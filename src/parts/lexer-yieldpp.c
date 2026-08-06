@@ -1946,7 +1946,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 			goto err_nomem;
 		tpp_file_move(prev_file, file);
 		tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
-		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+		tpp_lcinfo_init_invalid(&file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
@@ -2030,7 +2030,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 	tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
-	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+	tpp_lcinfo_init_invalid(&file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
 	file->tf_pos   = tpp_string_str(file->tf_chunk);

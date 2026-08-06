@@ -676,9 +676,9 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(self, line, col) \
-	(void)((self).TPP_INTERNAL(lci_line) = line,       \
-	       (self).TPP_INTERNAL(lci_col)  = col)
+#define tpp_lcinfo_init(p_self, line, col)        \
+	(void)((self)->TPP_INTERNAL(lci_line) = line, \
+	       (self)->TPP_INTERNAL(lci_col)  = col)
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {
@@ -692,8 +692,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 
 #ifndef tpp_lcinfo_init
 #define tpp_lcinfo_init(self, line, col) \
-	(void)((self) = tpp_lcinfo_of(line, col))
+	(void)(*(self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
+#ifndef tpp_lcinfo_setline
+#define tpp_lcinfo_setline(self, line) tpp_lcinfo_init(self, line, tpp_lcinfo_getcol(*(self)))
+#endif /* !tpp_lcinfo_setline */
+#ifndef tpp_lcinfo_setcol
+#define tpp_lcinfo_setcol(self, col) tpp_lcinfo_init(self, tpp_lcinfo_getline(*(self)), col)
+#endif /* !tpp_lcinfo_setcol */
 #ifndef tpp_lcinfo_equals
 #define tpp_lcinfo_equals(a, b)                        \
 	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
@@ -702,9 +708,9 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 
 /* Specifies an invalid LC information object */
 #ifndef TPP_LCINFO_INVALID
-#define TPP_LCINFO_INVALID            tpp_lcinfo_of(-1, -1)
-#define tpp_lcinfo_isvalid(x)         (tpp_lcinfo_getcol(x) >= 0)
-#define tpp_lcinfo_init_invalid(self) tpp_lcinfo_init(self, -1, -1)
+#define TPP_LCINFO_INVALID              tpp_lcinfo_of(-1, -1)
+#define tpp_lcinfo_isvalid(x)           (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_init_invalid(p_self) tpp_lcinfo_init(p_self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 
 /* Check if "x" represents valid line/column information */
@@ -712,7 +718,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #define tpp_lcinfo_isvalid(x) (!tpp_lcinfo_equals(x, TPP_LCINFO_INVALID))
 #endif /* !tpp_lcinfo_isvalid */
 #ifndef tpp_lcinfo_init_invalid
-#define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
+#define tpp_lcinfo_init_invalid(p_self) (void)(*(p_self) = TPP_LCINFO_INVALID)
 #endif /* !tpp_lcinfo_init_invalid */
 
 

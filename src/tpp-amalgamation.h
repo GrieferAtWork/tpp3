@@ -5659,9 +5659,9 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(self, line, col) \
-	(void)((self).TPP_INTERNAL(lci_line) = line,       \
-	       (self).TPP_INTERNAL(lci_col)  = col)
+#define tpp_lcinfo_init(p_self, line, col)        \
+	(void)((self)->TPP_INTERNAL(lci_line) = line, \
+	       (self)->TPP_INTERNAL(lci_col)  = col)
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {
@@ -5675,8 +5675,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 
 #ifndef tpp_lcinfo_init
 #define tpp_lcinfo_init(self, line, col) \
-	(void)((self) = tpp_lcinfo_of(line, col))
+	(void)(*(self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
+#ifndef tpp_lcinfo_setline
+#define tpp_lcinfo_setline(self, line) tpp_lcinfo_init(self, line, tpp_lcinfo_getcol(*(self)))
+#endif /* !tpp_lcinfo_setline */
+#ifndef tpp_lcinfo_setcol
+#define tpp_lcinfo_setcol(self, col) tpp_lcinfo_init(self, tpp_lcinfo_getline(*(self)), col)
+#endif /* !tpp_lcinfo_setcol */
 #ifndef tpp_lcinfo_equals
 #define tpp_lcinfo_equals(a, b)                        \
 	(tpp_lcinfo_getline(a) == tpp_lcinfo_getline(b) && \
@@ -5685,9 +5691,9 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 
 /* Specifies an invalid LC information object */
 #ifndef TPP_LCINFO_INVALID
-#define TPP_LCINFO_INVALID            tpp_lcinfo_of(-1, -1)
-#define tpp_lcinfo_isvalid(x)         (tpp_lcinfo_getcol(x) >= 0)
-#define tpp_lcinfo_init_invalid(self) tpp_lcinfo_init(self, -1, -1)
+#define TPP_LCINFO_INVALID              tpp_lcinfo_of(-1, -1)
+#define tpp_lcinfo_isvalid(x)           (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_init_invalid(p_self) tpp_lcinfo_init(p_self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 
 /* Check if "x" represents valid line/column information */
@@ -5695,7 +5701,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #define tpp_lcinfo_isvalid(x) (!tpp_lcinfo_equals(x, TPP_LCINFO_INVALID))
 #endif /* !tpp_lcinfo_isvalid */
 #ifndef tpp_lcinfo_init_invalid
-#define tpp_lcinfo_init_invalid(self) (void)((self) = TPP_LCINFO_INVALID)
+#define tpp_lcinfo_init_invalid(p_self) (void)(*(p_self) = TPP_LCINFO_INVALID)
 #endif /* !tpp_lcinfo_init_invalid */
 
 
@@ -19641,6 +19647,14 @@ typedef struct tpp_file {
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
+/* Check if "self" includes L/C information */
+#define tpp_file_haslcinfo(self)                                                                             \
+	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                          \
+	  (tpp_file_getchunk(self) == NULL ||                                                                    \
+	   tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc)))) || \
+	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                     \
+	  tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))
+
 
 /* Access macro information */
 #if TPP_HAVE_CPP_MACROS
@@ -19666,6 +19680,13 @@ typedef struct tpp_file {
  */
 #define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
 
+
+/* Retrieve file flags of `self` */
+#if TPP_HAVE_FILE_FLAGS
+#define tpp_file_getflags(self) (self)->TPP_INTERNAL(tf_flags)
+#else /* TPP_HAVE_FILE_FLAGS */
+#define tpp_file_getflags(self) 0
+#endif /* !TPP_HAVE_FILE_FLAGS */
 
 
 /* Check if the next `tpp_lexer_yieldpp()` done in the context of this file is
@@ -25868,7 +25889,7 @@ typedef struct tpp_lexer_printf_info {
 	(void)((self)->tlpfi_file     = (file),            \
 	       (self)->tlpfi_pos      = (pos),             \
 	       (self)->tlpfi_filename = NULL,              \
-	       tpp_lcinfo_init_invalid((self)->tlpfi_lc))
+	       tpp_lcinfo_init_invalid(&(self)->tlpfi_lc))
 #define tpp_lexer_printf_info_init_lc(self, filename, lc) \
 	(void)((self)->tlpfi_file     = NULL,                 \
 	       (self)->tlpfi_filename = (filename),           \

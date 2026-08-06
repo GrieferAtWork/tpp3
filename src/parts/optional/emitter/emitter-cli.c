@@ -534,8 +534,20 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			break;
 
 		case 'f': {
-#if (TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN || \
-     TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#if (TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN ||  \
+     TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA || \
+     TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY ||     \
+     TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||       \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||          \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||     \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS ||    \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS ||    \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE)
 			bool no = false;
 			if (tpp_streq(arg, "no-"))
 				no = true, arg += 3;
@@ -553,6 +565,24 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
+			if (tpp_streq(arg, "working-directory\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
+			if (tpp_streq(arg, "use-cpp-digit\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
+			if (tpp_streq(arg, "use-cpp-digit-flags\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
@@ -857,6 +887,18 @@ TPP_CLI_HELP1("-f[no-]relaxed-macro-column",
 TPP_CLI_HELP1("-f[no-]reemit-unknown-pragma",
               "Re-emit unknown #pragma directives")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
+TPP_CLI_HELP1("-f[no-]working-directory",
+              "Include the preprocessors PWD in output")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
+TPP_CLI_HELP1("-f[no-]use-cpp-digit",
+              "Use # LINENUM instead of #line")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
+TPP_CLI_HELP1("-f[no-]use-cpp-digit-flags",
+              "Produce 1/2/3/4 flags in # LINENUM directives")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 TPP_CLI_HELP1("-f[no-]normalize=space",
               "Emit SPACE tokens using only ASCII SPACE")

@@ -54,12 +54,23 @@
 #define teff_NORMALIZE_DIGRAPHS                 TPP_EMITTER_INTERNAL(teff_NORMALIZE_DIGRAPHS)
 #define teff_NOLINE                             TPP_EMITTER_INTERNAL(teff_NOLINE)
 #define teff_RELAXED_MACRO_COLUMN               TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN)
+#define teff_USE_CPP_DIGIT                      TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT)
+#define teff_USE_CPP_DIGIT_FLAGS                TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_FLAGS)
+#define teff_USE_CPP_DIGIT_WORKING_DIRECTORY    TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_WORKING_DIRECTORY)
 #define teff_REEMIT_MACRO_DEFINITIONS_LAZY      TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY)
 #define teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #define teff_TRACE_INCLUDES                     TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
-#define tes_curpos                              TPP_EMITTER_INTERNAL(tes_curpos)
-#define tes_curfilename                         TPP_EMITTER_INTERNAL(tes_curfilename)
-#define tes_curfilename_str                     TPP_EMITTER_INTERNAL(tes_curfilename_str)
+#define tesf_curpos                             TPP_EMITTER_INTERNAL(tesf_curpos)
+#define tesf_fname                              TPP_EMITTER_INTERNAL(tesf_fname)
+#define tesf_fname_str                          TPP_EMITTER_INTERNAL(tesf_fname_str)
+#define tesf_flags                              TPP_EMITTER_INTERNAL(tesf_flags)
+#define tesfs_file                              TPP_EMITTER_INTERNAL(tesfs_file)
+#define tesfs_filec                             TPP_EMITTER_INTERNAL(tesfs_filec)
+#define tesfs_filev                             TPP_EMITTER_INTERNAL(tesfs_filev)
+#define tes_curfile                             TPP_EMITTER_INTERNAL(tes_curfile)
+#define tes_cached_filec                        TPP_EMITTER_INTERNAL(tes_cached_filec)
+#define tes_cached_filev                        TPP_EMITTER_INTERNAL(tes_cached_filev)
+#define tes_flags                               TPP_EMITTER_INTERNAL(tes_flags)
 #define tes_prevtok                             TPP_EMITTER_INTERNAL(tes_prevtok)
 #define te_lexer                                TPP_EMITTER_INTERNAL(te_lexer)
 #define te_output                               TPP_EMITTER_INTERNAL(te_output)
@@ -106,6 +117,15 @@ TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
 		/* .teff_RELAXED_MACRO_COLUMN               = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+		/* .teff_USE_CPP_DIGIT                      = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+		/* .teff_USE_CPP_DIGIT_FLAGS                = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+		/* .teff_USE_CPP_DIGIT_WORKING_DIRECTORY    = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 		/* .teff_REEMIT_MACRO_DEFINITIONS_LAZY      = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
@@ -122,6 +142,69 @@ TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
 /************************************************************************/
 /* File: parts/optional/emitter/emitter.c                               */
 /************************************************************************/
+
+#if TPP_EMITTER_HAVE_CURPOS
+static TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_state_file_init(tpp_emitter_state_file *tpp_restrict self) {
+	self->tesf_fname     = NULL;
+	self->tesf_fname_str = NULL;
+}
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_state_file_fini(tpp_emitter_state_file *tpp_restrict self) {
+	if (self->tesf_fname_str)
+		tpp_string_decref(self->tesf_fname_str);
+	tpp_dbg_memset(self, sizeof(*self));
+}
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_state_files_fini(tpp_emitter_state_files *tpp_restrict self) {
+	tpp_emitter_state_file_fini(&self->tesfs_file);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	{
+		tpp_size i;
+		for (i = 0; i < self->tesfs_filec; ++i)
+			tpp_emitter_state_file_fini(&self->tesfs_filev[i]);
+		tpp_free(self->tesfs_filev);
+	}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+}
+
+#endif /* TPP_EMITTER_HAVE_CURPOS */
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_state_init(tpp_emitter_state *tpp_restrict self) {
+#if TPP_EMITTER_HAVE_CURPOS
+	tpp_lcinfo_init(&self->tes_curfile.tesfs_file.tesf_curpos, 0, 0);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	self->tes_cached_filec = 0;
+	self->tes_cached_filev = NULL;
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	tpp_emitter_state_file_init(&self->tes_curfile.tesfs_file);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	self->tes_curfile.tesfs_filec = 0;
+	self->tes_curfile.tesfs_filev = NULL;
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+	self->tes_curfile.tesfs_file.tesf_flags = 0;
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CURPOS */
+#if TPP_EMITTER_HAVE_FLAGS
+	self->tes_flags = TPP_EMITTER_FLAG_NORMAL;
+#endif /* TPP_EMITTER_HAVE_FLAGS */
+	self->tes_prevtok = TPP_TOK_EOF;
+}
+
+static TPP_NONNULL((1)) void TPPCALL
+tpp_emitter_state_fini(tpp_emitter_state *tpp_restrict self) {
+#if TPP_EMITTER_HAVE_CURPOS
+	tpp_emitter_state_files_fini(&self->tes_curfile);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	tpp_free(self->tes_cached_filev);
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CURPOS */
+	tpp_dbg_memset(self, sizeof(*self));
+}
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
  * (before `tpp_lexer_fini()` is called) a given emitter.
@@ -148,9 +231,13 @@ tpp_emitter_init_after_lexer(tpp_emitter *tpp_restrict self,
 	tpp_emitter_enable_reemit_include_directives(self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0 */
 #if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
-     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES))
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
 	_tpp_emitter_enable_file_pushed_hook(self); /* Must be turned on by default */
 #endif /* ... */
+#if TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+	tpp_lexer_sethook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped);
+#endif /* TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -195,9 +282,9 @@ tpp_emitter_printspace(tpp_emitter *tpp_restrict self, tpp_column count) {
 	tpp_size num_printed;
 	tpp_ssize result = tpp_emitter_printrepeat(self, &num_printed, (tpp_size)count, ' ');
 #if TPP_EMITTER_HAVE_CURPOS
-	tpp_lcinfo_init(self->te_state.tes_curpos,
-	                tpp_lcinfo_getline(self->te_state.tes_curpos),
-	                tpp_lcinfo_getcol(self->te_state.tes_curpos) + num_printed);
+	tpp_lcinfo_setcol(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
+	                  tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) +
+	                  num_printed);
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 	return result;
 }
@@ -208,7 +295,7 @@ static TPP_FORMATPRINTER_DEFINE(_tpp_emitter_print, arg, text, num_bytes) {
 	tpp_emitter *self = (tpp_emitter *)arg;
 	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
 	if (result >= 0) {
-		self->te_state.tes_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curpos, text, num_bytes,
+		self->te_state.tes_curfile.tesfs_file.tesf_curpos = tpp_lcinfo_account_ex(self->te_state.tes_curfile.tesfs_file.tesf_curpos, text, num_bytes,
 		                                                  tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
 	}
 	return result;
@@ -232,9 +319,9 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 	tpp_size num_printed;
 	tpp_ssize result = tpp_emitter_printrepeat(self, &num_printed, (tpp_size)count, '\n');
 #if TPP_EMITTER_HAVE_CURPOS
-	tpp_lcinfo_init(self->te_state.tes_curpos,
-	                tpp_lcinfo_getline(self->te_state.tes_curpos) + num_printed,
-	                num_printed ? 0 : tpp_lcinfo_getcol(self->te_state.tes_curpos));
+	tpp_lcinfo_init(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
+	                tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos) + num_printed,
+	                num_printed ? 0 : tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos));
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 	return result;
 }
@@ -242,6 +329,7 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 
 #if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 /* Emit a `#line` directive (and update `self->te_state`) */
+#if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
                                  tpp_line line, char const *filename,
@@ -250,7 +338,10 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	char buffer[(sizeof("\n#line ") - sizeof(char)) + TPP_ITOA_MAXLEN + 2];
 	char *ptr = buffer, *buf_temp;
 	tpp_size partlen;
-	tpp_column oldcol = tpp_lcinfo_getcol(self->te_state.tes_curpos);
+	tpp_column oldcol = tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
+	char const *emit_filename = filename;
+	if (self->te_state.tes_curfile.tesfs_file.tesf_fname == filename)
+		emit_filename = NULL;
 	if (oldcol != 0)
 		*ptr++ = '\n';
 	*ptr++ = '#';
@@ -263,7 +354,7 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
 	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
-	if (filename) {
+	if (emit_filename) {
 		*ptr++ = ' ';
 		*ptr++ = '"';
 	} else {
@@ -273,38 +364,482 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	if (temp < 0)
 		goto err_temp;
 	result += temp;
-	if (filename) {
-		partlen = tpp_strlen(filename);
-		temp = tpp_emitter_output_printraw_cstr(self, filename, partlen);
+	if (emit_filename) {
+		partlen = tpp_strlen(emit_filename);
+		temp = tpp_emitter_output_printraw_cstr(self, emit_filename, partlen);
 		if (temp < 0) {
-			tpp_lcinfo_init(self->te_state.tes_curpos,
-			                tpp_lcinfo_getline(self->te_state.tes_curpos) + (oldcol ? 1 : 0),
+			tpp_lcinfo_init(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
+			                tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos) +
+			                (oldcol ? 1 : 0),
 			                (tpp_size)(ptr - buffer));
 			goto err_temp;
 		}
 		result += temp;
 		temp = tpp_emitter_output_printraw_conststr(self, "\"\n");
 		if (temp < 0) {
-			tpp_lcinfo_init(self->te_state.tes_curpos,
-			                tpp_lcinfo_getline(self->te_state.tes_curpos),
-			                (tpp_size)(ptr - buffer) + partlen);
+			tpp_lcinfo_setcol(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
+			                  (tpp_size)(ptr - buffer) + partlen);
 			goto err_temp;
 		}
 		result += temp;
+	}
 
-		/* Remember the newly assigned filename */
-		self->te_state.tes_curfilename = filename;
+	/* Remember the newly assigned filename */
+	self->te_state.tes_curfile.tesfs_file.tesf_fname = filename;
+	if (filename_str != self->te_state.tes_curfile.tesfs_file.tesf_fname_str) {
 		if (filename_str)
 			tpp_string_incref(filename_str);
-		if (self->te_state.tes_curfilename_str)
-			tpp_string_decref(self->te_state.tes_curfilename_str);
-		self->te_state.tes_curfilename_str = filename_str;
+		if (self->te_state.tes_curfile.tesfs_file.tesf_fname_str)
+			tpp_string_decref(self->te_state.tes_curfile.tesfs_file.tesf_fname_str);
+		self->te_state.tes_curfile.tesfs_file.tesf_fname_str = filename_str;
 	}
-	tpp_lcinfo_init(self->te_state.tes_curpos, line, 0);
+	tpp_lcinfo_init(&self->te_state.tes_curfile.tesfs_file.tesf_curpos, line, 0);
 	return result;
 err_temp:
 	return temp;
 }
+#endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+
+#if !TPP_EMITTER_HAVE_USE_CPP_DIGIT
+#define tpp_emitter_pushed_files_changed(self, lcfile) false
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT */
+
+#define tpp_emitter_print_cpp_digit_pushfile(self, ent, filename) \
+	tpp_emitter_print_cpp_digit_applyfile(self, ent, filename, '1')
+#define tpp_emitter_print_cpp_digit_popfile(self, ent, filename) \
+	tpp_emitter_print_cpp_digit_applyfile(self, ent, filename, '2')
+#define tpp_emitter_print_cpp_digit_setfile(self, ent, filename) \
+	tpp_emitter_print_cpp_digit_applyfile(self, ent, filename, '\0')
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
+                                       tpp_emitter_state_file const *tpp_restrict ent,
+                                       char const *filename
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+                                       , char flag
+#define tpp_emitter_print_cpp_digit_applyfile(self, ent, filename, flag) \
+	tpp_emitter_print_cpp_digit_applyfile_(self, ent, filename, flag)
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#define tpp_emitter_print_cpp_digit_applyfile(self, ent, filename, flag) \
+	tpp_emitter_print_cpp_digit_applyfile_(self, ent, filename)
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+                                       ) {
+	tpp_ssize temp, result;
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	char buf[sizeof("#  \"2 3 4\n") + TPP_ITOA_MAXLEN - sizeof(char)];
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	char buf[sizeof("#  \"2\n") + TPP_ITOA_MAXLEN - sizeof(char)];
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	char *buf_temp, *ptr = buf;
+	tpp_size partlen;
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+	if (!filename && (flag || ent->tesf_flags))
+#else /* _TPP_EMITTER_STATE_FLAGS_MASK */
+	if (!filename && flag)
+#endif /* !_TPP_EMITTER_STATE_FLAGS_MASK */
+	{
+		/* Flags must be set -- need a filename */
+		filename = ent->tesf_fname;
+		if (filename == NULL)
+			filename = "?"; /* Could happen if underlying file has no name... */
+	}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
+	*ptr++ = '#';
+	*ptr++ = ' ';
+	buf_temp = tpp_itoa(ptr, tpp_lcinfo_getline(ent->tesf_curpos) + 1);
+	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
+	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr += partlen;
+	if (filename) {
+		*ptr++ = ' ';
+		*ptr++ = '\"';
+	} else {
+		*ptr++ = '\n';
+	}
+	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
+	if (filename && result >= 0) {
+		temp = tpp_emitter_output_printraw_cstr(self, filename, tpp_strlen(filename));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		ptr = buf;
+		*ptr++ = '"';
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+		if (flag) {
+			*ptr++ = ' ';
+			*ptr++ = flag;
+		}
+#if TPP_HAVE_FILE_SYSHDR
+		if (ent->tesf_flags & TPP_FILE_FLAGS_SYSHDR) {
+			*ptr++ = ' ';
+			*ptr++ = '3';
+		}
+#endif /* TPP_HAVE_FILE_SYSHDR */
+#if TPP_HAVE_FILE_EXTERN_C
+		if (ent->tesf_flags & TPP_FILE_FLAGS_EXTERN_C) {
+			*ptr++ = ' ';
+			*ptr++ = '4';
+		}
+#endif /* TPP_HAVE_FILE_EXTERN_C */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+		*ptr++ = '\n';
+		temp = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
+		if (temp < 0)
+			return temp;
+		result += temp;
+	}
+	tpp_lcinfo_setcol(&self->te_state.tes_curfile.tesfs_file.tesf_curpos, 0);
+	return result;
+}
+
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_print_working_directory(tpp_formatprinter printer, void *arg) {
+	/* TODO */
+	return tpp_formatprinter_print_conststr(printer, arg, "$(TODO:pwd)");
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
+                                              tpp_line line) {
+	tpp_ssize temp, result;
+	char buf[sizeof("#  \"") + TPP_ITOA_MAXLEN - sizeof(char)];
+	char *buf_temp, *ptr = buf;
+	tpp_size partlen;
+	*ptr++ = '#';
+	*ptr++ = ' ';
+	buf_temp = tpp_itoa(ptr, tpp_lcinfo_getline(line) + 1);
+	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
+	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr += partlen;
+	*ptr++ = ' ';
+	*ptr++ = '\"';
+	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
+	if (result < 0)
+		return result;
+	temp = tpp_print_working_directory(tpp_emitter_getoutput(self), self);
+	if (temp < 0)
+		return temp;
+	result += temp;
+	temp = tpp_emitter_output_printraw_conststr(self, "//\"\n");
+	if (temp < 0)
+		return temp;
+	result += temp;
+	return result;
+}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+
+#if !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#define tpp_emitter_pushed_files_changed(self, lcfile) false
+#else /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
+tpp_file_prevlc(tpp_file *file) {
+	do {
+		file = tpp_file_getprev(file);
+	} while (file && (tpp_file_getkind(file) != TPP_FILE_KIND_IO &&
+	                  tpp_file_getkind(file) != TPP_FILE_KIND_TEXT));
+	return file;
+}
+
+/* Check if the stack of files pushed by  */
+static TPP_WUNUSED TPP_PURECALL TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_emitter_pushed_files_changed(tpp_emitter const *tpp_restrict self,
+                                 tpp_file *tpp_restrict lcfile) {
+	tpp_size i;
+	if (!tpp_emitter_has(self, USE_CPP_DIGIT))
+		return false;
+	if (!tpp_emitter_has(self, USE_CPP_DIGIT_FLAGS))
+		return false;
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+	/* This one must be checked *before* "tes_fchanged" in case of "#pragma GCC system_header" */
+	if ((self->te_state.tes_curfile.tesfs_file.tesf_flags) !=
+	    (tpp_file_getflags(lcfile) & _TPP_EMITTER_STATE_FLAGS_MASK))
+		return true;
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+	if (!(self->te_state.tes_flags & TPP_EMITTER_FLAG_FCHANGED))
+		return false;
+
+	for (i = self->te_state.tes_curfile.tesfs_filec; i--;) {
+		char const *actual_filename;
+		tpp_emitter_state_file *expected;
+		lcfile = tpp_file_prevlc(lcfile);
+		if (lcfile == NULL)
+			return true;
+		expected = &self->te_state.tes_curfile.tesfs_filev[i];
+		actual_filename = tpp_file_getfilename(lcfile);
+		if (expected->tesf_fname != actual_filename) {
+			if (expected->tesf_fname && actual_filename &&
+			    tpp_strcmp(expected->tesf_fname, actual_filename) == 0) {
+				tpp_string *actual_string = tpp_file_getfilenamestr(lcfile);
+				expected->tesf_fname = actual_filename;
+				if (actual_string)
+					tpp_string_incref(actual_string);
+				if (expected->tesf_fname_str)
+					tpp_string_decref(expected->tesf_fname_str);
+				expected->tesf_fname = actual_filename;
+				expected->tesf_fname_str = actual_string;
+			} else {
+				return true; /* Need a directive */
+			}
+		}
+	}
+	return tpp_file_prevlc(lcfile) != NULL;
+}
+
+/* Capture the state of the #include-stack */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_emitter_state_files_capture(tpp_emitter_state_files *tpp_restrict self,
+                                tpp_file *tpp_restrict lcfile, tpp_lcinfo lcinfo,
+                                char const *filename, tpp_string *filename_str, tpp_size cached_filec,
+                                /*inherit(always)*/tpp_emitter_state_file *cached_filev) {
+	tpp_size i, extra_file_count;
+	tpp_file *lciter;
+	self->tesfs_file.tesf_curpos = lcinfo;
+	self->tesfs_file.tesf_fname = filename;
+	self->tesfs_file.tesf_fname_str = filename_str;
+	if (filename_str)
+		tpp_string_incref(filename_str);
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+	self->tesfs_file.tesf_flags = tpp_file_getflags(lcfile) & _TPP_EMITTER_STATE_FLAGS_MASK;
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+
+	extra_file_count = 0;
+	for (lciter = lcfile; (lciter = tpp_file_prevlc(lciter)) != NULL;)
+		++extra_file_count;
+	self->tesfs_filec = extra_file_count;
+	self->tesfs_filev = cached_filev;
+#ifndef __OPTIMIZE_SIZE__
+	if (extra_file_count < cached_filec) {
+		tpp_emitter_state_file *newbuf;
+		newbuf = (tpp_emitter_state_file *)tpp_tryrealloc(cached_filev,
+		                                                  (extra_file_count ? extra_file_count : 1) *
+		                                                  sizeof(tpp_emitter_state_file));
+		if (newbuf)
+			self->tesfs_filev = newbuf;
+	} else
+#endif /* !__OPTIMIZE_SIZE__ */
+	if (extra_file_count > cached_filec) {
+		tpp_emitter_state_file *newbuf;
+		newbuf = (tpp_emitter_state_file *)tpp_realloc(cached_filev,
+			                                           extra_file_count *
+			                                           sizeof(tpp_emitter_state_file));
+		if tpp_unlikely(!newbuf)
+			goto err_nomem;
+		self->tesfs_filev = newbuf;
+	}
+
+	/* Populate file metadata entries. */
+	for (lciter = lcfile, i = extra_file_count; (lciter = tpp_file_prevlc(lciter)) != NULL;) {
+		tpp_emitter_state_file *ent;
+		tpp_assert(i != 0);
+		--i;
+		ent = &self->tesfs_filev[i];
+		ent->tesf_curpos = tpp_file_getstartlcinfo(lciter);
+		ent->tesf_fname  = tpp_file_getfilename(lciter);
+		ent->tesf_fname_str = tpp_file_getfilenamestr(lciter);
+		if (ent->tesf_fname_str)
+			tpp_string_incref(ent->tesf_fname_str);
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+		ent->tesf_flags = tpp_file_getflags(lciter) & _TPP_EMITTER_STATE_FLAGS_MASK;
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+	}
+	tpp_assert(i == 0);
+
+	return TPP_EOK;
+err_nomem:
+	tpp_emitter_state_files_fini(self);
+	return TPP_ENOMEM;
+}
+
+static TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1)) tpp_emitter_state_file const *TPPCALL
+tpp_emitter_state_files_getfile(tpp_emitter_state_files const *tpp_restrict self,
+                                tpp_size index) {
+	tpp_assert(index <= self->tesfs_filec + 1);
+	if (index < self->tesfs_filec)
+		return &self->tesfs_filev[index];
+	return &self->tesfs_file;
+}
+
+/* Print directives to migrate from the file-state of "self" to that of "new_files" */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
+                             tpp_emitter_state_files const *tpp_restrict new_files) {
+	tpp_ssize temp, result = 0;
+	tpp_emitter_state_file const *oldent, *newent;
+	tpp_emitter_state_files const *const old_files = &self->te_state.tes_curfile;
+	tpp_size num_identical, i;
+	tpp_size const old_file_count = old_files->tesfs_filec + 1;
+	tpp_size const new_file_count = new_files->tesfs_filec + 1;
+	tpp_size const num_common = old_file_count < new_file_count ? old_file_count : new_file_count;
+	for (num_identical = 0; num_identical < num_common; ++num_identical) {
+		oldent = tpp_emitter_state_files_getfile(old_files, num_identical);
+		newent = tpp_emitter_state_files_getfile(new_files, num_identical);
+		if (oldent->tesf_fname != newent->tesf_fname) {
+			if (oldent->tesf_fname && newent->tesf_fname &&
+			    tpp_strcmp(oldent->tesf_fname, newent->tesf_fname) == 0)
+				((tpp_emitter_state_file *)oldent)->tesf_fname = newent->tesf_fname;
+			if (oldent->tesf_fname != newent->tesf_fname)
+				break;
+		}
+		if (tpp_lcinfo_getline(oldent->tesf_curpos) != tpp_lcinfo_getline(newent->tesf_curpos))
+			break;
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+		if (oldent->tesf_flags != newent->tesf_flags)
+			break;
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+	}
+
+	/* Must emit directives to transform
+	 * `old_files[num_identical:old_file_count]` into
+	 * `new_files[num_identical:new_file_count]` */
+
+	/* Emit directives to pop files */
+	for (i = old_file_count - 1; i > (num_identical + 1);) {
+		oldent = tpp_emitter_state_files_getfile(old_files, --i);
+		temp = tpp_emitter_print_cpp_digit_popfile(self, oldent, oldent->tesf_fname);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+
+	/* Emit directives to re-adjust the last shared file */
+	oldent = tpp_emitter_state_files_getfile(old_files, num_identical);
+	newent = tpp_emitter_state_files_getfile(new_files, num_identical);
+	if (i > num_identical) {
+		temp = tpp_emitter_print_cpp_digit_popfile(self, newent, newent->tesf_fname);
+	} else if ((i + 1) >= new_file_count ||
+	           ((old_file_count == 1) && /* Must emit a set-directive if this is the first one... */
+	            !(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE))) {
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+		if (!(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE) &&
+			tpp_emitter_has(self, USE_CPP_DIGIT_WORKING_DIRECTORY)) {
+			temp = tpp_emitter_print_cpp_digit_setfile(self, newent, newent->tesf_fname);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			temp = tpp_emitter_print_cpp_digit_working_directory(self, tpp_lcinfo_getline(newent->tesf_curpos));
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+		}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+		temp = tpp_emitter_print_cpp_digit_setfile(self, newent,
+		                                           (oldent->tesf_fname == newent->tesf_fname
+		                                            ? NULL
+		                                            : newent->tesf_fname));
+		++i;
+	} else {
+		temp = 0; /* Files are about to be pushed, so no need for a line-setter */
+		++i;
+	}
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+
+	/* Emit directives to push files */
+	for (; i < new_file_count; ++i) {
+		newent = tpp_emitter_state_files_getfile(new_files, i);
+		temp = tpp_emitter_print_cpp_digit_pushfile(self, newent, newent->tesf_fname);
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_emitter_print_cpp_digit_directive(tpp_emitter *tpp_restrict self,
+                                      tpp_file *tpp_restrict lcfile, tpp_line line,
+                                      char const *filename, tpp_string *filename_str) {
+	tpp_ssize temp, result = 0;
+	/* Ensure that the emitter's output is placed at the start of a line.
+	 * This can always simply be done at the very start since by the time
+	 * we get here, we know that we *have* to emit *at least* 1 directive! */
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
+		result = tpp_emitter_output_printraw_conststr(self, "\n");
+		if (result < 0)
+			return result;
+		tpp_lcinfo_init(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
+		                tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos) + 1,
+		                0);
+	}
+
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	if (!tpp_emitter_has(self, USE_CPP_DIGIT_FLAGS) ||
+	    !(self->te_state.tes_flags & TPP_EMITTER_FLAG_FCHANGED))
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	if (1)
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	{
+		/* Simple case: files didn't change, so we
+		 * don't have to (re-)build file tables! */
+		char const *emit_filename = filename;
+		tpp_emitter_state_file *ent;
+		ent = &self->te_state.tes_curfile.tesfs_file;
+		if (ent->tesf_fname == filename)
+			emit_filename = NULL;
+		tpp_lcinfo_setline(&ent->tesf_curpos, line);
+		ent->tesf_fname = filename;
+		if (ent->tesf_fname_str)
+			tpp_string_decref(ent->tesf_fname_str);
+		ent->tesf_fname_str = filename_str;
+		if (filename_str)
+			tpp_string_incref(filename_str);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS && _TPP_EMITTER_STATE_FLAGS_MASK
+		ent->tesf_flags = tpp_file_getflags(lcfile) & _TPP_EMITTER_STATE_FLAGS_MASK;
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS && _TPP_EMITTER_STATE_FLAGS_MASK */
+		temp = tpp_emitter_print_cpp_digit_setfile(self, ent, emit_filename);
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+		if (temp >= 0 && !(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE) &&
+			tpp_emitter_has(self, USE_CPP_DIGIT_WORKING_DIRECTORY)) {
+			result += temp;
+			temp = tpp_emitter_print_cpp_digit_working_directory(self, tpp_lcinfo_getline(ent->tesf_curpos));
+			if (temp < 0)
+				return temp;
+			result += temp;
+			temp = tpp_emitter_print_cpp_digit_setfile(self, ent, filename);
+		}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+	} else {
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+		tpp_errno error;
+		tpp_emitter_state_files newfiles;
+		tpp_size i, cached_filec = self->te_state.tes_cached_filec;
+		tpp_emitter_state_file *cached_filev = self->te_state.tes_cached_filev;
+		self->te_state.tes_cached_filec = 0;
+		self->te_state.tes_cached_filev = NULL;
+		error = tpp_emitter_state_files_capture(&newfiles, lcfile,
+		                                        tpp_lcinfo_of(line, 0),
+		                                        filename, filename_str,
+		                                        cached_filec, cached_filev);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		temp = tpp_emitter_print_files_diff(self, &newfiles);
+
+		/* Re-use old file-buffer as new cache */
+		tpp_emitter_state_file_fini(&self->te_state.tes_curfile.tesfs_file);
+		for (i = 0; i < self->te_state.tes_curfile.tesfs_filec; ++i)
+			tpp_emitter_state_file_fini(&self->te_state.tes_curfile.tesfs_filev[i]);
+		self->te_state.tes_cached_filec = self->te_state.tes_curfile.tesfs_filec;
+		self->te_state.tes_cached_filev = self->te_state.tes_curfile.tesfs_filev;
+		self->te_state.tes_curfile = newfiles;
+		self->te_state.tes_flags &= ~TPP_EMITTER_FLAG_FCHANGED;
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+	}
+	if (temp < 0)
+		return temp;
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+	self->te_state.tes_flags |= TPP_EMITTER_FLAG_HASLINE;
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+	result += temp;
+	return result;
+}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT */
 #endif /* TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
 
 
@@ -799,37 +1334,37 @@ emit_without_alignment:
 		tpp_file *const lcfile = tpp_lexer_getlcfile(lexer);
 		char const *const lc_filename = tpp_file_getfilename(lcfile);
 		tpp_lcinfo const lcinfo = tpp_file_getstartlcinfo(lcfile);
+		bool pushes_changed;
 
 		/* Don't align anything if there is no LC info (except to inject required whitespace) */
 		if (!tpp_lcinfo_isvalid(lcinfo))
 			goto emit_without_alignment;
 
 		/* Check if the pointed-to filename changed, but its contents didn't. */
-		if (self->te_state.tes_curfilename != lc_filename &&
-		    self->te_state.tes_curfilename != NULL && lc_filename != NULL &&
-		    tpp_strcmp(self->te_state.tes_curfilename, lc_filename) == 0) {
+		if (self->te_state.tes_curfile.tesfs_file.tesf_fname != lc_filename &&
+		    self->te_state.tes_curfile.tesfs_file.tesf_fname != NULL && lc_filename != NULL &&
+		    tpp_strcmp(self->te_state.tes_curfile.tesfs_file.tesf_fname, lc_filename) == 0) {
 			tpp_string *new_filename_string = tpp_file_getfilenamestr(lcfile);
 			if (new_filename_string)
 				tpp_string_incref(new_filename_string);
-			if (self->te_state.tes_curfilename_str)
-				tpp_string_decref(self->te_state.tes_curfilename_str);
-			self->te_state.tes_curfilename     = lc_filename;
-			self->te_state.tes_curfilename_str = new_filename_string;
+			if (self->te_state.tes_curfile.tesfs_file.tesf_fname_str)
+				tpp_string_decref(self->te_state.tes_curfile.tesfs_file.tesf_fname_str);
+			self->te_state.tes_curfile.tesfs_file.tesf_fname     = lc_filename;
+			self->te_state.tes_curfile.tesfs_file.tesf_fname_str = new_filename_string;
 		}
 
 		/* Check if stuff needs to be realigned (by injecting whitespace). */
-		if (self->te_state.tes_curfilename != lc_filename ||
-		    !tpp_lcinfo_equals(self->te_state.tes_curpos, lcinfo) ||
-		    require_whitespace) {
-			tpp_line oldline = tpp_lcinfo_getline(self->te_state.tes_curpos);
+		pushes_changed = tpp_emitter_pushed_files_changed(self, lcfile);
+		if (self->te_state.tes_curfile.tesfs_file.tesf_fname != lc_filename ||
+		    !tpp_lcinfo_equals(self->te_state.tes_curfile.tesfs_file.tesf_curpos, lcinfo) ||
+		    require_whitespace || pushes_changed) {
+			tpp_line oldline = tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
 			tpp_line newline = tpp_lcinfo_getline(lcinfo);
-			tpp_column oldcol = tpp_lcinfo_getcol(self->te_state.tes_curpos);
+			tpp_column oldcol = tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
 			tpp_column newcol = tpp_lcinfo_getcol(lcinfo);
-			bool need_line_directive = false;
+			bool need_line_directive = pushes_changed;
 
-			/* TODO: Must also emit a directive if the system_header or
-			 *       extern_c flags changed, and the `# <linenum>` is being used. */
-			if (self->te_state.tes_curfilename != lc_filename) {
+			if (self->te_state.tes_curfile.tesfs_file.tesf_fname != lc_filename) {
 				need_line_directive = true;
 			} else if (newline < oldline) {
 				need_line_directive = true;
@@ -856,16 +1391,26 @@ emit_without_alignment:
 				}
 			}
 			if (need_line_directive) {
-				char const *emit_filename = lc_filename;
-				if (self->te_state.tes_curfilename == lc_filename)
-					emit_filename = NULL;
-				temp = tpp_emitter_print_line_directive(self, newline, emit_filename,
+#if !TPP_EMITTER_HAVE_USE_CPP_DIGIT
+				temp = tpp_emitter_print_line_directive(self, newline, lc_filename,
 				                                        tpp_file_getfilenamestr(lcfile));
+#elif !TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+				temp = tpp_emitter_print_cpp_digit_directive(self, lcfile, newline, lc_filename,
+				                                             tpp_file_getfilenamestr(lcfile));
+#else /* ... */
+				if (tpp_emitter_has(self, USE_CPP_DIGIT)) {
+					temp = tpp_emitter_print_cpp_digit_directive(self, lcfile, newline, lc_filename,
+					                                             tpp_file_getfilenamestr(lcfile));
+				} else {
+					temp = tpp_emitter_print_line_directive(self, newline, lc_filename,
+					                                        tpp_file_getfilenamestr(lcfile));
+				}
+#endif /* !... */
 				if (temp < 0)
 					goto err_temp;
 				result += temp;
-				oldline = tpp_lcinfo_getline(self->te_state.tes_curpos);
-				oldcol  = tpp_lcinfo_getcol(self->te_state.tes_curpos);
+				oldline = tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
+				oldcol  = tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
 			}
 
 			/* Align with extra line-feed characters. */
@@ -874,7 +1419,7 @@ emit_without_alignment:
 				if (temp < 0)
 					goto err_temp;
 				result += temp;
-				oldcol = tpp_lcinfo_getcol(self->te_state.tes_curpos);
+				oldcol = tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos);
 				tpp_assert(oldcol == 0);
 			}
 
@@ -884,7 +1429,7 @@ emit_without_alignment:
 				if (temp < 0)
 					goto err_temp;
 				result += temp;
-				tpp_assert(tpp_lcinfo_getcol(self->te_state.tes_curpos) == newcol);
+				tpp_assert(tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) == newcol);
 			}
 		}
 #endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) */
@@ -914,7 +1459,7 @@ _tpp_emitter_hook_unknown_pragma(tpp_lexer *tpp_restrict lexer) {
 	tpp_token_id prev_token;
 	tpp_token_id tok = tpp_lexer_gettok(lexer);
 #if TPP_EMITTER_HAVE_CURPOS
-	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 		temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			goto err_temp;
@@ -1059,7 +1604,7 @@ _tpp_emitter_hook_macro_defined(tpp_lexer *tpp_restrict lexer,
                                 tpp_macro *tpp_restrict macro) {
 	tpp_emitter *self = tpp_emitter_oflexer(lexer);
 #if TPP_EMITTER_HAVE_CURPOS
-	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 		tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			return TPP_SSIZE_ASERR(temp);
@@ -1073,7 +1618,7 @@ _tpp_emitter_hook_macro_undefined(tpp_lexer *tpp_restrict lexer,
                                   tpp_keyword *tpp_restrict name) {
 	tpp_emitter *self = tpp_emitter_oflexer(lexer);
 #if TPP_EMITTER_HAVE_CURPOS
-	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 		tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			return TPP_SSIZE_ASERR(temp);
@@ -1093,7 +1638,7 @@ _tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict lexer,
 	tpp_emitter *const self = tpp_emitter_oflexer(lexer);
 	tpp_ssize temp;
 #if TPP_EMITTER_HAVE_CURPOS
-	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 		temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			goto err_temp;
@@ -1140,7 +1685,17 @@ err_temp:
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 
-#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+static TPP_NONNULL((1, 2)) void TPPCALL
+tpp_emitter_maybe_set_files_changes(tpp_emitter *tpp_restrict self,
+                                    tpp_file const *tpp_restrict changed_file) {
+	if (tpp_emitter_has(self, USE_CPP_DIGIT_FLAGS) &&
+	    tpp_file_haslcinfo(changed_file))
+		self->te_state.tes_flags |= TPP_EMITTER_FLAG_FCHANGED;
+}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
+#if _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 #if TPP_EMITTER_HAVE_TRACE_INCLUDES
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_trace_include_printdots(tpp_lexer *tpp_restrict lexer, tpp_size count) {
@@ -1216,7 +1771,7 @@ tpp_emitter_reemit_macro_used(tpp_emitter *tpp_restrict self,
 
 	/* Must emit a new definition! */
 #if TPP_EMITTER_HAVE_CURPOS
-	if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+	if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 		tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
 		if (temp < 0)
 			return TPP_SSIZE_ASERR(temp);
@@ -1266,9 +1821,22 @@ _tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict lexer) {
 	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	tpp_emitter_maybe_set_files_changes(self, file);
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
 	return TPP_EOK;
 }
-#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES */
+#endif /* _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_emitter_hook_file_popped(tpp_lexer *tpp_restrict lexer) {
+	tpp_emitter *const self = tpp_emitter_oflexer(lexer);
+	tpp_emitter_maybe_set_files_changes(self, tpp_lexer_getfile(lexer));
+}
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 
 
 #if TPP_EMITTER_HAVE_MODE_BRACKET
@@ -1347,7 +1915,7 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 			tpp_errno error;
 			/* Must emit an #undef directive */
 #if TPP_EMITTER_HAVE_CURPOS
-			if (tpp_lcinfo_getcol(self->te_state.tes_curpos) != 0) {
+			if (tpp_lcinfo_getcol(self->te_state.tes_curfile.tesfs_file.tesf_curpos) != 0) {
 				tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
 				if (temp < 0)
 					return temp;
@@ -1857,8 +2425,20 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			break;
 
 		case 'f': {
-#if (TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN || \
-     TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#if (TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN ||  \
+     TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA || \
+     TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY ||     \
+     TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||       \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||          \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||     \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS ||    \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE ||         \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS ||    \
+     TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE)
 			bool no = false;
 			if (tpp_streq(arg, "no-"))
 				no = true, arg += 3;
@@ -1876,6 +2456,24 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
+			if (tpp_streq(arg, "working-directory\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
+			if (tpp_streq(arg, "use-cpp-digit\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
+			if (tpp_streq(arg, "use-cpp-digit-flags\0")) {
+				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS, !no);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
@@ -2180,6 +2778,18 @@ TPP_CLI_HELP1("-f[no-]relaxed-macro-column",
 TPP_CLI_HELP1("-f[no-]reemit-unknown-pragma",
               "Re-emit unknown #pragma directives")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
+TPP_CLI_HELP1("-f[no-]working-directory",
+              "Include the preprocessors PWD in output")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
+TPP_CLI_HELP1("-f[no-]use-cpp-digit",
+              "Use # LINENUM instead of #line")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
+#if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
+TPP_CLI_HELP1("-f[no-]use-cpp-digit-flags",
+              "Produce 1/2/3/4 flags in # LINENUM directives")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 TPP_CLI_HELP1("-f[no-]normalize=space",
               "Emit SPACE tokens using only ASCII SPACE")

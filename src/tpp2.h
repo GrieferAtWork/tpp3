@@ -5113,23 +5113,23 @@ TPPFUN struct TPPFile TPPFile_Empty;
 #define TPPFile_Incref(self)       (void)(++(self)->f_refcnt)
 #define TPPFile_Decref(self)       (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
 #define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
-TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
+TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *tpp_restrict self);
 
 /* Create a new explicit text file by inherited the given `inherited_text`.
  * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
 TPPFUN /*ref*/struct TPPFile *TPPCALL
-TPPFile_NewExplicitInherited(/*ref*/struct TPPString *__restrict inherited_text);
+TPPFile_NewExplicitInherited(/*ref*/struct TPPString *tpp_restrict inherited_text);
 
 /* Opens a file.
  * NOTE: The given filename is what will appear as text when expanding __FILE__
  * @return: NULL: Failed to open the given file (`errno` was set to ENOENT)
  * @return: NULL: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
-TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *__restrict filename);
+TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *tpp_restrict filename);
 
 /* Similar to `TPPFile_Open`, but allows the caller to specify a stream,
  * allowing them to use this function for opening things like STD handles.
  * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *__restrict name);
+TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *tpp_restrict name);
 
 
 /* Searches the cache and opens a new file if not found.

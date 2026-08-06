@@ -2441,7 +2441,7 @@ typedef struct tpp_lexer_printf_info {
 	(void)((self)->tlpfi_file     = (file),            \
 	       (self)->tlpfi_pos      = (pos),             \
 	       (self)->tlpfi_filename = NULL,              \
-	       tpp_lcinfo_init_invalid((self)->tlpfi_lc))
+	       tpp_lcinfo_init_invalid(&(self)->tlpfi_lc))
 #define tpp_lexer_printf_info_init_lc(self, filename, lc) \
 	(void)((self)->tlpfi_file     = NULL,                 \
 	       (self)->tlpfi_filename = (filename),           \

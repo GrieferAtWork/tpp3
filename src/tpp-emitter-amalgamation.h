@@ -230,7 +230,21 @@
 #define TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN */
 
-/* TODO: Config to select between use of `# <linenum>` and `#line` */
+/* Use `# <linenum>` instead of `#line` to align tokens */
+#ifndef TPP_EMITTER_HAVE_USE_CPP_DIGIT
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT */
+
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
+#ifndef TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS ((TPP_EMITTER_HAVE_USE_CPP_DIGIT && TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_FILE_POPPED_HOOK && (TPP_HAVE_FILE_SYSHDR || TPP_HAVE_FILE_EXTERN_C)) ? TPP_CONF_FEAT1 : 0)
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: the first time a `# <linenum>` directive is emitted,
+ * emit it 2 times, and in-between those to emissions, emit another line `# <linenum> "$(PWD)//"` */
+#ifndef TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+#define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY (TPP_EMITTER_HAVE_USE_CPP_DIGIT ? TPP_CONF_FEAT0 : 0)
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 
 /* TODO: "-fworking-directory"
  *       The first time the emitter emits a `# <linenum>` marker, it must simply
@@ -462,6 +476,26 @@
 	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA)
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 
+/* `-fworking-directory`, `-fno-working-directory`:
+ * Turn `TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY` on/off */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
+#define TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY \
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY))
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
+
+/* `-fuse-cpp-digit`, `-fno-use-cpp-digit`:
+ * Turn `TPP_EMITTER_HAVE_USE_CPP_DIGIT` on/off */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
+#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT \
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT))
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
+
+/* `-fuse-cpp-digit-flags`, `-fno-use-cpp-digit-flags`:
+ * Turn `TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS` on/off */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
+#define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS \
+	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 
 /* `-fnormalize=space`, `-fno-normalize=space`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_SPACE` on/off */
@@ -578,18 +612,21 @@
 TPP_DECL_BEGIN
 
 #undef TPP_EMITTER_HAVE_FEATURES
-#if (TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||             \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||                \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||          \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) ||             \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||          \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||               \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) ||         \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) ||          \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) ||                      \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) ||        \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ||\
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) ||\
+#if (TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||                    \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) ||                       \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) ||                 \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) ||                    \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) ||                 \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) ||                      \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) ||                \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) ||                 \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) ||                             \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) ||               \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) ||                      \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) ||                \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) ||    \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ||      \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) || \
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES))
 #define TPP_EMITTER_HAVE_FEATURES 1
 #else /* ... */
@@ -628,6 +665,15 @@ typedef enum tpp_emitter_feature_id {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
 	TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+	TPP_EMITTER_FEAT_USE_CPP_DIGIT,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+	TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+	TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 	TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
@@ -682,6 +728,18 @@ typedef union tpp_emitter_features {
 		unsigned int TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN): 1;
 #define _tpp_emitter_has_RELAXED_MACRO_COLUMN(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_FLAGS): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT_FLAGS(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_FLAGS)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_WORKING_DIRECTORY): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT_WORKING_DIRECTORY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY): 1;
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY)
@@ -743,6 +801,15 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
 #define _tpp_emitter_has_RELAXED_MACRO_COLUMN(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+#define _tpp_emitter_has_USE_CPP_DIGIT(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#define _tpp_emitter_has_USE_CPP_DIGIT_FLAGS(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#define _tpp_emitter_has_USE_CPP_DIGIT_WORKING_DIRECTORY(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
@@ -764,32 +831,71 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #define TPP_EMITTER_HAVE_CURPOS 0
 #endif /* !... */
 
+#if TPP_EMITTER_HAVE_CURPOS
+typedef struct tpp_emitter_state_file {
+	tpp_lcinfo          TPP_EMITTER_INTERNAL(tesf_curpos);    /* Current line/column position in output (with respect to emitted `#line` directives) */
+	char const         *TPP_EMITTER_INTERNAL(tesf_fname);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
+	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tesf_fname_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#if TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C
+#define _TPP_EMITTER_STATE_FLAGS_MASK (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C)
+#elif TPP_HAVE_FILE_SYSHDR
+#define _TPP_EMITTER_STATE_FLAGS_MASK TPP_FILE_FLAGS_SYSHDR
+#elif TPP_HAVE_FILE_EXTERN_C
+#define _TPP_EMITTER_STATE_FLAGS_MASK TPP_FILE_FLAGS_EXTERN_C
+#else /* ... */
+#define _TPP_EMITTER_STATE_FLAGS_MASK 0
+#endif /* !... */
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+	tpp_file_flags          TPP_EMITTER_INTERNAL(tesf_flags); /* Set of `_TPP_EMITTER_STATE_FLAGS_MASK` */
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+} tpp_emitter_state_file;
+
+typedef struct tpp_emitter_state_files {
+	tpp_emitter_state_file  TPP_EMITTER_INTERNAL(tesfs_file);    /* Most-recent file */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	tpp_size                TPP_EMITTER_INTERNAL(tesfs_filec);   /* # of dummy files pushed by `# <digit> "filename" 1` */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tesfs_filev);   /* [0..tesfs_filec][owned] Extra files pus */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+} tpp_emitter_state_files;
+#endif /* TPP_EMITTER_HAVE_CURPOS */
+
+#undef TPP_EMITTER_HAVE_FLAGS
+#if (TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || \
+     TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#define TPP_EMITTER_HAVE_FLAGS 1
+#else /* ... */
+#define TPP_EMITTER_HAVE_FLAGS 0
+#endif /* !... */
+
+#if TPP_EMITTER_HAVE_FLAGS
+#define tpp_emitter_flags uint_least8_t
+#define TPP_EMITTER_FLAG_NORMAL   UINT8_C(0x00)
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#define TPP_EMITTER_FLAG_FCHANGED UINT8_C(0x01) /* Contents of the #include-stack may have changed */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+#define TPP_EMITTER_FLAG_HASLINE  UINT8_C(0x02) /* At least 1 `# <linenum>`-directive was emitted */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+#endif /* TPP_EMITTER_HAVE_FLAGS */
+
+
 typedef struct tpp_emitter_state {
 #if TPP_EMITTER_HAVE_CURPOS
-	tpp_lcinfo          TPP_EMITTER_INTERNAL(tes_curpos);          /* Current line/column position in output (with respect to emitted `#line` directives) */
-	char const         *TPP_EMITTER_INTERNAL(tes_curfilename);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
-	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tes_curfilename_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
-#define _tpp_emitter_state_init_cur(self)                             \
-	, tpp_lcinfo_init((self)->TPP_EMITTER_INTERNAL(tes_curpos), 0, 0) \
-	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename)     = NULL        \
-	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str) = NULL
-#define _tpp_emitter_state_fini_cur(self)                                          \
-	, (self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)                            \
-	  ? (void)tpp_string_decref((self)->TPP_EMITTER_INTERNAL(tes_curfilename_str)) \
-	  : (void)0
-#else /* TPP_EMITTER_HAVE_CURPOS */
-#define _tpp_emitter_state_init_cur(self) /* nothing */
-#define _tpp_emitter_state_fini_cur(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_CURPOS */
-	tpp_token_id        TPP_EMITTER_INTERNAL(tes_prevtok);         /* Last token ID (preceding the token currently being emitted).
-	                                                                * When the current token is the first, this is `TPP_TOK_EOF` */
+	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tes_curfile); /* Current file-state. */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Used internally */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* Used internally */
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CURPOS */
+#if TPP_EMITTER_HAVE_FLAGS
+	tpp_emitter_flags       TPP_EMITTER_INTERNAL(tes_flags);   /* Emitter flags */
+#endif /* TPP_EMITTER_HAVE_FLAGS */
+	tpp_token_id            TPP_EMITTER_INTERNAL(tes_prevtok); /* Last token ID (preceding the token currently being emitted).
+	                                                            * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
 
-#define tpp_emitter_state_init(self)                               \
-	(void)((self)->TPP_EMITTER_INTERNAL(tes_prevtok) = TPP_TOK_EOF \
-	       _tpp_emitter_state_init_cur(self))
-#define tpp_emitter_state_fini(self) \
-	(void)((void)0 _tpp_emitter_state_fini_cur(self))
 
 #undef _TPP_EMITTER_MODE_DEFAULT
 #undef TPP_EMITTER_MODE_HAVE_MULTIPLE
@@ -990,22 +1096,41 @@ _tpp_emitter_hook_include_encountered(tpp_lexer *tpp_restrict self,
                                       tpp_hook_include_kind include_kind);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
-#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES
+#undef _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
+#if (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || \
+     TPP_EMITTER_HAVE_TRACE_INCLUDES ||                \
+     TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#define _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 1
+#else /* ... */
+#define _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 0
+#endif /* !... */
+#if _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict self);
 #define _tpp_emitter_enable_file_pushed_hook(self) \
 	tpp_lexer_sethook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
 #if ((!TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)) && \
-     (!TPP_EMITTER_HAVE_TRACE_INCLUDES || TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)))
-#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) && TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
-#define _tpp_emitter_candisable_file_pushed_hook(self)                                \
-	(!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY) && \
-	 !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
-#elif TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
-#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY))
-#else /* ... */
-#define _tpp_emitter_candisable_file_pushed_hook(self) (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES))
-#endif /* !... */
+     (!TPP_EMITTER_HAVE_TRACE_INCLUDES || TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)) && \
+     (!TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)))
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+#define _tpp_emitter_candisable_file_pushed_hook_REEMIT_MACRO_DEFINITIONS_LAZY(self) && !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY)
+#else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+#define _tpp_emitter_candisable_file_pushed_hook_REEMIT_MACRO_DEFINITIONS_LAZY(self) /* nothing */
+#endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+#define _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self) && !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES)
+#else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#define _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self) /* nothing */
+#endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#define _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self) && !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS)
+#else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#define _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self) /* nothing */
+#endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#define _tpp_emitter_candisable_file_pushed_hook(self)                              \
+	(1 _tpp_emitter_candisable_file_pushed_hook_REEMIT_MACRO_DEFINITIONS_LAZY(self) \
+	   _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self)                \
+	   _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self))
 #define _tpp_emitter_disable_file_pushed_hook(self)                \
 	(_tpp_emitter_candisable_file_pushed_hook(self)                \
 	 ? tpp_lexer_resethook_file_pushed(tpp_emitter_getlexer(self)) \
@@ -1013,7 +1138,28 @@ _tpp_emitter_hook_file_pushed(tpp_lexer *tpp_restrict self);
 #else /* ... */
 #define _tpp_emitter_disable_file_pushed_hook(self) (void)0
 #endif /* !... */
-#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_EMITTER_HAVE_TRACE_INCLUDES */
+#endif /* _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+_tpp_emitter_hook_file_popped(tpp_lexer *tpp_restrict self);
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#define tpp_emitter_enable_use_cpp_digit_flags(self)                        \
+	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
+	 _tpp_emitter_enable_file_pushed_hook(self),                            \
+	 tpp_lexer_sethook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped))
+#define tpp_emitter_disable_use_cpp_digit_flags(self)                        \
+	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
+	 _tpp_emitter_disable_file_pushed_hook(self),                            \
+	 tpp_lexer_resethook_file_popped(tpp_emitter_getlexer(self)))
+#define tpp_emitter_get_use_cpp_digit_flags(self) \
+	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS)
+#define tpp_emitter_set_use_cpp_digit_flags(self, v)    \
+	((v) ? tpp_emitter_enable_use_cpp_digit_flags(self) \
+	     : tpp_emitter_disable_use_cpp_digit_flags(self))
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 
 /* API support for *lazy* (re-)emission of `#define` and `#undef` directives */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)

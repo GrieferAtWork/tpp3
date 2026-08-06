@@ -387,6 +387,14 @@ typedef struct tpp_file {
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
+/* Check if "self" includes L/C information */
+#define tpp_file_haslcinfo(self)                                                                             \
+	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                          \
+	  (tpp_file_getchunk(self) == NULL ||                                                                    \
+	   tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc)))) || \
+	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                     \
+	  tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))
+
 
 /* Access macro information */
 #if TPP_HAVE_CPP_MACROS
@@ -412,6 +420,13 @@ typedef struct tpp_file {
  */
 #define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
 
+
+/* Retrieve file flags of `self` */
+#if TPP_HAVE_FILE_FLAGS
+#define tpp_file_getflags(self) (self)->TPP_INTERNAL(tf_flags)
+#else /* TPP_HAVE_FILE_FLAGS */
+#define tpp_file_getflags(self) 0
+#endif /* !TPP_HAVE_FILE_FLAGS */
 
 
 /* Check if the next `tpp_lexer_yieldpp()` done in the context of this file is

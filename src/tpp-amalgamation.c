@@ -23779,7 +23779,7 @@ reuse_old_chunk:
 			ps_rel = 0;
 			kp_rel = 0;
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			tpp_lcinfo_init(self->tf_data.td_io.tff_start_lc, 0, 0);
+			tpp_lcinfo_init(&self->tf_data.td_io.tff_start_lc, 0, 0);
 #if TPP_HAVE_FILE_GETHASH
 			self->tf_data.td_io.tff_hash = TPP_HASH_INITIAL;
 #endif /* TPP_HAVE_FILE_GETHASH */
@@ -24150,7 +24150,7 @@ tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 			if (last_linefeed) {
 				tpp_line num_lf = tpp_lcinfo_count_linefeed(self, last_linefeed, self->tf_lcpos);
 				tpp_line last_linefeed_lno = tpp_lcinfo_getline(self->tf_lcval) - num_lf;
-				tpp_lcinfo_init(result, last_linefeed_lno, 0);
+				tpp_lcinfo_init(&result, last_linefeed_lno, 0);
 				result = tpp_lcinfo_account_ex(result, last_linefeed,
 				                               (tpp_size)(pos - last_linefeed),
 				                               self->tf_enc);
@@ -24438,7 +24438,7 @@ tpp_file_setline(tpp_file *tpp_restrict self,
 	delta      = line - cur_line;
 	start_line = tpp_lcinfo_getline(self->tf_data.td_text.tft_start_lc) + delta;
 	start_col  = tpp_lcinfo_getcol(self->tf_data.td_text.tft_start_lc);
-	tpp_lcinfo_init(self->tf_data.td_text.tft_start_lc, start_line, start_col);
+	tpp_lcinfo_init(&self->tf_data.td_text.tft_start_lc, start_line, start_col);
 
 	/* Invalidate cache */
 #if TPP_HAVE_FILE_LC_CACHE
@@ -24569,8 +24569,7 @@ tpp_file_gettextfile(tpp_file const *tpp_restrict self) {
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
-	while ((iter->tf_kind != TPP_FILE_KIND_IO && iter->tf_kind != TPP_FILE_KIND_TEXT) ||
-	       (iter->tf_chunk == NULL || !tpp_lcinfo_isvalid(iter->tf_data.td_io.tff_start_lc))) {
+	while (!tpp_file_haslcinfo(iter)) {
 		iter = iter->tf_tprev;
 		if (iter == NULL) {
 			iter = tpp_file_gettextfile(self);
@@ -47527,7 +47526,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 			goto err_nomem;
 		tpp_file_move(prev_file, file);
 		tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
-		tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+		tpp_lcinfo_init_invalid(&file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
 		file->tf_tprev = prev_file;
@@ -47611,7 +47610,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 	tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
-	tpp_lcinfo_init_invalid(file->tf_data.td_io.tff_start_lc);
+	tpp_lcinfo_init_invalid(&file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
 	file->tf_pos   = tpp_string_str(file->tf_chunk);
