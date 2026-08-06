@@ -214,6 +214,14 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 }
 #endif /* TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE) || TPP_EMITTER_HAVE_NORMALIZE_LF */
 
+
+#if TPP_EMITTER_HAVE_NORMALIZE_C_STRING || (TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE))
+static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
+	return tpp_token_encodestring(tpp_emitter_getprinter((tpp_emitter *)arg), arg, text, num_bytes);
+}
+#endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING || (TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)) */
+
+
 #if TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)
 /* Emit a `#line` directive (and update `self->te_state`) */
 #if TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
@@ -253,7 +261,7 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	result += temp;
 	if (emit_filename) {
 		partlen = tpp_strlen(emit_filename);
-		temp = tpp_emitter_output_printraw_cstr(self, emit_filename, partlen);
+		temp = tpp_emitter_print_encodestring(self, (tpp_char const *)emit_filename, partlen);
 		if (temp < 0) {
 			tpp_lcinfo_init(&self->te_state.tes_curfile.tesfs_file.tesf_curpos,
 			                tpp_lcinfo_getline(self->te_state.tes_curfile.tesfs_file.tesf_curpos) +
@@ -346,7 +354,7 @@ tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
 	}
 	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
 	if (filename && result >= 0) {
-		temp = tpp_emitter_output_printraw_cstr(self, filename, tpp_strlen(filename));
+		temp = tpp_emitter_print_encodestring(self, (tpp_char const *)filename, tpp_strlen(filename));
 		if (temp < 0)
 			return temp;
 		result += temp;
@@ -738,10 +746,6 @@ tpp_emitter_print_cpp_digit_directive(tpp_emitter *tpp_restrict self,
 
 
 #if TPP_EMITTER_HAVE_NORMALIZE_C_STRING
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
-	return tpp_token_encodestring(tpp_emitter_getprinter((tpp_emitter *)arg), arg, text, num_bytes);
-}
-
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
 struct tpp_emitter_printbig_data {
 	tpp_emitter *tepbd_emitter; /* [1..1] Emitter */

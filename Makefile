@@ -65,6 +65,6 @@ bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/tpp-emitter-ama
 # Unit tests...
 test: bin/tpp$(EXE)
 	deemon -F test/_all.h
-	@echo bin/tpp$(EXE) test/_all.h
-	@bin/tpp$(EXE) test/_all.h > /dev/null && echo "Tests passed" || echo "TESTS FAILED"
+	@echo bin/tpp$(EXE) --mode=dispose test/_all.h
+	@bin/tpp$(EXE) --mode=dispose test/_all.h && echo "Tests passed" || echo "TESTS FAILED"
 .PHONY: test
