@@ -246,12 +246,6 @@
 #define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY (TPP_EMITTER_HAVE_USE_CPP_DIGIT ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 
-/* TODO: "-fworking-directory"
- *       The first time the emitter emits a `# <linenum>` marker, it must simply
- *       follow this up by emitting a second marker like: `# <linenum> "$(pwd)//"` */
-
-/* TODO: Config to enable emission of 1/2/3/4 flags in `# <linenum>`-directives */
-
 /* Enable support for re-emission of unknown pragmas. Requires that the TPP core
  * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
  * hook (since the emitter needs to be able to override that hook during its
@@ -885,8 +879,8 @@ typedef struct tpp_emitter_state {
 #if TPP_EMITTER_HAVE_CURPOS
 	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tes_curfile); /* Current file-state. */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Used internally */
-	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* Used internally */
+	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Size of alternate file-state buffer (`tes_cached_filev`). */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* [0..tes_cached_filec] Alternate file-state buffer (used internally) */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 #if TPP_EMITTER_HAVE_FLAGS

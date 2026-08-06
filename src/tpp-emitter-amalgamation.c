@@ -813,20 +813,27 @@ tpp_emitter_print_cpp_digit_directive(tpp_emitter *tpp_restrict self,
 		tpp_emitter_state_file *cached_filev = self->te_state.tes_cached_filev;
 		self->te_state.tes_cached_filec = 0;
 		self->te_state.tes_cached_filev = NULL;
+
+		/* Capture current file-state of lexer. */
 		error = tpp_emitter_state_files_capture(&newfiles, lcfile,
 		                                        tpp_lcinfo_of(line, 0),
 		                                        filename, filename_str,
 		                                        cached_filec, cached_filev);
 		if (TPP_ISERR(error))
 			return TPP_SSIZE_OFERR(error);
+
+		/* Emit directives to migrate from previous
+		 * file-state to the one just-captured. */
 		temp = tpp_emitter_print_files_diff(self, &newfiles);
 
-		/* Re-use old file-buffer as new cache */
+		/* Save old state-buffer as new cache */
 		tpp_emitter_state_file_fini(&self->te_state.tes_curfile.tesfs_file);
 		for (i = 0; i < self->te_state.tes_curfile.tesfs_filec; ++i)
 			tpp_emitter_state_file_fini(&self->te_state.tes_curfile.tesfs_filev[i]);
 		self->te_state.tes_cached_filec = self->te_state.tes_curfile.tesfs_filec;
 		self->te_state.tes_cached_filev = self->te_state.tes_curfile.tesfs_filev;
+
+		/* Remember new file-state. */
 		self->te_state.tes_curfile = newfiles;
 		self->te_state.tes_flags &= ~TPP_EMITTER_FLAG_FCHANGED;
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
@@ -850,7 +857,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_b
 
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
 struct tpp_emitter_printbig_data {
-	tpp_emitter *tepbd_emitter; /* Emitter */
+	tpp_emitter *tepbd_emitter; /* [1..1] Emitter */
 	tpp_char     tepbd_quote;   /* Used "-character */
 	bool         tepbd_after_x; /* True if after \x-sequence (meaning next regular byte mustn't be 0-9, a-f, A-F) */
 };

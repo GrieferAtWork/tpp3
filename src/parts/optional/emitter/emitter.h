@@ -89,8 +89,8 @@ typedef struct tpp_emitter_state {
 #if TPP_EMITTER_HAVE_CURPOS
 	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tes_curfile); /* Current file-state. */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Used internally */
-	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* Used internally */
+	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Size of alternate file-state buffer (`tes_cached_filev`). */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* [0..tes_cached_filec] Alternate file-state buffer (used internally) */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 #if TPP_EMITTER_HAVE_FLAGS

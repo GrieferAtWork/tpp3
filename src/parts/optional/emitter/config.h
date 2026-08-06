@@ -199,12 +199,6 @@
 #define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY (TPP_EMITTER_HAVE_USE_CPP_DIGIT ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 
-/* TODO: "-fworking-directory"
- *       The first time the emitter emits a `# <linenum>` marker, it must simply
- *       follow this up by emitting a second marker like: `# <linenum> "$(pwd)//"` */
-
-/* TODO: Config to enable emission of 1/2/3/4 flags in `# <linenum>`-directives */
-
 /* Enable support for re-emission of unknown pragmas. Requires that the TPP core
  * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
  * hook (since the emitter needs to be able to override that hook during its
