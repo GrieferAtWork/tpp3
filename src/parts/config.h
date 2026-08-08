@@ -3118,7 +3118,7 @@ print("#endif /" "* !... *" "/");
  * extended hook setter (that doesn't take a cookie argument) is used), then
  * the lexer *itself* will be passed as cookie */
 #ifndef TPP_HAVE_HOOK_COOKIES
-#if 0 // TODO: TPP_HAVE_PROFILE_NOT_MINIMAL
+#if TPP_HAVE_PROFILE_NOT_MINIMAL
 #define TPP_HAVE_HOOK_COOKIES 1
 #else /* ... */
 #define TPP_HAVE_HOOK_COOKIES 0

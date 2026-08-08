@@ -54,7 +54,8 @@ typedef enum tpp_frontend_cli_state {
 
 /* TPP frontend */
 typedef struct tpp_frontend {
-	tpp_emitter            tf_emitter;            /* Emitter and (contained within): lexer */
+	tpp_lexer              tf_lexer;              /* Lexer */
+	tpp_emitter            tf_emitter;            /* Emitter */
 	FILE                  *tf_output_file;        /* [0..1] File for preprocessor output */
 	tpp_cli_loader         tf_cli_loader;         /* CLI loader for lexer */
 	tpp_emitter_cli_loader tf_emitter_cli_loader; /* CLI loader for emitter */
@@ -315,11 +316,11 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 					if (tpp_streq(arg, "essage-format=")) { /* --message-format=... */
 						arg += (sizeof("essage-format=") - sizeof(char));
 						if (tpp_streq(arg, "gcc\0")) {
-							tpp_lexer_setfileandlineformat(tpp_emitter_getlexer(&self->tf_emitter),
+							tpp_lexer_setfileandlineformat(&self->tf_lexer,
 							                               "%Pf:%Pl:%Pc: ");
 							return TPP_EOK;
 						} else if (tpp_streq(arg, "msvc\0")) {
-							tpp_lexer_setfileandlineformat(tpp_emitter_getlexer(&self->tf_emitter),
+							tpp_lexer_setfileandlineformat(&self->tf_lexer,
 							                               "%Pf(%Pl, %Pc): ");
 							return TPP_EOK;
 						}
@@ -349,23 +350,17 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 					arg += 3, no = true;
 #if TPP_FRONTEND_HAVE_TPP2_COMPAT
 				if (tpp_streq(arg, "spc\0")) {
-					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
-					                              TPP_EXT_TOK_SPACE, !no);
+					return tpp_lexer_setextension(&self->tf_lexer, TPP_EXT_TOK_SPACE, !no);
 				} else if (tpp_streq(arg, "lf\0")) {
-					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
-					                              TPP_EXT_TOK_LF, !no);
+					return tpp_lexer_setextension(&self->tf_lexer, TPP_EXT_TOK_LF, !no);
 				} else if (tpp_streq(arg, "comments\0")) {
-					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
-					                              TPP_EXT_TOK_COMMENT, !no);
+					return tpp_lexer_setextension(&self->tf_lexer, TPP_EXT_TOK_COMMENT, !no);
 				} else if (tpp_streq(arg, "longstring\0")) {
 					tpp_errno error;
-					error = tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
-					                               TPP_EXT_STRING_ALLOW_MULTILINE, no);
+					error = tpp_lexer_setextension(&self->tf_lexer, TPP_EXT_STRING_ALLOW_MULTILINE, no);
 					if (!TPP_ISERR(error)) {
-						error = tpp_lexer_setwarninggrp(tpp_emitter_getlexer(&self->tf_emitter),
-						                                TPP_WG_MULTILINE_STRING,
-						                                no ? TPP_WSTATE_WARN
-						                                   : TPP_WSTATE_DISABLED);
+						error = tpp_lexer_setwarninggrp(&self->tf_lexer, TPP_WG_MULTILINE_STRING,
+						                                no ? TPP_WSTATE_WARN : TPP_WSTATE_DISABLED);
 					}
 					return error;
 				} else if (tpp_streq(arg, "unify-pragma\0")) {
@@ -514,8 +509,9 @@ int main(int argc, char **argv) {
 #endif /* TPP_OS_WINDOWS */
 
 	/* Initialize frontend */
-	tpp_emitter_init(&fe.tf_emitter, &tpp_frontend_output_printer);
-	tpp_cli_loader_init(&fe.tf_cli_loader, tpp_emitter_getlexer(&fe.tf_emitter));
+	tpp_lexer_init(&fe.tf_lexer);
+	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_output_printer);
+	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
 	fe.tf_output_file = NULL;
 	fe.tf_cli_state = TPP_FRONTEND_CLI_STATE_NORMAL;
@@ -568,12 +564,12 @@ int main(int argc, char **argv) {
 		if (tpp_strcmp(filename, "-") == 0) {
 			filename = (char *)"<stdin>";
 			if (first_file) {
-				tpp_lexer_initfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
+				tpp_lexer_initfile_io_ex(&fe.tf_lexer,
 				                         filename, tpp_get_stdin(),
 				                         TPP_FILE_FLAGS_NOCLOSE);
 				error = TPP_EOK;
 			} else {
-				error = tpp_lexer_pushfile_io_ex(tpp_emitter_getlexer(&fe.tf_emitter),
+				error = tpp_lexer_pushfile_io_ex(&fe.tf_lexer,
 				                                 filename, tpp_get_stdin(),
 				                                 TPP_FILE_FLAGS_NOCLOSE);
 			}
@@ -581,10 +577,10 @@ int main(int argc, char **argv) {
 #endif /* tpp_get_stdin */
 		{
 			if (first_file) {
-				error = tpp_lexer_initfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+				error = tpp_lexer_initfile_open(&fe.tf_lexer,
 				                                filename, TPP_SIZE_MAX);
 			} else {
-				error = tpp_lexer_pushfile_open(tpp_emitter_getlexer(&fe.tf_emitter),
+				error = tpp_lexer_pushfile_open(&fe.tf_lexer,
 				                                filename, TPP_SIZE_MAX);
 			}
 		}
@@ -614,7 +610,7 @@ int main(int argc, char **argv) {
 
 	/* Yield & re-emit tokens. */
 	for (;;) {
-		tpp_token_id const tok = tpp_lexer_yield(tpp_emitter_getlexer(&fe.tf_emitter));
+		tpp_token_id const tok = tpp_lexer_yield(&fe.tf_lexer);
 		if (TPP_TOK_ISERR(tok)) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			goto out_emitter_file;
@@ -626,19 +622,20 @@ int main(int argc, char **argv) {
 	}
 
 	/* Return "0" if there were no TPP_WSTATE_ERROR-level messages */
-	if (tpp_lexer_geterrorcount(tpp_emitter_getlexer(&fe.tf_emitter)) == 0)
+	if (tpp_lexer_geterrorcount(&fe.tf_lexer) == 0)
 		result = 0;
 
 out_emitter_file:
-	tpp_lexer_finifile(tpp_emitter_getlexer(&fe.tf_emitter));
+	tpp_lexer_finifile(&fe.tf_lexer);
 out_emitter:
 	tpp_emitter_fini(&fe.tf_emitter);
+	tpp_lexer_fini(&fe.tf_lexer);
 #ifdef _MSC_VER
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
 out_emitter_loader_file:
-	tpp_lexer_finifile(tpp_emitter_getlexer(&fe.tf_emitter));
+	tpp_lexer_finifile(&fe.tf_lexer);
 out_emitter_loader:
 	tpp_cli_loader_fini(&fe.tf_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
