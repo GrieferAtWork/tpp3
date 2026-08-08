@@ -175,6 +175,16 @@ typedef struct tpp_emitter {
 #define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
 #define tpp_emitter_setmode(self, v) (void)(v)
 #endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
+	tpp_line             TPP_EMITTER_INTERNAL(te_linethreshold); /* max # of blank lines emitted for alignment purposes */
+#define tpp_emitter_getlinethreshold(self)     ((self)->TPP_EMITTER_INTERNAL(te_linethreshold))
+#define tpp_emitter_setlinethreshold(self, v)  (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = (tpp_line)(v))
+#define tpp_emitter_disablelinethreshold(self) (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = -1)
+#elif !TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#define tpp_emitter_getlinethreshold(self) (-1)
+#else /* ... */
+#define tpp_emitter_getlinethreshold(self) TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#endif /* !... */
 } tpp_emitter;
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize

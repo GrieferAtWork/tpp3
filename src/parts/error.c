@@ -52,8 +52,6 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
 		return "Fatal compilation error";
-	case TPP_EWARNPRINT:
-		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */
 	default:
 		return "Unknown error";

@@ -896,8 +896,6 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 #if TPP_HAVE_WARNINGS
 	case TPP_ELEXERROR:
 		return "Fatal compilation error";
-	case TPP_EWARNPRINT:
-		return "Error while printing warning";
 #endif /* TPP_HAVE_WARNINGS */
 	default:
 		return "Unknown error";
@@ -43166,11 +43164,14 @@ again_yield_and_handle:
 			} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
 			if (TPP_TOK_ISERR(tok))
 				return TPP_TOK_ASERR(tok);
-			tok = tpp_lexer_require_number(self);
-			if (TPP_TOK_ISERR(tok))
-				return TPP_TOK_ASERR(tok);
-			if (!TPP_TOK_ISINT(tok))
+			if (!TPP_TOK_ISINT(tok)) {
+#if TPP_HAVE_TPP_W_EXPECTED_INT
+				error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INT);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INT */
 				break;
+			}
 		}
 		error = tpp_lexer_decodeint(self, &mode);
 		if (TPP_ISERR(error)) {
@@ -44101,9 +44102,6 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 		return TPP_TOK_ASERR(tok);
 
 	/* Next token must be an integer */
-	tok = tpp_lexer_require_number(self);
-	if (TPP_TOK_ISERR(tok))
-		return TPP_TOK_ASERR(tok);
 	if (TPP_TOK_ISINT(tok)) {
 		error = tpp_lexer_decodeint(self, &value);
 		if (TPP_ISERR(error))
@@ -44115,6 +44113,12 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 			if (TPP_ISERR(error))
 				return error;
 		}
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_INT
+		error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INT);
+		if (TPP_ISERR(error))
+			return error;
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INT */
 	}
 	do {
 		tok = tpp_lexer_yield_blocking(self);
@@ -45227,9 +45231,8 @@ handle_invalid:
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
@@ -45302,9 +45305,8 @@ tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
  * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
  * first, and that integer will be converted into the equivalent `tpp_float`.
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
@@ -45347,10 +45349,9 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 
 
 /* Decode the current token (which should be TPP_TOK_ISINT) into an integer
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_ENOMEM:    Out of memory */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
@@ -45364,10 +45365,9 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_ENOMEM:    Out of memory */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
@@ -51574,8 +51574,6 @@ tpp_lexer_parse_simple_int(tpp_lexer *tpp_restrict self, tpp_intmax *p_value) {
 again_yield:
 		tok = tpp_lexer_yield_blocking(self);
 	}
-	if (TPP_TOK_ISERR(tok))
-		return tok;
 	switch (tok) {
 	case '-':
 		neg = !neg;
@@ -51584,20 +51582,25 @@ again_yield:
 	case TPP_TOK_MINUS_MINUS:
 		goto again_yield;
 #endif /* TPP_HAVE_TOK_MINUS_MINUS */
-	default: break;
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+		break;
 	}
-	tok = tpp_lexer_require_number(self);
-	if (TPP_TOK_ISERR(tok))
-		return tok;
 	*p_value = 0;
 	if (TPP_TOK_ISINT(tok)) {
-		tpp_errno error;
-		error = tpp_lexer_decodeint(self, p_value);
+		tpp_errno error = tpp_lexer_decodeint(self, p_value);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_INT
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INT);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INT */
 	}
 	return tok;
 }

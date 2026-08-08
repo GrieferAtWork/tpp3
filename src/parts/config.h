@@ -3189,11 +3189,10 @@ local HOOKS = {
 		"@param: invokeinfo: Warning invocation method\n" +
 		"@param: id:         Warning ID\n" +
 		"@param: arg:        Variable arguments passed to warning\n" +
-		"@return: TPP_EOK:        Success (warning was emitted)\n" +
-		"@return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`\n" +
-		"@return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error\n" +
-		"@return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error\n" +
-		"@return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error",
+		"@return: TPP_EOK:       Success (warning was emitted)\n" +
+		"@return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error\n" +
+		"@return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error\n" +
+		"@return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error",
 		"WARNHANDLER",
 		"TPP_HAVE_WARNINGS",
 		"_tpp_lexer_builtin_warnhandler",
@@ -3230,8 +3229,7 @@ local HOOKS = {
 		"@return: TPP_ENOMEM:      Out of memory\n" +
 		"@return: TPP_EIO:         Filesystem I/O operation failed\n" +
 		"@return: TPP_EWOULDBLOCK: Operation would block\n" +
-		"@return: TPP_ELEXERROR:   A lexer error happened\n" +
-		"@return: TPP_EWARNPRINT:  Error while printing a warning",
+		"@return: TPP_ELEXERROR:   A lexer error happened",
 		"PARSEEXPR",
 		"(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)",
 		"_tpp_lexer_builtin_parseexpr",
@@ -3581,11 +3579,10 @@ for (local doc, name,
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #ifndef TPP_HAVE_WARNHANDLER_HOOK
 #ifdef TPP_HOOK_WARNHANDLER
 #define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -3662,8 +3659,7 @@ for (local doc, name,
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #ifndef TPP_HAVE_PARSEEXPR_HOOK
 #ifdef TPP_HOOK_PARSEEXPR
 #define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -5494,6 +5490,20 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_EXPECTED_STRING 0
 #endif /* !... */
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_INT
+#if (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_INT &&      \
+     (TPP_HAVE_PROFILE_NOT_MINIMAL ||              \
+      TPP_HAVE_MACRO___TPP_RANDOM ||               \
+      TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
+      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||     \
+      TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
+      TPP_HAVE_PRAGMA_WARNING ||                   \
+      TPP_HAVE_PRAGMA_TPP_WARNING))
+#define TPP_HAVE_TPP_W_EXPECTED_INT 1
+#else /* ... */
+#define TPP_HAVE_TPP_W_EXPECTED_INT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INT */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_YIELD_INCLUDE_STRING)

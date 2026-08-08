@@ -286,11 +286,10 @@ typedef struct tpp_hooks {
 	 * @param: invokeinfo: Warning invocation method
 	 * @param: id:         Warning ID
 	 * @param: arg:        Variable arguments passed to warning
-	 * @return: TPP_EOK:        Success (warning was emitted)
-	 * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
-	 * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+	 * @return: TPP_EOK:       Success (warning was emitted)
+	 * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
@@ -329,8 +328,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_ENOMEM:      Out of memory
 	 * @return: TPP_EIO:         Filesystem I/O operation failed
 	 * @return: TPP_EWOULDBLOCK: Operation would block
-	 * @return: TPP_ELEXERROR:   A lexer error happened
-	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
+	 * @return: TPP_ELEXERROR:   A lexer error happened */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [1..1] */
@@ -595,11 +593,10 @@ typedef struct tpp_hooks {
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
@@ -686,8 +683,7 @@ typedef struct tpp_hooks {
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_parseexpr(self, lexer, result) \

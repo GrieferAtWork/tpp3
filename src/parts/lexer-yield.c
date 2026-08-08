@@ -1822,8 +1822,6 @@ tpp_lexer_parse_simple_int(tpp_lexer *tpp_restrict self, tpp_intmax *p_value) {
 again_yield:
 		tok = tpp_lexer_yield_blocking(self);
 	}
-	if (TPP_TOK_ISERR(tok))
-		return tok;
 	switch (tok) {
 	case '-':
 		neg = !neg;
@@ -1832,20 +1830,25 @@ again_yield:
 	case TPP_TOK_MINUS_MINUS:
 		goto again_yield;
 #endif /* TPP_HAVE_TOK_MINUS_MINUS */
-	default: break;
+	default:
+		if (TPP_TOK_ISERR(tok))
+			return tok;
+		break;
 	}
-	tok = tpp_lexer_require_number(self);
-	if (TPP_TOK_ISERR(tok))
-		return tok;
 	*p_value = 0;
 	if (TPP_TOK_ISINT(tok)) {
-		tpp_errno error;
-		error = tpp_lexer_decodeint(self, p_value);
+		tpp_errno error = tpp_lexer_decodeint(self, p_value);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
+	} else {
+#if TPP_HAVE_TPP_W_EXPECTED_INT
+		tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXPECTED_INT);
+		if (TPP_ISERR(error))
+			return TPP_TOK_OFERR(error);
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INT */
 	}
 	return tok;
 }

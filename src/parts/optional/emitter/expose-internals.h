@@ -86,6 +86,7 @@ for (local ident: identifiers)
 #define te_output                               TPP_EMITTER_INTERNAL(te_output)
 #define te_state                                TPP_EMITTER_INTERNAL(te_state)
 #define te_mode                                 TPP_EMITTER_INTERNAL(te_mode)
+#define te_linethreshold                        TPP_EMITTER_INTERNAL(te_linethreshold)
 /*[[[end]]]*/
 
 /*[[[tpp-end]]]*/

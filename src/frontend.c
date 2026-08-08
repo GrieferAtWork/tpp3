@@ -261,6 +261,22 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
 	 */
 
+	/* TODO: Support TPP2-style CLI aliases:
+	 * - -f[no-]spc:            configure 'TPP_HAVE_TOK_SPACE'
+	 * - -f[no-]lf:             configure 'TPP_HAVE_TOK_LF'
+	 * - -f[no-]comments:       configure 'TPP_HAVE_TOK_COMMENT'
+	 * - -f[no-]longstring:     turn on 'TPP_HAVE_STRING_ALLOW_MULTILINE' + disable '-Wno-multiline-string'
+	 * - -f[no-]unify-pragma:   alias for '-f[no-]reemit-unknown-pragma'
+	 * - -fline:                turn off 'TPP_EMITTER_HAVE_NOLINE', turn off 'TPP_EMITTER_HAVE_USE_CPP_DIGIT'
+	 * - -fno-line:             turn on 'TPP_EMITTER_HAVE_NOLINE'
+	 * - -fcpp-line:            turn off 'TPP_EMITTER_HAVE_NOLINE', turn on 'TPP_EMITTER_HAVE_USE_CPP_DIGIT'
+	 * - --message-format=gcc:  tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")
+	 * - --message-format=msvc: tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")
+	 * - -i ...:                Construct TEXT-file from remainder of CLI, which is then used as input (use 'TPP_CONFIG_CLI_FILENAME' as filename)
+	 * - --tok:                 tpp_emitter_setmode(TPP_EMITTER_MODE_BRACKET)
+	 * - --pp:                  tpp_emitter_setmode(TODO), turn off SPACE/LF
+	 */
+
 	case TPP_FRONTEND_CLI_STATE_NORMAL:
 		switch (*arg++) {
 		case '-': {

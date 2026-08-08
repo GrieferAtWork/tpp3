@@ -47,6 +47,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_expected_rparen_after_va_opt"></a>`TPP_HAVE_TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT`
 - <a name="tpp_have_tpp_w_expansion_to_defined"></a>`TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`
 - <a name="tpp_have_tpp_w_expected_string"></a>`TPP_HAVE_TPP_W_EXPECTED_STRING`
+- <a name="tpp_have_tpp_w_expected_int"></a>`TPP_HAVE_TPP_W_EXPECTED_INT`
 - <a name="tpp_have_tpp_w_expected_include_string"></a>`TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING`
 - <a name="tpp_have_tpp_w_no_such_file"></a>`TPP_HAVE_TPP_W_NO_SUCH_FILE`
 - <a name="tpp_have_tpp_w_unknown_embed_parameter"></a>`TPP_HAVE_TPP_W_UNKNOWN_EMBED_PARAMETER`

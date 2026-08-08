@@ -485,11 +485,10 @@ for (local doc, name,
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #define tpp_lexer_callhook_warnhandler(self, info, invokeinfo, id, args) \
 	tpp_hooks_call_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, info, invokeinfo, id, args)
 #ifdef tpp_hooks_set_warnhandler
@@ -530,8 +529,7 @@ for (local doc, name,
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #define tpp_lexer_callhook_parseexpr(self, result) \
 	tpp_hooks_call_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, result)
 #ifdef tpp_hooks_set_parseexpr
@@ -1865,8 +1863,6 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
  * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
-
-#define tpp_lexer_require_number(self) tpp_lexer_require(self, TPP_TOK_C_INT) /* TODO: Must solve differently */
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 

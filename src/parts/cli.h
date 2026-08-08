@@ -105,17 +105,16 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
  *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
- * @return: TPP_EOK:        Success (argument was parsed + consumed)
- * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no
- *                          warning was emitted). You must either handle it yourself
- *                          by treating it as an argument for *your* compiler's
- *                          CLI, or as an input file for it, or emit a warning
- *                          informing the user that their CLI argument was not
- *                          understood.
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A lexer error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (argument was parsed + consumed)
+ * @return: TPP_ENOENT:    SOFT_ERROR: Argument could not be understood (but no
+ *                         warning was emitted). You must either handle it yourself
+ *                         by treating it as an argument for *your* compiler's
+ *                         CLI, or as an input file for it, or emit a warning
+ *                         informing the user that their CLI argument was not
+ *                         understood.
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
 
@@ -133,10 +132,9 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
  *                      parameter, or the argument string's end)
  * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
  *                      handle the flag in a different context).
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 
@@ -163,13 +161,12 @@ tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
  *   argument from the argc/argv your `main()` was given, before calling
  *   this function!
  *
- * @return: TPP_EOK:        Success (`*p_argc` and `*p_argv` were updated such that
- *                          they contain all unrecognized arguments, as well as all
- *                          input files for your compiler).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
+ *                         they contain all unrecognized arguments, as well as all
+ *                         input files for your compiler).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv);
@@ -182,11 +179,10 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
 

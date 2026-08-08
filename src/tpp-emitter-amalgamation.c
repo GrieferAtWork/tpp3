@@ -76,6 +76,7 @@
 #define te_output                               TPP_EMITTER_INTERNAL(te_output)
 #define te_state                                TPP_EMITTER_INTERNAL(te_state)
 #define te_mode                                 TPP_EMITTER_INTERNAL(te_mode)
+#define te_linethreshold                        TPP_EMITTER_INTERNAL(te_linethreshold)
 
 #endif /* !TPP_EMITTER_BUILDING */
 
@@ -221,6 +222,9 @@ tpp_emitter_init_after_lexer(tpp_emitter *tpp_restrict self,
 #if TPP_EMITTER_MODE_HAVE_MULTIPLE
 	self->te_mode = _TPP_EMITTER_MODE_DEFAULT;
 #endif /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
+	self->te_linethreshold = -TPP_EMITTER_CONFIG_LINE_THRESHOLD;
+#endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0 */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0
 	tpp_emitter_enable_reemit_unknown_pragma(self);
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0 */
@@ -552,7 +556,7 @@ tpp_file_prevlc(tpp_file *file) {
 
 /* Check if the stack of files pushed by  */
 static TPP_WUNUSED TPP_PURECALL TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_emitter_pushed_files_changed(tpp_emitter const *tpp_restrict self,
+tpp_emitter_pushed_files_changed(tpp_emitter *tpp_restrict self,
                                  tpp_file *tpp_restrict lcfile) {
 	tpp_size i;
 	if (!tpp_emitter_has(self, USE_CPP_DIGIT))
@@ -568,12 +572,13 @@ tpp_emitter_pushed_files_changed(tpp_emitter const *tpp_restrict self,
 	if (!(self->te_state.tes_flags & TPP_EMITTER_FLAG_FCHANGED))
 		return false;
 
+	/* Check file-stack for changes. */
 	for (i = self->te_state.tes_curfile.tesfs_filec; i--;) {
 		char const *actual_filename;
 		tpp_emitter_state_file *expected;
 		lcfile = tpp_file_prevlc(lcfile);
 		if (lcfile == NULL)
-			return true;
+			return true; /* Stack became smaller (file popped) */
 		expected = &self->te_state.tes_curfile.tesfs_filev[i];
 		actual_filename = tpp_file_getfilename(lcfile);
 		if (expected->tesf_fname != actual_filename) {
@@ -588,11 +593,16 @@ tpp_emitter_pushed_files_changed(tpp_emitter const *tpp_restrict self,
 				expected->tesf_fname = actual_filename;
 				expected->tesf_fname_str = actual_string;
 			} else {
-				return true; /* Need a directive */
+				return true; /* Stack changed (file(name) changed) */
 			}
 		}
 	}
-	return tpp_file_prevlc(lcfile) != NULL;
+	if (tpp_file_prevlc(lcfile) != NULL)
+		return true; /* Stack became larger (file pushed) */
+
+	/* Nothing actually changed. */
+	self->te_state.tes_flags &= ~TPP_EMITTER_FLAG_FCHANGED;
+	return false;
 }
 
 /* Capture the state of the #include-stack */
@@ -1379,9 +1389,14 @@ emit_without_alignment:
 				need_line_directive = true;
 			} else if (newline < oldline) {
 				need_line_directive = true;
-			} else if (newline > (oldline + 4)) { /* TODO: Config to specific this threshold (here: 4) */
+			} else
+#if TPP_EMITTER_CONFIG_LINE_THRESHOLD
+			if (newline >= (oldline + tpp_emitter_getlinethreshold(self)) &&
+			    (oldline + tpp_emitter_getlinethreshold(self)) >= oldline) {
 				need_line_directive = true;
-			} else if (newline == oldline) {
+			} else
+#endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD */
+			if (newline == oldline) {
 				if (newcol < oldcol) {
 #if TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN
 					if (lcfile != tpp_lexer_getfile(lexer) &&
@@ -2441,6 +2456,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
      TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT ||         \
      TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD ||         \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||       \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||          \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||     \
@@ -2485,6 +2501,21 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
+			if (tpp_streq(arg, "line-threshold\0") && no) {
+				tpp_emitter_disablelinethreshold(self->tcl_emitter);
+				return TPP_EOK;
+			} else if (tpp_streq(arg, "line-threshold=") && !no) {
+				tpp_line threshold = 0;
+				arg += (sizeof("line-threshold=") - sizeof(char));
+				for (; tpp_ascii_isdigit(*arg); ++arg) {
+					threshold *= 10;
+					threshold += tpp_ascii_asdigit(*arg);
+				}
+				tpp_emitter_setlinethreshold(self->tcl_emitter, threshold);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
 #if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
@@ -2801,6 +2832,10 @@ TPP_CLI_HELP1("-f[no-]use-cpp-digit",
 TPP_CLI_HELP1("-f[no-]use-cpp-digit-flags",
               "Produce 1/2/3/4 flags in # LINENUM directives")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
+TPP_CLI_HELP1("-f[no-]line-threshold=COUNT",
+              "Max # of blank lines before #line is emitted")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 TPP_CLI_HELP1("-f[no-]normalize=space",
               "Emit SPACE tokens using only ASCII SPACE")

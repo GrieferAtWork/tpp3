@@ -228,9 +228,8 @@ handle_invalid:
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
@@ -303,9 +302,8 @@ tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
  * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
  * first, and that integer will be converted into the equivalent `tpp_float`.
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
@@ -348,10 +346,9 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 
 
 /* Decode the current token (which should be TPP_TOK_ISINT) into an integer
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_ENOMEM:    Out of memory */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
@@ -365,10 +362,9 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Lexer error happened
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_ENOMEM:    Out of memory */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,

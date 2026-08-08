@@ -539,6 +539,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
      TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT ||         \
      TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS ||   \
+     TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD ||         \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||       \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||          \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||     \
@@ -583,6 +584,21 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
+			if (tpp_streq(arg, "line-threshold\0") && no) {
+				tpp_emitter_disablelinethreshold(self->tcl_emitter);
+				return TPP_EOK;
+			} else if (tpp_streq(arg, "line-threshold=") && !no) {
+				tpp_line threshold = 0;
+				arg += (sizeof("line-threshold=") - sizeof(char));
+				for (; tpp_ascii_isdigit(*arg); ++arg) {
+					threshold *= 10;
+					threshold += tpp_ascii_asdigit(*arg);
+				}
+				tpp_emitter_setlinethreshold(self->tcl_emitter, threshold);
+				return TPP_EOK;
+			} else
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
 #if (TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE ||     \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF ||        \
      TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS ||   \
@@ -899,6 +915,10 @@ TPP_CLI_HELP1("-f[no-]use-cpp-digit",
 TPP_CLI_HELP1("-f[no-]use-cpp-digit-flags",
               "Produce 1/2/3/4 flags in # LINENUM directives")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
+TPP_CLI_HELP1("-f[no-]line-threshold=COUNT",
+              "Max # of blank lines before #line is emitted")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 TPP_CLI_HELP1("-f[no-]normalize=space",
               "Emit SPACE tokens using only ASCII SPACE")

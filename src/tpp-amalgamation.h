@@ -4003,6 +4003,7 @@ TPP_WARNING(TPP_W_ENCOUNTERED_TRIGRAPH, 1(TPP_WG_TRIGRAPHS), 0(), ~,
 	 TPP_HAVE_TPP_W_DUPLICATE_MACRO_PARAMETER_NAME ||                 \
 	 TPP_HAVE_TPP_W_EXPECTED_LPAREN_AFTER_VA_OPT ||                   \
 	 TPP_HAVE_TPP_W_EXPECTED_STRING ||                                \
+	 TPP_HAVE_TPP_W_EXPECTED_INT ||                                   \
 	 TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING ||                        \
 	 TPP_HAVE_TPP_W_EOF_BEFORE_ENDIF ||                               \
 	 TPP_HAVE_TPP_W_ELIF_OR_ELSE_AFTER_ELSE ||                        \
@@ -4031,31 +4032,31 @@ TPP_WGROUP(TPP_WG_SYNTAX, TPP_WGNAME_SYNTAX, TPP_WSTATE_ERROR_OR_FATAL)
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 #define TPP_W_STRING_TERMINATED_BY_LINEFEED TPP_W_STRING_TERMINATED_BY_LINEFEED
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 0(), ~,
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_LINEFEED, 1(TPP_WG_SYNTAX), 1(2001), TPP_WSTATE_UNDEFINED,
             "string was terminated by a linefeed")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
 #define TPP_W_STRING_TERMINATED_BY_EOF TPP_W_STRING_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), ~,
+TPP_WARNING(TPP_W_STRING_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 1(3516), TPP_WSTATE_UNDEFINED,
             "string was terminated by EOF")
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
 
 #if TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
 #define TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN
-TPP_WARNING(TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN, 1(TPP_WG_SYNTAX), 0(), ~,
+TPP_WARNING(TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN, 1(TPP_WG_SYNTAX), 1(3513), TPP_WSTATE_UNDEFINED,
             "linefeed in raw string literal pattern")
 #endif /* TPP_HAVE_TPP_W_LINEFEED_IN_CXX_RAW_STRING_PATTERN */
 
 #if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
 #define TPP_W_COMMENT_TERMINATED_BY_EOF TPP_W_COMMENT_TERMINATED_BY_EOF
-TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 0(), ~,
-            "comment was terminated by EOF")
+TPP_WARNING(TPP_W_COMMENT_TERMINATED_BY_EOF, 1(TPP_WG_SYNTAX), 1(1071), TPP_WSTATE_UNDEFINED,
+            "comment was terminated by eof")
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 
 #if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN
 #define TPP_W_UNEXPECTED_TOKEN TPP_W_UNEXPECTED_TOKEN
-TPP_WARNING(TPP_W_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 0(), ~,
+TPP_WARNING(TPP_W_UNEXPECTED_TOKEN, 1(TPP_WG_SYNTAX), 1(4081), TPP_WSTATE_UNDEFINED,
             "expected %[%s%] but got %Pt")
 #endif /* TPP_HAVE_TPP_W_UNEXPECTED_TOKEN */
 
@@ -4121,9 +4122,15 @@ TPP_WARNING(TPP_W_EXPECTED_RPAREN_AFTER_VA_OPT, 1(TPP_WG_SYNTAX), 1(7615), TPP_W
 
 #if TPP_HAVE_TPP_W_EXPECTED_STRING
 #define TPP_W_EXPECTED_STRING TPP_W_EXPECTED_STRING
-TPP_WARNING(TPP_W_EXPECTED_STRING, 1(TPP_WG_SYNTAX), 1(4081), TPP_WSTATE_UNDEFINED,
+TPP_WARNING(TPP_W_EXPECTED_STRING, 1(TPP_WG_SYNTAX), 1(2130), TPP_WSTATE_UNDEFINED,
             "expected <string>, but got %Pt")
 #endif /* TPP_HAVE_TPP_W_EXPECTED_STRING */
+
+#if TPP_HAVE_TPP_W_EXPECTED_INT
+#define TPP_W_EXPECTED_INT TPP_W_EXPECTED_INT
+TPP_WARNING(TPP_W_EXPECTED_INT, 1(TPP_WG_SYNTAX), 0(), TPP_WSTATE_UNDEFINED,
+            "expected <int>, but got %Pt")
+#endif /* TPP_HAVE_TPP_W_EXPECTED_INT */
 
 #if TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_W_EXPECTED_INCLUDE_STRING TPP_W_EXPECTED_INCLUDE_STRING
@@ -9042,11 +9049,10 @@ TPP_DECL_END
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #ifndef TPP_HAVE_WARNHANDLER_HOOK
 #ifdef TPP_HOOK_WARNHANDLER
 #define TPP_HAVE_WARNHANDLER_HOOK (TPP_HAVE_WARNINGS ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -9123,8 +9129,7 @@ TPP_DECL_END
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #ifndef TPP_HAVE_PARSEEXPR_HOOK
 #ifdef TPP_HOOK_PARSEEXPR
 #define TPP_HAVE_PARSEEXPR_HOOK ((TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed) ? TPP_HOOK_DEFAULT_USER : TPP_HOOK_DISABLED)
@@ -10795,6 +10800,20 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_EXPECTED_STRING 0
 #endif /* !... */
 #endif /* !TPP_HAVE_TPP_W_EXPECTED_STRING */
+#ifndef TPP_HAVE_TPP_W_EXPECTED_INT
+#if (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_INT &&      \
+     (TPP_HAVE_PROFILE_NOT_MINIMAL ||              \
+      TPP_HAVE_MACRO___TPP_RANDOM ||               \
+      TPP_HAVE_MACRO___TPP_STR_SUBSTR ||           \
+      TPP_HAVE_PRAGMA_TPP_SET_KEYWORD_FLAGS ||     \
+      TPP_HAVE_PRAGMA_TPP_TPP_SET_KEYWORD_FLAGS || \
+      TPP_HAVE_PRAGMA_WARNING ||                   \
+      TPP_HAVE_PRAGMA_TPP_WARNING))
+#define TPP_HAVE_TPP_W_EXPECTED_INT 1
+#else /* ... */
+#define TPP_HAVE_TPP_W_EXPECTED_INT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_W_EXPECTED_INT */
 #ifndef TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING
 #define TPP_HAVE_TPP_W_EXPECTED_INCLUDE_STRING \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_YIELD_INCLUDE_STRING)
@@ -22584,11 +22603,10 @@ typedef struct tpp_hooks {
 	 * @param: invokeinfo: Warning invocation method
 	 * @param: id:         Warning ID
 	 * @param: arg:        Variable arguments passed to warning
-	 * @return: TPP_EOK:        Success (warning was emitted)
-	 * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
-	 * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+	 * @return: TPP_EOK:       Success (warning was emitted)
+	 * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+	 * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
@@ -22627,8 +22645,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_ENOMEM:      Out of memory
 	 * @return: TPP_EIO:         Filesystem I/O operation failed
 	 * @return: TPP_EWOULDBLOCK: Operation would block
-	 * @return: TPP_ELEXERROR:   A lexer error happened
-	 * @return: TPP_EWARNPRINT:  Error while printing a warning */
+	 * @return: TPP_ELEXERROR:   A lexer error happened */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [1..1] */
@@ -22893,11 +22910,10 @@ typedef struct tpp_hooks {
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
@@ -22984,8 +23000,7 @@ typedef struct tpp_hooks {
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
@@ -23934,11 +23949,10 @@ typedef struct tpp_lexer {
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
- * @return: TPP_EOK:        Success (warning was emitted)
- * @return: TPP_EWARNPRINT: Error during invocation of `TPP_HOOK_WARNPRINTER`
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EOK:       Success (warning was emitted)
+ * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
+ * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
 #define tpp_lexer_callhook_warnhandler(self, info, invokeinfo, id, args) \
 	tpp_hooks_call_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, info, invokeinfo, id, args)
 #ifdef tpp_hooks_set_warnhandler
@@ -23979,8 +23993,7 @@ typedef struct tpp_lexer {
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_ELEXERROR:   A lexer error happened */
 #define tpp_lexer_callhook_parseexpr(self, result) \
 	tpp_hooks_call_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, result)
 #ifdef tpp_hooks_set_parseexpr
@@ -25313,8 +25326,6 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok);
  * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok);
-
-#define tpp_lexer_require_number(self) tpp_lexer_require(self, TPP_TOK_C_INT) /* TODO: Must solve differently */
 #endif /* TPP_HAVE_LEXER_SKIP */
 
 
@@ -26165,17 +26176,16 @@ tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
  *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
- * @return: TPP_EOK:        Success (argument was parsed + consumed)
- * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no
- *                          warning was emitted). You must either handle it yourself
- *                          by treating it as an argument for *your* compiler's
- *                          CLI, or as an input file for it, or emit a warning
- *                          informing the user that their CLI argument was not
- *                          understood.
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A lexer error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (argument was parsed + consumed)
+ * @return: TPP_ENOENT:    SOFT_ERROR: Argument could not be understood (but no
+ *                         warning was emitted). You must either handle it yourself
+ *                         by treating it as an argument for *your* compiler's
+ *                         CLI, or as an input file for it, or emit a warning
+ *                         informing the user that their CLI argument was not
+ *                         understood.
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
 
@@ -26193,10 +26203,9 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
  *                      parameter, or the argument string's end)
  * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
  *                      handle the flag in a different context).
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 
@@ -26223,13 +26232,12 @@ tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
  *   argument from the argc/argv your `main()` was given, before calling
  *   this function!
  *
- * @return: TPP_EOK:        Success (`*p_argc` and `*p_argv` were updated such that
- *                          they contain all unrecognized arguments, as well as all
- *                          input files for your compiler).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
+ *                         they contain all unrecognized arguments, as well as all
+ *                         input files for your compiler).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv);
@@ -26242,11 +26250,10 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
 

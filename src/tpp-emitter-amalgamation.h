@@ -103,7 +103,7 @@
 #define TPP_EMITTER_HAVE_EMIT_TOKEN 0
 #endif /* !... */
 
-/* TODO: Emitter mode similar to TPP2's `--tok`, where tokens are emitted
+/* TODO: Emitter mode similar to TPP2's `--pp`, where tokens are emitted
  *       in a format that is very easily parseable by a machine. */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_SPACE`-token
@@ -371,10 +371,27 @@
 #define TPP_EMITTER_HAVE_TRACE_INCLUDES ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_MESGPRINTER_HOOK) ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_TRACE_INCLUDES */
 
+/* The max # of blank adjustment lines before the emitter will
+ * instead emit a(nother) `#line` (or `# <linenum>`) directive.
+ *
+ * When negative, the threshold is configurable at runtime.
+ * When configured as `0`, the threshold becomes infinite (at
+ * runtime, use `tpp_emitter_disablelinethreshold()` for this)
+ *
+ * **Getter**: `tpp_emitter_getlinethreshold(emitter)`<br/>
+ * **Setter**: `tpp_emitter_setlinethreshold(emitter, v)`
+ */
+#ifndef TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#define TPP_EMITTER_CONFIG_LINE_THRESHOLD (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4 : 4)
+#endif /* !TPP_EMITTER_CONFIG_LINE_THRESHOLD */
+
+
+
 
 /************************************************************************/
 /* EMITTER CLI CONFIG                                                   */
 /************************************************************************/
+
 /* Enable support for `tpp_emitter_cli_loader` */
 #ifndef TPP_EMITTER_HAVE_CLI
 #define TPP_EMITTER_HAVE_CLI TPP_HAVE_CLI
@@ -490,6 +507,13 @@
 #define TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
+
+/* `-fline-threshold=COUNT`, `-fno-line-threshold`:
+ * Configure `TPP_EMITTER_CONFIG_LINE_THRESHOLD` */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
+#define TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0)
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
 
 /* `-fnormalize=space`, `-fno-normalize=space`:
  * Turn `TPP_EMITTER_HAVE_NORMALIZE_SPACE` on/off */
@@ -965,6 +989,16 @@ typedef struct tpp_emitter {
 #define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
 #define tpp_emitter_setmode(self, v) (void)(v)
 #endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
+	tpp_line             TPP_EMITTER_INTERNAL(te_linethreshold); /* max # of blank lines emitted for alignment purposes */
+#define tpp_emitter_getlinethreshold(self)     ((self)->TPP_EMITTER_INTERNAL(te_linethreshold))
+#define tpp_emitter_setlinethreshold(self, v)  (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = (tpp_line)(v))
+#define tpp_emitter_disablelinethreshold(self) (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = -1)
+#elif !TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#define tpp_emitter_getlinethreshold(self) (-1)
+#else /* ... */
+#define tpp_emitter_getlinethreshold(self) TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#endif /* !... */
 } tpp_emitter;
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
