@@ -573,7 +573,8 @@ _err_printer:
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
-#define tpp_lexer_gethook_warnprinter(self) (&tpp_dummy_printer)
+#define tpp_lexer_gethook_warnprinter(self)       (&tpp_dummy_printer)
+#define tpp_lexer_gethookcookie_warnprinter(self) (self)
 #ifndef tpp_dummy_printer
 #define tpp_dummy_printer tpp_dummy_printer
 static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
@@ -628,14 +629,15 @@ err_temp:
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-_tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
+_tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
+	tpp_lexer *const self = (tpp_lexer *)lexer_cookie;
 	tpp_ssize print_status;
 	tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(invokeinfo);
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
-	void *const printer_arg = self;
+	void *const printer_arg = tpp_lexer_gethookcookie_warnprinter(self);
 
 	/* Print file-and-line prefix */
 	if (!tpp_lcinfo_isvalid(info->tlpfi_lc) &&

@@ -665,23 +665,41 @@
 #define tfd_user_filename                                  TPP_INTERNAL(tfd_user_filename)
 #define td_dummy                                           TPP_INTERNAL(td_dummy)
 #define th_warnprinter                                     TPP_INTERNAL(th_warnprinter)
+#define th_warnprinter_cookie                              TPP_INTERNAL(th_warnprinter_cookie)
 #define th_warnhandler                                     TPP_INTERNAL(th_warnhandler)
+#define th_warnhandler_cookie                              TPP_INTERNAL(th_warnhandler_cookie)
 #define th_mesgprinter                                     TPP_INTERNAL(th_mesgprinter)
+#define th_mesgprinter_cookie                              TPP_INTERNAL(th_mesgprinter_cookie)
 #define th_parseexpr                                       TPP_INTERNAL(th_parseexpr)
+#define th_parseexpr_cookie                                TPP_INTERNAL(th_parseexpr_cookie)
 #define th_unknown_pragma                                  TPP_INTERNAL(th_unknown_pragma)
+#define th_unknown_pragma_cookie                           TPP_INTERNAL(th_unknown_pragma_cookie)
 #define th_new_dependency                                  TPP_INTERNAL(th_new_dependency)
+#define th_new_dependency_cookie                           TPP_INTERNAL(th_new_dependency_cookie)
 #define th_file_pushed                                     TPP_INTERNAL(th_file_pushed)
+#define th_file_pushed_cookie                              TPP_INTERNAL(th_file_pushed_cookie)
 #define th_file_popped                                     TPP_INTERNAL(th_file_popped)
+#define th_file_popped_cookie                              TPP_INTERNAL(th_file_popped_cookie)
 #define th_include_encountered                             TPP_INTERNAL(th_include_encountered)
+#define th_include_encountered_cookie                      TPP_INTERNAL(th_include_encountered_cookie)
 #define th_include_not_found                               TPP_INTERNAL(th_include_not_found)
+#define th_include_not_found_cookie                        TPP_INTERNAL(th_include_not_found_cookie)
 #define th_macro_defined                                   TPP_INTERNAL(th_macro_defined)
+#define th_macro_defined_cookie                            TPP_INTERNAL(th_macro_defined_cookie)
 #define th_macro_undefined                                 TPP_INTERNAL(th_macro_undefined)
+#define th_macro_undefined_cookie                          TPP_INTERNAL(th_macro_undefined_cookie)
 #define th_ident_sccs                                      TPP_INTERNAL(th_ident_sccs)
+#define th_ident_sccs_cookie                               TPP_INTERNAL(th_ident_sccs_cookie)
 #define th_system_include_path                             TPP_INTERNAL(th_system_include_path)
+#define th_system_include_path_cookie                      TPP_INTERNAL(th_system_include_path_cookie)
 #define th_system_embed_path                               TPP_INTERNAL(th_system_embed_path)
+#define th_system_embed_path_cookie                        TPP_INTERNAL(th_system_embed_path_cookie)
 #define th_unknown_string_escape                           TPP_INTERNAL(th_unknown_string_escape)
+#define th_unknown_string_escape_cookie                    TPP_INTERNAL(th_unknown_string_escape_cookie)
 #define th_raise_lexerror                                  TPP_INTERNAL(th_raise_lexerror)
+#define th_raise_lexerror_cookie                           TPP_INTERNAL(th_raise_lexerror_cookie)
 #define th_isfloatsuffix                                   TPP_INTERNAL(th_isfloatsuffix)
+#define th_isfloatsuffix_cookie                            TPP_INTERNAL(th_isfloatsuffix_cookie)
 #define tmpe_macro                                         TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                         TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                           TPP_INTERNAL(tmps_cnt)
@@ -31689,7 +31707,7 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 #if TPP_HAVE_HOOKS
-	tpp_hooks_init(&self->tl_hooks);
+	tpp_hooks_init(&self->tl_hooks, self);
 #endif /* TPP_HAVE_HOOKS */
 
 #if TPP_HAVE_WARNINGS
@@ -32855,7 +32873,8 @@ _err_printer:
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
-#define tpp_lexer_gethook_warnprinter(self) (&tpp_dummy_printer)
+#define tpp_lexer_gethook_warnprinter(self)       (&tpp_dummy_printer)
+#define tpp_lexer_gethookcookie_warnprinter(self) (self)
 #ifndef tpp_dummy_printer
 #define tpp_dummy_printer tpp_dummy_printer
 static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
@@ -32910,14 +32929,15 @@ err_temp:
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-_tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
+_tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
+	tpp_lexer *const self = (tpp_lexer *)lexer_cookie;
 	tpp_ssize print_status;
 	tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(invokeinfo);
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
-	void *const printer_arg = self;
+	void *const printer_arg = tpp_lexer_gethookcookie_warnprinter(self);
 
 	/* Print file-and-line prefix */
 	if (!tpp_lcinfo_isvalid(info->tlpfi_lc) &&
@@ -57524,8 +57544,8 @@ tpp_px_expr(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_lexer_builtin_parseexpr(struct tpp_lexer *tpp_restrict self,
-                             tpp_expr_value *tpp_restrict result) {
+_tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_restrict result) {
+	tpp_lexer *const self = (tpp_lexer *)lexer_cookie;
 	tpp_token_id tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 	if (TPP_TOK_ISERR(tok))
 		return TPP_TOK_ASERR(tok);

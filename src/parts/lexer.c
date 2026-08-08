@@ -184,7 +184,7 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 #if TPP_HAVE_HOOKS
-	tpp_hooks_init(&self->tl_hooks);
+	tpp_hooks_init(&self->tl_hooks, self);
 #endif /* TPP_HAVE_HOOKS */
 
 #if TPP_HAVE_WARNINGS

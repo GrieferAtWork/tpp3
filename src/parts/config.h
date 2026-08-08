@@ -3113,6 +3113,18 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
+/* API hooks have user-configurable cookies. When not otherwise configured,
+ * (such as when a default user-defined hook is defined, or when the non-
+ * extended hook setter (that doesn't take a cookie argument) is used), then
+ * the lexer *itself* will be passed as cookie */
+#ifndef TPP_HAVE_HOOK_COOKIES
+#if 0 // TODO: TPP_HAVE_PROFILE_NOT_MINIMAL
+#define TPP_HAVE_HOOK_COOKIES 1
+#else /* ... */
+#define TPP_HAVE_HOOK_COOKIES 0
+#endif /* !... */
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -3181,7 +3193,6 @@ local HOOKS = {
 	{
 		"Called by `tpp_lexer_warnf()` to print warning messages.\n" +
 		"Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten\n" +
-		"@param: arg: The current lexer (`tpp_lexer *`)\n" +
 		"@return: >= 0: Success\n" +
 		"@return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error\n" +
 		"@return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory\n" +
@@ -3190,7 +3201,7 @@ local HOOKS = {
 		"WARNPRINTER",
 		"TPP_HAVE_WARNINGS",
 		"_tpp_lexer_builtin_warn_or_mesg_printer",
-		"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
+		"tpp_formatprinter ", "", { "cookie", "text", "num_bytes" },
 		"0"
 	},
 
@@ -3200,7 +3211,7 @@ local HOOKS = {
 		"@param: info:       Warning context location\n" +
 		"@param: invokeinfo: Warning invocation method\n" +
 		"@param: id:         Warning ID\n" +
-		"@param: arg:        Variable arguments passed to warning\n" +
+		"@param: args:       Variable arguments passed to warning\n" +
 		"@return: TPP_EOK:       Success (warning was emitted)\n" +
 		"@return: TPP_EIO:       I/O Error\n" +
 		"@return: TPP_ENOMEM:    Out of memory\n" +
@@ -3209,13 +3220,12 @@ local HOOKS = {
 		"WARNHANDLER",
 		"TPP_HAVE_WARNINGS",
 		"_tpp_lexer_builtin_warnhandler",
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args)", { "lexer", "info", "invokeinfo", "id", "args" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args)", { "cookie", "info", "invokeinfo", "id", "args" },
 		"TPP_EOK"
 	},
 
 	{
 		"Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)\n" +
-		"@param: arg: The current lexer (`tpp_lexer *`)\n" +
 		"@return: >= 0: Success\n" +
 		"@return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error\n" +
 		"@return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory\n" +
@@ -3224,16 +3234,16 @@ local HOOKS = {
 		"MESGPRINTER",
 		"TPP_HAVE_PRAGMA_MESSAGE",
 		"_tpp_lexer_builtin_warn_or_mesg_printer",
-		"tpp_formatprinter ", "", { "lexer", "text", "num_bytes" },
+		"tpp_formatprinter ", "", { "cookie", "text", "num_bytes" },
 		"0"
 	},
 
 	{
 		"User-defined callback for parsing `#if`-style expressions\n" +
-		"- This callback is invoked in a context where `self` points\n" +
-		"  before the expression's first token (meaning that this\n" +
-		"  callback is responsible to do the initial yield using\n" +
-		"  whatever method it wants to use).\n" +
+		"- This callback is invoked in a context where the lexer\n" +
+		"  points before the expression's first token (meaning that\n" +
+		"  this callback is responsible to do the initial yield\n" +
+		"  using whatever method it wants to use).\n" +
 		"- When it is known that the expression has finite length,\n" +
 		"  as in: it has to end before EOF, or at the next unmatched\n" +
 		"  `)`-token, the caller will have configured the lexer's\n" +
@@ -3252,7 +3262,7 @@ local HOOKS = {
 		"PARSEEXPR",
 		"(TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_MACRO___TPP_EVAL || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed)",
 		"_tpp_lexer_builtin_parseexpr",
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result)", { "lexer", "result" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_expr_value *tpp_restrict result)", { "cookie", "result" },
 		"tpp_expr_value_init_zero(result)"
 	},
 
@@ -3267,7 +3277,7 @@ local HOOKS = {
 		"UNKNOWN_PRAGMA",
 		"(TPP_HAVE_PRAGMA && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie)", { "cookie" },
 		"TPP_ENOENT"
 	},
 
@@ -3283,13 +3293,13 @@ local HOOKS = {
 		"NEW_DEPENDENCY",
 		"(TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_USER_KEYWORDS && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd)", { "lexer", "filename_kwd" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_keyword *filename_kwd)", { "cookie", "filename_kwd" },
 		"TPP_EOK"
 	},
 
 	{
 		"Called whenever a file was just pushed onto the `#include`-stack. Information\n" +
-		"about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.\n" +
+		"about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(LEXER)`.\n" +
 		"\n" +
 		"Notes:\n" +
 		"- This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.\n" +
@@ -3302,14 +3312,14 @@ local HOOKS = {
 		"FILE_PUSHED",
 		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie)", { "cookie" },
 		"TPP_EOK"
 	},
 
 	{
 		"Called whenever a file is about to be popped off the `#include`-stack.\n" +
 		"Information about the file that's about-to-be popped can be retrieved\n" +
-		"by examining `tpp_lexer_getfile(self)`.\n" +
+		"by examining `tpp_lexer_getfile(LEXER)`.\n" +
 		"\n" +
 		"Notes:\n" +
 		"- When files are popped by `tpp_lexer_manualpopfile_popfile()` within a\n" +
@@ -3320,7 +3330,7 @@ local HOOKS = {
 		"FILE_POPPED",
 		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK)",
 		"", // No builtin default
-		"void (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"void (TPPCALL *", ")(tpp_hook_cookie cookie)", { "cookie" },
 		"(void)0"
 	},
 
@@ -3350,7 +3360,7 @@ local HOOKS = {
 		"INCLUDE_ENCOUNTERED",
 		"(TPP_HAVE_PROFILE_ALL && (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED))",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind)", { "lexer", "include_kind" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind)", { "cookie", "include_kind" },
 		"TPP_EOK"
 	},
 
@@ -3376,7 +3386,7 @@ local HOOKS = {
 		"INCLUDE_NOT_FOUND",
 		"(TPP_HAVE_PROFILE_ALL && (TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_HAVE_CPP_EMBED))",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind)", { "lexer", "include_kind" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind)", { "cookie", "include_kind" },
 		"TPP_ENOENT"
 	},
 
@@ -3398,7 +3408,7 @@ local HOOKS = {
 		"MACRO_DEFINED",
 		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro)", { "lexer", "name", "macro" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro)", { "cookie", "name", "macro" },
 		"TPP_EOK"
 	},
 
@@ -3424,7 +3434,7 @@ local HOOKS = {
 		"MACRO_UNDEFINED",
 		"(TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_DEFINE)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name)", { "lexer", "name" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_keyword *tpp_restrict name)", { "cookie", "name" },
 		"TPP_EOK"
 	},
 
@@ -3445,7 +3455,7 @@ local HOOKS = {
 		"IDENT_SCCS",
 		"TPP_HAVE_CPP_IDENT_SCCS",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len)", { "lexer", "mode", "chunk", "comment_str", "comment_len" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len)", { "cookie", "mode", "chunk", "comment_str", "comment_len" },
 		"TPP_EOK"
 	},
 
@@ -3466,7 +3476,7 @@ local HOOKS = {
 		"SYSTEM_INCLUDE_PATH",
 		"(TPP_HAVE_LEXER_OPEN_INCLUDE_STRING && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg)", { "cookie", "mode", "when", "cb", "arg" },
 		"TPP_ENOENT"
 	},
 
@@ -3484,7 +3494,7 @@ local HOOKS = {
 		"SYSTEM_EMBED_PATH",
 		"(TPP_HAVE_LEXER_OPEN_EMBED_STRING && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg)", { "lexer", "mode", "when", "cb", "arg" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg)", { "cookie", "mode", "when", "cb", "arg" },
 		"TPP_ENOENT"
 	},
 
@@ -3512,7 +3522,7 @@ local HOOKS = {
 		"UNKNOWN_STRING_ESCAPE",
 		"(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_ssize (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config)", { "lexer", "p_pos", "end", "config" },
+		"tpp_ssize (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config)", { "cookie", "p_pos", "end", "config" },
 		"TPP_SSIZE_OFERR(TPP_ENOENT)"
 	},
 
@@ -3528,7 +3538,7 @@ local HOOKS = {
 		"RAISE_LEXERROR",
 		"(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self)", { "lexer" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie)", { "cookie" },
 		"TPP_ELEXERROR"
 	},
 
@@ -3548,7 +3558,7 @@ local HOOKS = {
 		"ISFLOATSUFFIX",
 		"(TPP_HAVE_TOK_C_FLOAT && TPP_HAVE_SMART_FLOAT_TOKENS)",
 		"", // No builtin default
-		"tpp_errno (TPPCALL *", ")(tpp_lexer *tpp_restrict self, tpp_char const *pos)", { "lexer", "pos" },
+		"tpp_errno (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_char const *pos)", { "cookie", "pos" },
 		"TPP_ENOENT"
 	},
 };
@@ -3606,7 +3616,6 @@ for (local doc, name,
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
  * Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
- * @param: arg: The current lexer (`tpp_lexer *`)
  * @return: >= 0: Success
  * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
@@ -3639,13 +3648,13 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_WARNPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_WARNPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_WARNPRINTER_HOOK */
 
-/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_lexer *tpp_restrict self, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
+/* >> tpp_errno TPP_HOOK_WARNHANDLER(tpp_hook_cookie cookie, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
  * Called by `tpp_lexer_warnf()` to handle warning notifications. Can be
  * overwritten to implement custom behavior in regards to handling of warnings.
  * @param: info:       Warning context location
  * @param: invokeinfo: Warning invocation method
  * @param: id:         Warning ID
- * @param: arg:        Variable arguments passed to warning
+ * @param: args:       Variable arguments passed to warning
  * @return: TPP_EOK:       Success (warning was emitted)
  * @return: TPP_EIO:       I/O Error
  * @return: TPP_ENOMEM:    Out of memory
@@ -3680,7 +3689,6 @@ for (local doc, name,
 
 /* >> TPP_FORMATPRINTER_DEFINE(TPP_HOOK_MESGPRINTER, arg, text, num_bytes);
  * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
- * @param: arg: The current lexer (`tpp_lexer *`)
  * @return: >= 0: Success
  * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
@@ -3713,12 +3721,12 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_MESGPRINTER_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_MESGPRINTER_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
-/* >> tpp_errno TPP_HOOK_PARSEEXPR(tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result);
+/* >> tpp_errno TPP_HOOK_PARSEEXPR(tpp_hook_cookie cookie, tpp_expr_value *tpp_restrict result);
  * User-defined callback for parsing `#if`-style expressions
- * - This callback is invoked in a context where `self` points
- *   before the expression's first token (meaning that this
- *   callback is responsible to do the initial yield using
- *   whatever method it wants to use).
+ * - This callback is invoked in a context where the lexer
+ *   points before the expression's first token (meaning that
+ *   this callback is responsible to do the initial yield
+ *   using whatever method it wants to use).
  * - When it is known that the expression has finite length,
  *   as in: it has to end before EOF, or at the next unmatched
  *   `)`-token, the caller will have configured the lexer's
@@ -3761,7 +3769,7 @@ for (local doc, name,
 #define TPP_HAVE_BUILTIN_PARSEEXPR_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_PARSEEXPR_HOOK)
 #endif /* !TPP_HAVE_BUILTIN_PARSEEXPR_HOOK */
 
-/* >> tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_UNKNOWN_PRAGMA(tpp_hook_cookie cookie);
  * Called whenever a `#pragma` is encountered that is not recognized.
  * When called, the lexer is set-up to point at the first token after the `#pragma`.
  * @return: TPP_EOK:      Pragma has been handled
@@ -3799,7 +3807,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_UNKNOWN_PRAGMA` is defined, but `TPP_HAVE_UNKNOWN_PRAGMA_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_PRAGMA && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
+/* >> tpp_errno TPP_HOOK_NEW_DEPENDENCY(tpp_hook_cookie cookie, tpp_keyword *filename_kwd);
  * Called whenever some file is `#include`-ed for the first time
  * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
  *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`
@@ -3838,9 +3846,9 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_NEW_DEPENDENCY` is defined, but `TPP_HAVE_NEW_DEPENDENCY_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_NEW_DEPENDENCY && !TPP_HOOK_USESUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_FILE_PUSHED(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_FILE_PUSHED(tpp_hook_cookie cookie);
  * Called whenever a file was just pushed onto the `#include`-stack. Information
- * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(self)`.
+ * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(LEXER)`.
  *
  * Notes:
  * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
@@ -3880,10 +3888,10 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_FILE_PUSHED` is defined, but `TPP_HAVE_FILE_PUSHED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_PUSHED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_PUSHED_HOOK) */
 
-/* >> void TPP_HOOK_FILE_POPPED(tpp_lexer *tpp_restrict self);
+/* >> void TPP_HOOK_FILE_POPPED(tpp_hook_cookie cookie);
  * Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
- * by examining `tpp_lexer_getfile(self)`.
+ * by examining `tpp_lexer_getfile(LEXER)`.
  *
  * Notes:
  * - When files are popped by `tpp_lexer_manualpopfile_popfile()` within a
@@ -3921,7 +3929,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_FILE_POPPED` is defined, but `TPP_HAVE_FILE_POPPED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_FILE_POPPED && !TPP_HOOK_USESUSER(TPP_HAVE_FILE_POPPED_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_INCLUDE_ENCOUNTERED(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
+/* >> tpp_errno TPP_HOOK_INCLUDE_ENCOUNTERED(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind);
  * Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
  * is encountered, at the point in time when the lexer's current token has already
  * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
@@ -3974,7 +3982,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_INCLUDE_ENCOUNTERED` is defined, but `TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_ENCOUNTERED && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind);
+/* >> tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind);
  * Called when the file specified by a `#include` (or `#include_next`, `#import` or
  * `#embed`)-directive could not be found. This hook may be used to either suppress
  * the error (by returning something other than `TPP_ENOENT`), or log the error to
@@ -4023,7 +4031,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_INCLUDE_NOT_FOUND` is defined, but `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_INCLUDE_NOT_FOUND && !TPP_HOOK_USESUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_MACRO_DEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
+/* >> tpp_errno TPP_HOOK_MACRO_DEFINED(tpp_hook_cookie cookie, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro);
  * Called whenever a `#define` directive has just been fully
  * parsed (macro was has not yet been registered with keyword).
  *
@@ -4068,7 +4076,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_MACRO_DEFINED` is defined, but `TPP_HAVE_MACRO_DEFINED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_DEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_DEFINED_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_MACRO_UNDEFINED(tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name);
+/* >> tpp_errno TPP_HOOK_MACRO_UNDEFINED(tpp_hook_cookie cookie, tpp_keyword *tpp_restrict name);
  * Called whenever a `#undef` directive has just been fully
  * parsed (macro hasn't been deleted from keyword, yet). Note
  * that this hook is still called, even if the keyword doesn't
@@ -4117,7 +4125,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_MACRO_UNDEFINED` is defined, but `TPP_HAVE_MACRO_UNDEFINED_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_MACRO_UNDEFINED && !TPP_HOOK_USESUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
+/* >> tpp_errno TPP_HOOK_IDENT_SCCS(tpp_hook_cookie cookie, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len);
  * Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -4161,7 +4169,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_IDENT_SCCS` is defined, but `TPP_HAVE_IDENT_SCCS_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_IDENT_SCCS && !TPP_HOOK_USESUSER(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
+/* >> tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_include_path()` at different
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -4205,7 +4213,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_SYSTEM_INCLUDE_PATH` is defined, but `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_INCLUDE_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
+/* >> tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
  * Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
  * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
  * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
@@ -4246,7 +4254,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_SYSTEM_EMBED_PATH` is defined, but `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -4297,7 +4305,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_UNKNOWN_STRING_ESCAPE` is defined, but `TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_UNKNOWN_STRING_ESCAPE && !TPP_HOOK_USESUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_lexer *tpp_restrict self);
+/* >> tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_hook_cookie cookie);
  * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
  * This hook can be used to do additional state changes that may be necessary by the
  * hosting application in order to handle the resulting `TPP_ELEXERROR`
@@ -4336,7 +4344,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_RAISE_LEXERROR` is defined, but `TPP_HAVE_RAISE_LEXERROR_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_RAISE_LEXERROR && !TPP_HOOK_USESUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
-/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_lexer *tpp_restrict self, tpp_char const *pos);
+/* >> tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_hook_cookie cookie, tpp_char const *pos);
  * Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
  * part of the float-token (in the form of a float-suffix), or if this should actually be
