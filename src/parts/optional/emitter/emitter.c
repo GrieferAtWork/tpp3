@@ -26,6 +26,7 @@
 
 #include "config.h"
 #include "emitter.h"
+#include "emitter-io.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
@@ -393,12 +394,6 @@ tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
 
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
-tpp_print_working_directory(tpp_formatprinter printer, void *arg) {
-	/* TODO */
-	return tpp_formatprinter_print_conststr(printer, arg, "$(TODO:pwd)");
-}
-
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
                                               tpp_line line) {
 	tpp_ssize temp, result;
@@ -416,7 +411,7 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
 	if (result < 0)
 		return result;
-	temp = tpp_print_working_directory(tpp_emitter_getoutput(self), self);
+	temp = tpp_io_printpwd(&tpp_emitter_print_encodestring, self);
 	if (temp < 0)
 		return temp;
 	result += temp;

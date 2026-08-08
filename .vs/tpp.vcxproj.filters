@@ -162,6 +162,9 @@
     <ClCompile Include="..\src\parts\optional\emitter\emitter-cli.c">
       <Filter>src\parts\optional\emitter</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\optional\emitter\emitter-io.c">
+      <Filter>src\parts\optional\emitter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -264,6 +267,9 @@
       <Filter>src\parts\optional\emitter</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\optional\emitter\emitter-cli.h">
+      <Filter>src\parts\optional\emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\emitter\emitter-io.h">
       <Filter>src\parts\optional\emitter</Filter>
     </ClInclude>
   </ItemGroup>

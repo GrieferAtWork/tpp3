@@ -449,7 +449,8 @@ tpp_lcinfo_count_linefeed(tpp_file const *tpp_restrict self,
 #define TPP_FILE_UTF32_MINEXTRA 7  /* max(4, TPP_UNICODE_32TO8_MAXBUF(1)) */
 #define TPP_FILE_MINEXTRA       10 /* max(1, TPP_FILE_UTF16_MINEXTRA, TPP_FILE_UTF32_MINEXTRA, TPP_FILE_EMBED_MINEXTRA) + lengthof(tff_encdat.tffed_unicode.tffu_tailv) */
 
-static tpp_char *TPPCALL
+#define tpp_writeutf8_rev tpp_writeutf8_rev /* Define as macro so "emitter-io.c" may re-use */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_char *TPPCALL
 tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 	if (uc <= TPP_UTF8_1BYTE_MAX) {
 		*--dst = (tpp_char)uc;
@@ -523,7 +524,7 @@ union tpp_word32 {
 };
 
 /* @param: src_count: # of utf-16 words in `src` (== # of bytes/2) */
-static tpp_char *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
 tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
 		uint_least16_t ord;
@@ -551,7 +552,7 @@ tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 	return dst_end;
 }
 
-static tpp_char *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
 tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
 		uint_least16_t ord;
@@ -580,7 +581,7 @@ tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 }
 
 /* @param: src_count: # of utf-32 words in `src` (== # of bytes/4) */
-static tpp_char *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
 tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
 		uint_least32_t ord;
@@ -592,7 +593,7 @@ tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
 	return dst_end;
 }
 
-static tpp_char *TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
 tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
 		uint_least32_t ord;

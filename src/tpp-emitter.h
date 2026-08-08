@@ -23,6 +23,7 @@
 
 #include "parts/optional/emitter/api.h"
 #include "parts/optional/emitter/config.h"
+#include "parts/optional/emitter/emitter-io.h"
 #include "parts/optional/emitter/emitter-features.h"
 #include "parts/optional/emitter/emitter.h"
 #include "parts/optional/emitter/emitter-cli.h"

@@ -346,6 +346,12 @@
 #define TPP_EMITTER_CONFIG_LINE_THRESHOLD (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4 : 4)
 #endif /* !TPP_EMITTER_CONFIG_LINE_THRESHOLD */
 
+/* Provide an API `tpp_io_printpwd()` that can be used to print the hosting
+ * process's current working directory to a given `tpp_formatprinter`. */
+#ifndef TPP_EMITTER_HAVE_IO_PRINTPWD
+#define TPP_EMITTER_HAVE_IO_PRINTPWD (TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#endif /* !TPP_EMITTER_HAVE_IO_PRINTPWD */
+
 
 
 

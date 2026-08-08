@@ -17,28 +17,32 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/* clang-format off */
-#ifndef GUARD_TPP_EMITTER_AMALGAMATION_C
-#define GUARD_TPP_EMITTER_AMALGAMATION_C 1
+#ifndef GUARD_TPP_OPTIONAL_EMITTER_EMITTER_IO_H
+#define GUARD_TPP_OPTIONAL_EMITTER_EMITTER_IO_H 1
 
-#ifndef TPP_EMITTER_AMALGAMATION_H
-#define TPP_EMITTER_AMALGAMATION_H "tpp-emitter-amalgamation.h"
-#endif /* !TPP_EMITTER_AMALGAMATION_H */
+#include "api.h"
 
-/* Include "tpp-emitter-amalgamation.h" header... */
-#ifndef GUARD_TPP_EMITTER_AMALGAMATION_H
-#undef TPP_EMITTER_BUILDING
-#define TPP_EMITTER_BUILDING 1
-#include TPP_EMITTER_AMALGAMATION_H
-#endif /* !GUARD_TPP_EMITTER_AMALGAMATION_H */
+#include "config.h"
 
-#if !TPP_EMITTER_BUILDING
-#include "parts/optional/emitter/expose-internals.h"
-#endif /* !TPP_EMITTER_BUILDING */
+/*[[[tpp-begin]]]*/
+TPP_DECL_BEGIN
 
-#include "parts/optional/emitter/emitter-io.c"
-#include "parts/optional/emitter/emitter-features.c"
-#include "parts/optional/emitter/emitter.c"
-#include "parts/optional/emitter/emitter-cli.c"
-#endif /* !GUARD_TPP_EMITTER_AMALGAMATION_C */
-/* clang-format on */
+#if TPP_EMITTER_HAVE_IO_PRINTPWD
+#ifndef tpp_io_printpwd
+/* Print the hosting process's current-working-directory ($PWD,
+ * aka `getcwd()`) to the given `printer`. Needed primarily to
+ * implement `TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY`
+ *
+ * @return: * :  Sum of positive return values of `printer`
+ * @return: < 0: First negative return value of `printer`
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):    I/O error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_io_printpwd(tpp_formatprinter printer, void *arg);
+#endif /* !tpp_io_printpwd */
+#endif /* TPP_EMITTER_HAVE_IO_PRINTPWD */
+
+TPP_DECL_END
+/*[[[tpp-end]]]*/
+
+#endif /* !GUARD_TPP_OPTIONAL_EMITTER_EMITTER_IO_H */

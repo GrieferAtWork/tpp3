@@ -393,6 +393,12 @@
 #define TPP_EMITTER_CONFIG_LINE_THRESHOLD (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4 : 4)
 #endif /* !TPP_EMITTER_CONFIG_LINE_THRESHOLD */
 
+/* Provide an API `tpp_io_printpwd()` that can be used to print the hosting
+ * process's current working directory to a given `tpp_formatprinter`. */
+#ifndef TPP_EMITTER_HAVE_IO_PRINTPWD
+#define TPP_EMITTER_HAVE_IO_PRINTPWD (TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#endif /* !TPP_EMITTER_HAVE_IO_PRINTPWD */
+
 
 
 
@@ -641,9 +647,28 @@
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO */
 
 /************************************************************************/
-/* File: parts/optional/emitter/emitter-features.h                      */
+/* File: parts/optional/emitter/emitter-io.h                            */
 /************************************************************************/
 TPP_DECL_BEGIN
+
+#if TPP_EMITTER_HAVE_IO_PRINTPWD
+#ifndef tpp_io_printpwd
+/* Print the hosting process's current-working-directory ($PWD,
+ * aka `getcwd()`) to the given `printer`. Needed primarily to
+ * implement `TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY`
+ *
+ * @return: * :  Sum of positive return values of `printer`
+ * @return: < 0: First negative return value of `printer`
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):    I/O error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_io_printpwd(tpp_formatprinter printer, void *arg);
+#endif /* !tpp_io_printpwd */
+#endif /* TPP_EMITTER_HAVE_IO_PRINTPWD */
+
+/************************************************************************/
+/* File: parts/optional/emitter/emitter-features.h                      */
+/************************************************************************/
 
 #undef TPP_EMITTER_HAVE_FEATURES
 #if (TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) ||                    \
