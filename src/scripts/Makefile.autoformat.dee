@@ -34,6 +34,7 @@ global dependsOnRules: {string: string} = Dict();
 for (local partsDir: {
 	PARTS_DIR,
 	f"{PARTS_DIR}/optional/emitter",
+	f"{PARTS_DIR}/optional/makefile",
 }) {
 	for (local ent: opendir(partsDir)) {
 		if (ent.d_type == DT_REG) {
@@ -116,6 +117,8 @@ function main() {
 	printIncludeDependencies(joinpath(SRC_DIR, "tpp.c"), "tpp-amalgamation.c");
 	printIncludeDependencies(joinpath(SRC_DIR, "tpp-emitter.h"), "tpp-emitter-amalgamation.h");
 	printIncludeDependencies(joinpath(SRC_DIR, "tpp-emitter.c"), "tpp-emitter-amalgamation.c");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp-makefile.h"), "tpp-makefile-amalgamation.h");
+	printIncludeDependencies(joinpath(SRC_DIR, "tpp-makefile.c"), "tpp-makefile-amalgamation.c");
 }
 
 #ifdef __MAIN__

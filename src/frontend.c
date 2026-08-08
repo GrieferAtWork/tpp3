@@ -24,9 +24,11 @@
 
 #include "tpp-amalgamation.c"
 #include "tpp-emitter-amalgamation.c"
+#include "tpp-makefile-amalgamation.c"
 #else /* USE_AMALGAMATION */
 #include "tpp.h"
 #include "tpp-emitter.h"
+#include "tpp-makefile.h"
 #endif /* !USE_AMALGAMATION */
 
 #include <stdio.h>
@@ -54,12 +56,14 @@ typedef enum tpp_frontend_cli_state {
 
 /* TPP frontend */
 typedef struct tpp_frontend {
-	tpp_lexer              tf_lexer;              /* Lexer */
-	tpp_emitter            tf_emitter;            /* Emitter */
-	FILE                  *tf_output_file;        /* [0..1] File for preprocessor output */
-	tpp_cli_loader         tf_cli_loader;         /* CLI loader for lexer */
-	tpp_emitter_cli_loader tf_emitter_cli_loader; /* CLI loader for emitter */
-	tpp_frontend_cli_state tf_cli_state;          /* CLI parsing state */
+	tpp_lexer               tf_lexer;               /* Lexer */
+	tpp_emitter             tf_emitter;             /* Emitter */
+	tpp_makefile            tf_makefile;            /* Makefile */
+	FILE                   *tf_output_file;         /* [0..1] File for preprocessor output */
+	tpp_cli_loader          tf_cli_loader;          /* CLI loader for lexer */
+	tpp_emitter_cli_loader  tf_emitter_cli_loader;  /* CLI loader for emitter */
+	tpp_makefile_cli_loader tf_makefile_cli_loader; /* CLI loader for makefile */
+	tpp_frontend_cli_state  tf_cli_state;           /* CLI parsing state */
 } tpp_frontend;
 
 static TPP_FORMATPRINTER_DEFINE(tpp_frontend_output_printer, arg, text, num_bytes) {
@@ -176,6 +180,7 @@ static void tpp_frontend_help_cli(bool all_spellings) {
 	tpp_size padlen, temp;
 	padlen = tpp_help_maxspelling(tpp_cli_loader_help, all_spellings);
 	temp = tpp_help_maxspelling(tpp_emitter_cli_loader_help, all_spellings);
+	temp = tpp_help_maxspelling(tpp_makefile_cli_loader_help, all_spellings);
 	if (padlen < temp)
 		padlen = temp;
 	temp = tpp_help_maxspelling(tpp_frontend_help_text, all_spellings);
@@ -184,6 +189,7 @@ static void tpp_frontend_help_cli(bool all_spellings) {
 	tpp_frontend_help_cli_for(tpp_frontend_help_text, padlen, all_spellings);
 	tpp_frontend_help_cli_for(tpp_cli_loader_help, padlen, all_spellings);
 	tpp_frontend_help_cli_for(tpp_emitter_cli_loader_help, padlen, all_spellings);
+	tpp_frontend_help_cli_for(tpp_makefile_cli_loader_help, padlen, all_spellings);
 }
 
 static void tpp_frontend_help_extensions(void) {
@@ -247,42 +253,17 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
 	switch (self->tf_cli_state) {
 
-	/* TODO: Support for CLI arguments that must be handled by front-end:
-	 * - "-M", "--dependencies"
-	 *   - Using TPP_HAVE_NEW_DEPENDENCY_HOOK
-	 * - "-MM", "--user-dependencies"
-	 *   - Don't emit if #include-stack contains a `tpp_file_getsystemheader()`-file
-	 * - "-MF file"
-	 *   No special handling needed in TPP backend
-	 * - "-MG", "--print-missing-file-dependencies"
-	 *   - Use `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` (with a `TPP_EOK` return value)
-	 *     to suppress `TPP_W_NO_SUCH_FILE` warnings, whilst at the same time
-	 *     using `tpp_lexer_decode_include_string_cb()` to add the missing include's
-	 *     filename to the set of dependencies
-	 * - "-MP"
-	 *   No special handling needed in TPP backend
-	 * - "-MT target"
-	 *   No special handling needed in TPP backend
-	 * - "-MQ target"
-	 *   No special handling needed in TPP backend
-	 * - "-MD", "--write-dependencies"
-	 *   No special handling needed in TPP backend
-	 * - "-MMD", "--write-user-dependencies"
-	 *   No special handling needed in TPP backend (see "-MM")
-	 *
-	 * TODO: The `-M*` flags above should really (somehow) be handled by the TPP core!
-	 *       Being able to generate Makefile-compatible dependency definitions really
-	 *       is something that pretty much any compiler that's using the C preprocessor
-	 *       should be capable of doing. Therefor, the functionality to do so should be
-	 *       part of the TPP core, too!
-	 *
-	 * - "-fsearch-include-path[=kind]"  (kind=R"(user|system)", default="user")
-	 *   No special handling needed in TPP backend
+	/* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
+	 *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
+	 * - No special handling needed in TPP backend
 	 *   When kind=user, and the main input file could not be found, it must be
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
 	 *   When kind=system, and the main input file could not be found, it must be
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
-	 */
+	 *
+	 * TODO: For the purpose of pushing the initial (set of) input files, rather than
+	 *       do so here, `tpp_cli_loader` should have an API that off-loads that task
+	 *       onto it, thus simplifying what needs to be done by the frontend. */
 
 	case TPP_FRONTEND_CLI_STATE_NORMAL:
 		switch (*arg++) {
@@ -400,6 +381,8 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 				tpp_errno error = tpp_cli_loader_parseflag(&self->tf_cli_loader, &after_dash);
 				if (error == TPP_ENOENT)
 					error = tpp_emitter_cli_loader_parseflag(&self->tf_emitter_cli_loader, &after_dash);
+				if (error == TPP_ENOENT)
+					error = tpp_makefile_cli_loader_parseflag(&self->tf_makefile_cli_loader, &after_dash);
 				if (TPP_ISERR(error))
 					return error;
 			}
@@ -511,20 +494,24 @@ int main(int argc, char **argv) {
 	/* Initialize frontend */
 	tpp_lexer_init(&fe.tf_lexer);
 	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_output_printer);
+	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, &tpp_frontend_output_printer);
 	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
+	tpp_makefile_cli_loader_init(&fe.tf_makefile_cli_loader, &fe.tf_makefile);
 	fe.tf_output_file = NULL;
 	fe.tf_cli_state = TPP_FRONTEND_CLI_STATE_NORMAL;
 
 	/* Parse arguments... */
-	error = tpp_cli_loader_parseargv(&fe.tf_cli_loader, &argc, &argv);
+	error = tpp_cli_loader_parseargv(&fe.tf_cli_loader, &argc, &argv); /* CORE */
 	if (!TPP_ISERR(error))
-		error = tpp_emitter_cli_loader_parseargv(&fe.tf_emitter_cli_loader, &argc, &argv);
+		error = tpp_emitter_cli_loader_parseargv(&fe.tf_emitter_cli_loader, &argc, &argv); /* EMITTER */
 	if (!TPP_ISERR(error))
-		error = tpp_frontend_parseargv(&fe, &argc, &argv);
+		error = tpp_makefile_cli_loader_parseargv(&fe.tf_makefile_cli_loader, &argc, &argv); /* MAKEFILE */
+	if (!TPP_ISERR(error))
+		error = tpp_frontend_parseargv(&fe, &argc, &argv); /* FRONTEND */
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
-		goto out_emitter_loader;
+		goto out_emitter_cli;
 	}
 
 	/* Parse remainder of argument list using our own CLI handler, as well */
@@ -537,17 +524,17 @@ int main(int argc, char **argv) {
 			++argv;
 			tpp_frontend_help(appname, argc, argv);
 			result = 0;
-			goto out_emitter_loader;
+			goto out_emitter_cli;
 		} else if (tpp_strcmp(*argv, "--version") == 0) {
 			tpp_frontend_version();
 			result = 0;
-			goto out_emitter_loader;
+			goto out_emitter_cli;
 		}
 		fprintf(stderr, "unknown argument %s\n"
 		                "Usage: %s [ARGS...] [--] [INFILES]\n"
 		                "See --help for more info\n",
 		        *argv, appname);
-		goto out_emitter_loader;
+		goto out_emitter_cli;
 	}
 	if (argc == 0) {
 		argc = 1;
@@ -587,20 +574,23 @@ int main(int argc, char **argv) {
 		if (TPP_ISERR(error)) {
 			fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
 			if (first_file)
-				goto out_emitter_loader;
-			goto out_emitter_loader_file;
+				goto out_emitter_cli;
+			goto out_emitter_cli_file;
 		}
 		first_file = false;
 	} while (argc);
 
 	/* Flush CLI loaders */
-	error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
+	error = tpp_makefile_cli_loader_flush(&fe.tf_makefile_cli_loader);
+	if (!TPP_ISERR(error))
+		error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
 	if (!TPP_ISERR(error))
 		error = tpp_cli_loader_flush(&fe.tf_cli_loader);
 
 	/* Finalize CLI loaders */
-	tpp_cli_loader_fini(&fe.tf_cli_loader);
+	tpp_makefile_cli_loader_fini(&fe.tf_makefile_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
+	tpp_cli_loader_fini(&fe.tf_cli_loader);
 
 	/* Final check for errors. */
 	if (TPP_ISERR(error)) {
@@ -634,11 +624,12 @@ out_emitter:
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER */
 	return result;
-out_emitter_loader_file:
+out_emitter_cli_file:
 	tpp_lexer_finifile(&fe.tf_lexer);
-out_emitter_loader:
-	tpp_cli_loader_fini(&fe.tf_cli_loader);
+out_emitter_cli:
+	tpp_makefile_cli_loader_fini(&fe.tf_makefile_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
+	tpp_cli_loader_fini(&fe.tf_cli_loader);
 	goto out_emitter;
 }
 

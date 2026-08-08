@@ -38,9 +38,9 @@
 /************************************************************************/
 /* If "tpp-emitter-amalgamation.h" was already included, re-define
  * `TPP_EMITTER_INTERNAL()` identifers to their unescaped names. */
-#define tcl_emitter                             TPP_EMITTER_INTERNAL(tcl_emitter)
-#define tcl_state                               TPP_EMITTER_INTERNAL(tcl_state)
-#define tcl_flags                               TPP_EMITTER_INTERNAL(tcl_flags)
+#define tecl_emitter                            TPP_EMITTER_INTERNAL(tecl_emitter)
+#define tecl_state                              TPP_EMITTER_INTERNAL(tecl_state)
+#define tecl_flags                              TPP_EMITTER_INTERNAL(tecl_flags)
 #define te_feat                                 TPP_EMITTER_INTERNAL(te_feat)
 #define tef_flags                               TPP_EMITTER_INTERNAL(tef_flags)
 #define tetf_bitset                             TPP_EMITTER_INTERNAL(tetf_bitset)
@@ -2335,12 +2335,12 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict self) {
 	tpp_errno result;
 	(void)self;
-	tpp_emitter_enable_NOLINE(self->tcl_emitter);
+	tpp_emitter_enable_NOLINE(self->tecl_emitter);
 
 	/* Enable emission of SPACE/LF tokens */
-	result = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+	result = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tecl_emitter));
 	if (!TPP_ISERR(result))
-		result = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+		result = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tecl_emitter));
 	return result;
 }
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
@@ -2351,7 +2351,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_trace_includes(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
-	tpp_emitter_enable_trace_includes(self->tcl_emitter);
+	tpp_emitter_enable_trace_includes(self->tecl_emitter);
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE) */
 	return TPP_EOK;
 }
@@ -2364,16 +2364,16 @@ tpp_emitter_cli_enable_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->tcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
+	self->tecl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->tcl_emitter);
+	tpp_emitter_enable_reemit_macro_definitions(self->tecl_emitter);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 	/* Set emitter mode to "TPP_EMITTER_MODE_DISPOSE" */
 #if TPP_EMITTER_HAVE_MODE_DISPOSE
-	tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_DISPOSE);
+	tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_DISPOSE);
 #endif /* TPP_EMITTER_HAVE_MODE_DISPOSE */
 
 	return TPP_EOK;
@@ -2387,11 +2387,11 @@ tpp_emitter_cli_enable_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->tcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
+	self->tecl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->tcl_emitter);
+	tpp_emitter_enable_reemit_macro_definitions(self->tecl_emitter);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 	return TPP_EOK;
@@ -2405,16 +2405,16 @@ tpp_emitter_cli_enable_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
 	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->tcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
+	self->tecl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->tcl_emitter);
+	tpp_emitter_enable_reemit_macro_definitions(self->tecl_emitter);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 	/* *only* print the name of macros in `#define` directives */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
-	tpp_emitter_enablefeature(self->tcl_emitter, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY);
+	tpp_emitter_enablefeature(self->tecl_emitter, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY);
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 
 	return TPP_EOK;
@@ -2429,7 +2429,7 @@ tpp_emitter_cli_enable_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	/* Turn on re-emission of #include-directives */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
-	tpp_emitter_enable_reemit_include_directives(self->tcl_emitter);
+	tpp_emitter_enable_reemit_include_directives(self->tecl_emitter);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 	return TPP_EOK;
@@ -2444,7 +2444,7 @@ tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	/* Turn on re-emission of #include-directives */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
-	tpp_emitter_enable_reemit_macro_definitions_lazy(self->tcl_emitter);
+	tpp_emitter_enable_reemit_macro_definitions_lazy(self->tecl_emitter);
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
 	return TPP_EOK;
@@ -2540,19 +2540,19 @@ tpp_emitter_cli_enable_dumps(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_ENOENT:    SOFT_ERROR: Argument could not be understood (but no
  *                         warning was emitted). You must either handle it yourself
  *                         by treating it as an argument for *your* compiler's
- *                         CLI, or as an input file for the emitter, or emit a
+ *                         CLI, or as an input file for the lexer, or emit a
  *                         warning informing the user that their CLI argument
  *                         was not understood. You should also probably try to
  *                         pass it to `tpp_cli_loader_parsearg()`.
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
-	switch (self->tcl_state) {
+	switch (self->tecl_state) {
 
 	case TPP_EMITTER_CLI_LOADER_STATE_NORMAL: {
 		if (*arg++ != '-')
@@ -2564,7 +2564,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 			switch (*arg++) {
 
 			case '\0':
-				self->tcl_state = TPP_EMITTER_CLI_LOADER_STATE_DDASH; /* -- */
+				self->tecl_state = TPP_EMITTER_CLI_LOADER_STATE_DDASH; /* -- */
 				return TPP_EOK;
 
 			case 'n':
@@ -2594,7 +2594,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 					if (*arg == '=') {
 						return tpp_emitter_cli_enable_dumps(self, arg + 1);
 					} else if (*arg == '\0') {
-						self->tcl_state = TPP_EMITTER_CLI_LOADER_STATE_DUMP;
+						self->tecl_state = TPP_EMITTER_CLI_LOADER_STATE_DUMP;
 						return TPP_EOK;
 					}
 				} else
@@ -2610,48 +2610,48 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT
 					if (tpp_streq(arg, "emit\0")) {
 						tpp_errno error;
-						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_EMIT);
-						tpp_emitter_disable_NOLINE(self->tcl_emitter);
+						tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_EMIT);
+						tpp_emitter_disable_NOLINE(self->tecl_emitter);
 						/* Turn off emission of `SPACE` and `LF` tokens */
-						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tecl_emitter));
 						if (!TPP_ISERR(error))
-							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tecl_emitter));
 						return error;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT */
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE
 					if (tpp_streq(arg, "dispose\0")) {
-						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_DISPOSE);
+						tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_DISPOSE);
 						return TPP_EOK;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE */
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET
 					if (tpp_streq(arg, "bracket\0")) {
 						tpp_errno error;
-						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_BRACKET);
-						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_BRACKET);
+						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tecl_emitter));
 						if (!TPP_ISERR(error))
-							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tecl_emitter));
 						return error;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET */
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED
 					if (tpp_streq(arg, "typed\0")) {
 						tpp_errno error;
-						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_TYPED);
-						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_TYPED);
+						error = tpp_lexer_enable_TOK_SPACE(tpp_emitter_getlexer(self->tecl_emitter));
 						if (!TPP_ISERR(error))
-							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+							error = tpp_lexer_enable_TOK_LF(tpp_emitter_getlexer(self->tecl_emitter));
 						return error;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
 #if TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO
 					if (tpp_streq(arg, "zero\0")) {
 						tpp_errno error;
-						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_ZERO);
-						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						tpp_emitter_setmode(self->tecl_emitter, TPP_EMITTER_MODE_ZERO);
+						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tecl_emitter));
 						if (!TPP_ISERR(error))
-							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tecl_emitter));
 						return error;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO */
@@ -2711,37 +2711,37 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 
 #if TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN
 			if (tpp_streq(arg, "relaxed-macro-column\0")) {
-				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN, !no);
+				tpp_emitter_setfeature(self->tecl_emitter, TPP_EMITTER_FEAT_RELAXED_MACRO_COLUMN, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN */
 #if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
 			if (tpp_streq(arg, "reemit-unknown-pragma\0")) {
-				tpp_emitter_set_reemit_unknown_pragma(self->tcl_emitter, !no);
+				tpp_emitter_set_reemit_unknown_pragma(self->tecl_emitter, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 #if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
 			if (tpp_streq(arg, "working-directory\0")) {
-				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY, !no);
+				tpp_emitter_setfeature(self->tecl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY */
 #if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT
 			if (tpp_streq(arg, "use-cpp-digit\0")) {
-				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT, !no);
+				tpp_emitter_setfeature(self->tecl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
 #if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
 			if (tpp_streq(arg, "use-cpp-digit-flags\0")) {
-				tpp_emitter_setfeature(self->tcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS, !no);
+				tpp_emitter_setfeature(self->tecl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD
 			if (tpp_streq(arg, "line-threshold\0") && no) {
-				tpp_emitter_disablelinethreshold(self->tcl_emitter);
+				tpp_emitter_disablelinethreshold(self->tecl_emitter);
 				return TPP_EOK;
 			} else if (tpp_streq(arg, "line-threshold=") && !no) {
 				tpp_line threshold = 0;
@@ -2750,7 +2750,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 					threshold *= 10;
 					threshold += tpp_ascii_asdigit(*arg);
 				}
-				tpp_emitter_setlinethreshold(self->tcl_emitter, threshold);
+				tpp_emitter_setlinethreshold(self->tecl_emitter, threshold);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD */
@@ -2766,49 +2766,49 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				arg += (sizeof("normalize=") - sizeof(char));
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE
 				if (tpp_streq(arg, "space\0")) {
-					tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_SPACE(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF
 				if (tpp_streq(arg, "lf\0")) {
-					tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_LF(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS
 				if (tpp_streq(arg, "strings\0")) {
-					tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_C_STRING(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT
 				if (tpp_streq(arg, "int\0")) {
-					tpp_emitter_set_NORMALIZE_C_INT(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_C_INT(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS
 				if (tpp_streq(arg, "keywords\0")) {
-					tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_KEYWORDS(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE
 				if (tpp_streq(arg, "bse\0")) {
-					tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_BSE(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS
 				if (tpp_streq(arg, "trigraphs\0")) {
-					tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS
 				if (tpp_streq(arg, "digraphs\0")) {
-					tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
+					tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tecl_emitter, !no);
 					return TPP_EOK;
 				} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS */
@@ -2818,14 +2818,14 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #endif /* ... */
 #if TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE
 			if (tpp_streq(arg, "normalize\0")) {
-				tpp_emitter_set_NORMALIZE_SPACE(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_LF(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_C_STRING(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_C_INT(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_KEYWORDS(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_BSE(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tcl_emitter, !no);
-				tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tcl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_SPACE(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_LF(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_C_STRING(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_C_INT(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_KEYWORDS(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_BSE(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_TRIGRAPHS(self->tecl_emitter, !no);
+				tpp_emitter_set_NORMALIZE_DIGRAPHS(self->tecl_emitter, !no);
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE */
@@ -2842,7 +2842,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP
 	case TPP_EMITTER_CLI_LOADER_STATE_DUMP:
-		self->tcl_state = TPP_EMITTER_CLI_LOADER_STATE_NORMAL;
+		self->tecl_state = TPP_EMITTER_CLI_LOADER_STATE_NORMAL;
 		return tpp_emitter_cli_enable_dumps(self, arg);
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP */
 
@@ -2869,7 +2869,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
  *                      handle the flag in a different context).
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg) {
@@ -2906,10 +2906,10 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
  *
  * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
  *                         they contain all unrecognized arguments, as well as all
- *                         input files for the emitter).
+ *                         input files for the lexer).
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
- * @return: TPP_ELEXERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
@@ -2972,7 +2972,7 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
- * @return: TPP_ELEXERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
@@ -2980,9 +2980,9 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	/* Emit a warning if the CLI loader isn't in a neutral state */
 #if TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
-	if (self->tcl_state != TPP_EMITTER_CLI_LOADER_STATE_NORMAL &&
-	    self->tcl_state != TPP_EMITTER_CLI_LOADER_STATE_DDASH) {
-		tpp_errno error = tpp_emitter_cli_warnf(self->tcl_emitter, NULL, 0,
+	if (self->tecl_state != TPP_EMITTER_CLI_LOADER_STATE_NORMAL &&
+	    self->tecl_state != TPP_EMITTER_CLI_LOADER_STATE_DDASH) {
+		tpp_errno error = tpp_emitter_cli_warnf(self->tecl_emitter, NULL, 0,
 		                                        TPP_W_MISSING_CLI_ARGUMENT);
 		if (TPP_ISERR(error))
 			return error;
@@ -2990,11 +2990,11 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
 #if (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS
-	if (self->tcl_flags & _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M) {
+	if (self->tecl_flags & _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M) {
 		tpp_ssize temp;
-		temp = tpp_lexer_dump_definitions(tpp_emitter_getlexer(self->tcl_emitter),
-		                                  tpp_emitter_getoutput(self->tcl_emitter),
-		                                  self->tcl_emitter,
+		temp = tpp_lexer_dump_definitions(tpp_emitter_getlexer(self->tecl_emitter),
+		                                  tpp_emitter_getoutput(self->tecl_emitter),
+		                                  self->tecl_emitter,
 		                                  TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS);
 		if (temp < 0)
 			return TPP_SSIZE_ASERR(temp);

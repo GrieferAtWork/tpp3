@@ -17,78 +17,75 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_TPP_OPTIONAL_EMITTER_EMITTER_CLI_H
-#define GUARD_TPP_OPTIONAL_EMITTER_EMITTER_CLI_H 1
+#ifndef GUARD_TPP_OPTIONAL_MAKEFILE_MF_CLI_H
+#define GUARD_TPP_OPTIONAL_MAKEFILE_MF_CLI_H 1
 
 #include "api.h"
 
 #include "config.h"
-#include "emitter.h"
+#include "mf.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-#if TPP_EMITTER_HAVE_CLI
+#if TPP_MAKEFILE_HAVE_CLI
 
 /* Publicly exposed CLI loader states */
-#define TPP_EMITTER_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
-#define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
+#define TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
+#define TPP_MAKEFILE_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-#define TPP_EMITTER_HAVE_CLI_DASH_FLAGS \
-	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
+#undef TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
+#define TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS \
+	0
 
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-#define _tpp_emitter_cli_loader_flags uint_least32_t
-#define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
-#if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
-#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT32_C(0x00000001) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
-#endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
-#endif /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
+#define _tpp_makefile_cli_loader_flags uint_least32_t
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
 
 
-typedef struct tpp_emitter_cli_loader {
-	tpp_emitter *TPP_EMITTER_INTERNAL(tecl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
-	unsigned int TPP_EMITTER_INTERNAL(tecl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tecl_flags);
-#define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tecl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
-#else /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
-#define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
-} tpp_emitter_cli_loader;
+typedef struct tpp_makefile_cli_loader {
+	tpp_makefile *TPP_MAKEFILE_INTERNAL(tmfcl_mf);    /* [1..1][const] The makefile being configured by this CLI loader */
+	unsigned int  TPP_MAKEFILE_INTERNAL(tmfcl_state); /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
+	_tpp_makefile_cli_loader_flags TPP_MAKEFILE_INTERNAL(tmfcl_flags);
+#define _tpp_makefile_cli_loader_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) = _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
+#else /* TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
+#define _tpp_makefile_cli_loader_init_flags(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
+} tpp_makefile_cli_loader;
 
-/* Initialize a CLI loader for `emitter`
+/* Initialize a CLI loader for `makefile`
  *
- * The CLI loader must be used on a lexer/emitter that has already been initialized
- * itself (as per `tpp_emitter_init()`), though whether or not the its initial
+ * The CLI loader must be used on a lexer/makefile that has already been initialized
+ * itself (as per `tpp_makefile_init()`), though whether or not the its initial
  * file has already been initialized doesn't matter (the CLI loader will never
  * make persistent modifications to a lexer's current file/token). */
-#define tpp_emitter_cli_loader_init(self, emitter)                                          \
-	(void)((self)->TPP_EMITTER_INTERNAL(tecl_emitter) = (emitter),                          \
-	       (self)->TPP_EMITTER_INTERNAL(tecl_state)   = TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
-	       _tpp_emitter_cli_loader_init_flags(self))
-#define tpp_emitter_cli_loader_fini(self) \
-	tpp_dbg_memset(self, sizeof(tpp_emitter_cli_loader))
+#define tpp_makefile_cli_loader_init(self, makefile)                                         \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_mf)    = (makefile),                          \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL \
+	       _tpp_makefile_cli_loader_init_flags(self))
+#define tpp_makefile_cli_loader_fini(self) \
+	tpp_dbg_memset(self, sizeof(tpp_makefile_cli_loader))
 
-/* Return the emitter that is being initialized by the given CLI loader. */
-#define tpp_emitter_cli_loader_getemitter(self) \
-	(self)->TPP_EMITTER_INTERNAL(tecl_emitter)
+/* Return the makefile that is being initialized by the given CLI loader. */
+#define tpp_makefile_cli_loader_getmakefile(self) \
+	(self)->TPP_MAKEFILE_INTERNAL(tmfcl_mf)
 
 /* Check if a "--" argument was encountered during CLI parsing.
- * Once that is the case, `tpp_emitter_cli_loader_parsearg()` will
+ * Once that is the case, `tpp_makefile_cli_loader_parsearg()` will
  * no longer accept additional CLI arguments, and all remaining
  * arguments should be treated as input files (for the compiler
  * that you're building) */
-#define tpp_emitter_cli_loader_hasddash(self) \
-	((self)->TPP_EMITTER_INTERNAL(tecl_state) == TPP_EMITTER_CLI_LOADER_STATE_DDASH)
+#define tpp_makefile_cli_loader_hasddash(self) \
+	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_DDASH)
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` is a CLI argument as you'd expect.
  *
  * WARNING: When you call this function, you must guaranty that `arg` remains
- *          valid, allocated, and unaltered until `tpp_emitter_cli_loader_fini()` is
+ *          valid, allocated, and unaltered until `tpp_makefile_cli_loader_fini()` is
  *          called.
  *
  * @return: TPP_EOK:       Success (argument was parsed + consumed)
@@ -104,7 +101,7 @@ typedef struct tpp_emitter_cli_loader {
  * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char const *arg);
+tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, char const *arg);
 
 /* Try to parse a *flag*-style parameter, that is: an argument that actually consists
  * of multiple, tightly packed parameters, whilst having a singular, leading `-` (that
@@ -125,9 +122,9 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
  * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg);
+tpp_makefile_cli_loader_parseflag(tpp_makefile_cli_loader *tpp_restrict self, char const **p_arg);
 
-/* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.
+/* Convenience wrapper around `tpp_makefile_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.
  *
  * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
@@ -138,12 +135,12 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
  * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
-                                 int *p_argc, char ***p_argv);
+tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
+                                  int *p_argc, char ***p_argv);
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
- * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_emitter_cli_loader_getemitter(self)`
+ * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_makefile_cli_loader_getmakefile(self)`
  *
  * Unlike the other CLI loader functions above, this one *MUST* be called
  * *AFTER* the lexer's initial input file has been initialized, as it may
@@ -155,16 +152,16 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);
+tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self);
 
-#if TPP_EMITTER_HAVE_CLI_HELP
+#if TPP_MAKEFILE_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
-TPP_CONST_DECL char const tpp_emitter_cli_loader_help[];
-#endif /* TPP_EMITTER_HAVE_CLI_HELP */
-#endif /* TPP_EMITTER_HAVE_CLI */
+TPP_CONST_DECL char const tpp_makefile_cli_loader_help[];
+#endif /* TPP_MAKEFILE_HAVE_CLI_HELP */
+#endif /* TPP_MAKEFILE_HAVE_CLI */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 
-#endif /* !GUARD_TPP_OPTIONAL_EMITTER_EMITTER_CLI_H */
+#endif /* !GUARD_TPP_OPTIONAL_MAKEFILE_MF_CLI_H */

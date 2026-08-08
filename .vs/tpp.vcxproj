@@ -57,6 +57,9 @@
     <ClCompile Include="..\src\parts\optional\emitter\emitter-features.c" />
     <ClCompile Include="..\src\parts\optional\emitter\emitter-io.c" />
     <ClCompile Include="..\src\parts\optional\emitter\emitter.c" />
+    <ClCompile Include="..\src\parts\optional\makefile\mf-cli.c" />
+    <ClCompile Include="..\src\parts\optional\makefile\mf-features.c" />
+    <ClCompile Include="..\src\parts\optional\makefile\mf.c" />
     <ClCompile Include="..\src\parts\preparse.c" />
     <ClCompile Include="..\src\parts\string.c" />
     <ClCompile Include="..\src\parts\sysinclude.c" />
@@ -68,6 +71,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\src\tpp-makefile.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\src\tpp.c">
@@ -102,6 +111,12 @@
     <ClInclude Include="..\src\parts\optional\emitter\emitter-io.h" />
     <ClInclude Include="..\src\parts\optional\emitter\emitter.h" />
     <ClInclude Include="..\src\parts\optional\emitter\expose-internals.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\api.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\config.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\expose-internals.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\mf-cli.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\mf-features.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\mf.h" />
     <ClInclude Include="..\src\parts\preparse.h" />
     <ClInclude Include="..\src\parts\string.h" />
     <ClInclude Include="..\src\parts\sysinclude.h" />
@@ -111,6 +126,7 @@
     <ClInclude Include="..\src\parts\tuple.h" />
     <ClInclude Include="..\src\parts\warnings.h" />
     <ClInclude Include="..\src\tpp-emitter.h" />
+    <ClInclude Include="..\src\tpp-makefile.h" />
     <ClInclude Include="..\src\tpp.h" />
     <ClInclude Include="..\src\tpp2.h" />
   </ItemGroup>

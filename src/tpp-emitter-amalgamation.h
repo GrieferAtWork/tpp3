@@ -1314,13 +1314,12 @@ _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie);
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
 
 
-#undef TPP_HAVE_EMITTER_CLI_NEEDS_FINI
 typedef struct tpp_emitter_cli_loader {
-	tpp_emitter *TPP_EMITTER_INTERNAL(tcl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
-	unsigned int TPP_EMITTER_INTERNAL(tcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
+	tpp_emitter *TPP_EMITTER_INTERNAL(tecl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
+	unsigned int TPP_EMITTER_INTERNAL(tecl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
 #if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tcl_flags);
-#define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tcl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
+	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tecl_flags);
+#define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tecl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
 #else /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
@@ -1332,16 +1331,16 @@ typedef struct tpp_emitter_cli_loader {
  * itself (as per `tpp_emitter_init()`), though whether or not the its initial
  * file has already been initialized doesn't matter (the CLI loader will never
  * make persistent modifications to a lexer's current file/token). */
-#define tpp_emitter_cli_loader_init(self, emitter)                                         \
-	(void)((self)->TPP_EMITTER_INTERNAL(tcl_emitter) = (emitter),                          \
-	       (self)->TPP_EMITTER_INTERNAL(tcl_state)   = TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
+#define tpp_emitter_cli_loader_init(self, emitter)                                          \
+	(void)((self)->TPP_EMITTER_INTERNAL(tecl_emitter) = (emitter),                          \
+	       (self)->TPP_EMITTER_INTERNAL(tecl_state)   = TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
 	       _tpp_emitter_cli_loader_init_flags(self))
 #define tpp_emitter_cli_loader_fini(self) \
 	tpp_dbg_memset(self, sizeof(tpp_emitter_cli_loader))
 
 /* Return the emitter that is being initialized by the given CLI loader. */
 #define tpp_emitter_cli_loader_getemitter(self) \
-	(self)->TPP_EMITTER_INTERNAL(tcl_emitter)
+	(self)->TPP_EMITTER_INTERNAL(tecl_emitter)
 
 /* Check if a "--" argument was encountered during CLI parsing.
  * Once that is the case, `tpp_emitter_cli_loader_parsearg()` will
@@ -1349,7 +1348,7 @@ typedef struct tpp_emitter_cli_loader {
  * arguments should be treated as input files (for the compiler
  * that you're building) */
 #define tpp_emitter_cli_loader_hasddash(self) \
-	((self)->TPP_EMITTER_INTERNAL(tcl_state) == TPP_EMITTER_CLI_LOADER_STATE_DDASH)
+	((self)->TPP_EMITTER_INTERNAL(tecl_state) == TPP_EMITTER_CLI_LOADER_STATE_DDASH)
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -1363,13 +1362,13 @@ typedef struct tpp_emitter_cli_loader {
  * @return: TPP_ENOENT:    SOFT_ERROR: Argument could not be understood (but no
  *                         warning was emitted). You must either handle it yourself
  *                         by treating it as an argument for *your* compiler's
- *                         CLI, or as an input file for the emitter, or emit a
+ *                         CLI, or as an input file for the lexer, or emit a
  *                         warning informing the user that their CLI argument
  *                         was not understood. You should also probably try to
  *                         pass it to `tpp_cli_loader_parsearg()`.
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char const *arg);
@@ -1390,7 +1389,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
  *                      handle the flag in a different context).
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg);
@@ -1400,10 +1399,10 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
  *
  * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
  *                         they contain all unrecognized arguments, as well as all
- *                         input files for the emitter).
+ *                         input files for the lexer).
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
- * @return: TPP_ELEXERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
@@ -1420,7 +1419,7 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
- * @return: TPP_ELEXERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);

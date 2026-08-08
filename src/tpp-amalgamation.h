@@ -9000,6 +9000,12 @@ TPP_DECL_END
 #define TPP_HOOK_RT_USER       (-1) /* Hook is per-lexer configurable; defaults to user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
 #define TPP_HOOK_RT_BUILTIN    (-2) /* Hook is per-lexer configurable; defaults to builtin implementation (or no-op if there is no builtin) */
 #define TPP_HOOK_RT_NOOP       (-3) /* Hook is per-lexer configurable; defaults to no-op implementation */
+/* TODO: `TPP_HOOK_RT_MANY` -- Instead of having a sethook-function, have `addhook` and `delhook` functions
+ *       Additionally, if a macro `TPP_HOOK_FOO` is defined, that hook will *always* be called before the
+ *       set of dynamically registered hooks (the `TPP_HOOK_FOO` is hard-coded and not part of the list of
+ *       dynamic hooks) */
+/* TODO: When `TPP_HAVE_PROFILE_ALL` is enabled, `TPP_HOOK_RT_MANY` should be used by default -- the
+ *       other `TPP_HOOK_RT_*` modes should be used by default if `TPP_HAVE_PROFILE_NOT_MINIMAL`. */
 
 #define TPP_HOOK_USESBUILTIN(x) ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN)
 #define TPP_HOOK_USESUSER(x)    ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER)
@@ -26781,7 +26787,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
  *                      handle the flag in a different context).
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown */
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 

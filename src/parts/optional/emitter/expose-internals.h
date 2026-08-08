@@ -48,9 +48,9 @@ local maxLen = identifiers.each.length > ...;
 for (local ident: identifiers)
 	print("#define ", ident, " " * (maxLen - #ident), " TPP_EMITTER_INTERNAL(", ident, ")");
 ]]]*/
-#define tcl_emitter                             TPP_EMITTER_INTERNAL(tcl_emitter)
-#define tcl_state                               TPP_EMITTER_INTERNAL(tcl_state)
-#define tcl_flags                               TPP_EMITTER_INTERNAL(tcl_flags)
+#define tecl_emitter                            TPP_EMITTER_INTERNAL(tecl_emitter)
+#define tecl_state                              TPP_EMITTER_INTERNAL(tecl_state)
+#define tecl_flags                              TPP_EMITTER_INTERNAL(tecl_flags)
 #define te_feat                                 TPP_EMITTER_INTERNAL(te_feat)
 #define tef_flags                               TPP_EMITTER_INTERNAL(tef_flags)
 #define tetf_bitset                             TPP_EMITTER_INTERNAL(tetf_bitset)

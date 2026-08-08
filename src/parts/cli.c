@@ -1411,7 +1411,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
  *                      handle the flag in a different context).
  * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
  * @return: TPP_EIO:       HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg) {

@@ -32,11 +32,13 @@ all: Makefile.autoformat \
 	src/tpp-amalgamation.c \
 	src/tpp-emitter-amalgamation.h \
 	src/tpp-emitter-amalgamation.c \
+	src/tpp-makefile-amalgamation.h \
+	src/tpp-makefile-amalgamation.c \
 	doc/config.md
 .PHONY: all
 
 # Inline code generation self-dependencies...
-Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c src/tpp-emitter.h src/tpp-emitter.c
+Makefile.autoformat: src/scripts/Makefile.autoformat.dee src/tpp.h src/tpp.c src/tpp-emitter.h src/tpp-emitter.c src/tpp-makefile.h src/tpp-makefile.c
 	deemon src/scripts/Makefile.autoformat.dee > Makefile.autoformat
 -include Makefile.autoformat
 
@@ -52,13 +54,19 @@ src/tpp-emitter-amalgamation.h: Makefile.autoformat src/tpp-emitter.h src/script
 src/tpp-emitter-amalgamation.c: Makefile.autoformat src/tpp-emitter.c src/scripts/make-amalgamation.dee
 	deemon src/scripts/make-amalgamation.dee src/tpp-emitter.c '' > src/tpp-emitter-amalgamation.c
 
+# Optional TPP component: "makefile"
+src/tpp-makefile-amalgamation.h: Makefile.autoformat src/tpp-makefile.h src/scripts/make-amalgamation.dee
+	deemon src/scripts/make-amalgamation.dee src/tpp-makefile.h '' > src/tpp-makefile-amalgamation.h
+src/tpp-makefile-amalgamation.c: Makefile.autoformat src/tpp-makefile.c src/scripts/make-amalgamation.dee
+	deemon src/scripts/make-amalgamation.dee src/tpp-makefile.c '' > src/tpp-makefile-amalgamation.c
+
 # Generated documentation
 doc/config.md: Makefile.autoformat src/parts/.format-cache/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h
 	deemon src/scripts/make-config-doc.dee
 
 
 # Frontend executable
-bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/tpp-emitter-amalgamation.c src/tpp-emitter-amalgamation.h src/frontend.c
+bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/tpp-emitter-amalgamation.c src/tpp-emitter-amalgamation.h src/tpp-makefile-amalgamation.c src/tpp-makefile-amalgamation.h src/frontend.c
 	gcc -Wall -Wextra -Wno-misleading-indentation -DUSE_AMALGAMATION -o bin/tpp$(EXE) src/frontend.c
 
 
