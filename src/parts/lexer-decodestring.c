@@ -1458,10 +1458,10 @@ tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char 
  * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()`)
- * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Either one of the printers returned this value, or
+ *                                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory  (can only happen inside of `tpp_lexer_warnf()`)
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_lexer_decodestring_config const *tpp_restrict config) {
@@ -1712,11 +1712,11 @@ do_decode_basic:
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
- * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
- * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Either one of the printers returned this value, or
+ *                                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O error while yielding to next token
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_lexer_decodestring_config const *tpp_restrict config,
@@ -1784,12 +1784,12 @@ again_yield:
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
                       /*out*/ TPP_REF tpp_string **tpp_restrict p_result,
@@ -1981,13 +1981,13 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
  *                   NOTE: May be non-NULL, even if `str` is statically allocated!
  * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning
- * @return: * :             Return value of given `cb` */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook
+ * @return: * :            Return value of given `cb` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
@@ -2254,12 +2254,12 @@ do_multi_chunk_string:
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
                            /*out*/ tpp_expr_value *tpp_restrict result,
@@ -2358,12 +2358,12 @@ tpp_lexer_decodecharacter_big_cb(void *arg, tpp_lexer *tpp_restrict lexer, tpp_u
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_uintmax *tpp_restrict p_result,
@@ -2407,12 +2407,12 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
  *
  * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,

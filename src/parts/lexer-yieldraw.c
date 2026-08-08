@@ -1804,7 +1804,7 @@ done:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_seek_end_of_c_float(tpp_lexer *tpp_restrict self,
                               tpp_char const **p_pos,
@@ -2039,7 +2039,7 @@ done:
  * @return: TPP_EIO:         I/O error while trying to read from file
  * @return: TPP_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_ELEXERROR:   Lexer error
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_c_int(tpp_lexer *tpp_restrict self,
                             tpp_char const **p_pos) {
@@ -2104,7 +2104,7 @@ again:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_at(self, &tpp_lexer_gettoken(self)->tt_end);

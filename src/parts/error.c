@@ -53,9 +53,13 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 	case TPP_ELEXERROR:
 		return "Fatal compilation error";
 #endif /* TPP_HAVE_WARNINGS */
-	default:
-		return "Unknown error";
+	default: break;
 	}
+#if TPP_HAVE_EUSER
+	if (TPP_ISEUSER(error))
+		return "User-defined error";
+#endif /* TPP_HAVE_EUSER */
+	return "Unknown error";
 }
 #endif /* TPP_HAVE_STRERROR */
 

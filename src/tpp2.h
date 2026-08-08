@@ -1449,14 +1449,12 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - When migrating, you should adjust your error-checking code to
  *   deal with all possible types of lexing errors:
  *   ```diff
- *   - case TOK_ERR:
  *   -     if (tok == TOK_ERR) {
- *   + TPP_CASE_TPP_TOK_ERR
  *   +     if (TPP_TOK_ISERR(tok)) {
  *   ```
  *
  * Note however that you are advised to deal with the meaning of actual errors:
- * - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EWARNPRINT:
+ * - TPP_TOK_ENOMEM, TPP_TOK_EIO, TPP_TOK_EUSER(*):
  *   These errors are not caused by TPP itself and indicate a problem
  *   with the underlying operating system. In all likelihood, you can
  *   probably just propagate these errors

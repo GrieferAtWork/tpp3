@@ -185,12 +185,12 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
  *                          Function name for warning messages
  * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*`
  *
- * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched `)` was found
- * @return: TPP_TOK_RPAREN:      Unmatched closing `)` was encountered
- * @return: TPP_TOK_ENOMEM:      Out of memory
- * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EOF:       EOF was encountered before an unmatched `)` was found
+ * @return: TPP_TOK_RPAREN:    Unmatched closing `)` was encountered
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,

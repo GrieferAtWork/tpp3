@@ -897,9 +897,13 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 	case TPP_ELEXERROR:
 		return "Fatal compilation error";
 #endif /* TPP_HAVE_WARNINGS */
-	default:
-		return "Unknown error";
+	default: break;
 	}
+#if TPP_HAVE_EUSER
+	if (TPP_ISEUSER(error))
+		return "User-defined error";
+#endif /* TPP_HAVE_EUSER */
+	return "Unknown error";
 }
 #endif /* TPP_HAVE_STRERROR */
 
@@ -31620,12 +31624,19 @@ TPP_STATIC_ASSERT(TPP_TOK_ASERR(TPP_TOK_ELEXERROR) == TPP_ELEXERROR);
 TPP_STATIC_ASSERT(TPP_TOK_ASERR_OR_EOK(TPP_TOK_ELEXERROR) == TPP_ELEXERROR);
 TPP_STATIC_ASSERT(TPP_TOK_OFERR(TPP_ELEXERROR) == TPP_TOK_ELEXERROR);
 TPP_STATIC_ASSERT(TPP_TOK_OFERR_OR_EOF(TPP_ELEXERROR) == TPP_TOK_ELEXERROR);
-TPP_STATIC_ASSERT(TPP_TOK_ISERR(TPP_TOK_EWARNPRINT));
-TPP_STATIC_ASSERT(TPP_TOK_ASERR(TPP_TOK_EWARNPRINT) == TPP_EWARNPRINT);
-TPP_STATIC_ASSERT(TPP_TOK_ASERR_OR_EOK(TPP_TOK_EWARNPRINT) == TPP_EWARNPRINT);
-TPP_STATIC_ASSERT(TPP_TOK_OFERR(TPP_EWARNPRINT) == TPP_TOK_EWARNPRINT);
-TPP_STATIC_ASSERT(TPP_TOK_OFERR_OR_EOF(TPP_EWARNPRINT) == TPP_TOK_EWARNPRINT);
 #endif /* TPP_HAVE_WARNINGS */
+#if TPP_HAVE_EUSER
+TPP_STATIC_ASSERT(TPP_TOK_ISERR(TPP_TOK_EUSER(0)));
+TPP_STATIC_ASSERT(TPP_TOK_ISERR(TPP_TOK_EUSER(999)));
+TPP_STATIC_ASSERT(TPP_TOK_ASERR(TPP_TOK_EUSER(0)) == TPP_EUSER(0));
+TPP_STATIC_ASSERT(TPP_TOK_ASERR(TPP_TOK_EUSER(999)) == TPP_EUSER(999));
+TPP_STATIC_ASSERT(TPP_TOK_ASERR_OR_EOK(TPP_TOK_EUSER(0)) == TPP_EUSER(0));
+TPP_STATIC_ASSERT(TPP_TOK_ASERR_OR_EOK(TPP_TOK_EUSER(999)) == TPP_EUSER(999));
+TPP_STATIC_ASSERT(TPP_TOK_OFERR(TPP_EUSER(0)) == TPP_TOK_EUSER(0));
+TPP_STATIC_ASSERT(TPP_TOK_OFERR(TPP_EUSER(999)) == TPP_TOK_EUSER(999));
+TPP_STATIC_ASSERT(TPP_TOK_OFERR_OR_EOF(TPP_EUSER(0)) == TPP_TOK_EUSER(0));
+TPP_STATIC_ASSERT(TPP_TOK_OFERR_OR_EOF(TPP_EUSER(999)) == TPP_TOK_EUSER(999));
+#endif /* TPP_HAVE_EUSER */
 TPP_STATIC_ASSERT(TPP_TOK_OFERR_OR_EOF(TPP_EOK) == TPP_TOK_EOF);
 
 TPP_STATIC_ASSERT(TPP_TOK_ASERR_OR_EOK(TPP_TOK_EOF) == TPP_EOK);
@@ -32348,9 +32359,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
  * @param: arg:     Cookie argument for `printer`
  * @param: format:  Format pattern (see above)
  * @param: args:    Extra varargs-arguments for `format`
- * @return: >= 0:   Sum of return values of `printer`.
- * @return: < 0:    First negative return value of `printer`. The more high-level
- *                  `tpp_lexer_warnf` API returns `TPP_EWARNPRINT` in this case. */
+ * @return: >= 0:   Sum of return values of `printer`
+ * @return: < 0:    First negative return value of `printer` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
                          tpp_formatprinter printer, void *arg,
@@ -32745,13 +32755,13 @@ err_temp:
 }
 
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
                              tpp_lexer_printf_info *tpp_restrict const _info,
+                             tpp_ssize *const _p_printer_result,
                              tpp_formatprinter const _printer,
                              void *const _printer_arg,
-                             tpp_warning_id const _id, va_list _args,
-                             tpp_ssize *const _p_printer_result) {
+                             tpp_warning_id const _id, va_list _args) {
 	tpp_ssize _printer_temp, _printer_result = 0;
 	switch (_id) {
 
@@ -32836,13 +32846,11 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 #undef tpp_current_printer_arg
 /************************************************************************/
 	}
-	if (_p_printer_result)
-		*_p_printer_result = _printer_result;
+	*_p_printer_result = _printer_result;
 	return TPP_EOK;
 _err_printer:
-	if (_p_printer_result)
-		*_p_printer_result = _printer_temp;
-	return TPP_EWARNPRINT;
+	*_p_printer_result = _printer_temp;
+	return TPP_EOK;
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
@@ -32862,21 +32870,15 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
  * its trailing linefeed) to `printer`. When `id` uses `TPP_WARNING_EX`,
  * the warning's printer callback is invoked with the relevant parameters
  *
- * @return: TPP_EOK:        Success (sum of return values of `printer` is stored in
- *                          `*p_printer_result`, assuming that `p_printer_result != NULL`)
- * @return: TPP_EWARNPRINT: An invocation of `*printer` returned a negative value
- *                          (that value was stored in `*p_printer_result`, assuming
- *                          that `p_printer_result != NULL`)
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+ * @return: >= 0: Success (sum of return values of `printer`)
+ * @return: < 0:  Failure (first negative return value of `printer`)
+ * @return: TPP_SSIZE_OFERR(*): A `TPP_WARNING_EX` returned something other than `TPP_EOK` */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
                       tpp_lexer_printf_info *tpp_restrict info,
                       tpp_formatprinter printer, void *arg,
-                      tpp_warning_id id, va_list args,
-                      /*0..1*/ tpp_ssize *p_printer_result) {
-	tpp_ssize temp, printer_status;
+                      tpp_warning_id id, va_list args) {
+	tpp_ssize temp, result;
 	char const *warning_format;
 
 	/* Lookup the generic warning-message format for "id" */
@@ -32884,32 +32886,25 @@ tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
 	if (warning_format == NULL) {
 		/* In this case, "id" must be using a custom warning message expression! */
 		tpp_errno error;
-		error = tpp_lexer_vwarnf_impl_custom(self, info, printer, arg,
-		                                     id, args, p_printer_result);
-		tpp_assert((!TPP_ISERR(error) ||
-		            (error == TPP_ENOMEM || error == TPP_EIO ||
-		             error == TPP_ELEXERROR || error == TPP_EWARNPRINT)) &&
-		           "Custom warning callbacks may only return one of these errors");
-		return error;
+		error = tpp_lexer_vwarnf_impl_custom(self, info, &result,
+		                                     printer, arg, id, args);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		return result;
 	}
-	printer_status = tpp_lexer_vprintf_warning(self, info, printer, arg,
-	                                           warning_format, args);
-	if (printer_status < 0)
-		goto err_printer;
+
+	/* Print generic warning message */
+	result = tpp_lexer_vprintf_warning(self, info, printer, arg,
+	                                   warning_format, args);
+	if (result < 0)
+		return result;
 	temp = tpp_formatprinter_print_conststr(printer, arg, "\n");
-	if (temp < 0) {
-		printer_status = temp;
-		goto err_printer;
-	}
-	if (p_printer_result) {
-		printer_status += temp;
-		*p_printer_result = printer_status;
-	}
-	return TPP_EOK;
-err_printer:
-	if (p_printer_result)
-		*p_printer_result = printer_status;
-	return TPP_EWARNPRINT;
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
 }
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
@@ -32918,7 +32913,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
-	tpp_errno error;
+	tpp_ssize print_status;
 	tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(invokeinfo);
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
 	void *const printer_arg = self;
@@ -32932,15 +32927,17 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
-		if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-		                             tpp_lexer_getfileandlineformat(self)) < 0)
+		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+		                                        tpp_lexer_getfileandlineformat(self));
+		if (print_status < 0)
 			goto err_printer;
 	}
 
 	/* Print what this is about... */
-	if ((tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
-	     ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
-	     : tpp_formatprinter_print_conststr(printer, printer_arg, "error[")) < 0)
+	print_status = tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
+	               ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
+	               : tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
+	if (print_status < 0)
 		goto err_printer;
 
 	/* Print the relevant context name. */
@@ -32948,9 +32945,10 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	if (tpp_warning_context_id_isnumber(ctxid)) {
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(ctxid);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
-		if ((tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
-		     ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
-		     : tpp_format_print_uint(printer, printer_arg, number)) < 0)
+		print_status = tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
+		               ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
+		               : tpp_format_print_uint(printer, printer_arg, number);
+		if (print_status < 0)
 			goto err_printer;
 	} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */
@@ -32958,23 +32956,27 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(ctxid);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "?") < 0)
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
+			if (print_status < 0)
 				goto err_printer;
 		} else {
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "-W") < 0)
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
+			if (print_status < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name)) < 0)
+			print_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
+			if (print_status < 0)
 				goto err_printer;
 		}
 	}
-	if (tpp_formatprinter_print_conststr(printer, printer_arg, "]: ") < 0)
+	print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
+	if (print_status < 0)
 		goto err_printer;
 
 
 	/* Lookup the generic warning-message format for "id" */
-	error = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args, NULL);
-	if (TPP_ISERR(error))
-		return error;
+	print_status = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args);
+	if (print_status < 0)
+		goto err_printer;
 
 	/* Print projection origin */
 #if TPP_HAVE_CPP_MACROS
@@ -32987,23 +32989,26 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			tpp_lexer_printf_info_init_at(&projection_info, lcx.tlcix_projfile, lcx.tlcix_projpos);
 			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
 			projection_info.tlpfi_lc = nlcx.tlcix_info;
-			if (tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
-			                             tpp_lexer_getfileandlineformat(self)) < 0)
+			print_status = tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
+			                                        tpp_lexer_getfileandlineformat(self));
+			if (print_status < 0)
 				goto err_printer;
 #if TPP_HAVE_MACRO_NAME
 			if (tpp_file_ismacro(lcx.tlcix_projfile) &&
 			    tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile))) {
 				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile));
-				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-				                             "note: projected from expansion of %[%.*s%]\n",
-				                             (unsigned int)tpp_keyword_getlen(macro_name),
-				                             tpp_keyword_getstr(macro_name)) < 0)
+				print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                                        "note: projected from expansion of %[%.*s%]\n",
+				                                        (unsigned int)tpp_keyword_getlen(macro_name),
+				                                        tpp_keyword_getstr(macro_name));
+				if (print_status < 0)
 					goto err_printer;
 			} else
 #endif /* TPP_HAVE_MACRO_NAME */
 			{
-				if (tpp_formatprinter_print_conststr(printer, printer_arg,
-				                                     "note: projected from here\n") < 0)
+				print_status = tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                                "note: projected from here\n");
+				if (print_status < 0)
 					goto err_printer;
 			}
 			lcx = nlcx;
@@ -33026,31 +33031,32 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			 * line-feed) */
 			tpp_lexer_printf_info caller_info;
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
-			if (tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
-			                             tpp_lexer_getfileandlineformat(self)) < 0)
+			print_status = tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
+			                                        tpp_lexer_getfileandlineformat(self));
+			if (print_status < 0)
 				goto err_printer;
 #if TPP_HAVE_MACRO_NAME
 			if (tpp_file_ismacro(caller) &&
 			    tpp_macro_getname(tpp_file_getmacro(caller))) {
 				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(caller));
-				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-				                             "note: originating from expansion of %[%.*s%]\n",
-				                             (unsigned int)tpp_keyword_getlen(macro_name),
-				                             tpp_keyword_getstr(macro_name)) < 0)
-					goto err_printer;
+				print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                                        "note: originating from expansion of %[%.*s%]\n",
+				                                        (unsigned int)tpp_keyword_getlen(macro_name),
+				                                        tpp_keyword_getstr(macro_name));
 			} else
 #endif /* TPP_HAVE_MACRO_NAME */
 			{
-				if (tpp_formatprinter_print_conststr(printer, printer_arg,
-				                                     "note: originating from here\n") < 0)
-					goto err_printer;
+				print_status = tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                                "note: originating from here\n");
 			}
+			if (print_status < 0)
+				goto err_printer;
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	return TPP_EOK;
 err_printer:
-	return TPP_EWARNPRINT;
+	return TPP_SSIZE_ASERR(print_status);
 }
 #endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
@@ -33142,9 +33148,9 @@ done:
 
 /* Emits the specified lexer warning at the start of the current token.
  * @param: args: Format arguments specific to `id` (see `%`-sequences in warning expressions)
- * @return: TPP_EOK:        Warning was emitted, but you may proceed
- * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
- * @return: TPP_EWARNPRINT: Error while printing warning */
+ * @return: TPP_EOK:       Warning was emitted, but you may proceed
+ * @return: TPP_ELEXERROR: Warning was emitted, but was configured as an error
+ * @return: TPP_EUSER(*):  Error while printing warning */
 TPP_IMPL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args) {
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -36228,7 +36234,7 @@ done:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_seek_end_of_c_float(tpp_lexer *tpp_restrict self,
                               tpp_char const **p_pos,
@@ -36463,7 +36469,7 @@ done:
  * @return: TPP_EIO:         I/O error while trying to read from file
  * @return: TPP_EWOULDBLOCK: Current file uses "TPP_FILE_FLAGS_NONBLOCK" and operation would have blocked
  * @return: TPP_ELEXERROR:   Lexer error
- * @return: TPP_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_c_int(tpp_lexer *tpp_restrict self,
                             tpp_char const **p_pos) {
@@ -36528,7 +36534,7 @@ again:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
 	return tpp_lexer_yieldraw_at(self, &tpp_lexer_gettoken(self)->tt_end);
@@ -40164,12 +40170,12 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
  *                          Function name for warning messages
  * @param: flags:           Set of `TPP_LEXER_SEEK_RPAREN_FLAG_*`
  *
- * @return: TPP_TOK_EOF:         EOF was encountered before an unmatched `)` was found
- * @return: TPP_TOK_RPAREN:      Unmatched closing `)` was encountered
- * @return: TPP_TOK_ENOMEM:      Out of memory
- * @return: TPP_TOK_EIO:         I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EOF:       EOF was encountered before an unmatched `)` was found
+ * @return: TPP_TOK_RPAREN:    Unmatched closing `)` was encountered
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,
@@ -44959,12 +44965,12 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
  *
  * NOTE: This function automatically handles `TPP_TOK_EWOULDBLOCK` by blocking!
  *
- * @return: * :                 The next token (rollback)
- * @return: expected:           The next token (commit; iow: this is now also the current token)
- * @return: TPP_TOK_ENOMEM:     Out of memory
- * @return: TPP_TOK_EIO:        I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:  Lexer error
- * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+ * @return: * :                The next token (rollback)
+ * @return: expected:          The next token (commit; iow: this is now also the current token)
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
                       unsigned int flags) {
@@ -45232,7 +45238,8 @@ handle_invalid:
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
  * @return: TPP_EOK:       Success
- * @return: TPP_ELEXERROR: Lexer error happened */
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
                        tpp_intmax *tpp_restrict result,
@@ -45306,7 +45313,8 @@ tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
  * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
  * first, and that integer will be converted into the equivalent `tpp_float`.
  * @return: TPP_EOK:       Success
- * @return: TPP_ELEXERROR: Lexer error happened */
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
@@ -45351,7 +45359,8 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 /* Decode the current token (which should be TPP_TOK_ISINT) into an integer
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
- * @return: TPP_ENOMEM:    Out of memory */
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
@@ -45367,7 +45376,8 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 /* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
- * @return: TPP_ENOMEM:    Out of memory */
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
@@ -48674,7 +48684,7 @@ return_result:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldpp(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -52451,7 +52461,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -52840,12 +52850,12 @@ set_threechar:
  * a little further up ahead, and the implementation decided that
  * the tokens that lay in-between should be skipped.
  *
- * @return: * :                 The currently loaded token
- * @return: tok:                Success
- * @return: TPP_TOK_ENOMEM:     Out of memory
- * @return: TPP_TOK_EIO:        I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:  Lexer error
- * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+ * @return: * :                The currently loaded token
+ * @return: tok:               Success
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_char const *pos;
@@ -52963,11 +52973,11 @@ err_result_rollback:
  *
  * NOTE: This function automatically handles `TPP_TOK_EWOULDBLOCK`
  *
- * @return: * :                 The token that comes after the one that was just skipped
- * @return: TPP_TOK_ENOMEM:     Out of memory
- * @return: TPP_TOK_EIO:        I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:  Lexer error
- * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+ * @return: * :                The token that comes after the one that was just skipped
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token_id result = tpp_lexer_require(self, tok);
@@ -53125,7 +53135,7 @@ again:
  * @return: TPP_TOK_EIO:         I/O error while trying to read from file
  * @return: TPP_TOK_EWOULDBLOCK: Current file uses `TPP_FILE_FLAGS_NONBLOCK` and operation would have blocked
  * @return: TPP_TOK_ELEXERROR:   Lexer error
- * @return: TPP_TOK_EWARNPRINT:  Error while printing a warning */
+ * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 #if TPP_HAVE_CPP_MACROS
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self) {
@@ -55143,10 +55153,10 @@ tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char 
  * @param: config: Printer configuration
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory  (can only happen inside of `tpp_lexer_warnf()`)
- * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Either one of the printers returned this value, or
+ *                                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory  (can only happen inside of `tpp_lexer_warnf()`)
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_lexer_decodestring_config const *tpp_restrict config) {
@@ -55397,11 +55407,11 @@ do_decode_basic:
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers
- * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR):  Either one of the printers returned this value, or
- *                                           a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):     Out of memory
- * @return: TPP_SSIZE_OFERR(TPP_EIO):        I/O error while yielding to next token
- * @return: TPP_SSIZE_OFERR(TPP_EWARNPRINT): Error while printing a warning */
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Either one of the printers returned this value, or
+ *                                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O error while yielding to next token
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_parsestring_ex(tpp_lexer *tpp_restrict self,
                          tpp_lexer_decodestring_config const *tpp_restrict config,
@@ -55469,12 +55479,12 @@ again_yield:
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
                       /*out*/ TPP_REF tpp_string **tpp_restrict p_result,
@@ -55666,13 +55676,13 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
  *                   NOTE: May be non-NULL, even if `str` is statically allocated!
  * @param: flags:    Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning
- * @return: * :             Return value of given `cb` */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook
+ * @return: * :            Return value of given `cb` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_cb(tpp_lexer *self,
                          tpp_errno (TPPCALL *cb)(void *arg, tpp_string *chunk,
@@ -55939,12 +55949,12 @@ do_multi_chunk_string:
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
                            /*out*/ tpp_expr_value *tpp_restrict result,
@@ -56043,12 +56053,12 @@ tpp_lexer_decodecharacter_big_cb(void *arg, tpp_lexer *tpp_restrict lexer, tpp_u
  *
  * @param: flags: Set of `TPP_LEXER_PARSESTRING_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
                                  /*out*/ tpp_uintmax *tpp_restrict p_result,
@@ -56092,12 +56102,12 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
  *
  * @param: flags: Set of `TPP_LEXER_PARSECHARACTER_FLAG_*`
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ELEXERROR:  Either one of the printers returned this value, or
- *                          a lexer error happened (s.a. `tpp_lexer_warnf()`).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O error while yielding to next token
- * @return: TPP_EWARNPRINT: Error while printing a warning */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Either one of the printers returned this value, or
+ *                         a lexer error happened (s.a. `tpp_lexer_warnf()`).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O error while yielding to next token
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,
@@ -58969,17 +58979,17 @@ tpp_cli_loader_parse_isysroot(tpp_cli_loader *tpp_restrict self, char const *arg
  *          valid, allocated, and unaltered until `tpp_cli_loader_fini()` is
  *          called.
  *
- * @return: TPP_EOK:        Success (argument was parsed + consumed)
- * @return: TPP_ENOENT:     SOFT_ERROR: Argument could not be understood (but no
- *                          warning was emitted). You must either handle it yourself
- *                          by treating it as an argument for *your* compiler's
- *                          CLI, or as an input file for it, or emit a warning
- *                          informing the user that their CLI argument was not
- *                          understood.
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A lexer error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (argument was parsed + consumed)
+ * @return: TPP_ENOENT:    SOFT_ERROR: Argument could not be understood (but no
+ *                         warning was emitted). You must either handle it yourself
+ *                         by treating it as an argument for *your* compiler's
+ *                         CLI, or as an input file for it, or emit a warning
+ *                         informing the user that their CLI argument was not
+ *                         understood.
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A lexer error was thrown
+ * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
@@ -59665,10 +59675,10 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
  *                      parameter, or the argument string's end)
  * @return: TPP_ENOENT: Did not recognize the flag in `**p_arg` (caller should try to
  *                      handle the flag in a different context).
- * @return: TPP_ENOMEM:     HARD_ERROR: Out of memory
- * @return: TPP_EIO:        HARD_ERROR: I/O Error
- * @return: TPP_ELEXERROR:  HARD_ERROR: A emitter error was thrown
- * @return: TPP_EWARNPRINT: HARD_ERROR: An error happened within a warning printer */
+ * @return: TPP_ENOMEM:    HARD_ERROR: Out of memory
+ * @return: TPP_EIO:       HARD_ERROR: I/O Error
+ * @return: TPP_ELEXERROR: HARD_ERROR: A emitter error was thrown
+ * @return: TPP_EUSER(*):  HARD_ERROR: User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg) {
 	char const *arg = *p_arg;
@@ -59709,13 +59719,13 @@ tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg) 
  *   argument from the argc/argv your `main()` was given, before calling
  *   this function!
  *
- * @return: TPP_EOK:        Success (`*p_argc` and `*p_argv` were updated such that
- *                          they contain all unrecognized arguments, as well as all
- *                          input files for your compiler).
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success (`*p_argc` and `*p_argv` were updated such that
+ *                         they contain all unrecognized arguments, as well as all
+ *                         input files for your compiler).
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv) {
@@ -59774,11 +59784,11 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
- * @return: TPP_EOK:        Success
- * @return: TPP_ENOMEM:     Out of memory
- * @return: TPP_EIO:        I/O Error
- * @return: TPP_ELEXERROR:  A lexer error was thrown
- * @return: TPP_EWARNPRINT: An error happened within a warning printer */
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown
+ * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 	(void)self;

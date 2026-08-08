@@ -270,7 +270,12 @@ typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
 	 * Called by `tpp_lexer_warnf()` to print warning messages.
 	 * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
-	 * @param: arg: The current lexer (`tpp_lexer *`) */
+	 * @param: arg: The current lexer (`tpp_lexer *`)
+	 * @return: >= 0: Success
+	 * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
+	 * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
+	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
@@ -287,9 +292,10 @@ typedef struct tpp_hooks {
 	 * @param: id:         Warning ID
 	 * @param: arg:        Variable arguments passed to warning
 	 * @return: TPP_EOK:       Success (warning was emitted)
-	 * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
-	 * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
+	 * @return: TPP_EIO:       I/O Error
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_ELEXERROR: Hard lexer error
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *tpp_restrict self, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
@@ -300,7 +306,12 @@ typedef struct tpp_hooks {
 
 	/* >> tpp_formatprinter th_mesgprinter;
 	 * Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
-	 * @param: arg: The current lexer (`tpp_lexer *`) */
+	 * @param: arg: The current lexer (`tpp_lexer *`)
+	 * @return: >= 0: Success
+	 * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
+	 * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
+	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
@@ -328,7 +339,8 @@ typedef struct tpp_hooks {
 	 * @return: TPP_ENOMEM:      Out of memory
 	 * @return: TPP_EIO:         Filesystem I/O operation failed
 	 * @return: TPP_EWOULDBLOCK: Operation would block
-	 * @return: TPP_ELEXERROR:   A lexer error happened */
+	 * @return: TPP_ELEXERROR:   A lexer error happened
+	 * @return: TPP_EUSER(*):    User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *tpp_restrict self, tpp_expr_value *tpp_restrict result); /* [1..1] */
@@ -340,10 +352,11 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_unknown_pragma)(struct tpp_lexer *tpp_restrict self);
 	 * Called whenever a `#pragma` is encountered that is not recognized.
 	 * When called, the lexer is set-up to point at the first token after the `#pragma`.
-	 * @return: TPP_EOK:    Pragma has been handled
-	 * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
+	 * @return: TPP_EOK:      Pragma has been handled
+	 * @return: TPP_ENOENT:   Pragma is still unknown, and a warning should be emitted
+	 * @return: TPP_EIO:      I/O error
+	 * @return: TPP_ENOMEM:   Out of memory
+	 * @return: TPP_EUSER(*): User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_unknown_pragma))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
@@ -351,7 +364,12 @@ typedef struct tpp_hooks {
 	/* >> tpp_errno (TPPCALL *th_new_dependency)(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd);
 	 * Called whenever some file is `#include`-ed for the first time
 	 * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
-	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
+	 *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`
+	 * @return: TPP_EOK:       Success (keep going)
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_new_dependency))(struct tpp_lexer *tpp_restrict self, tpp_keyword *filename_kwd); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
@@ -362,7 +380,12 @@ typedef struct tpp_hooks {
 	 *
 	 * Notes:
 	 * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
-	 * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+	 * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()`
+	 * @return: TPP_EOK:       Success (keep going)
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_file_pushed))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
@@ -396,12 +419,15 @@ typedef struct tpp_hooks {
 	 * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
 	 *
 	 * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
-	 * @return: TPP_EOK:    Continue handling like usual
-	 * @return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
-	 *                      the file containing the `#include`-directive as though the file
-	 *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
-	 *                      suppressed.
-	 * @return: TPP_E*:     Some other error -- propagate immdediately */
+	 * @return: TPP_EOK:       Continue handling like usual
+	 * @return: TPP_ENOENT:    Don't attempt to find/open a file. Instead, continue processing
+	 *                         the file containing the `#include`-directive as though the file
+	 *                         could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+	 *                         suppressed.
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_encountered))(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
@@ -417,11 +443,14 @@ typedef struct tpp_hooks {
 	 * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
 	 *
 	 * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
-	 * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
-	 *                      the file could not be found (*DONT* use this hook to manually push a file or
-	 *                      something like that)
-	 * @return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
-	 * @return: TPP_E*:     Some other error -- propagate immdediately */
+	 * @return: TPP_EOK:       Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
+	 *                         the file could not be found (*DONT* use this hook to manually push a file or
+	 *                         something like that)
+	 * @return: TPP_ENOENT:    Emit the `TPP_W_NO_SUCH_FILE` error
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_include_not_found))(struct tpp_lexer *tpp_restrict self, tpp_hook_include_kind include_kind); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
@@ -430,12 +459,17 @@ typedef struct tpp_hooks {
 	 * Called whenever a `#define` directive has just been fully
 	 * parsed (macro was has not yet been registered with keyword).
 	 *
-	 * This hook is *ONLY* invoked when `#define` is encountered, or
-	 * `#pragma pop_macro("foo")` was used to restore a macro's previous
-	 * definition.
+	 * - This hook is *ONLY* invoked when `#define` is encountered, or
+	 *   `#pragma pop_macro("foo")` was used to restore a macro's previous
+	 *   definition.
+	 * - Calls to `tpp_lexer_define()` or other related functions will
+	 *   *NOT* invoke this hook.
 	 *
-	 * Calls to `tpp_lexer_define()` or other related functions will
-	 * *NOT* invoke this hook. */
+	 * @return: TPP_EOK:       Success (keep going)
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_macro_defined))(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) */
@@ -452,7 +486,13 @@ typedef struct tpp_hooks {
 	 * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
 	 * related functions will *NOT* invoke this hook.
 	 *
-	 * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+	 * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")`
+	 *
+	 * @return: TPP_EOK:       Success (keep going)
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_macro_undefined))(struct tpp_lexer *tpp_restrict self, tpp_keyword *tpp_restrict name); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
@@ -466,9 +506,11 @@ typedef struct tpp_hooks {
 	 *                      any chunk to stay alive
 	 * @param: comment_str: The source comment that should be inserted
 	 * @param: comment_len: Length of `comment_str` in bytes
-	 * @return: TPP_EOK:    Success
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
+	 * @return: TPP_EOK:       Success (keep going)
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_ident_sccs))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
@@ -481,10 +523,12 @@ typedef struct tpp_hooks {
 	 * include path APIs (`tpp_lexer_includes_add*`)
 	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
 	 *               caller's position in `tpp_lexer_foreach_include_path()`.
-	 * @return: * :         First non-TPP_ENOENT return value of `cb`
-	 * @return: TPP_ENOENT: File still not found
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
+	 * @return: * :            First non-TPP_ENOENT return value of `cb`
+	 * @return: TPP_ENOENT:    File still not found
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_include_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
@@ -494,10 +538,12 @@ typedef struct tpp_hooks {
 	 * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
 	 * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
 	 *               caller's position in `tpp_lexer_foreach_embed_path()`.
-	 * @return: * :         First non-TPP_ENOENT return value of `cb`
-	 * @return: TPP_ENOENT: File still not found
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
+	 * @return: * :            First non-TPP_ENOENT return value of `cb`
+	 * @return: TPP_ENOENT:    File still not found
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_system_embed_path))(struct tpp_lexer *tpp_restrict self, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
@@ -516,9 +562,13 @@ typedef struct tpp_hooks {
 	 * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
 	 * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
 	 * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
-	 * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+	 * @return: TPP_SSIZE_OFERR(TPP_ENOENT):    Escape sequence still not recognized
 	 *                 (please leave `*p_pos` unchanged in this case). The caller will
-	 *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+	 *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
+	 * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+	 * @return: TPP_SSIZE_OFERR(TPP_EIO):       Filesystem I/O operation failed
+	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
+	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(struct tpp_lexer *tpp_restrict self, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
@@ -527,8 +577,11 @@ typedef struct tpp_hooks {
 	 * Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
 	 * This hook can be used to do additional state changes that may be necessary by the
 	 * hosting application in order to handle the resulting `TPP_ELEXERROR`
-	 * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
-	 * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+	 * @return: TPP_EOK:       Have `tpp_lexer_warnf()` return `TPP_ELEXERROR`
+	 * @return: TPP_ELEXERROR: Same as `TPP_EOK`
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_raise_lexerror))(struct tpp_lexer *tpp_restrict self); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
@@ -540,10 +593,12 @@ typedef struct tpp_hooks {
 	 * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
 	 * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
 	 * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
-	 * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
-	 * @return: TPP_ENOENT: It's not a float suffix
-	 * @return: TPP_EIO:    I/O error
-	 * @return: TPP_ENOMEM: Out of memory */
+	 * @return: TPP_EOK:       Pointed-to location actually *does* refer to a float suffix
+	 * @return: TPP_ENOENT:    It's not a float suffix
+	 * @return: TPP_ENOMEM:    Out of memory
+	 * @return: TPP_EIO:       Filesystem I/O operation failed
+	 * @return: TPP_ELEXERROR: A lexer error happened
+	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_isfloatsuffix))(struct tpp_lexer *tpp_restrict self, tpp_char const *pos); /* [0..1] */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
@@ -552,7 +607,12 @@ typedef struct tpp_hooks {
 
 /* Called by `tpp_lexer_warnf()` to print warning messages.
  * Potentially unused if `TPP_HAVE_WARNHANDLER_HOOK` is also overwritten
- * @param: arg: The current lexer (`tpp_lexer *`) */
+ * @param: arg: The current lexer (`tpp_lexer *`)
+ * @return: >= 0: Success
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
@@ -594,9 +654,10 @@ typedef struct tpp_hooks {
  * @param: id:         Warning ID
  * @param: arg:        Variable arguments passed to warning
  * @return: TPP_EOK:       Success (warning was emitted)
- * @return: TPP_ENOMEM:    A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:       A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR: A `TPP_WARNING_EX` returned with this error */
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_ELEXERROR: Hard lexer error
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
@@ -630,7 +691,12 @@ typedef struct tpp_hooks {
 #endif /* !TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
 /* Used by `#pragma message` to print messages (see `TPP_HAVE_PRAGMA_MESSAGE`)
- * @param: arg: The current lexer (`tpp_lexer *`) */
+ * @param: arg: The current lexer (`tpp_lexer *`)
+ * @return: >= 0: Success
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):       I/O Error
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
@@ -683,7 +749,8 @@ typedef struct tpp_hooks {
  * @return: TPP_ENOMEM:      Out of memory
  * @return: TPP_EIO:         Filesystem I/O operation failed
  * @return: TPP_EWOULDBLOCK: Operation would block
- * @return: TPP_ELEXERROR:   A lexer error happened */
+ * @return: TPP_ELEXERROR:   A lexer error happened
+ * @return: TPP_EUSER(*):    User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
@@ -718,10 +785,11 @@ typedef struct tpp_hooks {
 
 /* Called whenever a `#pragma` is encountered that is not recognized.
  * When called, the lexer is set-up to point at the first token after the `#pragma`.
- * @return: TPP_EOK:    Pragma has been handled
- * @return: TPP_ENOENT: Pragma is still unknown, and a warning should be emitted
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
+ * @return: TPP_EOK:      Pragma has been handled
+ * @return: TPP_ENOENT:   Pragma is still unknown, and a warning should be emitted
+ * @return: TPP_EIO:      I/O error
+ * @return: TPP_ENOMEM:   Out of memory
+ * @return: TPP_EUSER(*): User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 #define tpp_hooks_call_unknown_pragma(self, lexer) \
 	((self)->TPP_INTERNAL(th_unknown_pragma) ? (*(self)->TPP_INTERNAL(th_unknown_pragma))(lexer) : TPP_ENOENT)
@@ -746,7 +814,12 @@ typedef struct tpp_hooks {
 
 /* Called whenever some file is `#include`-ed for the first time
  * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
- *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`. */
+ *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`
+ * @return: TPP_EOK:       Success (keep going)
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
 	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(lexer, filename_kwd) : TPP_EOK)
@@ -774,7 +847,12 @@ typedef struct tpp_hooks {
  *
  * Notes:
  * - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
- * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()` */
+ * - This hook is *NOT* called for `tpp_file_subtext_push()` or `tpp_file_pushdummy()`
+ * @return: TPP_EOK:       Success (keep going)
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 #define tpp_hooks_call_file_pushed(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_pushed) ? (*(self)->TPP_INTERNAL(th_file_pushed))(lexer) : TPP_EOK)
@@ -842,12 +920,15 @@ typedef struct tpp_hooks {
  * To gain access to the `#include`-string, you must use `tpp_lexer_decode_include_string_cb()`
  *
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
- * @return: TPP_EOK:    Continue handling like usual
- * @return: TPP_ENOENT: Don't attempt to find/open a file. Instead, continue processing
- *                      the file containing the `#include`-directive as though the file
- *                      could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
- *                      suppressed.
- * @return: TPP_E*:     Some other error -- propagate immdediately */
+ * @return: TPP_EOK:       Continue handling like usual
+ * @return: TPP_ENOENT:    Don't attempt to find/open a file. Instead, continue processing
+ *                         the file containing the `#include`-directive as though the file
+ *                         could not be found, and the `TPP_W_NO_SUCH_FILE` error was being
+ *                         suppressed.
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 #define tpp_hooks_call_include_encountered(self, lexer, include_kind) \
 	((self)->TPP_INTERNAL(th_include_encountered) ? (*(self)->TPP_INTERNAL(th_include_encountered))(lexer, include_kind) : TPP_EOK)
@@ -880,11 +961,14 @@ typedef struct tpp_hooks {
  * to know what that string says, you can use `tpp_lexer_decode_include_string_cb()` to decode it.
  *
  * @param: include_kind: The kind of directive that this is (one of `TPP_HOOK_INCLUDE_KIND_*`)
- * @return: TPP_EOK:    Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
- *                      the file could not be found (*DONT* use this hook to manually push a file or
- *                      something like that)
- * @return: TPP_ENOENT: Emit the `TPP_W_NO_SUCH_FILE` error
- * @return: TPP_E*:     Some other error -- propagate immdediately */
+ * @return: TPP_EOK:       Suppress the accompanying `TPP_W_NO_SUCH_FILE` error, but continue acting like
+ *                         the file could not be found (*DONT* use this hook to manually push a file or
+ *                         something like that)
+ * @return: TPP_ENOENT:    Emit the `TPP_W_NO_SUCH_FILE` error
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #define tpp_hooks_call_include_not_found(self, lexer, include_kind) \
 	((self)->TPP_INTERNAL(th_include_not_found) ? (*(self)->TPP_INTERNAL(th_include_not_found))(lexer, include_kind) : TPP_ENOENT)
@@ -910,12 +994,17 @@ typedef struct tpp_hooks {
 /* Called whenever a `#define` directive has just been fully
  * parsed (macro was has not yet been registered with keyword).
  *
- * This hook is *ONLY* invoked when `#define` is encountered, or
- * `#pragma pop_macro("foo")` was used to restore a macro's previous
- * definition.
+ * - This hook is *ONLY* invoked when `#define` is encountered, or
+ *   `#pragma pop_macro("foo")` was used to restore a macro's previous
+ *   definition.
+ * - Calls to `tpp_lexer_define()` or other related functions will
+ *   *NOT* invoke this hook.
  *
- * Calls to `tpp_lexer_define()` or other related functions will
- * *NOT* invoke this hook. */
+ * @return: TPP_EOK:       Success (keep going)
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
 #define tpp_hooks_call_macro_defined(self, lexer, name, macro) \
 	((self)->TPP_INTERNAL(th_macro_defined) ? (*(self)->TPP_INTERNAL(th_macro_defined))(lexer, name, macro) : TPP_EOK)
@@ -949,7 +1038,13 @@ typedef struct tpp_hooks {
  * Calls to `tpp_lexer_undef()`, `tpp_keyword_undef()`, or other
  * related functions will *NOT* invoke this hook.
  *
- * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")` */
+ * NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")`
+ *
+ * @return: TPP_EOK:       Success (keep going)
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 #define tpp_hooks_call_macro_undefined(self, lexer, name) \
 	((self)->TPP_INTERNAL(th_macro_undefined) ? (*(self)->TPP_INTERNAL(th_macro_undefined))(lexer, name) : TPP_EOK)
@@ -980,9 +1075,11 @@ typedef struct tpp_hooks {
  *                      any chunk to stay alive
  * @param: comment_str: The source comment that should be inserted
  * @param: comment_len: Length of `comment_str` in bytes
- * @return: TPP_EOK:    Success
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
+ * @return: TPP_EOK:       Success (keep going)
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
 #define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
 	((self)->TPP_INTERNAL(th_ident_sccs) ? (*(self)->TPP_INTERNAL(th_ident_sccs))(lexer, mode, chunk, comment_str, comment_len) : TPP_EOK)
@@ -1012,10 +1109,12 @@ typedef struct tpp_hooks {
  * include path APIs (`tpp_lexer_includes_add*`)
  * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_include_path()`.
- * @return: * :         First non-TPP_ENOENT return value of `cb`
- * @return: TPP_ENOENT: File still not found
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
+ * @return: * :            First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT:    File still not found
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #define tpp_hooks_call_system_include_path(self, lexer, mode, when, cb, arg) \
 	((self)->TPP_INTERNAL(th_system_include_path) ? (*(self)->TPP_INTERNAL(th_system_include_path))(lexer, mode, when, cb, arg) : TPP_ENOENT)
@@ -1042,10 +1141,12 @@ typedef struct tpp_hooks {
  * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
  * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
  *               caller's position in `tpp_lexer_foreach_embed_path()`.
- * @return: * :         First non-TPP_ENOENT return value of `cb`
- * @return: TPP_ENOENT: File still not found
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
+ * @return: * :            First non-TPP_ENOENT return value of `cb`
+ * @return: TPP_ENOENT:    File still not found
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 #define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
 	((self)->TPP_INTERNAL(th_system_embed_path) ? (*(self)->TPP_INTERNAL(th_system_embed_path))(lexer, mode, when, cb, arg) : TPP_ENOENT)
@@ -1081,9 +1182,13 @@ typedef struct tpp_hooks {
  * @param: config: Identically-named argument of `tpp_lexer_decodestring()`
  * @return: * :    Sum of positive return values of `data_printer` and `utf8_printer`
  * @return: < 0:   First negative return value of `data_printer` or `utf8_printer`
- * @return: TPP_SSIZE_OFERR(TPP_ENOENT): Escape sequence still not recognized
+ * @return: TPP_SSIZE_OFERR(TPP_ENOENT):    Escape sequence still not recognized
  *                 (please leave `*p_pos` unchanged in this case). The caller will
- *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE` */
+ *                 proceed by emitting `TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
+ * @return: TPP_SSIZE_OFERR(TPP_ENOMEM):    Out of memory
+ * @return: TPP_SSIZE_OFERR(TPP_EIO):       Filesystem I/O operation failed
+ * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
+ * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, config) \
 	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(lexer, p_pos, end, config) : TPP_SSIZE_OFERR(TPP_ENOENT))
@@ -1109,8 +1214,11 @@ typedef struct tpp_hooks {
 /* Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
  * This hook can be used to do additional state changes that may be necessary by the
  * hosting application in order to handle the resulting `TPP_ELEXERROR`
- * @return: TPP_EOK: Have `tpp_lexer_warnf()` still return `TPP_ELEXERROR`
- * @return: * :      Make `tpp_lexer_warnf()` return this instead of `TPP_ELEXERROR` */
+ * @return: TPP_EOK:       Have `tpp_lexer_warnf()` return `TPP_ELEXERROR`
+ * @return: TPP_ELEXERROR: Same as `TPP_EOK`
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
 #define tpp_hooks_call_raise_lexerror(self, lexer) \
 	((self)->TPP_INTERNAL(th_raise_lexerror) ? (*(self)->TPP_INTERNAL(th_raise_lexerror))(lexer) : TPP_ELEXERROR)
@@ -1139,10 +1247,12 @@ typedef struct tpp_hooks {
  * parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
  * with `pos` pointing at the `f` (additional characters thereafter may not be loaded
  * yet, though can be loaded using `tpp_lexer_readchar()` and `tpp_lexer_readunichar()`)
- * @return: TPP_EOK:    Pointed-to location actually *does* refer to a float suffix
- * @return: TPP_ENOENT: It's not a float suffix
- * @return: TPP_EIO:    I/O error
- * @return: TPP_ENOMEM: Out of memory */
+ * @return: TPP_EOK:       Pointed-to location actually *does* refer to a float suffix
+ * @return: TPP_ENOENT:    It's not a float suffix
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       Filesystem I/O operation failed
+ * @return: TPP_ELEXERROR: A lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 #define tpp_hooks_call_isfloatsuffix(self, lexer, pos) \
 	((self)->TPP_INTERNAL(th_isfloatsuffix) ? (*(self)->TPP_INTERNAL(th_isfloatsuffix))(lexer, pos) : TPP_ENOENT)

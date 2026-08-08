@@ -331,12 +331,12 @@ set_threechar:
  * a little further up ahead, and the implementation decided that
  * the tokens that lay in-between should be skipped.
  *
- * @return: * :                 The currently loaded token
- * @return: tok:                Success
- * @return: TPP_TOK_ENOMEM:     Out of memory
- * @return: TPP_TOK_EIO:        I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:  Lexer error
- * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+ * @return: * :                The currently loaded token
+ * @return: tok:               Success
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_char const *pos;
@@ -454,11 +454,11 @@ err_result_rollback:
  *
  * NOTE: This function automatically handles `TPP_TOK_EWOULDBLOCK`
  *
- * @return: * :                 The token that comes after the one that was just skipped
- * @return: TPP_TOK_ENOMEM:     Out of memory
- * @return: TPP_TOK_EIO:        I/O error while trying to read from file
- * @return: TPP_TOK_ELEXERROR:  Lexer error
- * @return: TPP_TOK_EWARNPRINT: Error while printing a warning */
+ * @return: * :                The token that comes after the one that was just skipped
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	tpp_token_id result = tpp_lexer_require(self, tok);

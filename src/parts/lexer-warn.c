@@ -78,9 +78,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
  * @param: arg:     Cookie argument for `printer`
  * @param: format:  Format pattern (see above)
  * @param: args:    Extra varargs-arguments for `format`
- * @return: >= 0:   Sum of return values of `printer`.
- * @return: < 0:    First negative return value of `printer`. The more high-level
- *                  `tpp_lexer_warnf` API returns `TPP_EWARNPRINT` in this case. */
+ * @return: >= 0:   Sum of return values of `printer`
+ * @return: < 0:    First negative return value of `printer` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
                          tpp_formatprinter printer, void *arg,
@@ -475,13 +474,13 @@ err_temp:
 }
 
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
                              tpp_lexer_printf_info *tpp_restrict const _info,
+                             tpp_ssize *const _p_printer_result,
                              tpp_formatprinter const _printer,
                              void *const _printer_arg,
-                             tpp_warning_id const _id, va_list _args,
-                             tpp_ssize *const _p_printer_result) {
+                             tpp_warning_id const _id, va_list _args) {
 	tpp_ssize _printer_temp, _printer_result = 0;
 	switch (_id) {
 
@@ -566,13 +565,11 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
 #undef tpp_current_printer_arg
 /************************************************************************/
 	}
-	if (_p_printer_result)
-		*_p_printer_result = _printer_result;
+	*_p_printer_result = _printer_result;
 	return TPP_EOK;
 _err_printer:
-	if (_p_printer_result)
-		*_p_printer_result = _printer_temp;
-	return TPP_EWARNPRINT;
+	*_p_printer_result = _printer_temp;
+	return TPP_EOK;
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
@@ -592,21 +589,15 @@ static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
  * its trailing linefeed) to `printer`. When `id` uses `TPP_WARNING_EX`,
  * the warning's printer callback is invoked with the relevant parameters
  *
- * @return: TPP_EOK:        Success (sum of return values of `printer` is stored in
- *                          `*p_printer_result`, assuming that `p_printer_result != NULL`)
- * @return: TPP_EWARNPRINT: An invocation of `*printer` returned a negative value
- *                          (that value was stored in `*p_printer_result`, assuming
- *                          that `p_printer_result != NULL`)
- * @return: TPP_ENOMEM:     A `TPP_WARNING_EX` returned with this error
- * @return: TPP_EIO:        A `TPP_WARNING_EX` returned with this error
- * @return: TPP_ELEXERROR:  A `TPP_WARNING_EX` returned with this error */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+ * @return: >= 0: Success (sum of return values of `printer`)
+ * @return: < 0:  Failure (first negative return value of `printer`)
+ * @return: TPP_SSIZE_OFERR(*): A `TPP_WARNING_EX` returned something other than `TPP_EOK` */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
                       tpp_lexer_printf_info *tpp_restrict info,
                       tpp_formatprinter printer, void *arg,
-                      tpp_warning_id id, va_list args,
-                      /*0..1*/ tpp_ssize *p_printer_result) {
-	tpp_ssize temp, printer_status;
+                      tpp_warning_id id, va_list args) {
+	tpp_ssize temp, result;
 	char const *warning_format;
 
 	/* Lookup the generic warning-message format for "id" */
@@ -614,32 +605,25 @@ tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
 	if (warning_format == NULL) {
 		/* In this case, "id" must be using a custom warning message expression! */
 		tpp_errno error;
-		error = tpp_lexer_vwarnf_impl_custom(self, info, printer, arg,
-		                                     id, args, p_printer_result);
-		tpp_assert((!TPP_ISERR(error) ||
-		            (error == TPP_ENOMEM || error == TPP_EIO ||
-		             error == TPP_ELEXERROR || error == TPP_EWARNPRINT)) &&
-		           "Custom warning callbacks may only return one of these errors");
-		return error;
+		error = tpp_lexer_vwarnf_impl_custom(self, info, &result,
+		                                     printer, arg, id, args);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		return result;
 	}
-	printer_status = tpp_lexer_vprintf_warning(self, info, printer, arg,
-	                                           warning_format, args);
-	if (printer_status < 0)
-		goto err_printer;
+
+	/* Print generic warning message */
+	result = tpp_lexer_vprintf_warning(self, info, printer, arg,
+	                                   warning_format, args);
+	if (result < 0)
+		return result;
 	temp = tpp_formatprinter_print_conststr(printer, arg, "\n");
-	if (temp < 0) {
-		printer_status = temp;
-		goto err_printer;
-	}
-	if (p_printer_result) {
-		printer_status += temp;
-		*p_printer_result = printer_status;
-	}
-	return TPP_EOK;
-err_printer:
-	if (p_printer_result)
-		*p_printer_result = printer_status;
-	return TPP_EWARNPRINT;
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
 }
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
@@ -648,7 +632,7 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
-	tpp_errno error;
+	tpp_ssize print_status;
 	tpp_warning_context_id const ctxid = tpp_warning_invokeinfo_getctxid(invokeinfo);
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
 	void *const printer_arg = self;
@@ -662,15 +646,17 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
-		if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-		                             tpp_lexer_getfileandlineformat(self)) < 0)
+		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+		                                        tpp_lexer_getfileandlineformat(self));
+		if (print_status < 0)
 			goto err_printer;
 	}
 
 	/* Print what this is about... */
-	if ((tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
-	     ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
-	     : tpp_formatprinter_print_conststr(printer, printer_arg, "error[")) < 0)
+	print_status = tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
+	               ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
+	               : tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
+	if (print_status < 0)
 		goto err_printer;
 
 	/* Print the relevant context name. */
@@ -678,9 +664,10 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 	if (tpp_warning_context_id_isnumber(ctxid)) {
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(ctxid);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
-		if ((tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
-		     ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
-		     : tpp_format_print_uint(printer, printer_arg, number)) < 0)
+		print_status = tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
+		               ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
+		               : tpp_format_print_uint(printer, printer_arg, number);
+		if (print_status < 0)
 			goto err_printer;
 	} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */
@@ -688,23 +675,27 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(ctxid);
 		char const *group_name = tpp_warning_group_getnames(group_id);
 		if tpp_unlikely(group_name == NULL) {
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "?") < 0)
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
+			if (print_status < 0)
 				goto err_printer;
 		} else {
-			if (tpp_formatprinter_print_conststr(printer, printer_arg, "-W") < 0)
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
+			if (print_status < 0)
 				goto err_printer;
-			if (tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name)) < 0)
+			print_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
+			if (print_status < 0)
 				goto err_printer;
 		}
 	}
-	if (tpp_formatprinter_print_conststr(printer, printer_arg, "]: ") < 0)
+	print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
+	if (print_status < 0)
 		goto err_printer;
 
 
 	/* Lookup the generic warning-message format for "id" */
-	error = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args, NULL);
-	if (TPP_ISERR(error))
-		return error;
+	print_status = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args);
+	if (print_status < 0)
+		goto err_printer;
 
 	/* Print projection origin */
 #if TPP_HAVE_CPP_MACROS
@@ -717,23 +708,26 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			tpp_lexer_printf_info_init_at(&projection_info, lcx.tlcix_projfile, lcx.tlcix_projpos);
 			tpp_file_getlcinfo_ex(lcx.tlcix_projfile, lcx.tlcix_projpos, &nlcx);
 			projection_info.tlpfi_lc = nlcx.tlcix_info;
-			if (tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
-			                             tpp_lexer_getfileandlineformat(self)) < 0)
+			print_status = tpp_lexer_printf_warning(self, &projection_info, printer, printer_arg,
+			                                        tpp_lexer_getfileandlineformat(self));
+			if (print_status < 0)
 				goto err_printer;
 #if TPP_HAVE_MACRO_NAME
 			if (tpp_file_ismacro(lcx.tlcix_projfile) &&
 			    tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile))) {
 				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(lcx.tlcix_projfile));
-				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-				                             "note: projected from expansion of %[%.*s%]\n",
-				                             (unsigned int)tpp_keyword_getlen(macro_name),
-				                             tpp_keyword_getstr(macro_name)) < 0)
+				print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                                        "note: projected from expansion of %[%.*s%]\n",
+				                                        (unsigned int)tpp_keyword_getlen(macro_name),
+				                                        tpp_keyword_getstr(macro_name));
+				if (print_status < 0)
 					goto err_printer;
 			} else
 #endif /* TPP_HAVE_MACRO_NAME */
 			{
-				if (tpp_formatprinter_print_conststr(printer, printer_arg,
-				                                     "note: projected from here\n") < 0)
+				print_status = tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                                "note: projected from here\n");
+				if (print_status < 0)
 					goto err_printer;
 			}
 			lcx = nlcx;
@@ -756,31 +750,32 @@ _tpp_lexer_builtin_warnhandler(struct tpp_lexer *tpp_restrict self,
 			 * line-feed) */
 			tpp_lexer_printf_info caller_info;
 			tpp_lexer_printf_info_init_at(&caller_info, caller, caller->tf_tpos);
-			if (tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
-			                             tpp_lexer_getfileandlineformat(self)) < 0)
+			print_status = tpp_lexer_printf_warning(self, &caller_info, printer, printer_arg,
+			                                        tpp_lexer_getfileandlineformat(self));
+			if (print_status < 0)
 				goto err_printer;
 #if TPP_HAVE_MACRO_NAME
 			if (tpp_file_ismacro(caller) &&
 			    tpp_macro_getname(tpp_file_getmacro(caller))) {
 				tpp_keyword const *macro_name = tpp_macro_getname(tpp_file_getmacro(caller));
-				if (tpp_lexer_printf_warning(self, info, printer, printer_arg,
-				                             "note: originating from expansion of %[%.*s%]\n",
-				                             (unsigned int)tpp_keyword_getlen(macro_name),
-				                             tpp_keyword_getstr(macro_name)) < 0)
-					goto err_printer;
+				print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
+				                                        "note: originating from expansion of %[%.*s%]\n",
+				                                        (unsigned int)tpp_keyword_getlen(macro_name),
+				                                        tpp_keyword_getstr(macro_name));
 			} else
 #endif /* TPP_HAVE_MACRO_NAME */
 			{
-				if (tpp_formatprinter_print_conststr(printer, printer_arg,
-				                                     "note: originating from here\n") < 0)
-					goto err_printer;
+				print_status = tpp_formatprinter_print_conststr(printer, printer_arg,
+				                                                "note: originating from here\n");
 			}
+			if (print_status < 0)
+				goto err_printer;
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_STACK */
 	return TPP_EOK;
 err_printer:
-	return TPP_EWARNPRINT;
+	return TPP_SSIZE_ASERR(print_status);
 }
 #endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
@@ -872,9 +867,9 @@ done:
 
 /* Emits the specified lexer warning at the start of the current token.
  * @param: args: Format arguments specific to `id` (see `%`-sequences in warning expressions)
- * @return: TPP_EOK:        Warning was emitted, but you may proceed
- * @return: TPP_ELEXERROR:  Warning was emitted, but was configured as an error
- * @return: TPP_EWARNPRINT: Error while printing warning */
+ * @return: TPP_EOK:       Warning was emitted, but you may proceed
+ * @return: TPP_ELEXERROR: Warning was emitted, but was configured as an error
+ * @return: TPP_EUSER(*):  Error while printing warning */
 TPP_IMPL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_vwarnf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args) {
 	tpp_file *const file = tpp_lexer_getfile(self);
