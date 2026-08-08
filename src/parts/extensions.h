@@ -48,7 +48,10 @@ typedef union tpp_extensions_state {
 	} TPP_INTERNAL(tes_flags);
 	unsigned char TPP_INTERNAL(tes_bitset)[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_extensions_state;
+
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_extensions_state_getid(self, id) \
 	((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))

@@ -235,7 +235,9 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
  * - `tpp_extension_getname()`
  * - `tpp_warning_group_getnames()`
  */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL char const tpp_cli_loader_help[];
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_HAVE_CLI_HELP */
 #endif /* TPP_HAVE_CLI */
 

@@ -81,11 +81,15 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_trymalloc(tpp_size len);
 TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
-TPP_DECL struct tpp_string_empty_struct {
+struct TPP_INTERNAL(tpp_string_empty_struct) {
 	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
 	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
 	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
-} _tpp_string_empty;
+};
+
+#if !TPP_USE_STATIC
+TPP_DECL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_string_newempty()               \
 	(tpp_string_incref(&_tpp_string_empty), \

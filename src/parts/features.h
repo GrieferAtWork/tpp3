@@ -72,7 +72,9 @@ print("	} TPP_INTERNAL(tf_flags);");
 print("	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
 print("} tpp_features;");
 print("");
+print("#if !TPP_USE_STATIC");
 print("TPP_CONST_DECL tpp_features const tpp_features_default;");
+print("#endif /" "* !TPP_USE_STATIC *" "/");
 print("");
 print("#define tpp_features_getid(self, id) \\");
 print("	((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
@@ -2366,7 +2368,9 @@ typedef union tpp_features {
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
 
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_features const tpp_features_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_features_getid(self, id) \
 	((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))

@@ -73,7 +73,9 @@ TPP_DECL_BEGIN
 #else /* UINT_LEAST8_MAX == 0xff */
 #define _tpp_ascii_mask(ch) ((ch) & 0xff)
 #endif /* UINT_LEAST8_MAX != 0xff */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
+#endif /* !TPP_USE_STATIC */
 #define tpp_ascii_issymstrt(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_ascii_issymcont(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
 #define tpp_ascii_isdigit(ch)      (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISDIGIT)
@@ -234,7 +236,9 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
 	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - 128])
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
+#endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_cur _tpp_unicode_utf8seqlen_mb_cur
 #endif /* !tpp_unicode_utf8seqlen_mb_getcur */
 
@@ -261,7 +265,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
 #define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
 	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - 128])
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
+#endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_max _tpp_unicode_utf8seqlen_mb_max
 #endif /* !tpp_unicode_utf8seqlen_mb_getmax */
 

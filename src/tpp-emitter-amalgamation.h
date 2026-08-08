@@ -815,7 +815,9 @@ typedef union tpp_emitter_features {
 	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
 
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_emitter_features_getid(self, id) \
 	((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
@@ -1427,7 +1429,9 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self);
 #if TPP_EMITTER_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL char const tpp_emitter_cli_loader_help[];
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_EMITTER_HAVE_CLI_HELP */
 #endif /* TPP_EMITTER_HAVE_CLI */
 

@@ -1017,12 +1017,12 @@ tpp_keyword_destroychain(tpp_keyword *tpp_restrict chain) {
 }
 
 
-TPP_IMPL TPP_REF tpp_keyword *tpp_keywords_empty_map[1] = { NULL };
+TPP_CONST_IMPL TPP_REF tpp_keyword *const _tpp_keywords_empty_map[1] = { NULL };
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self) {
 	TPP_REF tpp_keyword **bckv = self->tks_bckv;
-	if (bckv != tpp_keywords_empty_map) {
+	if (bckv != (tpp_keyword **)_tpp_keywords_empty_map) {
 		tpp_hash i;
 		for (i = 0; i <= self->tks_bckm; ++i) {
 			TPP_REF tpp_keyword *chain = bckv[i];
@@ -1192,7 +1192,7 @@ tpp_keywords_copy(tpp_keywords *tpp_restrict self,
 	self->tks_kwdc = from->tks_kwdc;
 	self->tks_bckm = from->tks_bckm;
 	self->tks_bckv = from->tks_bckv;
-	if (self->tks_bckv != tpp_keywords_empty_map) {
+	if (self->tks_bckv != (tpp_keyword **)_tpp_keywords_empty_map) {
 		TPP_REF tpp_keyword **bckv;
 		tpp_keyword const *const *src;
 		tpp_hash i;
@@ -1406,7 +1406,7 @@ tpp_keywords_inskeyword(tpp_keywords *tpp_restrict self,
 		}
 
 		/* Free old table and assume new one. */
-		if (self->tks_bckv != tpp_keywords_empty_map)
+		if (self->tks_bckv != (tpp_keyword **)_tpp_keywords_empty_map)
 			tpp_free(self->tks_bckv);
 		self->tks_bckv = new_table;
 		self->tks_bckm = new_mask;
@@ -1414,7 +1414,7 @@ tpp_keywords_inskeyword(tpp_keywords *tpp_restrict self,
 
 do_insert:
 	tpp_assert(self->tks_bckm != 0);
-	tpp_assert(self->tks_bckv != tpp_keywords_empty_map);
+	tpp_assert(self->tks_bckv != (tpp_keyword **)_tpp_keywords_empty_map);
 	{
 		TPP_REF tpp_keyword **bucket;
 		bucket = &self->tks_bckv[kwd->tk_hash & self->tks_bckm];

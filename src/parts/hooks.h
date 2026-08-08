@@ -1623,10 +1623,6 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
                                tpp_warning_id id, va_list args);
 #endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
 
-#if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_mesgprinter, arg, text, num_bytes);
-#endif /* TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
-
 #if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_restrict result);

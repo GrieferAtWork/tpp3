@@ -52,7 +52,7 @@ tpp_string_malloc(tpp_size len) {
 	return result;
 }
 
-TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
+TPP_IMPL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty = {
 	/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),
 	/* .ts_len    = */ 0,
 	/* .ts_nul    = */ 0,

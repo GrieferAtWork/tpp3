@@ -5215,12 +5215,34 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 #endif /* !__GNUC__ */
 #endif /* !TPP_GCC_VERSION_NUM */
 
-/* Declaration providers for internal functions used across multiple source files.
- * HINT: These get hard-overwritten to "static" in "tpp-amalgamation.c" */
+/* When defined to `1`, TPP is configured such that *everything* is declared
+ * and implement as `static`. When that is the case, TPP is only accessible
+ * within the source file that includes `tpp-amalgamation.c`, but also makes
+ * it possible to have *multiple* (possibly differently configured) instances
+ * of TPP exist within the same process.
+ *
+ * If you only indent to use TPP from a singular source file, enabling this
+ * option is *highly* recommended, as it also allows compilers to done some
+ * advanced optimizations:
+ * - Since everything is contained in a single source file, the compiler can
+ *   essentially optimization TPP like it would normally only do during a
+ *   whole-program-optimization pass (which can normally only happen during
+ *   linking)
+ * - Since everything is defined `static`, compilers will tell you which
+ *   functions/APIs are still enabled by your config, but aren't actually
+ *   used anywhere (meaning you could just turn off whatever config(s) cause
+ *   those functions to be provided in order to further optimize TPP) */
+#ifndef TPP_USE_STATIC
+#define TPP_USE_STATIC 0
+#endif /* !TPP_USE_STATIC */
+
+
 #ifndef TPP_IMPL
-#if (defined(_WIN64) || defined(WIN64) || \
-     defined(_WIN32) || defined(WIN32) || \
-     defined(__WIN32__) || defined(__CYGWIN__))
+#if TPP_USE_STATIC
+#define TPP_IMPL static
+#elif (defined(_WIN64) || defined(WIN64) || \
+       defined(_WIN32) || defined(WIN32) || \
+       defined(__WIN32__) || defined(__CYGWIN__))
 #define TPP_IMPL /* nothing */
 #elif TPP_HOST_HAS_ATTRIBUTE(__visibility__)
 #define TPP_IMPL __attribute__((__visibility__("hidden")))
@@ -5228,19 +5250,30 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
 #define TPP_IMPL /* nothing */
 #endif /* !... */
 #endif /* !TPP_IMPL */
+
 #ifndef TPP_DECL
+#if TPP_USE_STATIC
+#define TPP_DECL static
+#else /* TPP_USE_STATIC */
 #define TPP_DECL extern TPP_IMPL
+#endif /* !TPP_USE_STATIC */
 #endif /* !TPP_DECL */
+
 #ifndef TPP_CONST_IMPL
-#ifdef __cplusplus
+#if TPP_USE_STATIC
+#define TPP_CONST_IMPL static
+#elif defined(__cplusplus)
 #define TPP_CONST_IMPL extern TPP_IMPL
 #else /* __cplusplus */
 #define TPP_CONST_IMPL TPP_IMPL
 #endif /* !__cplusplus */
 #endif /* !TPP_CONST_IMPL */
-#ifndef TPP_CONST_DECL
+#if TPP_USE_STATIC
+#undef TPP_CONST_DECL /* Can't forward-declare static data */
+#elif !defined(TPP_CONST_DECL)
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
+
 #ifndef tpp_restrict
 #ifdef restrict
 #define tpp_restrict restrict
@@ -12815,7 +12848,9 @@ char const *TPPCALL tpp_strerror(tpp_errno error);
 #else /* UINT_LEAST8_MAX == 0xff */
 #define _tpp_ascii_mask(ch) ((ch) & 0xff)
 #endif /* UINT_LEAST8_MAX != 0xff */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
+#endif /* !TPP_USE_STATIC */
 #define tpp_ascii_issymstrt(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_ascii_issymcont(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
 #define tpp_ascii_isdigit(ch)      (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISDIGIT)
@@ -12967,7 +13002,9 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
 	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - 128])
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
+#endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_cur _tpp_unicode_utf8seqlen_mb_cur
 #endif /* !tpp_unicode_utf8seqlen_mb_getcur */
 
@@ -12994,7 +13031,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
 #define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
 	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - 128])
+#if !TPP_USE_STATIC
 TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
+#endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_max _tpp_unicode_utf8seqlen_mb_max
 #endif /* !tpp_unicode_utf8seqlen_mb_getmax */
 
@@ -13253,11 +13292,15 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_trymalloc(tpp_size len);
 TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
-TPP_DECL struct tpp_string_empty_struct {
+struct TPP_INTERNAL(tpp_string_empty_struct) {
 	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
 	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
 	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
-} _tpp_string_empty;
+};
+
+#if !TPP_USE_STATIC
+TPP_DECL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_string_newempty()               \
 	(tpp_string_incref(&_tpp_string_empty), \
@@ -18532,7 +18575,9 @@ typedef union tpp_features {
 	unsigned char TPP_INTERNAL(ttf_bitset)[TPP_FEAT_COUNT ? ((TPP_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_features;
 
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_features const tpp_features_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_features_getid(self, id) \
 	((self)->TPP_INTERNAL(ttf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
@@ -20498,7 +20543,9 @@ tpp_file_popdummy(tpp_file *tpp_restrict self);
 #if TPP_TABSIZE >= 0
 #define tpp_gettabsize() TPP_TABSIZE
 #else /* TPP_TABSIZE >= 0 */
+#if !TPP_USE_STATIC
 TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below */
+#endif /* !TPP_USE_STATIC */
 #define tpp_gettabsize()  _tpp_tabsize
 #define tpp_settabsize(v) (void)(_tpp_tabsize = (v))
 #endif /* TPP_TABSIZE < 0 */
@@ -21539,13 +21586,15 @@ typedef struct tpp_keywords {
 	                                               *       no keyword has some other reference count value. */
 } tpp_keywords;
 
-TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
+#if !TPP_USE_STATIC
+TPP_CONST_DECL TPP_REF tpp_keyword *const _tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
+#endif /* !TPP_USE_STATIC */
 
 /* Initialize/finalize a given keywords table. */
 #define tpp_keywords_init(self)                \
 	(void)((self)->TPP_INTERNAL(tks_kwdc) = 0, \
 	       (self)->TPP_INTERNAL(tks_bckm) = 0, \
-	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
+	       (self)->TPP_INTERNAL(tks_bckv) = (tpp_keyword **)_tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
 #if TPP_HAVE_LEXER_COPY
@@ -21722,7 +21771,10 @@ typedef union tpp_extensions_state {
 	} TPP_INTERNAL(tes_flags);
 	unsigned char TPP_INTERNAL(tes_bitset)[TPP_EXT_COUNT ? ((TPP_EXT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_extensions_state;
+
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_extensions_state const tpp_extensions_state_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_extensions_state_getid(self, id) \
 	((self)->TPP_INTERNAL(tes_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
@@ -22044,7 +22096,9 @@ typedef union tpp_warnings_state {
 	unsigned char TPP_INTERNAL(tws_bitset)[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_warnings_state;
 
-TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
+#if !TPP_USE_STATIC
+TPP_CONST_DECL tpp_warnings_state const tpp_warnings_state_default;
+#endif /* !TPP_USE_STATIC */
 
 #define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1))))
 #define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1))) << 1)
@@ -23984,10 +24038,6 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args);
 #endif /* TPP_HAVE_BUILTIN_WARNHANDLER_HOOK */
-
-#if TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_mesgprinter, arg, text, num_bytes);
-#endif /* TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_PARSEEXPR_HOOK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -26888,7 +26938,9 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self);
  * - `tpp_extension_getname()`
  * - `tpp_warning_group_getnames()`
  */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL char const tpp_cli_loader_help[];
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_HAVE_CLI_HELP */
 #endif /* TPP_HAVE_CLI */
 

@@ -157,7 +157,9 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self);
 #if TPP_MAKEFILE_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL char const tpp_makefile_cli_loader_help[];
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_MAKEFILE_HAVE_CLI_HELP */
 #endif /* TPP_MAKEFILE_HAVE_CLI */
 

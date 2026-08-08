@@ -792,13 +792,15 @@ typedef struct tpp_keywords {
 	                                               *       no keyword has some other reference count value. */
 } tpp_keywords;
 
-TPP_DECL TPP_REF tpp_keyword *tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
+#if !TPP_USE_STATIC
+TPP_CONST_DECL TPP_REF tpp_keyword *const _tpp_keywords_empty_map[1]; /* Consider this one TPP_INTERNAL */
+#endif /* !TPP_USE_STATIC */
 
 /* Initialize/finalize a given keywords table. */
 #define tpp_keywords_init(self)                \
 	(void)((self)->TPP_INTERNAL(tks_kwdc) = 0, \
 	       (self)->TPP_INTERNAL(tks_bckm) = 0, \
-	       (self)->TPP_INTERNAL(tks_bckv) = tpp_keywords_empty_map)
+	       (self)->TPP_INTERNAL(tks_bckv) = (tpp_keyword **)_tpp_keywords_empty_map)
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_fini(tpp_keywords *tpp_restrict self);
 #if TPP_HAVE_LEXER_COPY

@@ -19,12 +19,27 @@
  */
 #define TPP_BUILDING_OPTIONAL 1
 #ifdef USE_AMALGAMATION
-#define TPP_PROFILE TPP_PROFILE_ALL /* Enable all features */
-#define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions for everything */
+#define TPP_PROFILE TPP_PROFILE_ALL /* Enable everything */
+#define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions instead of features (so everything is configurable via `-f[no-]extension`) */
+#define TPP_USE_STATIC 1            /* Define everything with `static` linkage */
 
-#include "tpp-amalgamation.c"
-#include "tpp-emitter-amalgamation.c"
-#include "tpp-makefile-amalgamation.c"
+/* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used */
+#define TPP_HAVE_LEXER_COPY             0
+#define TPP_HAVE_KEYWORDS_UNDEFALL      0
+#define TPP_HAVE_KEYWORDS_UNASSERTALL   0
+#define TPP_HAVE_KEYWORDS_RESETFLAGS    0
+#define TPP_HAVE_KEYWORDS_RESETFEATURES 0
+#define TPP_HAVE_KEYWORDS_RESETCOUNTERS 0
+/* TODO: Make it so `_tpp_lexer_pushfile_text` isn't defined */
+/* TODO: Make it so `_tpp_lexer_initfile_text` isn't defined */
+/* TODO: Make it so `tpp_keyword_undefuser` isn't defined */
+#undef TPP_USE_STATIC
+#define TPP_USE_STATIC 0 /* TODO: Disabled (for now) to prevent "-Wunused-function" */
+
+/* Pull in TPP sources */
+#include "tpp-amalgamation.c"          /* CORE */
+#include "tpp-emitter-amalgamation.c"  /* Source extension: EMITTER */
+#include "tpp-makefile-amalgamation.c" /* Source extension: MAKEFILE */
 #else /* USE_AMALGAMATION */
 #include "tpp.h"
 #include "tpp-emitter.h"
@@ -620,9 +635,9 @@ out_emitter_file:
 out_emitter:
 	tpp_emitter_fini(&fe.tf_emitter);
 	tpp_lexer_fini(&fe.tf_lexer);
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC)
 	_CrtDumpMemoryLeaks();
-#endif /* _MSC_VER */
+#endif /* _MSC_VER && _CRTDBG_MAP_ALLOC */
 	return result;
 out_emitter_cli_file:
 	tpp_lexer_finifile(&fe.tf_lexer);

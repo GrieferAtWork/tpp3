@@ -1129,7 +1129,9 @@ tpp_file_popdummy(tpp_file *tpp_restrict self);
 #if TPP_TABSIZE >= 0
 #define tpp_gettabsize() TPP_TABSIZE
 #else /* TPP_TABSIZE >= 0 */
+#if !TPP_USE_STATIC
 TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below */
+#endif /* !TPP_USE_STATIC */
 #define tpp_gettabsize()  _tpp_tabsize
 #define tpp_settabsize(v) (void)(_tpp_tabsize = (v))
 #endif /* TPP_TABSIZE < 0 */

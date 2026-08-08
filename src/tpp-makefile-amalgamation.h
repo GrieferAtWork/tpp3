@@ -112,7 +112,9 @@ typedef union tpp_makefile_features {
 	unsigned char TPP_MAKEFILE_INTERNAL(tetf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_makefile_features;
 
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_makefile_features_getid(self, id) \
 	((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
@@ -352,7 +354,9 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self);
 #if TPP_MAKEFILE_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
+#if !TPP_USE_STATIC
 TPP_CONST_DECL char const tpp_makefile_cli_loader_help[];
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_MAKEFILE_HAVE_CLI_HELP */
 #endif /* TPP_MAKEFILE_HAVE_CLI */
 

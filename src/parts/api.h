@@ -225,12 +225,34 @@
 #endif /* !__GNUC__ */
 #endif /* !TPP_GCC_VERSION_NUM */
 
-/* Declaration providers for internal functions used across multiple source files.
- * HINT: These get hard-overwritten to "static" in "tpp-amalgamation.c" */
+/* When defined to `1`, TPP is configured such that *everything* is declared
+ * and implement as `static`. When that is the case, TPP is only accessible
+ * within the source file that includes `tpp-amalgamation.c`, but also makes
+ * it possible to have *multiple* (possibly differently configured) instances
+ * of TPP exist within the same process.
+ *
+ * If you only indent to use TPP from a singular source file, enabling this
+ * option is *highly* recommended, as it also allows compilers to done some
+ * advanced optimizations:
+ * - Since everything is contained in a single source file, the compiler can
+ *   essentially optimization TPP like it would normally only do during a
+ *   whole-program-optimization pass (which can normally only happen during
+ *   linking)
+ * - Since everything is defined `static`, compilers will tell you which
+ *   functions/APIs are still enabled by your config, but aren't actually
+ *   used anywhere (meaning you could just turn off whatever config(s) cause
+ *   those functions to be provided in order to further optimize TPP) */
+#ifndef TPP_USE_STATIC
+#define TPP_USE_STATIC 0
+#endif /* !TPP_USE_STATIC */
+
+
 #ifndef TPP_IMPL
-#if (defined(_WIN64) || defined(WIN64) || \
-     defined(_WIN32) || defined(WIN32) || \
-     defined(__WIN32__) || defined(__CYGWIN__))
+#if TPP_USE_STATIC
+#define TPP_IMPL static
+#elif (defined(_WIN64) || defined(WIN64) || \
+       defined(_WIN32) || defined(WIN32) || \
+       defined(__WIN32__) || defined(__CYGWIN__))
 #define TPP_IMPL /* nothing */
 #elif TPP_HOST_HAS_ATTRIBUTE(__visibility__)
 #define TPP_IMPL __attribute__((__visibility__("hidden")))
@@ -238,19 +260,30 @@
 #define TPP_IMPL /* nothing */
 #endif /* !... */
 #endif /* !TPP_IMPL */
+
 #ifndef TPP_DECL
+#if TPP_USE_STATIC
+#define TPP_DECL static
+#else /* TPP_USE_STATIC */
 #define TPP_DECL extern TPP_IMPL
+#endif /* !TPP_USE_STATIC */
 #endif /* !TPP_DECL */
+
 #ifndef TPP_CONST_IMPL
-#ifdef __cplusplus
+#if TPP_USE_STATIC
+#define TPP_CONST_IMPL static
+#elif defined(__cplusplus)
 #define TPP_CONST_IMPL extern TPP_IMPL
 #else /* __cplusplus */
 #define TPP_CONST_IMPL TPP_IMPL
 #endif /* !__cplusplus */
 #endif /* !TPP_CONST_IMPL */
-#ifndef TPP_CONST_DECL
+#if TPP_USE_STATIC
+#undef TPP_CONST_DECL /* Can't forward-declare static data */
+#elif !defined(TPP_CONST_DECL)
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
+
 #ifndef tpp_restrict
 #ifdef restrict
 #define tpp_restrict restrict

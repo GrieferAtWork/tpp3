@@ -75,7 +75,9 @@ print("	} TPP_MAKEFILE_INTERNAL(tef_flags);");
 print("	unsigned char TPP_MAKEFILE_INTERNAL(tetf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
 print("} tpp_makefile_features;");
 print("");
+print("#if !TPP_USE_STATIC");
 print("TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;");
+print("#endif /" "* !TPP_USE_STATIC *" "/");
 print("");
 print("#define tpp_makefile_features_getid(self, id) \\");
 print("	((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
@@ -121,7 +123,9 @@ typedef union tpp_makefile_features {
 	unsigned char TPP_MAKEFILE_INTERNAL(tetf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_makefile_features;
 
+#if !TPP_USE_STATIC
 TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
+#endif /* !TPP_USE_STATIC */
 
 #define tpp_makefile_features_getid(self, id) \
 	((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))

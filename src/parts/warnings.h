@@ -254,7 +254,9 @@ typedef union tpp_warnings_state {
 	unsigned char TPP_INTERNAL(tws_bitset)[TPP_WC_COUNT ? (((TPP_WC_COUNT * 2) + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_warnings_state;
 
-TPP_DECL tpp_warnings_state const tpp_warnings_state_default;
+#if !TPP_USE_STATIC
+TPP_CONST_DECL tpp_warnings_state const tpp_warnings_state_default;
+#endif /* !TPP_USE_STATIC */
 
 #define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / (TPP_CHAR_BIT >> 1))))
 #define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % (TPP_CHAR_BIT >> 1))) << 1)

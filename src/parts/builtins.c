@@ -240,7 +240,7 @@ tpp_warning_getgroups(tpp_warning_id id) {
 	return tpp_warning_groups_fast((unsigned int)id);
 }
 
-TPP_IMPL tpp_warnings_state const tpp_warnings_state_default = {
+TPP_CONST_IMPL tpp_warnings_state const tpp_warnings_state_default = {
 	/* .tws_state = */ {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
