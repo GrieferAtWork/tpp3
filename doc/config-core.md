@@ -1031,7 +1031,7 @@ the lexer *itself* will be passed as cookie
 Default:
 
 ```c
-0 // TODO: (TPP_PROFILE != TPP_PROFILE_MINIMAL)
+TPP_PROFILE != TPP_PROFILE_MINIMAL
 ```
 </details>
 

@@ -43367,7 +43367,8 @@ again_handle_set_warning_state:
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_MESSAGE
 #ifndef tpp_lexer_gethook_mesgprinter
-#define tpp_lexer_gethook_mesgprinter(self) (&tpp_dummy_printer)
+#define tpp_lexer_gethook_mesgprinter(self)       (&tpp_dummy_printer)
+#define tpp_lexer_gethookcookie_mesgprinter(self) (self)
 #ifndef tpp_dummy_printer
 #define tpp_dummy_printer tpp_dummy_printer
 static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
@@ -43402,7 +43403,9 @@ tpp_lexer_process_pragma_message(tpp_lexer *tpp_restrict self) {
 	if (TPP_TOK_ISSTRING(tok)) {
 		tpp_ssize status;
 		tpp_lexer_decodestring_config config;
-		tpp_lexer_decodestring_config_init_simple(&config, tpp_lexer_gethook_mesgprinter(self), self);
+		tpp_lexer_decodestring_config_init_simple(&config,
+		                                          tpp_lexer_gethook_mesgprinter(self),
+		                                          tpp_lexer_gethookcookie_mesgprinter(self));
 #if TPP_HAVE_PRAGMA_MESSAGE_PRINTS_LOCATION
 		if (tpp_lexer_has(self, PRAGMA_MESSAGE_PRINTS_LOCATION)) {
 			tpp_lexer_printf_info info;
