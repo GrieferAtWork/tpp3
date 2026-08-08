@@ -308,9 +308,6 @@
     <None Include="..\doc\config-conf.md">
       <Filter>doc</Filter>
     </None>
-    <None Include="..\src\Makefile">
-      <Filter>src</Filter>
-    </None>
     <None Include="..\src\parts\config.dee">
       <Filter>src\parts</Filter>
     </None>
@@ -344,5 +341,6 @@
     <None Include="..\src\scripts\Makefile.autoformat.dee">
       <Filter>src\scripts</Filter>
     </None>
+    <None Include="..\Makefile" />
   </ItemGroup>
 </Project>
