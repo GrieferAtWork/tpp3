@@ -22,6 +22,9 @@
     <Filter Include="src\parts\optional\emitter">
       <UniqueIdentifier>{03246e83-1de2-4fa8-9497-65366594ffe7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\parts\optional\makefile">
+      <UniqueIdentifier>{a9163b78-ef8d-46c5-9a83-a0805b061e28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\frontend.c">
@@ -165,6 +168,18 @@
     <ClCompile Include="..\src\parts\optional\emitter\emitter-io.c">
       <Filter>src\parts\optional\emitter</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\tpp-makefile.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\optional\makefile\mf.c">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\optional\makefile\mf-cli.c">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\parts\optional\makefile\mf-features.c">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -271,6 +286,27 @@
     </ClInclude>
     <ClInclude Include="..\src\parts\optional\emitter\emitter-io.h">
       <Filter>src\parts\optional\emitter</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\tpp-makefile.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\api.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\config.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\expose-internals.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\mf.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\mf-cli.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\mf-features.h">
+      <Filter>src\parts\optional\makefile</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
