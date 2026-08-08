@@ -47,17 +47,25 @@
 #define TPP_EMITTER_HAVE_MODE_TYPED (TPP_HAVE_STRTOKENID && TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_TYPED */
 
+/* Provide support for `TPP_EMITTER_MODE_ZERO`, where tokens are
+ * emitted in their normalized form (see `TPP_EMITTER_HAVE_NORMALIZE_*`),
+ * with every token followed by a NUL-byte. This format is primarily
+ * meant for preprocessing small files such that another process can
+ * (fairly easily) consume those tokens without having to worry about
+ * the boundaries between tokens. */
+#ifndef TPP_EMITTER_HAVE_MODE_ZERO
+#define TPP_EMITTER_HAVE_MODE_ZERO (TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_EMITTER_HAVE_MODE_ZERO */
+
 #undef TPP_EMITTER_HAVE_EMIT_TOKEN
 #if (TPP_EMITTER_HAVE_MODE_EMIT ||    \
      TPP_EMITTER_HAVE_MODE_BRACKET || \
-     TPP_EMITTER_HAVE_MODE_TYPED)
+     TPP_EMITTER_HAVE_MODE_TYPED ||   \
+     TPP_EMITTER_HAVE_MODE_ZERO)
 #define TPP_EMITTER_HAVE_EMIT_TOKEN 1
 #else /* ... */
 #define TPP_EMITTER_HAVE_EMIT_TOKEN 0
 #endif /* !... */
-
-/* TODO: Emitter mode similar to TPP2's `--pp`, where tokens are emitted
- *       in a format that is very easily parseable by a machine. */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any `TPP_TOK_SPACE`-token
  * is emitted as an (appropriately long) sequence of ` `-characters, rather
@@ -576,6 +584,14 @@
 #define TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED \
 	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_TYPED)
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
+
+/* `--mode=zero`
+ * - Set emitter mode to `TPP_EMITTER_HAVE_MODE_ZERO`
+ * - Turn off emission of `SPACE` and `LF` tokens */
+#ifndef TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO
+#define TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO \
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_ZERO)
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO */
 
 /*[[[tpp-end]]]*/
 

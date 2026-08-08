@@ -33,7 +33,16 @@
 
 #if TPP_OS_WINDOWS
 #include <Windows.h> /* For: `SetConsoleOutputCP(CP_UTF8)` */
+#ifdef _MSC_VER
+#include <fcntl.h>
+#include <io.h>
+#endif /* _MSC_VER */
 #endif /* TPP_OS_WINDOWS */
+
+/* Enable TPP2-compatibility CLI options */
+#ifndef TPP_FRONTEND_HAVE_TPP2_COMPAT
+#define TPP_FRONTEND_HAVE_TPP2_COMPAT TPP_HAVE_PROFILE_ALL
+#endif /* !TPP_FRONTEND_HAVE_TPP2_COMPAT */
 
 TPP_DECL_BEGIN
 
@@ -88,6 +97,19 @@ TPP_CLI_HELP1("--help", "Display this help")
 TPP_CLI_HELP1("--help SUBJECT", "Display extra help on {cli|extensions|warnings}")
 TPP_CLI_HELP1("--version", "Display version information")
 TPP_CLI_HELP2("-o FILE", "--output=FILE", "Write output to FILE")
+#if TPP_FRONTEND_HAVE_TPP2_COMPAT
+TPP_CLI_HELP1("-f[no]spc", "Alias for -f[no-]tok-space")
+TPP_CLI_HELP1("-f[no]lf", "Alias for -f[no-]tok-lf")
+TPP_CLI_HELP1("-f[no]comments", "Alias for -f[no-]tok-comment")
+TPP_CLI_HELP1("-f[no]longstring", "Alias for -fstring-allow-multiline, -Wno-multiline-string")
+TPP_CLI_HELP1("-f[no]unify-pragma", "Alias for -f[no-]reemit-unknown-pragma")
+TPP_CLI_HELP1("-fline", "Alias for -fno-use-cpp-digit")
+TPP_CLI_HELP1("-fno-line", "Alias for -P")
+TPP_CLI_HELP1("-fcpp-line", "Alias for -fuse-cpp-digit")
+TPP_CLI_HELP1("--message-format=GCC|MSVC", "Set file-and-line format in messages")
+TPP_CLI_HELP1("--tok", "Alias for --mode=bracket")
+TPP_CLI_HELP1("--pp", "Alias for --mode=zero")
+#endif /* TPP_FRONTEND_HAVE_TPP2_COMPAT */
 "";
 
 static tpp_size tpp_help_maxspelling(char const *db, bool all_spellings) {
@@ -261,22 +283,6 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
 	 */
 
-	/* TODO: Support TPP2-style CLI aliases:
-	 * - -f[no-]spc:            configure 'TPP_HAVE_TOK_SPACE'
-	 * - -f[no-]lf:             configure 'TPP_HAVE_TOK_LF'
-	 * - -f[no-]comments:       configure 'TPP_HAVE_TOK_COMMENT'
-	 * - -f[no-]longstring:     turn on 'TPP_HAVE_STRING_ALLOW_MULTILINE' + disable '-Wno-multiline-string'
-	 * - -f[no-]unify-pragma:   alias for '-f[no-]reemit-unknown-pragma'
-	 * - -fline:                turn off 'TPP_EMITTER_HAVE_NOLINE', turn off 'TPP_EMITTER_HAVE_USE_CPP_DIGIT'
-	 * - -fno-line:             turn on 'TPP_EMITTER_HAVE_NOLINE'
-	 * - -fcpp-line:            turn off 'TPP_EMITTER_HAVE_NOLINE', turn on 'TPP_EMITTER_HAVE_USE_CPP_DIGIT'
-	 * - --message-format=gcc:  tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")
-	 * - --message-format=msvc: tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")
-	 * - -i ...:                Construct TEXT-file from remainder of CLI, which is then used as input (use 'TPP_CONFIG_CLI_FILENAME' as filename)
-	 * - --tok:                 tpp_emitter_setmode(TPP_EMITTER_MODE_BRACKET)
-	 * - --pp:                  tpp_emitter_setmode(TODO), turn off SPACE/LF
-	 */
-
 	case TPP_FRONTEND_CLI_STATE_NORMAL:
 		switch (*arg++) {
 		case '-': {
@@ -304,9 +310,92 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 					}
 					break;
 
+#if TPP_FRONTEND_HAVE_TPP2_COMPAT
+				case 'm':
+					if (tpp_streq(arg, "essage-format=")) { /* --message-format=... */
+						arg += (sizeof("essage-format=") - sizeof(char));
+						if (tpp_streq(arg, "gcc\0")) {
+							tpp_lexer_setfileandlineformat(tpp_emitter_getlexer(&self->tf_emitter),
+							                               "%Pf:%Pl:%Pc: ");
+							return TPP_EOK;
+						} else if (tpp_streq(arg, "msvc\0")) {
+							tpp_lexer_setfileandlineformat(tpp_emitter_getlexer(&self->tf_emitter),
+							                               "%Pf(%Pl, %Pc): ");
+							return TPP_EOK;
+						}
+					}
+					break;
+				case 't':
+					if (tpp_streq(arg, "ok\0")) { /* --tok */
+						tpp_emitter_setmode(&self->tf_emitter, TPP_EMITTER_MODE_BRACKET);
+						return TPP_EOK;
+					}
+					break;
+				case 'p':
+					if (tpp_streq(arg, "p\0")) { /* --pp */
+						tpp_emitter_setmode(&self->tf_emitter, TPP_EMITTER_MODE_ZERO);
+						return TPP_EOK;
+					}
+					break;
+#endif /* TPP_FRONTEND_HAVE_TPP2_COMPAT */
+
 				default: break;
 				}
 				break;
+
+			case 'f': {
+				bool no = false;
+				if (tpp_streq(arg, "no-"))
+					arg += 3, no = true;
+#if TPP_FRONTEND_HAVE_TPP2_COMPAT
+				if (tpp_streq(arg, "spc\0")) {
+					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
+					                              TPP_EXT_TOK_SPACE, !no);
+				} else if (tpp_streq(arg, "lf\0")) {
+					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
+					                              TPP_EXT_TOK_LF, !no);
+				} else if (tpp_streq(arg, "comments\0")) {
+					return tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
+					                              TPP_EXT_TOK_COMMENT, !no);
+				} else if (tpp_streq(arg, "longstring\0")) {
+					tpp_errno error;
+					error = tpp_lexer_setextension(tpp_emitter_getlexer(&self->tf_emitter),
+					                               TPP_EXT_STRING_ALLOW_MULTILINE, no);
+					if (!TPP_ISERR(error)) {
+						error = tpp_lexer_setwarninggrp(tpp_emitter_getlexer(&self->tf_emitter),
+						                                TPP_WG_MULTILINE_STRING,
+						                                no ? TPP_WSTATE_WARN
+						                                   : TPP_WSTATE_DISABLED);
+					}
+					return error;
+				} else if (tpp_streq(arg, "unify-pragma\0")) {
+					tpp_emitter_set_reemit_unknown_pragma(&self->tf_emitter, !no);
+					return TPP_EOK;
+				} else if (tpp_streq(arg, "line\0")) {
+					if (no) {
+						tpp_emitter_enablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_NOLINE);
+					} else {
+						tpp_emitter_disablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_NOLINE);
+						tpp_emitter_disablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT);
+					}
+					return TPP_EOK;
+				} else if (tpp_streq(arg, "cpp-line\0") && !no) {
+					tpp_emitter_disablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_NOLINE);
+					tpp_emitter_enablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT);
+					return TPP_EOK;
+				}
+#endif /* TPP_FRONTEND_HAVE_TPP2_COMPAT */
+			}	break;
+
+#if TPP_FRONTEND_HAVE_TPP2_COMPAT
+			case 'i': {
+				if (*arg == '\0') {
+					/* XXX: Support TPP2-style CLI aliases:
+					 * - -i ...: Construct TEXT-file from remainder of CLI, which is then
+					 *          used as input (using 'TPP_CONFIG_CLI_FILENAME' as filename) */
+				}
+			}	break;
+#endif /* TPP_FRONTEND_HAVE_TPP2_COMPAT */
 
 			default: break;
 			}
@@ -416,6 +505,12 @@ int main(int argc, char **argv) {
 #if TPP_OS_WINDOWS
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
+#ifdef _MSC_VER
+	/* Disable stupid LF -> CRLF conversion for standard streams on windows */
+	(void)_setmode(0, _O_BINARY);
+	(void)_setmode(1, _O_BINARY);
+	(void)_setmode(2, _O_BINARY);
+#endif /* _MSC_VER */
 #endif /* TPP_OS_WINDOWS */
 
 	/* Initialize frontend */

@@ -3846,7 +3846,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TOK_C_CHAR "tok-char"
+#define TPP_EXTNAME_TOK_C_CHAR "tok-c-char"
 ```
 
 Detect:
@@ -3873,7 +3873,7 @@ TPP_COMMON_HAVE_TPP_TOK_C_GENERIC
 Extension name:
 
 ```c
-#define TPP_EXTNAME_TOK_C_STRING "tok-string"
+#define TPP_EXTNAME_TOK_C_STRING "tok-c-string"
 ```
 
 Detect:

@@ -320,7 +320,8 @@ tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 	(TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT ||    \
 	 TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE || \
 	 TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET || \
-	 TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED)
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED ||   \
+	 TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO)
 
 
 enum {
@@ -500,6 +501,16 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 						return error;
 					} else
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO
+					if (tpp_streq(arg, "zero\0")) {
+						tpp_errno error;
+						tpp_emitter_setmode(self->tcl_emitter, TPP_EMITTER_MODE_ZERO);
+						error = tpp_lexer_disable_TOK_SPACE(tpp_emitter_getlexer(self->tcl_emitter));
+						if (!TPP_ISERR(error))
+							error = tpp_lexer_disable_TOK_LF(tpp_emitter_getlexer(self->tcl_emitter));
+						return error;
+					} else
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO */
 					{
 					}
 				} else
@@ -973,6 +984,11 @@ TPP_CLI_HELP1("--mode=typed",
               "Set emitter to print tokens in [TYPE:REPR] notation\n"
               "Turn on emission of SPACE/LF tokens")
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED */
+#if TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO
+TPP_CLI_HELP1("--mode=zero",
+              "Set emitter to print tokens in REPR\\0 notation\n"
+              "Turn off emission of SPACE/LF tokens")
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO */
 "";
 #undef TPP_CLI_HELP1
 #undef TPP_CLI_HELP2

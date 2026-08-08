@@ -1805,6 +1805,21 @@ tpp_emitter_emitcurrent_typed(tpp_emitter *tpp_restrict self) {
 }
 #endif /* TPP_EMITTER_HAVE_MODE_TYPED */
 
+#if TPP_EMITTER_HAVE_MODE_ZERO
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_emitcurrent_zero(tpp_emitter *tpp_restrict self) {
+	tpp_ssize temp, result;
+	result = tpp_emitter_print_current_token(self);
+	if (result < 0)
+		return result;
+	temp = tpp_emitter_print_conststr(self, "\0");
+	if (temp < 0)
+		return temp;
+	result += temp;
+	return result;
+}
+#endif /* TPP_EMITTER_HAVE_MODE_ZERO */
+
 
 
 
@@ -1864,6 +1879,11 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 	case TPP_EMITTER_MODE_TYPED:
 		return tpp_emitter_emitcurrent_typed(self);
 #endif /* TPP_EMITTER_HAVE_MODE_TYPED */
+
+#if TPP_EMITTER_HAVE_MODE_ZERO
+	case TPP_EMITTER_MODE_ZERO:
+		return tpp_emitter_emitcurrent_zero(self);
+#endif /* TPP_EMITTER_HAVE_MODE_ZERO */
 
 	default: tpp_unreachable();
 	}

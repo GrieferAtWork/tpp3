@@ -2301,13 +2301,13 @@ print("#endif /" "* !... *" "/");
 /* Support for C character literals: `'foo'`
  * @detect: #if __TPP_COUNT_TOKENS("'foo'") == 1 */
 #ifndef TPP_HAVE_TOK_C_CHAR
-#define TPP_HAVE_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-char" */
+#define TPP_HAVE_TOK_C_CHAR TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-c-char" */
 #endif /* !TPP_HAVE_TOK_C_CHAR */
 
 /* Support for C string literals: `"foo"`
  * @detect: #if __TPP_COUNT_TOKENS('"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_C_STRING
-#define TPP_HAVE_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-string" */
+#define TPP_HAVE_TOK_C_STRING TPP_COMMON_HAVE_TPP_TOK_C_GENERIC /* "-ftok-c-string" */
 #endif /* !TPP_HAVE_TOK_C_STRING */
 
 /* Support for string literals: `R"AB(foo)AB"`
