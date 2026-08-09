@@ -2586,7 +2586,7 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_LEXER_WARNING_COUNT             1                                /* Needed to emulate "l_warncount" */
 #define TPP_HAVE_LEXER_CLI_DEFINE                1                                /* Needed to emulate "TPPLexer_Define()" */
 #define TPP_HAVE_LEXER_CLI_ASSERT                TPP_HAVE_CPP_ASSERT              /* Needed to emulate "TPPLexer_AddAssert()" */
-#define TPP_HAVE_KEYWORDS_UNDEFALL               1                                /* Needed to emulate "TPPLEXER_RESET_MACRO" */
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER               1                                /* Needed to emulate "TPPLEXER_RESET_MACRO" */
 #define TPP_HAVE_KEYWORDS_UNASSERTALL            1                                /* Needed to emulate "TPPLEXER_RESET_ASSERT" */
 #define TPP_HAVE_KEYWORDS_RESETFLAGS             1                                /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" + "TPPLEXER_RESET_FONCE" */
 #define TPP_HAVE_KEYWORDS_RESETFEATURES          1                                /* Needed to emulate "TPPLEXER_RESET_KWDFLAGS" */

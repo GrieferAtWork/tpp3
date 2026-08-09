@@ -6192,6 +6192,55 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_INIT_OPEN */
 
+/* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
+ * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_IO
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO
+#define TPP_HAVE_LEXER_PUSHFILE_IO 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_IO 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_IO */
+
+/* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
+ * a file, given its name, and push that file onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OPEN */
+
+/* TODO: `TPP_HAVE_CLI_DASH_INCLUDE` depends on `TPP_HAVE_LEXER_PUSHFILE_OFR`, but the order
+ *       should be reversed: `TPP_HAVE_LEXER_PUSHFILE_OFR` should be enabled implicitly when
+ *       `TPP_HAVE_CLI_DASH_INCLUDE` is enabled.
+ * The same also goes for other CLI options that are currently only turned on when certain
+ * other configs are already enabled. */
+
+/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
+ * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
+
+/* Provide an API `tpp_lexer_pushfile_text_ex()` that can be used to
+ * quickly push pre-loaded text files onto the lexer's `#include`-stack:
+ * - `tpp_lexer_pushfile_text()`
+ * - `tpp_lexer_pushfile_text_ascii()`
+ * - `tpp_lexer_pushfile_text_utf8()` */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_TEXT
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_TEXT */
+
 /* Provide an API `tpp_string_builder` centered around building `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
 #if (TPP_HAVE_PROFILE_ALL ||                     \
@@ -6752,13 +6801,13 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a function `tpp_keywords_undefalluser()` + `tpp_lexer_undefalluser()`
  * that can be used to quickly delete *all* macro definitions. */
-#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
+#ifndef TPP_HAVE_KEYWORDS_UNDEFALLUSER
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
-#define TPP_HAVE_KEYWORDS_UNDEFALL 1
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_UNDEFALL 0
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 /* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
  * that can be used to quickly delete *all* keyword assertions. */
@@ -7029,7 +7078,7 @@ print("#endif /" "* !... *" "/");
  * causes `FILE` to be injected as though it was `#include`-ed
  * at the start of the lexer's main input file. */
 #ifndef TPP_HAVE_CLI_DASH_INCLUDE
-#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_OPENFILE)
+#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_LEXER_PUSHFILE_OFR)
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
 
 /* `-imacros <file>`, `--imacros=<file>`, `--imacros <file>`:

@@ -11482,6 +11482,55 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_INIT_OPEN */
 
+/* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
+ * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_IO
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO
+#define TPP_HAVE_LEXER_PUSHFILE_IO 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_IO 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_IO */
+
+/* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
+ * a file, given its name, and push that file onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OPEN */
+
+/* TODO: `TPP_HAVE_CLI_DASH_INCLUDE` depends on `TPP_HAVE_LEXER_PUSHFILE_OFR`, but the order
+ *       should be reversed: `TPP_HAVE_LEXER_PUSHFILE_OFR` should be enabled implicitly when
+ *       `TPP_HAVE_CLI_DASH_INCLUDE` is enabled.
+ * The same also goes for other CLI options that are currently only turned on when certain
+ * other configs are already enabled. */
+
+/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
+ * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
+
+/* Provide an API `tpp_lexer_pushfile_text_ex()` that can be used to
+ * quickly push pre-loaded text files onto the lexer's `#include`-stack:
+ * - `tpp_lexer_pushfile_text()`
+ * - `tpp_lexer_pushfile_text_ascii()`
+ * - `tpp_lexer_pushfile_text_utf8()` */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_TEXT
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_TEXT */
+
 /* Provide an API `tpp_string_builder` centered around building `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
 #if (TPP_HAVE_PROFILE_ALL ||                     \
@@ -12042,13 +12091,13 @@ TPP_DECL_END
 
 /* Provide a function `tpp_keywords_undefalluser()` + `tpp_lexer_undefalluser()`
  * that can be used to quickly delete *all* macro definitions. */
-#ifndef TPP_HAVE_KEYWORDS_UNDEFALL
+#ifndef TPP_HAVE_KEYWORDS_UNDEFALLUSER
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
-#define TPP_HAVE_KEYWORDS_UNDEFALL 1
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER 1
 #else /* ... */
-#define TPP_HAVE_KEYWORDS_UNDEFALL 0
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER 0
 #endif /* !... */
-#endif /* !TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 /* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
  * that can be used to quickly delete *all* keyword assertions. */
@@ -12319,7 +12368,7 @@ TPP_DECL_END
  * causes `FILE` to be injected as though it was `#include`-ed
  * at the start of the lexer's main input file. */
 #ifndef TPP_HAVE_CLI_DASH_INCLUDE
-#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_OPENFILE)
+#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_LEXER_PUSHFILE_OFR)
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
 
 /* `-imacros <file>`, `--imacros=<file>`, `--imacros <file>`:
@@ -21329,8 +21378,16 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self);
  * and -- if there might be a builtin/predefined macro related to `self` -- that
  * macro is re-enabled. */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
+#else /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
+#define tpp_keyword_undefuser(self)                                      \
+	(void)(tpp_keyword_undef(self),                                      \
+	       (self)->TPP_INTERNAL(tk_macro) = tpp_keyword_isbuiltin(self)  \
+	                                        ? _TPP_KEYWORD_MACRO_BUILTIN \
+	                                        : _TPP_KEYWORD_MACRO_UNDEFINED)
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 #else /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #define tpp_keyword_undefuser(self) tpp_keyword_undef(self)
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
@@ -21699,7 +21756,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 
-#if TPP_HAVE_KEYWORDS_UNDEFALL
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 /* Delete all user-defined macro definitions */
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -21707,7 +21764,7 @@ tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self);
 #else /* TPP_HAVE_CPP_MACROS */
 #define tpp_keywords_undefalluser(self) (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
-#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 
 #if TPP_HAVE_KEYWORDS_UNASSERTALL
@@ -25093,32 +25150,8 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
-                         /*utf-8*/ char const *filename,
-                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                         void const *text, tpp_size text_size,
-                         tpp_lcinfo start_lc
-#if TPP_HAVE_FILE_FLAGS
-                         , tpp_file_flags flags
-#endif /* TPP_HAVE_FILE_FLAGS */
-#if TPP_HAVE_UNICODE
-                         , tpp_file_encoding encoding
-#endif /* TPP_HAVE_UNICODE */
-                         );
-#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
 #define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
-#elif TPP_HAVE_FILE_FLAGS
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags)
-#elif TPP_HAVE_UNICODE
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
-#else /* ... */
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
-#endif /* !... */
+	tpp_file_init_text_ex(tpp_lexer_getfile(self), filename, chunk, text, text_size, start_lc, flags, encoding)
 #define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
@@ -25165,8 +25198,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
-#if TPP_HAVE_INCLUDE_STACK
-#if TPP_HAVE_LEXER_INIT_IO
+#if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
@@ -25184,9 +25216,10 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
                          tpp_io_handle handle, tpp_file_flags ioflags);
 #define tpp_lexer_pushfile_io(self, filename, handle) \
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
-#endif /* TPP_HAVE_LEXER_INIT_IO */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_IO */
 
-#if TPP_HAVE_LEXER_INIT_OPEN
+
+#if TPP_HAVE_LEXER_PUSHFILE_OPEN
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of `filename` (in characters). You may
@@ -25198,7 +25231,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OPEN */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_OFR
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @return: TPP_EOK:    Success
@@ -25206,8 +25242,10 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
                        /*inherit(on_success)*/ tpp_lexer_openfile_result *tpp_restrict ofr);
-#endif /* TPP_HAVE_LEXER_INIT_OPEN */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OFR */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_TEXT
 /* Push another file onto the `#include`-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: start_lc: [valid_if(chunk != NULL)]
@@ -25247,7 +25285,11 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_TEXT */
 
+
+
+#if TPP_HAVE_INCLUDE_STACK
 
 /* Check if the current file can be popped. */
 #define tpp_lexer_canpopfile(self) \
@@ -25305,10 +25347,10 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 char const *macro_name, tpp_size macro_name_maxlen);
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 
-#if TPP_HAVE_KEYWORDS_UNDEFALL
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 /* Delete all user-defined macro definitions */
 #define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
-#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 
 #if TPP_HAVE_LEXER_CLI_ASSERT

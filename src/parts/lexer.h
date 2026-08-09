@@ -1121,32 +1121,8 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
 
 /* Initialize a lexer's file to read the given [text,text+text_size) blob.
  * @param: start_lc: [valid_if(chunk != NULL)] */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
-                         /*utf-8*/ char const *filename,
-                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                         void const *text, tpp_size text_size,
-                         tpp_lcinfo start_lc
-#if TPP_HAVE_FILE_FLAGS
-                         , tpp_file_flags flags
-#endif /* TPP_HAVE_FILE_FLAGS */
-#if TPP_HAVE_UNICODE
-                         , tpp_file_encoding encoding
-#endif /* TPP_HAVE_UNICODE */
-                         );
-#if TPP_HAVE_FILE_FLAGS && TPP_HAVE_UNICODE
 #define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags, encoding)
-#elif TPP_HAVE_FILE_FLAGS
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags)
-#elif TPP_HAVE_UNICODE
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, encoding)
-#else /* ... */
-#define tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding) \
-	_tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc)
-#endif /* !... */
+	tpp_file_init_text_ex(tpp_lexer_getfile(self), filename, chunk, text, text_size, start_lc, flags, encoding)
 #define tpp_lexer_initfile_text(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_initfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_lexer_initfile_text_ascii(self, filename, chunk, text, text_size, start_lc, flags) \
@@ -1193,8 +1169,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
-#if TPP_HAVE_INCLUDE_STACK
-#if TPP_HAVE_LEXER_INIT_IO
+#if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
@@ -1212,9 +1187,10 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
                          tpp_io_handle handle, tpp_file_flags ioflags);
 #define tpp_lexer_pushfile_io(self, filename, handle) \
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
-#endif /* TPP_HAVE_LEXER_INIT_IO */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_IO */
 
-#if TPP_HAVE_LEXER_INIT_OPEN
+
+#if TPP_HAVE_LEXER_PUSHFILE_OPEN
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of `filename` (in characters). You may
@@ -1226,7 +1202,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
                         /*utf-8*/ char const *tpp_restrict filename,
                         tpp_size filename_maxlen);
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OPEN */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_OFR
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @return: TPP_EOK:    Success
@@ -1234,8 +1213,10 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
                        /*inherit(on_success)*/ tpp_lexer_openfile_result *tpp_restrict ofr);
-#endif /* TPP_HAVE_LEXER_INIT_OPEN */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OFR */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_TEXT
 /* Push another file onto the `#include`-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: start_lc: [valid_if(chunk != NULL)]
@@ -1275,7 +1256,11 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_pushfile_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_lexer_pushfile_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
 #endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_TEXT */
 
+
+
+#if TPP_HAVE_INCLUDE_STACK
 
 /* Check if the current file can be popped. */
 #define tpp_lexer_canpopfile(self) \
@@ -1333,10 +1318,10 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 char const *macro_name, tpp_size macro_name_maxlen);
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 
-#if TPP_HAVE_KEYWORDS_UNDEFALL
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 /* Delete all user-defined macro definitions */
 #define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
-#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 
 #if TPP_HAVE_LEXER_CLI_ASSERT

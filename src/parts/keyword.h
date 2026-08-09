@@ -517,8 +517,16 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self);
  * and -- if there might be a builtin/predefined macro related to `self` -- that
  * macro is re-enabled. */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
+#else /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
+#define tpp_keyword_undefuser(self)                                      \
+	(void)(tpp_keyword_undef(self),                                      \
+	       (self)->TPP_INTERNAL(tk_macro) = tpp_keyword_isbuiltin(self)  \
+	                                        ? _TPP_KEYWORD_MACRO_BUILTIN \
+	                                        : _TPP_KEYWORD_MACRO_UNDEFINED)
+#endif /* !TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 #else /* TPP_HAVE_CPP_BUILTIN_MACROS */
 #define tpp_keyword_undefuser(self) tpp_keyword_undef(self)
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
@@ -897,7 +905,7 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 
-#if TPP_HAVE_KEYWORDS_UNDEFALL
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 /* Delete all user-defined macro definitions */
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -905,7 +913,7 @@ tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self);
 #else /* TPP_HAVE_CPP_MACROS */
 #define tpp_keywords_undefalluser(self) (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
-#endif /* TPP_HAVE_KEYWORDS_UNDEFALL */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 
 #if TPP_HAVE_KEYWORDS_UNASSERTALL

@@ -407,26 +407,6 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 }
 
 
-/* Initialize a lexer's file to read the given [text,text+text_size) blob.
- * @param: start_lc: [valid_if(chunk != NULL)] */
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-_tpp_lexer_initfile_text(tpp_lexer *tpp_restrict self,
-                         /*utf-8*/ char const *filename,
-                         /*inherit(always)*/ TPP_REF tpp_string *chunk,
-                         void const *text, tpp_size text_size,
-                         tpp_lcinfo start_lc
-#if TPP_HAVE_FILE_FLAGS
-                         , tpp_file_flags flags
-#endif /* TPP_HAVE_FILE_FLAGS */
-#if TPP_HAVE_UNICODE
-                         , tpp_file_encoding encoding
-#endif /* TPP_HAVE_UNICODE */
-                         ) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file_init_text_ex(file, filename, chunk, text, text_size, start_lc, flags, encoding);
-}
-
-
 #if TPP_HAVE_LEXER_INIT_IO
 /* Initialize a lexer such that it starts reading from `handle`
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
@@ -475,8 +455,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 
 
-#if TPP_HAVE_INCLUDE_STACK
-#if TPP_HAVE_LEXER_INIT_IO
+#if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
@@ -503,9 +482,10 @@ tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *fil
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);
 }
-#endif /* TPP_HAVE_LEXER_INIT_IO */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_IO */
 
-#if TPP_HAVE_LEXER_INIT_OPEN
+
+#if TPP_HAVE_LEXER_PUSHFILE_OPEN
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: filename_maxlen: Max length of `filename` (in characters). You may
@@ -534,7 +514,10 @@ tpp_lexer_pushfile_open(tpp_lexer *tpp_restrict self,
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);
 }
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OPEN */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_OFR
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
  * @return: TPP_EOK:    Success
@@ -552,8 +535,10 @@ tpp_lexer_pushfile_ofr(tpp_lexer *tpp_restrict self,
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);
 }
-#endif /* TPP_HAVE_LEXER_INIT_OPEN */
+#endif /* TPP_HAVE_LEXER_PUSHFILE_OFR */
 
+
+#if TPP_HAVE_LEXER_PUSHFILE_TEXT
 /* Push another file onto the `#include`-stack: [text,text+text_size) blob.
  * After a call to this function, the caller is responsible to yield the first token!
  * @param: start_lc: [valid_if(chunk != NULL)]
@@ -585,8 +570,10 @@ _tpp_lexer_pushfile_text(tpp_lexer *tpp_restrict self,
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);
 }
+#endif /* TPP_HAVE_LEXER_PUSHFILE_TEXT */
 
 
+#if TPP_HAVE_INCLUDE_STACK
 /* Pop the current file off the `#include`-stack.
  * The caller is responsible to ensure that `tpp_lexer_canpopfile(self) == true`
  * After a call to this function, the caller is responsible to yield the next token!

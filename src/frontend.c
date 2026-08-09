@@ -25,16 +25,12 @@
 
 /* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used */
 #define TPP_HAVE_LEXER_COPY             0
-#define TPP_HAVE_KEYWORDS_UNDEFALL      0
+#define TPP_HAVE_KEYWORDS_UNDEFALLUSER  0
 #define TPP_HAVE_KEYWORDS_UNASSERTALL   0
 #define TPP_HAVE_KEYWORDS_RESETFLAGS    0
 #define TPP_HAVE_KEYWORDS_RESETFEATURES 0
 #define TPP_HAVE_KEYWORDS_RESETCOUNTERS 0
-/* TODO: Make it so `_tpp_lexer_pushfile_text` isn't defined */
-/* TODO: Make it so `_tpp_lexer_initfile_text` isn't defined */
-/* TODO: Make it so `tpp_keyword_undefuser` isn't defined */
-#undef TPP_USE_STATIC
-#define TPP_USE_STATIC 0 /* TODO: Disabled (for now) to prevent "-Wunused-function" */
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT    0
 
 /* Pull in TPP sources */
 #include "tpp-amalgamation.c"          /* CORE */

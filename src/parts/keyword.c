@@ -478,7 +478,7 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 /* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
  * and -- if there might be a builtin/predefined macro related to `self` -- that
  * macro is re-enabled. */
-#if TPP_HAVE_CPP_BUILTIN_MACROS
+#if TPP_HAVE_CPP_BUILTIN_MACROS && TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
 	TPP_REF tpp_macro *old_macro;
@@ -489,7 +489,7 @@ tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
 	if (_TPP_KEYWORD_MACRO_ISDEFINED(old_macro))
 		tpp_macro_decref(old_macro);
 }
-#endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
+#endif /* TPP_HAVE_CPP_BUILTIN_MACROS && TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 #endif /* TPP_HAVE_CPP_MACROS */
 
@@ -2383,7 +2383,7 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_CLI_ASSERT */
 
 
-#if TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_KEYWORDS_UNDEFALLUSER && TPP_HAVE_CPP_MACROS
 /* Delete all user-defined macro definitions */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self) {
@@ -2394,7 +2394,7 @@ tpp_keywords_undefalluser(tpp_keywords *tpp_restrict self) {
 			tpp_keyword_undefuser(bucket);
 	}
 }
-#endif /* TPP_HAVE_KEYWORDS_UNDEFALL && TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER && TPP_HAVE_CPP_MACROS */
 
 
 #if TPP_HAVE_KEYWORDS_UNASSERTALL && TPP_HAVE_CPP_ASSERT
