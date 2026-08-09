@@ -12633,21 +12633,10 @@ TPP_DECL_END
 /* IMPLICIT API FEATURES (PART 3)                                       */
 /************************************************************************/
 
-/* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */
-#ifndef TPP_HAVE_LEXER_INIT_IO
-#if ((TPP_HAVE_FILE_NOKWD && TPP_HAVE_PROFILE_ALL) || \
-     TPP_HAVE_CLI_SETINPUTS_DASH)
-#define TPP_HAVE_LEXER_INIT_IO 1
-#else /* ... */
-#define TPP_HAVE_LEXER_INIT_IO 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_INIT_IO */
-
 /* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
  * initialize the lexer by passing in a filename that should be opened as input. */
 #ifndef TPP_HAVE_LEXER_INIT_OPEN
-#if ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_PROFILE_NOT_MINIMAL) || \
-     (TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_SETINPUTS))
+#if TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_LEXER_OPENFILE
 #define TPP_HAVE_LEXER_INIT_OPEN 1
 #else /* ... */
 #define TPP_HAVE_LEXER_INIT_OPEN 0
@@ -12657,8 +12646,7 @@ TPP_DECL_END
 /* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
  * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
 #ifndef TPP_HAVE_LEXER_PUSHFILE_IO
-#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO) || \
-     (TPP_HAVE_CLI_SETINPUTS_DASH && TPP_HAVE_INCLUDE_STACK))
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_FILE_NOKWD
 #define TPP_HAVE_LEXER_PUSHFILE_IO 1
 #else /* ... */
 #define TPP_HAVE_LEXER_PUSHFILE_IO 0
@@ -12668,8 +12656,7 @@ TPP_DECL_END
 /* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
  * a file, given its name, and push that file onto the lexer's `#include`-stack. */
 #ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
-#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || \
-     (TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_STACK))
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
 #else /* ... */
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN 0
@@ -25254,7 +25241,7 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
 #endif /* TPP_HAVE_UNICODE */
 
 
-#if TPP_HAVE_LEXER_INIT_IO
+#if TPP_HAVE_FILE_NOKWD
 /* Initialize a lexer such that it starts reading from `handle`
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
  *                          WARNING: This filename is *NOT* copied -- it must remain
@@ -25264,12 +25251,12 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
  *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings */
-TPP_DECL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags);
+#define tpp_lexer_initfile_io_ex(self, filename, handle, ioflags)  \
+	tpp_file_init_io_ex(tpp_lexer_getfile(self), filename, handle, \
+	                    (ioflags) | TPP_FILE_FLAGS_NOKWD)
 #define tpp_lexer_initfile_io(self, filename, handle) \
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
-#endif /* TPP_HAVE_LEXER_INIT_IO */
+#endif /* TPP_HAVE_FILE_NOKWD */
 
 #if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from `filename`

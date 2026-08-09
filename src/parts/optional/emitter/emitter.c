@@ -139,7 +139,7 @@ _tpp_emitter_init(tpp_emitter *tpp_restrict self,
 	_tpp_emitter_enable_file_pushed_hook(self); /* Must be turned on by default */
 #endif /* ... */
 #if TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-	tpp_lexer_sethook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped);
+	_tpp_emitter_enable_file_popped_hook(self);
 #endif /* TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 }
 
@@ -470,6 +470,7 @@ tpp_emitter_pushed_files_changed(tpp_emitter *tpp_restrict self,
 	/* Check file-stack for changes. */
 	for (i = self->te_state.tes_curfile.tesfs_filec; i--;) {
 		char const *actual_filename;
+		tpp_lcinfo actual_lcinfo;
 		tpp_emitter_state_file *expected;
 		lcfile = tpp_file_prevlc(lcfile);
 		if (lcfile == NULL)
@@ -488,9 +489,17 @@ tpp_emitter_pushed_files_changed(tpp_emitter *tpp_restrict self,
 				expected->tesf_fname = actual_filename;
 				expected->tesf_fname_str = actual_string;
 			} else {
-				return true; /* Stack changed (file(name) changed) */
+				return true; /* Stack changed: filename */
 			}
 		}
+
+#if _TPP_EMITTER_STATE_FLAGS_MASK
+		if (expected->tesf_flags != (tpp_file_getflags(lcfile) & _TPP_EMITTER_STATE_FLAGS_MASK))
+			return true; /* Stack changed: flags */
+#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
+		actual_lcinfo = tpp_file_getstartlcinfo(lcfile);
+		if (tpp_lcinfo_getline(expected->tesf_curpos) != tpp_lcinfo_getline(actual_lcinfo))
+			return true; /* Stack changed: line */
 	}
 	if (tpp_file_prevlc(lcfile) != NULL)
 		return true; /* Stack became larger (file pushed) */
@@ -578,6 +587,9 @@ tpp_emitter_state_files_getfile(tpp_emitter_state_files const *tpp_restrict self
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
                              tpp_emitter_state_files const *tpp_restrict new_files) {
+#if TPP_DEBUG
+	tpp_ssize delta = 0;
+#endif /* TPP_DEBUG */
 	tpp_ssize temp, result = 0;
 	tpp_emitter_state_file const *oldent, *newent;
 	tpp_emitter_state_files const *const old_files = &self->te_state.tes_curfile;
@@ -608,22 +620,27 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	 * `new_files[num_identical:new_file_count]` */
 
 	/* Emit directives to pop files */
-	for (i = old_file_count - 1; i > (num_identical + 1);) {
+	for (i = old_file_count - 1; i > num_identical;) {
 		oldent = tpp_emitter_state_files_getfile(old_files, --i);
 		temp = tpp_emitter_print_cpp_digit_popfile(self, oldent, oldent->tesf_fname);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
+#if TPP_DEBUG
+		--delta;
+#endif /* TPP_DEBUG */
 	}
 
 	/* Emit directives to re-adjust the last shared file */
 	oldent = tpp_emitter_state_files_getfile(old_files, num_identical);
 	newent = tpp_emitter_state_files_getfile(new_files, num_identical);
-	if (i > num_identical) {
+	if (i > num_identical || (i == num_identical && new_file_count < old_file_count)) {
 		temp = tpp_emitter_print_cpp_digit_popfile(self, newent, newent->tesf_fname);
-	} else if ((i + 1) >= new_file_count ||
-	           ((old_file_count == 1) && /* Must emit a set-directive if this is the first one... */
-	            !(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE))) {
+#if TPP_DEBUG
+		--delta;
+#endif /* TPP_DEBUG */
+	} else if (old_file_count == 1 && /* Must emit a set-directive if this is the first one... */
+	           (num_identical == 0 || !(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE))) {
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
 		if (!(self->te_state.tes_flags & TPP_EMITTER_FLAG_HASLINE) &&
 			tpp_emitter_has(self, USE_CPP_DIGIT_WORKING_DIRECTORY)) {
@@ -657,7 +674,14 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
+#if TPP_DEBUG
+		++delta;
+#endif /* TPP_DEBUG */
 	}
+
+#if TPP_DEBUG
+	tpp_assert((old_file_count + delta) == new_file_count);
+#endif /* TPP_DEBUG */
 
 	return result;
 err_temp:

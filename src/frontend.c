@@ -32,6 +32,9 @@
 #define TPP_HAVE_KEYWORDS_RESETFEATURES 0
 #define TPP_HAVE_KEYWORDS_RESETCOUNTERS 0
 #define TPP_HAVE_LEXER_PUSHFILE_TEXT    0
+#define TPP_HAVE_LEXER_INIT_OPEN        0
+#define TPP_HAVE_LEXER_PUSHFILE_IO      0
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN    0
 
 /* Pull in TPP sources */
 #include "tpp-amalgamation.c"          /* CORE */
@@ -598,10 +601,9 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
 			goto out_emitter_file;
 		}
+		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
 		if (tok == TPP_TOK_EOF)
 			break;
-
-		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
 	}
 
 	/* Flush Makefile output */

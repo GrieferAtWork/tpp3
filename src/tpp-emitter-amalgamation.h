@@ -1242,16 +1242,16 @@ _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie);
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
 #if TPP_HAVE_HOOK_COOKIES
-#define _tpp_emitter_enable_use_cpp_digit_flags(self) \
+#define _tpp_emitter_enable_file_popped_hook(self) \
 	tpp_lexer_sethook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
 #else /* TPP_HAVE_HOOK_COOKIES */
-#define _tpp_emitter_enable_use_cpp_digit_flags(self) \
+#define _tpp_emitter_enable_file_popped_hook(self) \
 	 tpp_lexer_sethook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped))
 #endif /* !TPP_HAVE_HOOK_COOKIES */
 #define tpp_emitter_enable_use_cpp_digit_flags(self)                        \
 	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
 	 _tpp_emitter_enable_file_pushed_hook(self),                            \
-	 _tpp_emitter_enable_use_cpp_digit_flags(self))
+	 _tpp_emitter_enable_file_popped_hook(self))
 #define tpp_emitter_disable_use_cpp_digit_flags(self)                        \
 	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
 	 _tpp_emitter_disable_file_pushed_hook(self),                            \

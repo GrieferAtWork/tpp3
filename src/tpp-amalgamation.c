@@ -31930,29 +31930,6 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 }
 
 
-#if TPP_HAVE_LEXER_INIT_IO
-/* Initialize a lexer such that it starts reading from `handle`
- * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
- *                          WARNING: This filename is *NOT* copied -- it must remain
- *                                   allocated and valid until `self` is finalized.
- * @param: handle:   The I/O handle to read from in order to retrieve text data.
- * @param: ioflags:  Extra flags specifying how to interact with `handle`:
- *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
- *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
- *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings */
-TPP_IMPL TPP_NONNULL((1)) void TPPCALL
-tpp_lexer_initfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags) {
-	tpp_file *const file = tpp_lexer_getfile(self);
-	/* It can never be a keyword, since the lexer is only being
-	 * initialized right now (and the keyword would have had to
-	 * be allocated by the lexer) */
-	ioflags |= TPP_FILE_FLAGS_NOKWD;
-	tpp_file_init_io_ex(file, filename, handle, ioflags);
-}
-#endif /* TPP_HAVE_LEXER_INIT_IO */
-
-
 
 #if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from `filename`
