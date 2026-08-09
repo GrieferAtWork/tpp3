@@ -2178,7 +2178,7 @@ got_result_kwd2:;
 #endif /* TPP_HAVE_USER_KEYWORDS */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-		if (!(mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT)) {
+		if (mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT) {
 			tpp_size include_count;
 #if TPP_HAVE_KEYWORD_INCLCOUNT
 			include_count = TPP_SIZE_MAX;

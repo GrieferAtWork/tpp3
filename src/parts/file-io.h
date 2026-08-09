@@ -107,6 +107,23 @@ _tpp_nt_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
 #endif /* tpp_io_handle_IS_HANDLE */
 
 
+/* Return a `tpp_io_handle` for the hosting process's *STDIN* standard stream.
+ * The returned file handle should *NOT* be closed!
+ *
+ * NOTE: This API is (currently) only used for `TPP_HAVE_CLI_SETINPUTS_DASH` */
+#ifdef tpp_io_handle_IS_HANDLE
+#define tpp_io_getstdin() GetStdHandle(STD_INPUT_HANDLE)
+#elif defined(tpp_io_handle_IS_int)
+#ifdef STDIN_FILENO
+#define tpp_io_getstdin() STDIN_FILENO
+#else /* STDIN_FILENO */
+#define tpp_io_getstdin() 0
+#endif /* !STDIN_FILENO */
+#elif defined(tpp_io_handle_IS_FILE)
+#define tpp_io_getstdin() stdin
+#endif /* !... */
+
+
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
  * @return: TPP_ENOENT: No such file or directory

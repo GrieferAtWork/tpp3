@@ -5788,6 +5788,14 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_CLI)
 #endif /* !TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
+#ifndef TPP_HAVE_TPP_W_NO_INPUT_FILES
+#define TPP_HAVE_TPP_W_NO_INPUT_FILES \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_CLI_SETINPUTS)
+#endif /* !TPP_HAVE_TPP_W_NO_INPUT_FILES */
+#ifndef TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES
+#define TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_CLI_SETINPUTS && !TPP_HAVE_INCLUDE_STACK))
+#endif /* !TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES */
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -6170,15 +6178,6 @@ print("#endif /" "* !... *" "/");
 	 (TPP_HAVE_CLI_DASH_IPREFIX && (TPP_HAVE_CLI_DASH_IWITHPREFIX || \
 	                                TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE)))
 #endif /* !TPP_HAVE_JOINPATH */
-
-/* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */
-#ifndef TPP_HAVE_LEXER_INIT_IO
-#if (TPP_HAVE_FILE_NOKWD && TPP_HAVE_PROFILE_ALL)
-#define TPP_HAVE_LEXER_INIT_IO 1
-#else /* ... */
-#define TPP_HAVE_LEXER_INIT_IO 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_INIT_IO */
 
 /* Provide an API `tpp_string_builder` centered around building `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
@@ -7280,6 +7279,46 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_CLI_DASH_WERROR_WARNING \
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
+
+/* Enable support for `tpp_cli_loader_setinputss()`, which can be used
+ * to easily implement a high-level wrapper around the different APIs
+ * that exist to load files into the lexer:
+ * - `tpp_lexer_initfile_open()`
+ * - `tpp_lexer_pushfile_open()`
+ * - `tpp_lexer_initfile_io_ex()`
+ * - `tpp_lexer_pushfile_io_ex()`
+ *
+ * When this API is enabled and being used, it also becomes possible
+ * to enable some additional CLI options such as `-fsearch-include-path`
+ * (s.a. `TODO: TPP_HAVE_CLI_* option for that switch`)  */
+#ifndef TPP_HAVE_CLI_SETINPUTS
+#define TPP_HAVE_CLI_SETINPUTS (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_HAVE_CLI_SETINPUTS */
+
+/* `tpp_cli_loader_setinputs()` supports a special case when the given
+ * filename is `"-"`. When that is the case, *STDIN* is used as input
+ * instead, with `TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME` becoming the
+ * filename. */
+#ifndef TPP_HAVE_CLI_SETINPUTS_DASH
+#define TPP_HAVE_CLI_SETINPUTS_DASH ((TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_FILE_NOCLOSE) && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_CLI_SETINPUTS_DASH */
+
+/* The name of the file that is loaded by `TPP_HAVE_CLI_SETINPUTS_DASH`
+ * when a filename `"-"` appears as an input to the lexer's CLI loader. */
+#ifndef TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME
+#define TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME "<stdin>"
+#endif /* !TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME */
+
+/* TODO: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
+
+/* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
+ *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
+ * - No special handling needed in TPP backend
+ *   When kind=user, and the main input file could not be found, it must be
+ *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
+ *   When kind=system, and the main input file could not be found, it must be
+ *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)` */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -7292,11 +7331,21 @@ print("#endif /" "* !... *" "/");
 /* IMPLICIT API FEATURES (PART 3)                                       */
 /************************************************************************/
 
+/* Enable support for `tpp_lexer_initfile_io()` and `tpp_lexer_initfile_io_ex()` */
+#ifndef TPP_HAVE_LEXER_INIT_IO
+#if ((TPP_HAVE_FILE_NOKWD && TPP_HAVE_PROFILE_ALL) || \
+     TPP_HAVE_CLI_SETINPUTS_DASH)
+#define TPP_HAVE_LEXER_INIT_IO 1
+#else /* ... */
+#define TPP_HAVE_LEXER_INIT_IO 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_INIT_IO */
+
 /* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
  * initialize the lexer by passing in a filename that should be opened as input. */
 #ifndef TPP_HAVE_LEXER_INIT_OPEN
 #if ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_PROFILE_NOT_MINIMAL) || \
-     TPP_HAVE_CLI_DASH_INCLUDE)
+     (TPP_HAVE_CLI_DASH_INCLUDE || TPP_HAVE_CLI_SETINPUTS))
 #define TPP_HAVE_LEXER_INIT_OPEN 1
 #else /* ... */
 #define TPP_HAVE_LEXER_INIT_OPEN 0
@@ -7306,7 +7355,8 @@ print("#endif /" "* !... *" "/");
 /* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
  * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
 #ifndef TPP_HAVE_LEXER_PUSHFILE_IO
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO) || \
+     (TPP_HAVE_CLI_SETINPUTS_DASH && TPP_HAVE_INCLUDE_STACK))
 #define TPP_HAVE_LEXER_PUSHFILE_IO 1
 #else /* ... */
 #define TPP_HAVE_LEXER_PUSHFILE_IO 0
@@ -7316,7 +7366,8 @@ print("#endif /" "* !... *" "/");
 /* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
  * a file, given its name, and push that file onto the lexer's `#include`-stack. */
 #ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || \
+     (TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_STACK))
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
 #else /* ... */
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN 0

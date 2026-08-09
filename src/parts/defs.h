@@ -5230,6 +5230,18 @@ TPP_WARNING(TPP_W_MISSING_CLI_ARGUMENT, 0(), 0(), ~,
             "missing cli argument")
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
+#if TPP_HAVE_TPP_W_NO_INPUT_FILES
+#define TPP_W_NO_INPUT_FILES TPP_W_NO_INPUT_FILES
+TPP_WARNING(TPP_W_NO_INPUT_FILES, 0(), 0(), ~,
+            "no input files")
+#endif /* TPP_HAVE_TPP_W_NO_INPUT_FILES */
+
+#if TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES
+#define TPP_W_TOO_MANY_INPUT_FILES TPP_W_TOO_MANY_INPUT_FILES
+TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
+            "too many input files")
+#endif /* TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES */
+
 
 /* Pull in user definitions (if defined) */
 #ifdef TPP_CONFIG_USERDEFS_FILENAME

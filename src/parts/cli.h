@@ -171,6 +171,33 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv);
 
+
+#if TPP_HAVE_CLI_SETINPUTS
+/* Use the given `argc` and `argv` as inputs for the lexer.
+ *
+ * This function should be used to pass everything on your `argv` following
+ * a potential `--` argument, as well as all arguments that don't start
+ * with a leading `-` (you should permutate your `argv` similar to how
+ * that is also done by `tpp_cli_loader_parseargv()` such that all unknown
+ * arguments, as well as a potential `--` argument appear last).
+ *
+ * This function will *always* initialize the lexer's *file-stack*, such
+ * that upon successful return from this function, the caller is responsible
+ * to finalize that part of the lexer using `tpp_lexer_finifile()`.
+ *
+ * - If there are inputs, a warning `TPP_W_NO_INPUT_FILES` is emitted.
+ * - If one of the inputs cannot be opened, a warning `TPP_W_NO_SUCH_FILE` is emitted.
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_setinputs(tpp_cli_loader *tpp_restrict self,
+                         int argc, char **argv);
+#endif /* TPP_HAVE_CLI_SETINPUTS */
+
+
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
  * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_cli_loader_getlexer(self)`

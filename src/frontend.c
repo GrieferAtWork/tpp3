@@ -281,18 +281,6 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
 	switch (self->tf_cli_state) {
 
-	/* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
-	 *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
-	 * - No special handling needed in TPP backend
-	 *   When kind=user, and the main input file could not be found, it must be
-	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
-	 *   When kind=system, and the main input file could not be found, it must be
-	 *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)`
-	 *
-	 * TODO: For the purpose of pushing the initial (set of) input files, rather than
-	 *       do so here, `tpp_cli_loader` should have an API that off-loads that task
-	 *       onto it, thus simplifying what needs to be done by the frontend. */
-
 	case TPP_FRONTEND_CLI_STATE_NORMAL:
 		switch (*arg++) {
 		case '-': {
@@ -502,7 +490,6 @@ int main(int argc, char **argv) {
 	tpp_errno error;
 	int result = 1;
 	tpp_frontend fe;
-	bool first_file;
 	char *appname = argv[0];
 	char *fallback_input_filename;
 	if (argc)
@@ -544,7 +531,7 @@ int main(int argc, char **argv) {
 	}
 
 	/* TODO: Support for environment variables, as described here: https://gcc.gnu.org/onlinedocs/cpp/Environment-Variables.html
-	 * TODO: Where possible, these variables should *NOT* be checked-for and parsed *here*,
+	 *       Where possible, these variables should *NOT* be checked-for and parsed *here*,
 	 *       but should instead only be checked-for and parsed when they become relevant:
 	 * - e.g. `SOURCE_DATE_EPOCH` should only be checked just before `tpp_time_now()`
 	 * - e.g. the different include-path variables should be loaded in `tpp_lexer_foreach_include_path()`
@@ -578,43 +565,12 @@ int main(int argc, char **argv) {
 		fallback_input_filename = (char *)"-";
 	}
 
-	first_file = true;
-	do {
-		char *filename;
-		--argc;
-		filename = argv[argc];
-#ifdef tpp_get_stdin
-		if (tpp_strcmp(filename, "-") == 0) {
-			filename = (char *)"<stdin>";
-			if (first_file) {
-				tpp_lexer_initfile_io_ex(&fe.tf_lexer,
-				                         filename, tpp_get_stdin(),
-				                         TPP_FILE_FLAGS_NOCLOSE);
-				error = TPP_EOK;
-			} else {
-				error = tpp_lexer_pushfile_io_ex(&fe.tf_lexer,
-				                                 filename, tpp_get_stdin(),
-				                                 TPP_FILE_FLAGS_NOCLOSE);
-			}
-		} else
-#endif /* tpp_get_stdin */
-		{
-			if (first_file) {
-				error = tpp_lexer_initfile_open(&fe.tf_lexer,
-				                                filename, TPP_SIZE_MAX);
-			} else {
-				error = tpp_lexer_pushfile_open(&fe.tf_lexer,
-				                                filename, TPP_SIZE_MAX);
-			}
-		}
-		if (TPP_ISERR(error)) {
-			fprintf(stderr, "failed to open '%s': %s\n", filename, tpp_strerror(error));
-			if (first_file)
-				goto out_emitter_cli;
-			goto out_emitter_cli_file;
-		}
-		first_file = false;
-	} while (argc);
+	/* Load lexer inputs from remaining arguments. */
+	error = tpp_cli_loader_setinputs(&fe.tf_cli_loader, argc, argv);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to load inputs: %s\n", tpp_strerror(error));
+		goto out_emitter_cli;
+	}
 
 	/* Flush CLI loaders */
 	error = tpp_makefile_cli_loader_flush(&fe.tf_makefile_cli_loader,
@@ -668,8 +624,6 @@ out_emitter:
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER && _CRTDBG_MAP_ALLOC */
 	return result;
-out_emitter_cli_file:
-	tpp_lexer_finifile(&fe.tf_lexer);
 out_emitter_cli:
 	tpp_makefile_cli_loader_fini(&fe.tf_makefile_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);

@@ -27114,7 +27114,7 @@ got_result_kwd2:;
 #endif /* TPP_HAVE_USER_KEYWORDS */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-		if (!(mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT)) {
+		if (mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT) {
 			tpp_size include_count;
 #if TPP_HAVE_KEYWORD_INCLCOUNT
 			include_count = TPP_SIZE_MAX;
@@ -59786,6 +59786,154 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 	*p_argv = argv;
 	return result;
 }
+
+#if TPP_HAVE_CLI_SETINPUTS
+
+/* Open the specified `input_filename`
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: No such file
+ * @return: * : Some other **HARD_ERROR** */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
+                          char const *tpp_restrict input_filename,
+                          tpp_file *tpp_restrict file) {
+	tpp_errno result;
+	tpp_lexer_openfile_result ofr;
+#if TPP_HAVE_CLI_SETINPUTS_DASH
+	if (tpp_strcmp(input_filename, "-") == 0) {
+#ifdef tpp_io_getstdin
+		tpp_io_handle std_input = tpp_io_getstdin();
+#if TPP_HAVE_FILE_NOKWD
+		tpp_file_init_io_ex(file, TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME,
+		                    std_input, TPP_FILE_FLAGS_NOCLOSE | TPP_FILE_FLAGS_NOKWD);
+#else /* TPP_HAVE_FILE_NOKWD */
+		tpp_file_init_io_ex(file, NULL, std_input, TPP_FILE_FLAGS_NOCLOSE);
+#endif /* !TPP_HAVE_FILE_NOKWD */
+		return TPP_EOK;
+#else /* tpp_io_getstdin */
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: `TPP_HAVE_CLI_SETINPUTS_DASH` is enabled, but `tpp_io_getstdin` isn't -> no way to retrieve hosting process's STDIN handle"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+		return TPP_ENOENT;
+#endif /* !tpp_io_getstdin */
+	}
+#endif /* TPP_HAVE_CLI_SETINPUTS_DASH */
+
+	/* Try to open the file directly */
+	result = tpp_lexer_openfile(self->tcl_lexer, NULL, input_filename, TPP_SIZE_MAX, &ofr);
+	if (result != TPP_ENOENT) {
+		if (!TPP_ISERR(result))
+			tpp_file_init_io_from_ofr(file, &ofr);
+		return result;
+	}
+
+	/* TODO: `-fsearch-include-path` */
+
+	/* Emit a warning about the file not being found */
+#if TPP_HAVE_TPP_W_NO_SUCH_FILE
+	result = tpp_lexer_cli_warnf(self->tcl_lexer, (tpp_char const *)input_filename,
+	                             tpp_strlen(input_filename), TPP_W_NO_SUCH_FILE);
+	if (TPP_ISERR(result))
+		return result;
+#endif /* TPP_HAVE_TPP_W_NO_SUCH_FILE */
+	return TPP_ENOENT;
+}
+
+/* Use the given `argc` and `argv` as inputs for the lexer.
+ *
+ * This function should be used to pass everything on your `argv` following
+ * a potential `--` argument, as well as all arguments that don't start
+ * with a leading `-` (you should permutate your `argv` similar to how
+ * that is also done by `tpp_cli_loader_parseargv()` such that all unknown
+ * arguments, as well as a potential `--` argument appear last).
+ *
+ * This function will *always* initialize the lexer's *file-stack*, such
+ * that upon successful return from this function, the caller is responsible
+ * to finalize that part of the lexer using `tpp_lexer_finifile()`.
+ *
+ * - If there are inputs, a warning `TPP_W_NO_INPUT_FILES` is emitted.
+ * - If one of the inputs cannot be opened, a warning `TPP_W_NO_SUCH_FILE` is emitted.
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_setinputs(tpp_cli_loader *tpp_restrict self,
+                         int argc, char **argv) {
+	tpp_lexer *const lexer = self->tcl_lexer;
+	tpp_errno error;
+	char const *filename;
+again:
+	if (!argc) {
+#if !TPP_HAVE_TPP_W_NO_INPUT_FILES
+		error = TPP_EOK;
+#else /* !TPP_HAVE_TPP_W_NO_INPUT_FILES */
+		error = tpp_lexer_cli_warnf(lexer, NULL, 0, TPP_W_NO_INPUT_FILES);
+		if (!TPP_ISERR(error))
+#endif /* TPP_HAVE_TPP_W_NO_INPUT_FILES */
+		{
+			/* Not treated as an error -> must still initialize the lexer's file */
+			tpp_lexer_initfile_text_utf8(lexer, NULL, NULL, NULL, 0,
+			                             TPP_LCINFO_INVALID,
+			                             TPP_FILE_FLAGS_NORMAL);
+		}
+		return error;
+	}
+
+	/* Initialize the *first* file */
+	filename = argv[--argc];
+	error = tpp_cli_loader_open_input(self, filename, tpp_lexer_getfile(lexer));
+	if (TPP_ISERR(error)) {
+		if (error == TPP_ENOENT)
+			goto again; /* Try our luck with the next file */
+		return error;
+	}
+
+#if !TPP_HAVE_INCLUDE_STACK
+#if TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES
+	if (argc != 0) {
+		error = tpp_lexer_cli_warnf(lexer, NULL, 0, TPP_W_TOO_MANY_INPUT_FILES);
+		if (TPP_ISERR(error)) {
+			tpp_lexer_finifile(lexer);
+			return error;
+		}
+	}
+#endif /* TPP_HAVE_TPP_W_TOO_MANY_INPUT_FILES */
+#else /* !TPP_HAVE_INCLUDE_STACK */
+	/* Enumerate remaining input files (which all need to be pushed). */
+	while (argc) {
+		tpp_file *const file = tpp_lexer_getfile(lexer);
+		tpp_file *const prev_file = tpp_file_alloc();
+		if tpp_unlikely(!prev_file) {
+			error = TPP_ENOMEM;
+			goto return_error;
+		}
+		tpp_file_move(prev_file, file);
+		filename = argv[--argc];
+		error = tpp_cli_loader_open_input(self, filename, file);
+		if (TPP_ISERR(error)) {
+			tpp_file_move(file, prev_file);
+			tpp_file_free(prev_file);
+			if (error != TPP_ENOENT) {
+return_error:
+				tpp_lexer_finifile(lexer);
+				return error;
+			}
+			/* Try our luck with the next file */
+		} else {
+			file->tf_prev  = prev_file;
+			file->tf_tprev = prev_file;
+			error = tpp_lexer_callhook_file_pushed(lexer);
+			if (TPP_ISERR(error))
+				goto return_error;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_STACK */
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_CLI_SETINPUTS */
+
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning

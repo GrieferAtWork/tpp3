@@ -47,19 +47,19 @@ TPP_DECL_BEGIN
 	 (TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD))
 
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
-#define _tpp_makefile_cli_loader_flags uint_least32_t
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
+#define _tpp_makefile_cli_loader_flags uint_least8_t
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL       UINT8_C(0x00) /* Normal flags */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED       UINT32_C(0x00000001) /* Enable Makefile generation */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED      UINT8_C(0x01) /* Enable Makefile generation */
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE UINT32_C(0x00000002) /* Consume all tokens because only a Makefile should be generated */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE UINT8_C(0x02) /* Consume all tokens because only a Makefile should be generated */
 #endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE UINT32_C(0x00000004) /* Escape target name using `tpp_makefile_escape()` */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE UINT8_C(0x04) /* Escape target name using `tpp_makefile_escape()` */
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT   UINT32_C(0x00000008) /* Automatically determine output filename if not pre-defined */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT   UINT8_C(0x08) /* Automatically determine output filename if not pre-defined */
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 
