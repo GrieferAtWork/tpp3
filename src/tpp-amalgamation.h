@@ -11470,67 +11470,6 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_INIT_IO */
 
-/* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
- * initialize the lexer by passing in a filename that should be opened as input.
- *
- * When `TPP_HAVE_INCLUDE_STACK` is enabled, this also enables support for `tpp_lexer_pushfile_open()` */
-#ifndef TPP_HAVE_LEXER_INIT_OPEN
-#if TPP_HAVE_LEXER_OPENFILE
-#define TPP_HAVE_LEXER_INIT_OPEN 1
-#else /* ... */
-#define TPP_HAVE_LEXER_INIT_OPEN 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_INIT_OPEN */
-
-/* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
- * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
-#ifndef TPP_HAVE_LEXER_PUSHFILE_IO
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO
-#define TPP_HAVE_LEXER_PUSHFILE_IO 1
-#else /* ... */
-#define TPP_HAVE_LEXER_PUSHFILE_IO 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_PUSHFILE_IO */
-
-/* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
- * a file, given its name, and push that file onto the lexer's `#include`-stack. */
-#ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
-#define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
-#else /* ... */
-#define TPP_HAVE_LEXER_PUSHFILE_OPEN 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_PUSHFILE_OPEN */
-
-/* TODO: `TPP_HAVE_CLI_DASH_INCLUDE` depends on `TPP_HAVE_LEXER_PUSHFILE_OFR`, but the order
- *       should be reversed: `TPP_HAVE_LEXER_PUSHFILE_OFR` should be enabled implicitly when
- *       `TPP_HAVE_CLI_DASH_INCLUDE` is enabled.
- * The same also goes for other CLI options that are currently only turned on when certain
- * other configs are already enabled. */
-
-/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
- * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
-#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
-#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
-#else /* ... */
-#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
-
-/* Provide an API `tpp_lexer_pushfile_text_ex()` that can be used to
- * quickly push pre-loaded text files onto the lexer's `#include`-stack:
- * - `tpp_lexer_pushfile_text()`
- * - `tpp_lexer_pushfile_text_ascii()`
- * - `tpp_lexer_pushfile_text_utf8()` */
-#ifndef TPP_HAVE_LEXER_PUSHFILE_TEXT
-#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK
-#define TPP_HAVE_LEXER_PUSHFILE_TEXT 1
-#else /* ... */
-#define TPP_HAVE_LEXER_PUSHFILE_TEXT 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_PUSHFILE_TEXT */
-
 /* Provide an API `tpp_string_builder` centered around building `tpp_string` */
 #ifndef TPP_HAVE_STRING_BUILDER
 #if (TPP_HAVE_PROFILE_ALL ||                     \
@@ -12019,27 +11958,6 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
-/* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
- * that can be used to define/undef commandline-defined macros. */
-#ifndef TPP_HAVE_LEXER_CLI_DEFINE
-#if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS)
-#define TPP_HAVE_LEXER_CLI_DEFINE 1
-#else /* ... */
-#define TPP_HAVE_LEXER_CLI_DEFINE 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
-
-/* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
- * that can be used to add/delete keyword assertions. */
-#ifndef TPP_HAVE_LEXER_CLI_ASSERT
-#if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_ASSERT)
-#define TPP_HAVE_LEXER_CLI_ASSERT 1
-#else /* ... */
-#define TPP_HAVE_LEXER_CLI_ASSERT 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
-
-
 /* Every token/keyword that TPP needs to pre-define for one reason or another
  * is defined as an enum in `tpp_token_id` under the name `TPP_KWD_<keyword>`
  * for keywords and `TPP_TOK_<DESCRIPTION>` for tokens.
@@ -12328,12 +12246,14 @@ TPP_DECL_END
  * of supported commandline flags in a human-readable format that can also
  * be rendered (fairly) easily. */
 #ifndef TPP_HAVE_CLI_HELP
-#define TPP_HAVE_CLI_HELP (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CLI)
+#define TPP_HAVE_CLI_HELP \
+	(TPP_HAVE_PROFILE_ALL && TPP_HAVE_CLI)
 #endif /* !TPP_HAVE_CLI_HELP */
 
 /* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */
 #ifndef TPP_HAVE_CLI_HELP_ALL_SPELLINGS
-#define TPP_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_HAVE_CLI_HELP_ALL_SPELLINGS \
+	(TPP_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_HAVE_CLI_HELP_ALL_SPELLINGS */
 
 /* `-Dmacro[=def]`, `-D macro[=def]`,
@@ -12341,7 +12261,8 @@ TPP_DECL_END
  * Define an additional macro as `#define macro def` (or
  * `#define macro 1` when `def` isn't given) */
 #ifndef TPP_HAVE_CLI_DASH_DEFINE_MACRO
-#define TPP_HAVE_CLI_DASH_DEFINE_MACRO (TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE)
+#define TPP_HAVE_CLI_DASH_DEFINE_MACRO \
+	(TPP_HAVE_CLI && (TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_MACROS))
 #endif /* !TPP_HAVE_CLI_DASH_DEFINE_MACRO */
 
 /* `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
@@ -12349,7 +12270,8 @@ TPP_DECL_END
  *
  * Implementation makes use of: `tpp_lexer_define()` + `tpp_lexer_undef()` */
 #ifndef TPP_HAVE_CLI_DASH_UNDEFINE_MACRO
-#define TPP_HAVE_CLI_DASH_UNDEFINE_MACRO (TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_DEFINE)
+#define TPP_HAVE_CLI_DASH_UNDEFINE_MACRO \
+	(TPP_HAVE_CLI && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_MACROS)
 #endif /* !TPP_HAVE_CLI_DASH_UNDEFINE_MACRO */
 
 /* `-Apredicate=answer`, `-A predicate=answer`, `--assert=predicate=answer`,
@@ -12361,14 +12283,15 @@ TPP_DECL_END
  *                              `tpp_lexer_unassertall()` */
 #ifndef TPP_HAVE_CLI_DASH_ASSERT
 #define TPP_HAVE_CLI_DASH_ASSERT \
-	(TPP_HAVE_CLI && TPP_HAVE_LEXER_CLI_ASSERT)
+	(TPP_HAVE_CLI && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_CPP_ASSERT)
 #endif /* !TPP_HAVE_CLI_DASH_ASSERT */
 
 /* `-include FILE`:
  * causes `FILE` to be injected as though it was `#include`-ed
  * at the start of the lexer's main input file. */
 #ifndef TPP_HAVE_CLI_DASH_INCLUDE
-#define TPP_HAVE_CLI_DASH_INCLUDE (TPP_HAVE_CLI && TPP_HAVE_LEXER_PUSHFILE_OFR)
+#define TPP_HAVE_CLI_DASH_INCLUDE \
+	(TPP_HAVE_CLI && TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_OPENFILE)
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
 
 /* `-imacros <file>`, `--imacros=<file>`, `--imacros <file>`:
@@ -12411,8 +12334,8 @@ TPP_DECL_END
  * - `TPP_HAVE_CPP_DEFINE`
  * - `TPP_HAVE_CPP_ASSERT` */
 #ifndef TPP_HAVE_CLI_DASH_FPREPROCESSED
-#define TPP_HAVE_CLI_DASH_FPREPROCESSED             \
-	(TPP_HAVE_CLI &&                                \
+#define TPP_HAVE_CLI_DASH_FPREPROCESSED            \
+	(TPP_HAVE_CLI &&                               \
 	 (TPP_CONF_ISRT(TPP_HAVE_CPP_MACROS) ||        \
 	  TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) ||         \
 	  TPP_CONF_ISRT(TPP_HAVE_BSE) ||               \
@@ -12647,6 +12570,95 @@ TPP_DECL_END
 #define TPP_HAVE_CLI_DASH_WERROR_WARNING \
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+
+
+
+
+
+/************************************************************************/
+/* IMPLICIT API FEATURES (PART 3)                                       */
+/************************************************************************/
+
+/* Enable support for `tpp_lexer_initfile_open()`, a function that lets you directly
+ * initialize the lexer by passing in a filename that should be opened as input. */
+#ifndef TPP_HAVE_LEXER_INIT_OPEN
+#if ((TPP_HAVE_LEXER_OPENFILE && TPP_HAVE_PROFILE_NOT_MINIMAL) || \
+     TPP_HAVE_CLI_DASH_INCLUDE)
+#define TPP_HAVE_LEXER_INIT_OPEN 1
+#else /* ... */
+#define TPP_HAVE_LEXER_INIT_OPEN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_INIT_OPEN */
+
+/* Provide an API `tpp_lexer_pushfile_io_ex()` and `tpp_lexer_pushfile_io()`
+ * that can be used to push `tpp_io_handle` onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_IO
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_IO
+#define TPP_HAVE_LEXER_PUSHFILE_IO 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_IO 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_IO */
+
+/* Provide an API `tpp_lexer_pushfile_open()` that can be used to quickly open
+ * a file, given its name, and push that file onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OPEN
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OPEN 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OPEN */
+
+/* Provide an API `tpp_lexer_pushfile_text_ex()` that can be used to
+ * quickly push pre-loaded text files onto the lexer's `#include`-stack:
+ * - `tpp_lexer_pushfile_text()`
+ * - `tpp_lexer_pushfile_text_ascii()`
+ * - `tpp_lexer_pushfile_text_utf8()` */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_TEXT
+#if TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_TEXT */
+
+/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
+ * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || \
+     TPP_HAVE_CLI_DASH_INCLUDE)
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
+
+/* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
+ * that can be used to define/undef commandline-defined macros. */
+#ifndef TPP_HAVE_LEXER_CLI_DEFINE
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_MACROS) || \
+     TPP_HAVE_CLI_DASH_DEFINE_MACRO ||                \
+     TPP_HAVE_CLI_DASH_UNDEFINE_MACRO)
+#define TPP_HAVE_LEXER_CLI_DEFINE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_CLI_DEFINE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_CLI_DEFINE */
+
+/* Provide a function `tpp_lexer_assert()` + `tpp_lexer_unassert()` + `tpp_lexer_unassertall()`
+ * that can be used to add/delete keyword assertions. */
+#ifndef TPP_HAVE_LEXER_CLI_ASSERT
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_ASSERT) || \
+     TPP_HAVE_CLI_DASH_ASSERT)
+#define TPP_HAVE_LEXER_CLI_ASSERT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_CLI_ASSERT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
 /************************************************************************/
 /************************************************************************/
