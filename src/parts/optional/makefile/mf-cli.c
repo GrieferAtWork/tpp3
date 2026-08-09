@@ -33,40 +33,6 @@ TPP_DECL_BEGIN
 
 #if TPP_MAKEFILE_HAVE_CLI
 
-/*[[[deemon
-for (local option, what: {
-//	{"TOK_SPACE", "enable"},
-}) {
-	local extraArgs = what == "set" ? ", v" : "";
-	print("#if TPP_CONF_ISEXT(TPP_HAVE_", option, ")");
-	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") tpp_lexer_", what, "extension(self, TPP_EXT_", option, extraArgs, ")");
-	print("#elif TPP_CONF_ISFEAT(TPP_HAVE_", option, ")");
-	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") (tpp_lexer_", what, "feature(self, TPP_FEAT_", option, extraArgs, "), TPP_EOK)");
-	print("#else /" "* ... *" "/");
-	print("#define tpp_lexer_", what, "_", option, "(self", extraArgs, ") TPP_EOK");
-	print("#endif /" "* !... *" "/");
-}
-]]]*/
-
-/*[[[end]]]*/
-
-
-/*[[[deemon
-for (local option, what: {
-//	{"NORMALIZE_SPACE", "set"},
-}) {
-	local extraArgs = what == "set" ? ", v" : "";
-	print("#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", option, ")");
-	print("#define tpp_makefile_", what, "_", option, "(self", extraArgs, ") tpp_makefile_", what, "feature(self, TPP_MAKEFILE_FEAT_", option, extraArgs, ")");
-	print("#else /" "* ... *" "/");
-	print("#define tpp_makefile_", what, "_", option, "(self", extraArgs, ") (void)0");
-	print("#endif /" "* !... *" "/");
-}
-]]]*/
-
-/*[[[end]]]*/
-
-
 /* Define a function `tpp_makefile_cli_warnf()` */
 #undef TPP_HAVE_MAKEFILE_CLI_WARN
 #define TPP_HAVE_MAKEFILE_CLI_WARN \
@@ -113,16 +79,15 @@ enum {
 
 
 /* Make makefile for being turned on (during `tpp_makefile_cli_loader_flush()`) */
-#if TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG
+static TPP_NONNULL((1)) void TPPCALL
 tpp_makefile_cli_loader_enable_with_makefile_only(tpp_makefile_cli_loader *tpp_restrict self) {
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 	tpp_makefile_cli_loader_enableonlymakefile(self);
 #endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 	tpp_makefile_cli_loader_enablemakefile(self);
-	return TPP_EOK;
 }
-#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -166,7 +131,8 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			case 'd':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_M
 				if (tpp_streq(arg, "ependencies\0")) { /* --dependencies */
-					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return TPP_EOK;
 				} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
 				{
@@ -177,9 +143,21 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 				if (tpp_streq(arg, "ser-dependencies\0")) { /* --user-dependencies */
 					tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
-					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return TPP_EOK;
 				} else
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+				{
+				}
+				break;
+
+			case 'p':
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+				if (tpp_streq(arg, "rint-missing-file-dependencies\0")) { /* --print-missing-file-dependencies */
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+				} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 				{
 				}
 				break;
@@ -187,14 +165,6 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			default: break;
 			}
 			break;
-
-		/* TODO: Support for CLI arguments that must be handled by front-end:
-		 * - "-MG", "--print-missing-file-dependencies"
-		 *   - Use `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` (with a `TPP_EOK` return value)
-		 *     to suppress `TPP_W_NO_SUCH_FILE` warnings, whilst at the same time
-		 *     using `tpp_lexer_decode_include_string_cb()` to add the missing include's
-		 *     filename to the set of dependencies */
-
 
 		case 'M':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MMD
@@ -248,15 +218,23 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+			if (tpp_streq(arg, "G\0")) {
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 			if (tpp_streq(arg, "M\0")) {
 				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
-				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MM */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_M
 			if (tpp_streq(arg, "\0")) {
-				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
 			{
@@ -650,6 +628,17 @@ TPP_CLI_HELP1("-MT TARGET", "Use TARGET in Makefile output")
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 TPP_CLI_HELP1("-MQ TARGET", "Use TARGET in Makefile output, but escape it first")
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+TPP_CLI_HELP2("-MG", "--print-missing-file-dependencies",
+              "Discard preprocessor output and generate a Makefile\n"
+              "Also include missing #include-s in the Makefile")
+#else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+TPP_CLI_HELP2("-MG", "--print-missing-file-dependencies",
+              "Generate a Makefile\n"
+              "Also include missing #include-s in the Makefile")
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MP
 TPP_CLI_HELP1("-MP", "All dependencies are repeated as phony/dummy targets")
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MP */

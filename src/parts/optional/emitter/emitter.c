@@ -145,6 +145,7 @@ _tpp_emitter_init(tpp_emitter *tpp_restrict self,
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_fini(tpp_emitter *tpp_restrict self) {
+	/* TODO: Clear all lexer hooks */
 	tpp_emitter_state_fini(&self->te_state);
 #if TPP_EMITTER_HAVE_FEATURES
 	tpp_emitter_features_fini(&self->te_feat);

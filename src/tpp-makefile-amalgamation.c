@@ -334,7 +334,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_byte
 }
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
-#if TPP_MAKEFILE_HAVE_PHONY
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
                     tpp_keyword const *tpp_restrict dep) {
@@ -361,7 +361,21 @@ tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
 	self->tmf_depv[self->tmf_depc++] = dep;
 	return TPP_EOK;
 }
-#endif /* TPP_MAKEFILE_HAVE_PHONY */
+
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_size i = self->tmf_depc;
+	while (i--) {
+		tpp_keyword const *mydep = self->tmf_depv[i];
+		if (tpp_keyword_equals(dep, mydep))
+			return true;
+	}
+	return false;
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
@@ -420,15 +434,9 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
 
-	/* Re-emit all dependencies as their own, phony targets.
-	 *
-	 * Note that dependencies were only added if `tpp_makefile_has(self, PHONY)`,
-	 * meaning that we can simply dump everything from within here, knowing that
-	 * (in case the state of that config changed at some point, or might even be
-	 * disabled right now), anything in here was added at a point in time when
-	 * phony target tracking was enabled (and thus: should get (re-)emitted). */
+	/* Re-emit all dependencies as their own, phony targets. */
 #if TPP_MAKEFILE_HAVE_PHONY
-	{
+	if (tpp_makefile_has(self, PHONY)) {
 		tpp_size i;
 		for (i = 0; i < self->tmf_depc; ++i) {
 			tpp_keyword const *dep = self->tmf_depv[i];
@@ -450,15 +458,12 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 }
 
 
-
-/* The main (mandatory) `NEW_DEPENDECY` hook that's used to
- * get notified whenever the lexer encounters a new dependency */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
+                                      tpp_keyword const *tpp_restrict filename_kwd) {
 	tpp_ssize output_temp;
 	tpp_char const *const filename = tpp_keyword_getstr(filename_kwd);
 	tpp_size const filename_len = tpp_keyword_getlen(filename_kwd);
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
 
 	/* Ignore if #include-stack contains syshdr-files */
 #if TPP_MAKEFILE_HAVE_USER_DEPENDENCIES
@@ -528,15 +533,60 @@ _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_
 	return TPP_EOK;
 }
 
+/* The main (mandatory) `NEW_DEPENDECY` hook that's used to
+ * get notified whenever the lexer encounters a new dependency */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
+	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
+}
+
+/* Handle missing file dependencies by (blindly) emitting them to the makefile */
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
+	/* Turn the filename into a keyword (so we can re-use the regular dependency-mechanism) */
+	tpp_makefile *const self = (tpp_makefile *)arg;
+	tpp_lexer *const lexer = tpp_makefile_getlexer(self);
+	tpp_hash const hash = tpp_hashof((tpp_char const *)str, length);
+	tpp_keyword const *ro_keyword = tpp_lexer_kwds_newkeyword(lexer, (tpp_char const *)str, length, hash);
+	if tpp_unlikely(!ro_keyword)
+		return TPP_ENOMEM;
+
+	/* Check if this "dependency" is already known */
+	if (tpp_makefile_hasdep(self, ro_keyword))
+		return TPP_EOK; /* Already emitted -> don't do so again! */
+
+#if TPP_MAKEFILE_HAVE_PHONY
+	if (!tpp_makefile_has(self, PHONY))
+#endif /* TPP_MAKEFILE_HAVE_PHONY */
+	{
+		tpp_errno error = tpp_makefile_adddep(self, ro_keyword);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	return tpp_makefile_new_dependency_hook_impl(self, ro_keyword);
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind) {
+	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+	tpp_lexer const *const lexer = tpp_makefile_getlexer(self);
+	(void)include_kind; /* Ignored -- treat all missing includes the same. */
+
+	/* NOTE: The `TPP_EOK` return value of `tpp_lexer_decode_include_string_cb()`
+	 *       also acts to suppresses the `TPP_W_NO_SUCH_FILE` that would normally
+	 *       be raised by the caller */
+	return tpp_lexer_decode_include_string_cb(lexer, &tpp_makefile_include_not_found_cb, self);
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
+
 /************************************************************************/
 /* File: parts/optional/makefile/mf-cli.c                               */
 /************************************************************************/
 
 #if TPP_MAKEFILE_HAVE_CLI
-
-
-
-
 
 /* Define a function `tpp_makefile_cli_warnf()` */
 #undef TPP_HAVE_MAKEFILE_CLI_WARN
@@ -584,16 +634,15 @@ enum {
 
 
 /* Make makefile for being turned on (during `tpp_makefile_cli_loader_flush()`) */
-#if TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG
+static TPP_NONNULL((1)) void TPPCALL
 tpp_makefile_cli_loader_enable_with_makefile_only(tpp_makefile_cli_loader *tpp_restrict self) {
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 	tpp_makefile_cli_loader_enableonlymakefile(self);
 #endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 	tpp_makefile_cli_loader_enablemakefile(self);
-	return TPP_EOK;
 }
-#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -637,7 +686,8 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			case 'd':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_M
 				if (tpp_streq(arg, "ependencies\0")) { /* --dependencies */
-					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return TPP_EOK;
 				} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
 				{
@@ -648,9 +698,21 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 				if (tpp_streq(arg, "ser-dependencies\0")) { /* --user-dependencies */
 					tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
-					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return TPP_EOK;
 				} else
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+				{
+				}
+				break;
+
+			case 'p':
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+				if (tpp_streq(arg, "rint-missing-file-dependencies\0")) { /* --print-missing-file-dependencies */
+					tpp_makefile_cli_loader_enable_with_makefile_only(self);
+					return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+				} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 				{
 				}
 				break;
@@ -658,14 +720,6 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			default: break;
 			}
 			break;
-
-		/* TODO: Support for CLI arguments that must be handled by front-end:
-		 * - "-MG", "--print-missing-file-dependencies"
-		 *   - Use `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` (with a `TPP_EOK` return value)
-		 *     to suppress `TPP_W_NO_SUCH_FILE` warnings, whilst at the same time
-		 *     using `tpp_lexer_decode_include_string_cb()` to add the missing include's
-		 *     filename to the set of dependencies */
-
 
 		case 'M':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MMD
@@ -719,15 +773,23 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+			if (tpp_streq(arg, "G\0")) {
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 			if (tpp_streq(arg, "M\0")) {
 				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
-				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MM */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_M
 			if (tpp_streq(arg, "\0")) {
-				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
 			{
@@ -1121,6 +1183,17 @@ TPP_CLI_HELP1("-MT TARGET", "Use TARGET in Makefile output")
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 TPP_CLI_HELP1("-MQ TARGET", "Use TARGET in Makefile output, but escape it first")
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MG
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+TPP_CLI_HELP2("-MG", "--print-missing-file-dependencies",
+              "Discard preprocessor output and generate a Makefile\n"
+              "Also include missing #include-s in the Makefile")
+#else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+TPP_CLI_HELP2("-MG", "--print-missing-file-dependencies",
+              "Generate a Makefile\n"
+              "Also include missing #include-s in the Makefile")
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MP
 TPP_CLI_HELP1("-MP", "All dependencies are repeated as phony/dummy targets")
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MP */

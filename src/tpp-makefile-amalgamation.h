@@ -73,6 +73,26 @@
 #define TPP_MAKEFILE_HAVE_USER_DEPENDENCIES (TPP_HAVE_FILE_SYSHDR ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_MAKEFILE_HAVE_USER_DEPENDENCIES */
 
+/* Enable API support for handling `TPP_HOOK_INCLUDE_NOT_FOUND` by emitting
+ * the associated file as an additional dependency. Useful when wanting to
+ * (somewhat accurately) determine dependencies, where some of them might
+ * not exist, yet.
+ *
+ * Used to implement `-MG` (aka. `--print-missing-file-dependencies`).
+ *
+ * When enabled, the following APIs become available:
+ * - `tpp_makefile_enable_missing_file_dependencies()`
+ * - `tpp_makefile_disable_missing_file_dependencies()`
+ * - `tpp_makefile_get_missing_file_dependencies_enabled()`
+ * - `tpp_makefile_set_missing_file_dependencies_enabled()`
+ *
+ * Note that even when this is enabled, printing of missing file
+ * dependencies is disabled by default (enable it by making a
+ * call to `tpp_makefile_enable_missing_file_dependencies()`). */
+#ifndef TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#define TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
+#endif /* !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
 /* When enabled, the Makefile keeps track of all dependencies encountered
  * over time, and (once flushed) will print all of them a second time in
  * the form of empty (dummy) targets. This is necessary in case one of those
@@ -169,14 +189,20 @@
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_OUTPUT_FILE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 
-/* TODO: `-MG`, `--print-missing-file-dependencies`: */
-
 /* Extension to `TPP_MAKEFILE_HAVE_CLI_DASH_MF`: when the
  * specified filename is `-`, output to `stdout` instead */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH \
 	(TPP_MAKEFILE_HAVE_CLI_DASH_MF && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH */
+
+/* `-MG`, `--print-missing-file-dependencies`:
+ * Turn on printing of missing file dependencies within the linked makefile/lexer.
+ * Also disables regular preprocessor output like `TPP_MAKEFILE_HAVE_CLI_DASH_M`. */
+#ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MG
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MG \
+	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES)
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 
 /* `-MT TARGET`: Specifies the exact text that to use as the makefile target name. */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MT
@@ -229,7 +255,7 @@
  * - `tpp_makefile_cli_loader_setonlymakefile()` */
 #ifndef TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 #define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE \
-	(TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM)
+	(TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 
 
@@ -521,16 +547,16 @@ typedef struct tpp_makefile {
 #define _tpp_makefile_init_flags(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_FLAGS */
 
-#if TPP_MAKEFILE_HAVE_PHONY
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depc); /* # of elements in `tmf_depv` */
 	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depa); /* Allocated size of `tmf_depv` */
 	tpp_keyword const **TPP_MAKEFILE_INTERNAL(tmf_depv); /* [1..1][0..tmf_depc][owned] Vector of dependencies (for replay as phonies) */
 #define _tpp_makefile_init_depv(self) , (self)->TPP_MAKEFILE_INTERNAL(tmf_depc) = (self)->TPP_MAKEFILE_INTERNAL(tmf_depa) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmf_depv) = NULL
 #define _tpp_makefile_fini_depv(self) , tpp_free((self)->TPP_MAKEFILE_INTERNAL(tmf_depv))
-#else /* TPP_MAKEFILE_HAVE_PHONY */
+#else /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 #define _tpp_makefile_init_depv(self) /* nothing */
 #define _tpp_makefile_fini_depv(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_PHONY */
+#endif /* !TPP_MAKEFILE_HAVE_PHONY && !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 	/* Current/maximum column position before lines are wrapped */
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
@@ -568,6 +594,7 @@ typedef struct tpp_makefile {
 #define tpp_makefile_fini(self)                  \
 	(void)((void)0 _tpp_makefile_fini_depv(self) \
 	       _tpp_makefile_fini_output_file(self), \
+	       /* TODO: Clear all lexer hooks */     \
 	       tpp_dbg_memset(self, sizeof(tpp_makefile)))
 
 /* Retrieve components of the makefile. */
@@ -724,6 +751,36 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self);
 	tpp_lexer_resethook_new_dependency(tpp_makefile_getlexer(self))
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd);
+
+
+
+/* Handle missing file dependencies by (blindly) emitting them to the makefile */
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#define tpp_makefile_get_missing_file_dependencies_enabled(self) \
+	(tpp_lexer_gethook_include_not_found(tpp_makefile_getlexer(self)) == &_tpp_makefile_include_not_found_hook)
+#define tpp_makefile_set_missing_file_dependencies_enabled(self, v) \
+	((v) ? (tpp_makefile_enable_missing_file_dependencies(self))    \
+	     : (tpp_makefile_disable_missing_file_dependencies(self), TPP_EOK))
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_makefile_enable_missing_file_dependencies(self)                        \
+	(tpp_lexer_sethook_include_not_found_ex(tpp_makefile_getlexer(self),           \
+	                                        &_tpp_makefile_include_not_found_hook, \
+	                                        self),                                 \
+	 TPP_EOK)
+#else /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_enable_missing_file_dependencies(self)                      \
+	(tpp_lexer_sethook_include_not_found(tpp_makefile_getlexer(self),            \
+	                                     &_tpp_makefile_include_not_found_hook), \
+	 TPP_EOK)
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_disable_missing_file_dependencies(self) \
+	tpp_lexer_resethook_include_not_found(tpp_makefile_getlexer(self))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind);
+#else /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#define tpp_makefile_get_missing_file_dependencies_enabled(self) 0
+#define tpp_makefile_disable_missing_file_dependencies(self)     (void)0
+#endif /* !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 
 

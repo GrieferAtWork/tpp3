@@ -35,6 +35,26 @@
 #define TPP_MAKEFILE_HAVE_USER_DEPENDENCIES (TPP_HAVE_FILE_SYSHDR ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_MAKEFILE_HAVE_USER_DEPENDENCIES */
 
+/* Enable API support for handling `TPP_HOOK_INCLUDE_NOT_FOUND` by emitting
+ * the associated file as an additional dependency. Useful when wanting to
+ * (somewhat accurately) determine dependencies, where some of them might
+ * not exist, yet.
+ *
+ * Used to implement `-MG` (aka. `--print-missing-file-dependencies`).
+ *
+ * When enabled, the following APIs become available:
+ * - `tpp_makefile_enable_missing_file_dependencies()`
+ * - `tpp_makefile_disable_missing_file_dependencies()`
+ * - `tpp_makefile_get_missing_file_dependencies_enabled()`
+ * - `tpp_makefile_set_missing_file_dependencies_enabled()`
+ *
+ * Note that even when this is enabled, printing of missing file
+ * dependencies is disabled by default (enable it by making a
+ * call to `tpp_makefile_enable_missing_file_dependencies()`). */
+#ifndef TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#define TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
+#endif /* !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
 /* When enabled, the Makefile keeps track of all dependencies encountered
  * over time, and (once flushed) will print all of them a second time in
  * the form of empty (dummy) targets. This is necessary in case one of those
@@ -131,14 +151,20 @@
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_OUTPUT_FILE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 
-/* TODO: `-MG`, `--print-missing-file-dependencies`: */
-
 /* Extension to `TPP_MAKEFILE_HAVE_CLI_DASH_MF`: when the
  * specified filename is `-`, output to `stdout` instead */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH \
 	(TPP_MAKEFILE_HAVE_CLI_DASH_MF && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH */
+
+/* `-MG`, `--print-missing-file-dependencies`:
+ * Turn on printing of missing file dependencies within the linked makefile/lexer.
+ * Also disables regular preprocessor output like `TPP_MAKEFILE_HAVE_CLI_DASH_M`. */
+#ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MG
+#define TPP_MAKEFILE_HAVE_CLI_DASH_MG \
+	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES)
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 
 /* `-MT TARGET`: Specifies the exact text that to use as the makefile target name. */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MT
@@ -191,7 +217,7 @@
  * - `tpp_makefile_cli_loader_setonlymakefile()` */
 #ifndef TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 #define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE \
-	(TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM)
+	(TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 
 

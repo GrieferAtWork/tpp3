@@ -23,7 +23,8 @@
 #define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions instead of features (so everything is configurable via `-f[no-]extension`) */
 #define TPP_USE_STATIC 1            /* Define everything with `static` linkage */
 
-/* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used */
+/* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used.
+ * These superfluous APIs can easily be discovered thanks to `-DTPP_USE_STATIC=1` */
 #define TPP_HAVE_LEXER_COPY             0
 #define TPP_HAVE_KEYWORDS_UNDEFALLUSER  0
 #define TPP_HAVE_KEYWORDS_UNASSERTALL   0

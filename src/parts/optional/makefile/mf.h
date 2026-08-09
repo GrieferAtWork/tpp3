@@ -105,16 +105,16 @@ typedef struct tpp_makefile {
 #define _tpp_makefile_init_flags(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_FLAGS */
 
-#if TPP_MAKEFILE_HAVE_PHONY
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depc); /* # of elements in `tmf_depv` */
 	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depa); /* Allocated size of `tmf_depv` */
 	tpp_keyword const **TPP_MAKEFILE_INTERNAL(tmf_depv); /* [1..1][0..tmf_depc][owned] Vector of dependencies (for replay as phonies) */
 #define _tpp_makefile_init_depv(self) , (self)->TPP_MAKEFILE_INTERNAL(tmf_depc) = (self)->TPP_MAKEFILE_INTERNAL(tmf_depa) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmf_depv) = NULL
 #define _tpp_makefile_fini_depv(self) , tpp_free((self)->TPP_MAKEFILE_INTERNAL(tmf_depv))
-#else /* TPP_MAKEFILE_HAVE_PHONY */
+#else /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 #define _tpp_makefile_init_depv(self) /* nothing */
 #define _tpp_makefile_fini_depv(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_PHONY */
+#endif /* !TPP_MAKEFILE_HAVE_PHONY && !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 	/* Current/maximum column position before lines are wrapped */
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
@@ -152,6 +152,7 @@ typedef struct tpp_makefile {
 #define tpp_makefile_fini(self)                  \
 	(void)((void)0 _tpp_makefile_fini_depv(self) \
 	       _tpp_makefile_fini_output_file(self), \
+	       /* TODO: Clear all lexer hooks */     \
 	       tpp_dbg_memset(self, sizeof(tpp_makefile)))
 
 /* Retrieve components of the makefile. */
@@ -308,6 +309,36 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self);
 	tpp_lexer_resethook_new_dependency(tpp_makefile_getlexer(self))
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd);
+
+
+
+/* Handle missing file dependencies by (blindly) emitting them to the makefile */
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#define tpp_makefile_get_missing_file_dependencies_enabled(self) \
+	(tpp_lexer_gethook_include_not_found(tpp_makefile_getlexer(self)) == &_tpp_makefile_include_not_found_hook)
+#define tpp_makefile_set_missing_file_dependencies_enabled(self, v) \
+	((v) ? (tpp_makefile_enable_missing_file_dependencies(self))    \
+	     : (tpp_makefile_disable_missing_file_dependencies(self), TPP_EOK))
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_makefile_enable_missing_file_dependencies(self)                        \
+	(tpp_lexer_sethook_include_not_found_ex(tpp_makefile_getlexer(self),           \
+	                                        &_tpp_makefile_include_not_found_hook, \
+	                                        self),                                 \
+	 TPP_EOK)
+#else /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_enable_missing_file_dependencies(self)                      \
+	(tpp_lexer_sethook_include_not_found(tpp_makefile_getlexer(self),            \
+	                                     &_tpp_makefile_include_not_found_hook), \
+	 TPP_EOK)
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_disable_missing_file_dependencies(self) \
+	tpp_lexer_resethook_include_not_found(tpp_makefile_getlexer(self))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind);
+#else /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#define tpp_makefile_get_missing_file_dependencies_enabled(self) 0
+#define tpp_makefile_disable_missing_file_dependencies(self)     (void)0
+#endif /* !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 
 

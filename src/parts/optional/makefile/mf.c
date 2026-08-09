@@ -127,7 +127,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_byte
 }
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
-#if TPP_MAKEFILE_HAVE_PHONY
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
                     tpp_keyword const *tpp_restrict dep) {
@@ -154,7 +154,21 @@ tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
 	self->tmf_depv[self->tmf_depc++] = dep;
 	return TPP_EOK;
 }
-#endif /* TPP_MAKEFILE_HAVE_PHONY */
+
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_size i = self->tmf_depc;
+	while (i--) {
+		tpp_keyword const *mydep = self->tmf_depv[i];
+		if (tpp_keyword_equals(dep, mydep))
+			return true;
+	}
+	return false;
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 
 
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
@@ -213,15 +227,9 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
 
-	/* Re-emit all dependencies as their own, phony targets.
-	 *
-	 * Note that dependencies were only added if `tpp_makefile_has(self, PHONY)`,
-	 * meaning that we can simply dump everything from within here, knowing that
-	 * (in case the state of that config changed at some point, or might even be
-	 * disabled right now), anything in here was added at a point in time when
-	 * phony target tracking was enabled (and thus: should get (re-)emitted). */
+	/* Re-emit all dependencies as their own, phony targets. */
 #if TPP_MAKEFILE_HAVE_PHONY
-	{
+	if (tpp_makefile_has(self, PHONY)) {
 		tpp_size i;
 		for (i = 0; i < self->tmf_depc; ++i) {
 			tpp_keyword const *dep = self->tmf_depv[i];
@@ -243,15 +251,12 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 }
 
 
-
-/* The main (mandatory) `NEW_DEPENDECY` hook that's used to
- * get notified whenever the lexer encounters a new dependency */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
+                                      tpp_keyword const *tpp_restrict filename_kwd) {
 	tpp_ssize output_temp;
 	tpp_char const *const filename = tpp_keyword_getstr(filename_kwd);
 	tpp_size const filename_len = tpp_keyword_getlen(filename_kwd);
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
 
 	/* Ignore if #include-stack contains syshdr-files */
 #if TPP_MAKEFILE_HAVE_USER_DEPENDENCIES
@@ -320,6 +325,55 @@ _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_
 #endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 	return TPP_EOK;
 }
+
+/* The main (mandatory) `NEW_DEPENDECY` hook that's used to
+ * get notified whenever the lexer encounters a new dependency */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
+	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
+}
+
+/* Handle missing file dependencies by (blindly) emitting them to the makefile */
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
+	/* Turn the filename into a keyword (so we can re-use the regular dependency-mechanism) */
+	tpp_makefile *const self = (tpp_makefile *)arg;
+	tpp_lexer *const lexer = tpp_makefile_getlexer(self);
+	tpp_hash const hash = tpp_hashof((tpp_char const *)str, length);
+	tpp_keyword const *ro_keyword = tpp_lexer_kwds_newkeyword(lexer, (tpp_char const *)str, length, hash);
+	if tpp_unlikely(!ro_keyword)
+		return TPP_ENOMEM;
+
+	/* Check if this "dependency" is already known */
+	if (tpp_makefile_hasdep(self, ro_keyword))
+		return TPP_EOK; /* Already emitted -> don't do so again! */
+
+#if TPP_MAKEFILE_HAVE_PHONY
+	if (!tpp_makefile_has(self, PHONY))
+#endif /* TPP_MAKEFILE_HAVE_PHONY */
+	{
+		tpp_errno error = tpp_makefile_adddep(self, ro_keyword);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	return tpp_makefile_new_dependency_hook_impl(self, ro_keyword);
+}
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind) {
+	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+	tpp_lexer const *const lexer = tpp_makefile_getlexer(self);
+	(void)include_kind; /* Ignored -- treat all missing includes the same. */
+
+	/* NOTE: The `TPP_EOK` return value of `tpp_lexer_decode_include_string_cb()`
+	 *       also acts to suppresses the `TPP_W_NO_SUCH_FILE` that would normally
+	 *       be raised by the caller */
+	return tpp_lexer_decode_include_string_cb(lexer, &tpp_makefile_include_not_found_cb, self);
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/
