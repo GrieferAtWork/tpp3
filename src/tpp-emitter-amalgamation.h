@@ -812,7 +812,7 @@ typedef union tpp_emitter_features {
 #define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 	} TPP_EMITTER_INTERNAL(tef_flags);
-	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	unsigned char TPP_EMITTER_INTERNAL(tef_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
 
 #if !TPP_USE_STATIC
@@ -820,11 +820,11 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #endif /* !TPP_USE_STATIC */
 
 #define tpp_emitter_features_getid(self, id) \
-	((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_enable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_disable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_setid(self, id, enabled) \
 	((enabled) ? tpp_emitter_features_enable(self, id) : tpp_emitter_features_disable(self, id))
 #define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)
@@ -1303,28 +1303,28 @@ _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie);
 #define TPP_EMITTER_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
 #define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-#define TPP_EMITTER_HAVE_CLI_DASH_FLAGS \
+#undef TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
+#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS \
 	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
+#if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 #define _tpp_emitter_cli_loader_flags uint_least32_t
 #define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
 #define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT32_C(0x00000001) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
-#endif /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 
 
 typedef struct tpp_emitter_cli_loader {
 	tpp_emitter *TPP_EMITTER_INTERNAL(tecl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
 	unsigned int TPP_EMITTER_INTERNAL(tecl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
+#if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tecl_flags);
 #define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tecl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
-#else /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#else /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#endif /* !TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 } tpp_emitter_cli_loader;
 
 /* Initialize a CLI loader for `emitter`

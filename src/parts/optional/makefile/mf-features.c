@@ -49,11 +49,11 @@ for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(f
 
 print("#if TPP_MAKEFILE_HAVE_FEATURES");
 print("TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {");
-print("	/" "* .tef_flags = *" "/ {");
+print("	/" "* .tmf_flags = *" "/ {");
 local configsLen = (configs.each.length > ...);
 for (local CONF: configs) {
 	print("#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ")");
-	print("		/" "* .teff_", CONF, " " * (configsLen - #CONF), " = *" "/ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_", CONF, "),");
+	print("		/" "* .tmff_", CONF, " " * (configsLen - #CONF), " = *" "/ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_", CONF, "),");
 	print("#endif /" "* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
 }
 print("	}");
@@ -62,10 +62,13 @@ print("#endif /" "* TPP_MAKEFILE_HAVE_FEATURES *" "/");
 ]]]*/
 #if TPP_MAKEFILE_HAVE_FEATURES
 TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
-	/* .tef_flags = */ {
+	/* .tmf_flags = */ {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
-		/* .teff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
+		/* .tmff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
+		/* .tmff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
+#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
 	}
 };
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */

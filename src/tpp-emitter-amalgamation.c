@@ -43,7 +43,7 @@
 #define tecl_flags                              TPP_EMITTER_INTERNAL(tecl_flags)
 #define te_feat                                 TPP_EMITTER_INTERNAL(te_feat)
 #define tef_flags                               TPP_EMITTER_INTERNAL(tef_flags)
-#define tetf_bitset                             TPP_EMITTER_INTERNAL(tetf_bitset)
+#define tef_bitset                              TPP_EMITTER_INTERNAL(tef_bitset)
 #define teff_NORMALIZE_SPACE                    TPP_EMITTER_INTERNAL(teff_NORMALIZE_SPACE)
 #define teff_NORMALIZE_LF                       TPP_EMITTER_INTERNAL(teff_NORMALIZE_LF)
 #define teff_NORMALIZE_C_STRING                 TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_STRING)

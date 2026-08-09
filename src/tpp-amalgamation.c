@@ -22543,9 +22543,10 @@ TPP_DECL_BEGIN
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
 #ifdef tpp_io_handle_IS_HANDLE
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
-                 LPWSTR *tpp_restrict plpwFixedFilename) {
+/* Semi-public API to fix a UNC path on windows */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_nt_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
+                     LPWSTR *tpp_restrict plpwFixedFilename) {
 	/* TODO */
 	(void)sFilename;
 	(void)plpwFixedFilename;
@@ -22580,7 +22581,7 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 	}
 
 	/* Convert utf-8 to wide, then pre-pend \\.\ to work around UNC limitations */
-	error = tpp_fix_unc_path(filename, &lpwFixedFilename);
+	error = _tpp_nt_fix_unc_path(filename, &lpwFixedFilename);
 	if (TPP_ISERR(error))
 		return error;
 #define tpp_io_open_return_error(err) return (tpp_free(lpwFilename), err)
@@ -22658,7 +22659,6 @@ TPP_IMPL void TPPCALL tpp_io_close(tpp_io_handle file) {
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((2)) tpp_ssize TPPCALL
 tpp_io_read(tpp_io_handle file, void *buf,
             tpp_size bufsize tpp_io_nonblock__PARAM) {
-#define tpp_io_read_return_error(error) return TPP_SSIZE_OFERR(error)
 #ifdef tpp_io_handle_IS_HANDLE
 	BOOL bRead;
 	DWORD dwResult;
@@ -22673,7 +22673,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		DWORD dwFileType;
 		TPP_SYSCALL({
 			dwFileType = GetFileType(file);
-		}, tpp_io_read_return_error);
+		}, return TPP_SSIZE_OFERR);
 		if (dwFileType == FILE_TYPE_UNKNOWN)
 			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (dwFileType == FILE_TYPE_PIPE) {
@@ -22683,13 +22683,13 @@ tpp_io_read(tpp_io_handle file, void *buf,
 			dwResult = 0;
 			TPP_SYSCALL({
 				bPeek = PeekNamedPipe(file, temp_buffer, sizeof(temp_buffer), &dwResult, NULL, NULL);
-			}, tpp_io_read_return_error);
+			}, return TPP_SSIZE_OFERR);
 			if (bPeek && dwResult == 0)
 				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		} else {
 			TPP_SYSCALL({
 				dwResult = WaitForSingleObject(file, 0);
-			}, tpp_io_read_return_error);
+			}, return TPP_SSIZE_OFERR);
 			if (dwResult == WAIT_TIMEOUT)
 				return TPP_SSIZE_OFERR(TPP_EWOULDBLOCK);
 		}
@@ -22698,7 +22698,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 
 	TPP_SYSCALL({
 		bRead = ReadFile(file, buf, dwBufsize, &dwResult, NULL);
-	}, tpp_io_read_return_error);
+	}, return TPP_SSIZE_OFERR);
 	if (!bRead)
 		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)dwResult;
@@ -22715,7 +22715,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 		FD_SET(file, &read_fds);
 		TPP_SYSCALL({
 			result = select(file + 1, &read_fds, NULL, NULL, &timeout);
-		}, tpp_io_read_return_error);
+		}, return TPP_SSIZE_OFERR);
 		if (result < 0)
 			return TPP_SSIZE_OFERR(TPP_EIO);
 		if (!FD_ISSET(file, &read_fds))
@@ -22724,7 +22724,7 @@ tpp_io_read(tpp_io_handle file, void *buf,
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 	TPP_SYSCALL({
 		result = (tpp_ssize)read(file, buf, bufsize);
-	}, tpp_io_read_return_error);
+	}, return TPP_SSIZE_OFERR);
 	if (result < 0)
 		return TPP_SSIZE_OFERR(TPP_EIO);
 	return result;
@@ -22734,12 +22734,11 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	tpp_size result;
 	TPP_SYSCALL({
 		result = (tpp_size)fread(buf, 1, bufsize, file);
-	}, tpp_io_read_return_error);
+	}, return TPP_SSIZE_OFERR);
 	if (result == 0 && ferror(file))
 		return TPP_SSIZE_OFERR(TPP_EIO);
 	return (tpp_ssize)result;
 #endif /* tpp_io_handle_IS_FILE */
-#undef tpp_io_read_return_error
 }
 
 

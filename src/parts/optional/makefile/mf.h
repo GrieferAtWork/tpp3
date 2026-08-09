@@ -23,13 +23,14 @@
 #include "api.h"
 
 #include "config.h"
+#include "mf-io.h"
 #include "mf-features.h"
 
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
 #undef TPP_MAKEFILE_HAVE_FLAGS
-#if 0 /* TODO */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
 #define TPP_MAKEFILE_HAVE_FLAGS 1
 #else /* ... */
 #define TPP_MAKEFILE_HAVE_FLAGS 0
@@ -38,25 +39,101 @@ TPP_DECL_BEGIN
 #if TPP_MAKEFILE_HAVE_FLAGS
 #define tpp_makefile_flags uint_least8_t
 #define TPP_MAKEFILE_FLAG_NORMAL UINT8_C(0x00)
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
+#define TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE UINT8_C(0x01) /* Don't close an output file handle */
+#endif /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 #endif /* TPP_MAKEFILE_HAVE_FLAGS */
 
 
 typedef struct tpp_makefile {
+	/* [1..1][const] The lexer whose tokens are being emitted */
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
-	tpp_lexer            *TPP_MAKEFILE_INTERNAL(tmf_lexer);  /* [1..1][const] The lexer whose tokens are being emitted */
+	tpp_lexer *TPP_MAKEFILE_INTERNAL(tmf_lexer);
 #define _tpp_makefile_init_lexer(self, lexer) (self)->TPP_MAKEFILE_INTERNAL(tmf_lexer) = (lexer)
 #else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
 #define _tpp_makefile_init_lexer(self, lexer) tpp_assert(tpp_makefile_getlexer(self) == (lexer))
 #endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
-	tpp_formatprinter     TPP_MAKEFILE_INTERNAL(tmf_output); /* [1..1][const] Makefile output printer (the makefile itself will be passed as argument) */
+
+	/* [1..1][const] Makefile output printer (the makefile itself will be passed as argument) */
+	tpp_formatprinter TPP_MAKEFILE_INTERNAL(tmf_output);
+
+	/* [valid_if(tmf_output == &_tpp_makefile_builtin_file_output)] Output-to-file information */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
+	tpp_makefile_io_handle TPP_MAKEFILE_INTERNAL(tmf_output_file);
+#define _tpp_makefile_init_output_file(self) /* nothing */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
+#define _tpp_makefile_fini_output_file_before_reassign(self)                                     \
+	, (self)->TPP_MAKEFILE_INTERNAL(tmf_output) == &_tpp_makefile_builtin_file_output            \
+	  ? (((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)           \
+	     ? (void)((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) &= ~TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE) \
+	     : tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmf_output_file)))                \
+	  : (void)0
+#define _tpp_makefile_fini_output_file(self)                                              \
+	, ((self)->TPP_MAKEFILE_INTERNAL(tmf_output) == &_tpp_makefile_builtin_file_output && \
+	   !((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE))    \
+	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmf_output_file))             \
+	  : (void)0
+#else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
+#define _tpp_makefile_fini_output_file(self)                                            \
+	, ((self)->TPP_MAKEFILE_INTERNAL(tmf_output) == &_tpp_makefile_builtin_file_output) \
+	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmf_output_file))           \
+	  : (void)0
+#endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
+#else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
+#define _tpp_makefile_init_output_file(self) /* nothing */
+#define _tpp_makefile_fini_output_file(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
+#ifndef _tpp_makefile_fini_output_file_before_reassign
+#define _tpp_makefile_fini_output_file_before_reassign _tpp_makefile_fini_output_file
+#endif /* !_tpp_makefile_fini_output_file_before_reassign */
+
+	/* Makefile feature configuration */
 #if TPP_MAKEFILE_HAVE_FEATURES
-	tpp_makefile_features TPP_MAKEFILE_INTERNAL(tmf_feat);   /* Makefile feature configuration */
+	tpp_makefile_features TPP_MAKEFILE_INTERNAL(tmf_feat);
 #define _tpp_makefile_init_feat(self) , tpp_makefile_features_init(&(self)->TPP_MAKEFILE_INTERNAL(tmf_feat))
 #define _tpp_makefile_fini_feat(self) , tpp_makefile_features_fini(&(self)->TPP_MAKEFILE_INTERNAL(tmf_feat))
 #else /* TPP_MAKEFILE_HAVE_FEATURES */
 #define _tpp_makefile_init_feat(self) /* nothing */
 #define _tpp_makefile_fini_feat(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_FEATURES */
+
+	/* Makefile flags (set of `TPP_MAKEFILE_FLAG_*`) */
+#if TPP_MAKEFILE_HAVE_FLAGS
+	tpp_makefile_flags TPP_MAKEFILE_INTERNAL(tmf_flags);
+#define _tpp_makefile_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmf_flags) = TPP_MAKEFILE_FLAG_NORMAL
+#else /* TPP_MAKEFILE_HAVE_FLAGS */
+#define _tpp_makefile_init_flags(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_FLAGS */
+
+#if TPP_MAKEFILE_HAVE_PHONY
+	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depc); /* # of elements in `tmf_depv` */
+	tpp_size            TPP_MAKEFILE_INTERNAL(tmf_depa); /* Allocated size of `tmf_depv` */
+	tpp_keyword const **TPP_MAKEFILE_INTERNAL(tmf_depv); /* [1..1][0..tmf_depc][owned] Vector of dependencies (for replay as phonies) */
+#define _tpp_makefile_init_depv(self) , (self)->TPP_MAKEFILE_INTERNAL(tmf_depc) = (self)->TPP_MAKEFILE_INTERNAL(tmf_depa) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmf_depv) = NULL
+#define _tpp_makefile_fini_depv(self) , tpp_free((self)->TPP_MAKEFILE_INTERNAL(tmf_depv))
+#else /* TPP_MAKEFILE_HAVE_PHONY */
+#define _tpp_makefile_init_depv(self) /* nothing */
+#define _tpp_makefile_fini_depv(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_PHONY */
+
+	/* Current/maximum column position before lines are wrapped */
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+	tpp_column TPP_MAKEFILE_INTERNAL(tmf_curcol); /* Current column position */
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0
+	tpp_column TPP_MAKEFILE_INTERNAL(tmf_maxcol); /* Max column position */
+#define tpp_makefile_getmaxcol(self)     (self)->TPP_MAKEFILE_INTERNAL(tmf_maxcol)
+#define tpp_makefile_setmaxcol(self, v)  (void)((self)->TPP_MAKEFILE_INTERNAL(tmf_maxcol) = (v))
+#define tpp_makefile_disablemaxcol(self) (void)((self)->TPP_MAKEFILE_INTERNAL(tmf_maxcol) = -1)
+#define _tpp_makefile_init_col(self)     , (self)->TPP_MAKEFILE_INTERNAL(tmf_curcol) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmf_maxcol) = (-TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH)
+#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
+#define _tpp_makefile_init_col(self) , (self)->TPP_MAKEFILE_INTERNAL(tmf_curcol) = 0
+#define tpp_makefile_getmaxcol(self) TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH >= 0 */
+#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+#define _tpp_makefile_init_col(self)     /* nothing */
+#define tpp_makefile_getmaxcol(self)     (-1)
+#define tpp_makefile_disablemaxcol(self) (void)0
+#endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 } tpp_makefile;
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
@@ -67,12 +144,18 @@ typedef struct tpp_makefile {
 #define tpp_makefile_init(self, lexer, output)                  \
 	(void)(_tpp_makefile_init_lexer(self, lexer),               \
 	       (self)->TPP_MAKEFILE_INTERNAL(tmf_output) = (output) \
-	       _tpp_makefile_init_feat(self))
-#define tpp_makefile_fini(self) \
-	tpp_dbg_memset(self, sizeof(tpp_makefile))
+	       _tpp_makefile_init_output_file(self)                 \
+	       _tpp_makefile_init_feat(self)                        \
+	       _tpp_makefile_init_flags(self)                       \
+	       _tpp_makefile_init_depv(self)                        \
+	       _tpp_makefile_init_col(self))
+#define tpp_makefile_fini(self)                  \
+	(void)((void)0 _tpp_makefile_fini_depv(self) \
+	       _tpp_makefile_fini_output_file(self), \
+	       tpp_dbg_memset(self, sizeof(tpp_makefile)))
 
 /* Retrieve components of the makefile. */
-#define tpp_makefile_getoutput(self) (self)->TPP_MAKEFILE_INTERNAL(tmf_output)
+#define tpp_makefile_getoutput(self)    (self)->TPP_MAKEFILE_INTERNAL(tmf_output)
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
 #define tpp_makefile_getlexer(self)   ((self)->TPP_MAKEFILE_INTERNAL(tmf_lexer))
 #define tpp_makefile_ofcookie(cookie) ((tpp_makefile *)(cookie))
@@ -83,6 +166,85 @@ typedef struct tpp_makefile {
 #define tpp_makefile_getlexer(self)   ((tpp_lexer *)((char *)(self) - TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
 #define tpp_makefile_ofcookie(cookie) ((tpp_makefile *)((char *)(self) + TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
 #endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+
+/* Assign a different output printer to "self" (also closes the old
+ * printer's file, if one was assigned by `tpp_makefile_setoutput_io()`
+ * or `tpp_makefile_setoutput_file()`) */
+#define tpp_makefile_setoutput(self, v)                                  \
+	(void)((void)0 _tpp_makefile_fini_output_file_before_reassign(self), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmf_output) = (v))
+
+
+/* Same as `tpp_makefile_setoutput()`, but assign a `tpp_makefile_io_handle`
+ * as output target. Note that the given `handle` is *ALWAYS* inherited. If
+ * this isn't what you want, use `tpp_makefile_setoutput_io_ex()` instead. */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
+#define tpp_makefile_setoutput_io(self, /*inherit(always)*/ handle)      \
+	(void)((void)0 _tpp_makefile_fini_output_file_before_reassign(self), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmf_output_file) = (handle),    \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmf_output) = &_tpp_makefile_builtin_file_output)
+TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes);
+
+/* Check if output is directed to a file, i.e. has been configured by one of:
+ * - `tpp_makefile_setoutput_io()`
+ * - `tpp_makefile_setoutput_io_ex()`
+ * - `tpp_makefile_setoutput_file()` */
+#define tpp_makefile_isoutput_io(self) \
+	(tpp_makefile_getoutput(self) == &_tpp_makefile_builtin_file_output)
+
+/* Return the I/O handle set by `tpp_makefile_setoutput_io()`. Behavior is weak
+ * undefined (and return value is entirely undefined) if the current output wasn't
+ * set by `tpp_makefile_setoutput_io()`, `tpp_makefile_setoutput_io_ex()` or
+ * `tpp_makefile_setoutput_file()`.
+ *
+ * To check if output is directed to a file, use `tpp_makefile_isoutput_io(self)` */
+#define tpp_makefile_getoutput_io(self) \
+	((self)->TPP_MAKEFILE_INTERNAL(tmf_output_file))
+#else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
+#define tpp_makefile_isoutput_io(self) 0
+#endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
+
+
+/* Same as `tpp_makefile_setoutput_io()`, but takes an additional argument
+ * which can be used to specifiy that the given `handle` should *NOT* be
+ * closed when the makefile is finalize, or a different output is assigned. */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
+#define tpp_makefile_setoutput_io_ex(self, /*inherit(always)*/ handle, noclose) \
+	(void)(tpp_makefile_setoutput_io(self, handle),                             \
+	       (noclose) ? tpp_makefile_enable_output_noclose(self)                 \
+	                 : (void)0)
+
+/* Get/set the NOCLOSE status set by `tpp_makefile_setoutput_io_ex()`
+ * Behavior is weak undefined if output wasn't re-directed to a custom
+ * file, or was set by `tpp_makefile_setoutput()` or the initializer. */
+#define tpp_makefile_get_output_noclose(self) \
+	((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)
+#define tpp_makefile_set_output_noclose(self, v)    \
+	((v) ? tpp_makefile_enable_output_noclose(self) \
+	     : tpp_makefile_disable_output_noclose(self))
+#define tpp_makefile_enable_output_noclose(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) |= TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)
+#define tpp_makefile_disable_output_noclose(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_flags) &= ~TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)
+#else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
+#define tpp_makefile_get_output_noclose(self)     0
+#define tpp_makefile_disable_output_noclose(self) (void)0
+#endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
+
+
+/* Same as `tpp_makefile_setoutput_io()`, but can be used to *directly*
+ * initialize output by opening (or creating) a file on-disk.
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOENT: Some parent-path-component of `filename` does not exist
+ * @return: TPP_EIO:    I/O error
+ * @return: TPP_ENOMEM: Out of memory */
+#if TPP_MAKEFILE_HAVE_OUTPUT_FILE
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_setoutput_file(tpp_makefile *tpp_restrict self,
+                            char const *tpp_restrict filename);
+#endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE */
+
 
 /* Helpers for quickly printing stuff to the makefile's output.
  * WARNING: Careless use of these functions may result in the makefile's
@@ -110,7 +272,50 @@ typedef struct tpp_makefile {
 #define tpp_makefile_resetfeatures(self)                   (void)0
 #endif /* !TPP_MAKEFILE_HAVE_FEATURES */
 
-/* TODO: API to enable/disable the makefile's callback into the lexer's `NEW_DEPENDENCY` hook */
+
+/* Must be called *ONCE* after all input has been processed.
+ * - This function will print a final, trailing LF, and (if enabled) re-
+ *   emit dependencies as dummy targets (see `TPP_MAKEFILE_HAVE_PHONY`).
+ * - This function is a no-op if `tpp_makefile_getenabled(self)` is `false`.
+ *
+ * @return: TPP_EOK: Success (or no-op)
+ * @return: * : Error (as returned by `tpp_makefile_getoutput(self)`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_makefile_flush(tpp_makefile *tpp_restrict self);
+
+
+
+/* The main (mandatory) `NEW_DEPENDECY` hook that's used to
+ * get notified whenever the lexer encounters a new dependency */
+#define tpp_makefile_getenabled(self) \
+	(tpp_lexer_gethook_new_dependency(tpp_makefile_getlexer(self)) == &_tpp_makefile_new_dependency_hook)
+#define tpp_makefile_setenabled(self, enabled) \
+	((enabled) ? (tpp_makefile_enable(self))   \
+	           : (tpp_makefile_disable(self), TPP_EOK))
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_makefile_enable(self)                                            \
+	(tpp_lexer_sethook_new_dependency_ex(tpp_makefile_getlexer(self),        \
+	                                     &_tpp_makefile_new_dependency_hook, \
+	                                     self),                              \
+	 TPP_EOK)
+#else /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_enable(self)                                          \
+	(tpp_lexer_sethook_new_dependency(tpp_makefile_getlexer(self),         \
+	                                  &_tpp_makefile_new_dependency_hook), \
+	 TPP_EOK)
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define tpp_makefile_disable(self) \
+	tpp_lexer_resethook_new_dependency(tpp_makefile_getlexer(self))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd);
+
+
+
+/* Apply Makefile-escape rules to `data...+=num_bytes` and print the result to `printer` */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL
+tpp_makefile_escape(tpp_formatprinter printer, void *arg,
+                    tpp_char const *data, tpp_size num_bytes,
+                    tpp_size *p_num_bytes_printed);
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

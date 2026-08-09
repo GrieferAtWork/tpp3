@@ -27,7 +27,16 @@
 /* ========= Makefile =========
  *
  * Brief:
- * - TODO
+ * - Unified API for generating Makefile-compatible dependency descriptions
+ *   of input files (possibly in parallel to the *actual* process of pre-
+ *   processing said input files)
+ * - Can be used to implement GCC's entire set of `-M*` CLI flags
+ * - In order to (correctly) configure + use this API, it is *highly*
+ *   recommended that you also make use of `tpp_makefile_cli_loader`,
+ *   as that one actually does all the work of printing the initial
+ *   input file's target object filename.
+ * - The `tpp_makefile` component is only responsible for printing
+ *   new include dependencies as they appear!
  */
 
 #ifndef TPP_AMALGAMATION_H

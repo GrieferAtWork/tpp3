@@ -34,25 +34,57 @@ TPP_DECL_BEGIN
 #define TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
 #define TPP_MAKEFILE_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
-#define TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS \
-	0
+#undef TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
+#define TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED                        \
+	((TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM) || \
+	 (TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD))
+	 
+#undef TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
+#define TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS                               \
+	(TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED ||                         \
+	 TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE ||                               \
+	 (TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ) || \
+	 (TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD))
 
-#if TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
+#if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
 #define _tpp_makefile_cli_loader_flags uint_least32_t
 #define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
-#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
+#if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED       UINT32_C(0x00000001) /* Enable Makefile generation */
+#endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE UINT32_C(0x00000002) /* Consume all tokens because only a Makefile should be generated */
+#endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE UINT32_C(0x00000004) /* Escape target name using `tpp_makefile_escape()` */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT   UINT32_C(0x00000008) /* Automatically determine output filename if not pre-defined */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
+#endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 
 
 typedef struct tpp_makefile_cli_loader {
-	tpp_makefile *TPP_MAKEFILE_INTERNAL(tmfcl_mf);    /* [1..1][const] The makefile being configured by this CLI loader */
-	unsigned int  TPP_MAKEFILE_INTERNAL(tmfcl_state); /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
-#if TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS
+	tpp_makefile *TPP_MAKEFILE_INTERNAL(tmfcl_mf);      /* [1..1][const] The makefile being configured by this CLI loader */
+	unsigned int  TPP_MAKEFILE_INTERNAL(tmfcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+	char const   *TPP_MAKEFILE_INTERNAL(tmfcl_target);  /* [0..1][const] Target specified by `-MT TARGET` or `-MQ TARGET` */
+#define _tpp_makefile_cli_loader_init_target(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = NULL
+#else /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#define _tpp_makefile_cli_loader_init_target(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MT && !TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+	char const   *TPP_MAKEFILE_INTERNAL(tmfcl_outfile); /* [0..1][const] Filename specified by `-MF FILE` */
+#define _tpp_makefile_cli_loader_init_outfile(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_outfile) = NULL
+#else /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#define _tpp_makefile_cli_loader_init_outfile(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
 	_tpp_makefile_cli_loader_flags TPP_MAKEFILE_INTERNAL(tmfcl_flags);
 #define _tpp_makefile_cli_loader_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) = _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
-#else /* TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
+#else /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 #define _tpp_makefile_cli_loader_init_flags(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_FLAGS */
+#endif /* !TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 } tpp_makefile_cli_loader;
 
 /* Initialize a CLI loader for `makefile`
@@ -64,6 +96,8 @@ typedef struct tpp_makefile_cli_loader {
 #define tpp_makefile_cli_loader_init(self, makefile)                                         \
 	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_mf)    = (makefile),                          \
 	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL \
+	       _tpp_makefile_cli_loader_init_target(self)                                        \
+	       _tpp_makefile_cli_loader_init_outfile(self)                                       \
 	       _tpp_makefile_cli_loader_init_flags(self))
 #define tpp_makefile_cli_loader_fini(self) \
 	tpp_dbg_memset(self, sizeof(tpp_makefile_cli_loader))
@@ -79,6 +113,78 @@ typedef struct tpp_makefile_cli_loader {
  * that you're building) */
 #define tpp_makefile_cli_loader_hasddash(self) \
 	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_DDASH)
+
+
+/* Control if `tpp_makefile_cli_loader_flush()` will turn eanble the makefile */
+#if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
+#define tpp_makefile_cli_loader_getmakefileenabled(self)  \
+	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+#define tpp_makefile_cli_loader_setmakefileenabled(self, v) \
+	((v) ? tpp_makefile_cli_loader_enablemakefile(self)     \
+	     : tpp_makefile_cli_loader_disablemakefile(self))
+#define tpp_makefile_cli_loader_enablemakefile(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+#define tpp_makefile_cli_loader_disablemakefile(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+#else /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
+#define tpp_makefile_cli_loader_enablemakefile(self)     (void)0
+#define tpp_makefile_cli_loader_getmakefileenabled(self) 1
+#endif /* !TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
+
+
+/* Get/set the target, as specified by `-MT` and `-MQ` */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+#define tpp_makefile_cli_loader_gettarget(self) (self)->TPP_MAKEFILE_INTERNAL(tmfcl_target)
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+#define tpp_makefile_cli_loader_settarget_mt(self, target)         \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+#define tpp_makefile_cli_loader_settarget_mq(self, target)         \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+#define tpp_makefile_cli_loader_gettarget_ismt(self) ((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+#define tpp_makefile_cli_loader_gettarget_ismq(self) (!tpp_makefile_cli_loader_gettarget_ismt(self))
+#elif TPP_MAKEFILE_HAVE_CLI_DASH_MT
+#define tpp_makefile_cli_loader_settarget_mt(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target))
+#define tpp_makefile_cli_loader_gettarget_ismt(self)       1
+#define tpp_makefile_cli_loader_gettarget_ismq(self)       0
+#elif TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+#define tpp_makefile_cli_loader_settarget_mq(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target))
+#define tpp_makefile_cli_loader_gettarget_ismt(self)       0
+#define tpp_makefile_cli_loader_gettarget_ismq(self)       1
+#endif /* ... */
+
+
+/* Get/set whether or not a call to `tpp_makefile_cli_loader_flush()`
+ * will (or has if that call was already made) consumed *all* tokens
+ * from the linked lexer.
+ *
+ * This is supposed to happen when `-M` (aka. `--dependencies`) is
+ * used in a context where conventions imply that generation of a
+ * Makefile is the *only* thing that's supposed to happen (i.e.: no
+ * compilation or the like is supposed to take place)
+ *
+ * By `#define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE 0`,
+ * this behavior can be hard-disabled at compile-time. Similarly, a
+ * call to `tpp_makefile_cli_loader_disableonlymakefile(self)` just
+ * prior to calling `tpp_makefile_cli_loader_flush()` will prevent
+ * this token-consumption step from happening as well. */
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+#define tpp_makefile_cli_loader_getonlymakefile(self) \
+	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+#define tpp_makefile_cli_loader_setonlymakefile(self, v)    \
+	((v) ? tpp_makefile_cli_loader_enableonlymakefile(self) \
+	     : tpp_makefile_cli_loader_disableonlymakefile(self))
+#define tpp_makefile_cli_loader_enableonlymakefile(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+#define tpp_makefile_cli_loader_disableonlymakefile(self) \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+#else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#define tpp_makefile_cli_loader_getonlymakefile(self)     0
+#define tpp_makefile_cli_loader_disableonlymakefile(self) (void)0
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -146,13 +252,25 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
+ * When `tpp_makefile_cli_loader_getonlymakefile(self)` returns true, a call
+ * to this function will cause *all* tokens to be consumed (and discarded)
+ * from the linked lexer, which is needed to implement the conventional
+ * behavior of the `-M` CLI flag. This behavior can however be hard-suppressed
+ * by `#define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE 0`.
+ *
+ * @param: output_filename: [0..1] Name of the compiler output file (used to generate
+ *                                 a fallback dependency filename for `-MD` / `-MMD`)
+ *                                 If present, also used as the default name of the
+ *                                 target that's written in the makefile (otherwise,
+ *                                 that target is derived from `__BASE_FILE__`)
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
  * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self);
+tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
+                              char const *output_filename);
 
 #if TPP_MAKEFILE_HAVE_CLI_HELP
 /* Returns supported CLI parameters, and human-readable information

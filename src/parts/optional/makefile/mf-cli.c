@@ -100,7 +100,29 @@ tpp_makefile_cli_warnf(tpp_makefile *tpp_restrict self, tpp_char const *token_st
 
 enum {
 	_TPP_MAKEFILE_CLI_LOADER_STATE_FIRST_INTERNAL = TPP_MAKEFILE_CLI_LOADER_STATE_DDASH,
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+	TPP_MAKEFILE_CLI_LOADER_STATE_MF, /* -MF FILE */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT
+	TPP_MAKEFILE_CLI_LOADER_STATE_MT, /* -MT TARGET */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+	TPP_MAKEFILE_CLI_LOADER_STATE_MQ, /* -MQ TARGET */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 };
+
+
+/* Make makefile for being turned on (during `tpp_makefile_cli_loader_flush()`) */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_makefile_cli_loader_enable_with_makefile_only(tpp_makefile_cli_loader *tpp_restrict self) {
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+	tpp_makefile_cli_loader_enableonlymakefile(self);
+#endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+	tpp_makefile_cli_loader_enablemakefile(self);
+	return TPP_EOK;
+}
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM */
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -141,32 +163,105 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 				self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_DDASH; /* -- */
 				return TPP_EOK;
 
+			case 'd':
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M
+				if (tpp_streq(arg, "ependencies\0")) { /* --dependencies */
+					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
+				{
+				}
+				break;
+
+			case 'u':
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MM
+				if (tpp_streq(arg, "ser-dependencies\0")) { /* --user-dependencies */
+					tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+					return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+				} else
+#endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+				{
+				}
+				break;
+
 			default: break;
 			}
 			break;
 
 		/* TODO: Support for CLI arguments that must be handled by front-end:
-		 * - "-M", "--dependencies"
-		 *   - Using TPP_HAVE_NEW_DEPENDENCY_HOOK
-		 * - "-MM", "--user-dependencies"
-		 *   - Don't emit if #include-stack contains a `tpp_file_getsystemheader()`-file
-		 * - "-MF file"
-		 *   No special handling needed in TPP backend
 		 * - "-MG", "--print-missing-file-dependencies"
 		 *   - Use `TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` (with a `TPP_EOK` return value)
 		 *     to suppress `TPP_W_NO_SUCH_FILE` warnings, whilst at the same time
 		 *     using `tpp_lexer_decode_include_string_cb()` to add the missing include's
-		 *     filename to the set of dependencies
-		 * - "-MP"
-		 *   No special handling needed in TPP backend
-		 * - "-MT target"
-		 *   No special handling needed in TPP backend
-		 * - "-MQ target"
-		 *   No special handling needed in TPP backend
-		 * - "-MD", "--write-dependencies"
-		 *   No special handling needed in TPP backend
-		 * - "-MMD", "--write-user-dependencies"
-		 *   No special handling needed in TPP backend (see "-MM") */
+		 *     filename to the set of dependencies */
+
+
+		case 'M':
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MMD
+			if (tpp_streq(arg, "MD\0")) {
+				self->tmfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
+				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+				tpp_makefile_cli_loader_enablemakefile(self);
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MD
+			if (tpp_streq(arg, "D\0")) {
+				self->tmfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
+				tpp_makefile_cli_loader_enablemakefile(self);
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+			if (*arg == 'F') {
+				if (*++arg) {
+					self->tmfcl_outfile = arg; /* -MFfoo.m */
+				} else {
+					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MF; /* -MF foo.m */
+				}
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MP
+			if (tpp_streq(arg, "P\0")) {
+				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_PHONY);
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MP */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT
+			if (*arg == 'T') {
+				if (*++arg) {
+					tpp_makefile_cli_loader_settarget_mt(self, arg); /* -MTmain.o */
+				} else {
+					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MT; /* -MT main.o */
+				}
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+			if (*arg == 'Q') {
+				if (*++arg) {
+					tpp_makefile_cli_loader_settarget_mq(self, arg); /* -MQmain.o */
+				} else {
+					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MQ; /* -MQ main.o */
+				}
+				return TPP_EOK;
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MM
+			if (tpp_streq(arg, "M\0")) {
+				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M
+			if (tpp_streq(arg, "\0")) {
+				return tpp_makefile_cli_loader_enable_with_makefile_only(self);
+			} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
+			{
+			}
+			break;
 
 		default: break;
 		}
@@ -174,6 +269,27 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 
 	case TPP_MAKEFILE_CLI_LOADER_STATE_DDASH:
 		break; /* Don't accept any more arguments after having encountered a "--" arguments */
+
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+	case TPP_MAKEFILE_CLI_LOADER_STATE_MF:
+		self->tmfcl_state   = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		self->tmfcl_outfile = arg;
+		return TPP_EOK;
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT
+	case TPP_MAKEFILE_CLI_LOADER_STATE_MT:
+		self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		tpp_makefile_cli_loader_settarget_mt(self, arg);
+		return TPP_EOK;
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT */
+
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+	case TPP_MAKEFILE_CLI_LOADER_STATE_MQ:
+		self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		tpp_makefile_cli_loader_settarget_mq(self, arg);
+		return TPP_EOK;
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 
 	default: tpp_unreachable();
 	}
@@ -208,6 +324,8 @@ tpp_makefile_cli_loader_parseflag(tpp_makefile_cli_loader *tpp_restrict self, ch
 	(void)flag;
 	(void)arg;
 	switch (flag) {
+
+		/* No flags defined... */
 
 	default: break;
 	}
@@ -284,34 +402,182 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
+ * When `tpp_makefile_cli_loader_getonlymakefile(self)` returns true, a call
+ * to this function will cause *all* tokens to be consumed (and discarded)
+ * from the linked lexer, which is needed to implement the conventional
+ * behavior of the `-M` CLI flag. This behavior can however be hard-suppressed
+ * by `#define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE 0`.
+ *
+ * @param: output_filename: [0..1] Name of the compiler output file (used to generate
+ *                                 a fallback dependency filename for `-MD` / `-MMD`)
+ *                                 If present, also used as the default name of the
+ *                                 target that's written in the makefile (otherwise,
+ *                                 that target is derived from `__BASE_FILE__`)
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
  * @return: TPP_ELEXERROR: A lexer error was thrown
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self) {
-	(void)self;
+tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
+                              char const *output_filename) {
+	tpp_errno error;
+	tpp_ssize output_temp;
+	tpp_size output_count;
 
 	/* Emit a warning if the CLI loader isn't in a neutral state */
 #if TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
 	if (self->tmfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL &&
 	    self->tmfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_DDASH) {
-		tpp_errno error = tpp_makefile_cli_warnf(self->tmfcl_mf, NULL, 0,
-		                                         TPP_W_MISSING_CLI_ARGUMENT);
+		error = tpp_makefile_cli_warnf(self->tmfcl_mf, NULL, 0,
+		                               TPP_W_MISSING_CLI_ARGUMENT);
 		if (TPP_ISERR(error))
 			return error;
 	}
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
-	/* TODO: If "-M" was used (meaning that *only* a makefile should be
-	 *       created, without any regular token emission having to happen),
-	 *       then we have to yield all input *right here*, since if we
-	 *       didn't do so now, output would also go through a potential
-	 *       emitter (or the target compiler) -- For the later case,
-	 *       there also needs to be a flag to tell the caller that input
-	 *       was already used up and actually *shouldn't* be passed on
-	 *       to the target compiler. */
+	/* Check if Makefile generation is enabled (if it isn't don't do anything else) */
+#if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
+	if (!tpp_makefile_cli_loader_getmakefileenabled(self))
+		return TPP_EOK;
+#endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
+
+	/* Turn on the linked makefile */
+	error = tpp_makefile_enable(self->tmfcl_mf);
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Redirect output to a custom file */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+	if (self->tmfcl_outfile) {
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
+		if (tpp_strcmp(self->tmfcl_outfile, "-") == 0) {
+#ifdef tpp_makefile_io_getstdout
+			tpp_makefile_io_handle handle = tpp_makefile_io_getstdout();
+			tpp_makefile_setoutput_io_ex(self->tmfcl_mf, handle, true);
+#else /* tpp_makefile_io_getstdout */
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: 'TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH' is enabled, but no way to retrieve STDOUT handle"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#endif /* !tpp_makefile_io_getstdout */
+		} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH */
+		{
+			error = tpp_makefile_setoutput_file(self->tmfcl_mf,
+			                                    self->tmfcl_outfile);
+			if (TPP_ISERR(error))
+				return error;
+		}
+	} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+	{
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD
+		if (self->tmfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT) {
+			char const *filename = output_filename;
+			char const *filename_end;
+			tpp_size filename_len;
+			char *output_buf, *ptr;
+			/* Auto-determine output filename when -MD or -MMD was used,
+			 * based on `output_filename`, or if not given: __BASE_FILE__ */
+			if (filename == NULL) {
+				tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
+				filename = tpp_file_getfilename(bf);
+				if (filename == NULL)
+					filename = ""; /* Unknown filename :( */
+			}
+			filename_end = filename;
+			filename_end += tpp_strlen(filename);
+			for (;;) {
+				char ch;
+				if (filename_end <= filename) {
+use_full_filename:
+					filename_end += tpp_strlen(filename_end);
+					break;
+				}
+				ch = *--filename_end;
+				if (TPP_FS_ISSEP(ch))
+					goto use_full_filename;
+				if (ch == '.')
+					break;
+			}
+			filename_len = (tpp_size)(filename_end - filename);
+			output_buf = (char *)tpp_malloc((filename_len * sizeof(char)) +
+			                                sizeof(TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION));
+			if tpp_unlikely(!output_buf)
+				return TPP_ENOMEM;
+			ptr = (char *)tpp_mempcpy(output_buf, filename, filename_len * sizeof(char));
+			tpp_memcpy(ptr, TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION,
+			           sizeof(TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION));
+			/* Use this one as filename */
+			error = tpp_makefile_setoutput_file(self->tmfcl_mf, output_buf);
+			tpp_free(output_buf);
+			if (TPP_ISERR(error))
+				return error;
+		}
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
+	}
+
+	/* Print makefile target */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+	if (self->tmfcl_target) {
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+		if (self->tmfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE) {
+			output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmfcl_mf), self->tmfcl_mf,
+			                                  (tpp_char const *)self->tmfcl_target,
+			                                  tpp_strlen(self->tmfcl_target),
+			                                  &output_count);
+		} else {
+			output_count = tpp_strlen(self->tmfcl_target);
+			output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, self->tmfcl_target, output_count);
+		}
+#elif TPP_MAKEFILE_HAVE_CLI_DASH_MT
+		output_count = tpp_strlen(self->tmfcl_target);
+		output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, self->tmfcl_target, output_count);
+#else /* ... */
+		output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmfcl_mf), self->tmfcl_mf,
+		                                  (tpp_char const *)self->tmfcl_target,
+		                                  tpp_strlen(self->tmfcl_target), &output_count);
+#endif /* !... */
+	} else
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+	{
+		/* TODO: Auto-determine target name based on __BASE_FILE__:
+		 * For C:      `__BASE_FILE__.rpartition(".").first + ".o"`
+		 * For deemon: `__BASE_FILE__.rpartition("/").first + "." + __BASE_FILE__.rpartition("/").last.rsstrip(".dee") + ".dec"`
+		 * ...
+		 * What's done here must be completely overwritable by the user,
+		 * with the default implementation simply doing what's right for C.
+		 */
+		output_count = 4;
+		output_temp = tpp_makefile_output_printraw_conststr(self->tmfcl_mf, "TODO");
+	}
+	if (output_temp < 0)
+		return TPP_SSIZE_ASERR(output_temp);
+	(void)output_count;
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+	self->tmfcl_mf->tmf_curcol = (tpp_column)output_count;
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+
+	/* Print the trailing `:` following the target name */
+	output_temp = tpp_makefile_output_printraw_conststr(self->tmfcl_mf, ":");
+	if (output_temp < 0)
+		return TPP_SSIZE_ASERR(output_temp);
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+	self->tmfcl_mf->tmf_curcol += 1;
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+
+	/* Consume all tokens from the lexer (if enabled) */
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+	if (tpp_makefile_cli_loader_getonlymakefile(self)) {
+		tpp_token_id tok;
+		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmfcl_mf);
+		do {
+			tok = tpp_lexer_yield(lexer);
+		} while (!TPP_TOK_ISERR_OR_EOF(tok));
+		if (TPP_TOK_ISERR(tok))
+			return TPP_TOK_ASERR(tok);
+	}
+#endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 
 	return TPP_EOK;
 }
@@ -332,8 +598,47 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self) {
 /* Returns supported CLI parameters, and human-readable information
  * for them. Same format as `tpp_cli_loader_help` (see for more info) */
 TPP_CONST_IMPL char const tpp_makefile_cli_loader_help[] =
-/* TODO */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_M
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+TPP_CLI_HELP2("-M", "--dependencies", "Discard preprocessor output and generate a Makefile")
+#else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+TPP_CLI_HELP2("-M", "--dependencies", "Generate a Makefile")
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_M */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MM
+#if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
+TPP_CLI_HELP2("-MM", "--user-dependencies",
+              "Discard preprocessor output and generate a Makefile\n"
+              "Omit dependencies from #pragma GCC system_header files")
+#else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+TPP_CLI_HELP2("-MM", "--user-dependencies",
+              "Generate a Makefile\n"
+              "Omit dependencies from #pragma GCC system_header files")
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MM */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MF
+TPP_CLI_HELP1("-MF FILE", "Write Makefile output to FILE")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MT
+TPP_CLI_HELP1("-MT TARGET", "Use TARGET in Makefile output")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
+TPP_CLI_HELP1("-MQ TARGET", "Use TARGET in Makefile output, but escape it first")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MP
+TPP_CLI_HELP1("-MP", "All dependencies are repeated as phony/dummy targets")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MP */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MD
+TPP_CLI_HELP1("-MD", "Generate a Makefile\n"
+                     "The output filename is determined automatically")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD */
+#if TPP_MAKEFILE_HAVE_CLI_DASH_MMD
+TPP_CLI_HELP1("-MMD", "Generate a Makefile\n"
+                      "The output filename is determined automatically\n"
+                      "Omit dependencies from #pragma GCC system_header files")
+#endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
 "";
+
 #undef TPP_CLI_HELP1
 #undef TPP_CLI_HELP2
 #endif /* TPP_MAKEFILE_HAVE_CLI_HELP */

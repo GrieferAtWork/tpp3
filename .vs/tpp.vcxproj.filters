@@ -180,6 +180,9 @@
     <ClCompile Include="..\src\parts\optional\makefile\mf-features.c">
       <Filter>src\parts\optional\makefile</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\parts\optional\makefile\mf-io.c">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\tpp.h">
@@ -306,6 +309,9 @@
       <Filter>src\parts\optional\makefile</Filter>
     </ClInclude>
     <ClInclude Include="..\src\parts\optional\makefile\mf-features.h">
+      <Filter>src\parts\optional\makefile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\parts\optional\makefile\mf-io.h">
       <Filter>src\parts\optional\makefile</Filter>
     </ClInclude>
   </ItemGroup>

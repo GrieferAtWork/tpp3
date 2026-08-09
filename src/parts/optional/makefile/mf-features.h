@@ -67,12 +67,12 @@ print("typedef union tpp_makefile_features {");
 print("	struct {");
 for (local CONF: configs) {
 	print("#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ")");
-	print("		unsigned int TPP_MAKEFILE_INTERNAL(teff_", CONF, "): 1;");
-	print("#define _tpp_makefile_has_", CONF, "(self) (self)->TPP_MAKEFILE_INTERNAL(te_feat).TPP_MAKEFILE_INTERNAL(tef_flags).TPP_MAKEFILE_INTERNAL(teff_", CONF, ")");
+	print("		unsigned int TPP_MAKEFILE_INTERNAL(tmff_", CONF, "): 1;");
+	print("#define _tpp_makefile_has_", CONF, "(self) (self)->TPP_MAKEFILE_INTERNAL(tmf_feat).TPP_MAKEFILE_INTERNAL(tmf_flags).TPP_MAKEFILE_INTERNAL(tmff_", CONF, ")");
 	print("#endif /" "* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
 }
-print("	} TPP_MAKEFILE_INTERNAL(tef_flags);");
-print("	unsigned char TPP_MAKEFILE_INTERNAL(tetf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
+print("	} TPP_MAKEFILE_INTERNAL(tmf_flags);");
+print("	unsigned char TPP_MAKEFILE_INTERNAL(tmf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
 print("} tpp_makefile_features;");
 print("");
 print("#if !TPP_USE_STATIC");
@@ -80,11 +80,11 @@ print("TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
 print("#endif /" "* !TPP_USE_STATIC *" "/");
 print("");
 print("#define tpp_makefile_features_getid(self, id) \\");
-print("	((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_makefile_features_enable(self, id) \\");
-print("	(void)((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_makefile_features_disable(self, id) \\");
-print("	(void)((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_makefile_features_setid(self, id, enabled) \\");
 print("	((enabled) ? tpp_makefile_features_enable(self, id) : tpp_makefile_features_disable(self, id))");
 print("#define tpp_makefile_features_init(self)            (void)(*(self) = tpp_makefile_features_default)");
@@ -99,7 +99,8 @@ for (local CONF: configs) {
 }
 ]]]*/
 #undef TPP_MAKEFILE_HAVE_FEATURES
-#if (TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES))
+#if (TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) ||\
+     TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY))
 #define TPP_MAKEFILE_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_MAKEFILE_HAVE_FEATURES 0
@@ -110,17 +111,24 @@ typedef enum tpp_makefile_feature_id {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
 	TPP_MAKEFILE_FEAT_USER_DEPENDENCIES,
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
+	TPP_MAKEFILE_FEAT_PHONY,
+#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
 	TPP_MAKEFILE_FEAT_COUNT
 } tpp_makefile_feature_id;
 
 typedef union tpp_makefile_features {
 	struct {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
-		unsigned int TPP_MAKEFILE_INTERNAL(teff_USER_DEPENDENCIES): 1;
-#define _tpp_makefile_has_USER_DEPENDENCIES(self) (self)->TPP_MAKEFILE_INTERNAL(te_feat).TPP_MAKEFILE_INTERNAL(tef_flags).TPP_MAKEFILE_INTERNAL(teff_USER_DEPENDENCIES)
+		unsigned int TPP_MAKEFILE_INTERNAL(tmff_USER_DEPENDENCIES): 1;
+#define _tpp_makefile_has_USER_DEPENDENCIES(self) (self)->TPP_MAKEFILE_INTERNAL(tmf_feat).TPP_MAKEFILE_INTERNAL(tmf_flags).TPP_MAKEFILE_INTERNAL(tmff_USER_DEPENDENCIES)
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
-	} TPP_MAKEFILE_INTERNAL(tef_flags);
-	unsigned char TPP_MAKEFILE_INTERNAL(tetf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
+		unsigned int TPP_MAKEFILE_INTERNAL(tmff_PHONY): 1;
+#define _tpp_makefile_has_PHONY(self) (self)->TPP_MAKEFILE_INTERNAL(tmf_feat).TPP_MAKEFILE_INTERNAL(tmf_flags).TPP_MAKEFILE_INTERNAL(tmff_PHONY)
+#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
+	} TPP_MAKEFILE_INTERNAL(tmf_flags);
+	unsigned char TPP_MAKEFILE_INTERNAL(tmf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_makefile_features;
 
 #if !TPP_USE_STATIC
@@ -128,11 +136,11 @@ TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
 #endif /* !TPP_USE_STATIC */
 
 #define tpp_makefile_features_getid(self, id) \
-	((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_makefile_features_enable(self, id) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_makefile_features_disable(self, id) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_makefile_features_setid(self, id, enabled) \
 	((enabled) ? tpp_makefile_features_enable(self, id) : tpp_makefile_features_disable(self, id))
 #define tpp_makefile_features_init(self)            (void)(*(self) = tpp_makefile_features_default)
@@ -143,6 +151,9 @@ TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
 #if TPP_CONF_ISCONST(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
 #define _tpp_makefile_has_USER_DEPENDENCIES(self) TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
 #endif /* TPP_CONF_ISCONST(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+#if TPP_CONF_ISCONST(TPP_MAKEFILE_HAVE_PHONY)
+#define _tpp_makefile_has_PHONY(self) TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY)
+#endif /* TPP_CONF_ISCONST(TPP_MAKEFILE_HAVE_PHONY) */
 /*[[[end]]]*/
 
 TPP_DECL_END

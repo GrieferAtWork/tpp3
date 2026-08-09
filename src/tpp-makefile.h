@@ -23,6 +23,7 @@
 
 #include "parts/optional/makefile/api.h"
 #include "parts/optional/makefile/config.h"
+#include "parts/optional/makefile/mf-io.h"
 #include "parts/optional/makefile/mf-features.h"
 #include "parts/optional/makefile/mf.h"
 #include "parts/optional/makefile/mf-cli.h"

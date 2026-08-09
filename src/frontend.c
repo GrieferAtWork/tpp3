@@ -75,19 +75,31 @@ typedef struct tpp_frontend {
 	tpp_emitter             tf_emitter;             /* Emitter */
 	tpp_makefile            tf_makefile;            /* Makefile */
 	FILE                   *tf_output_file;         /* [0..1] File for preprocessor output */
+	char const             *tf_output_filename;     /* [0..1] Filename for preprocessor output */
 	tpp_cli_loader          tf_cli_loader;          /* CLI loader for lexer */
 	tpp_emitter_cli_loader  tf_emitter_cli_loader;  /* CLI loader for emitter */
 	tpp_makefile_cli_loader tf_makefile_cli_loader; /* CLI loader for makefile */
 	tpp_frontend_cli_state  tf_cli_state;           /* CLI parsing state */
 } tpp_frontend;
 
-static TPP_FORMATPRINTER_DEFINE(tpp_frontend_output_printer, arg, text, num_bytes) {
-	tpp_emitter *emitter = (tpp_emitter *)arg;
-	tpp_frontend *fe = tpp_container_of(emitter, tpp_frontend, tf_emitter);
+static tpp_ssize TPPCALL
+tpp_frontend_output_printer(tpp_frontend *fe, tpp_char const *text, tpp_size num_bytes) {
 	if (fe->tf_output_file == NULL)
 		fe->tf_output_file = stdout;
 	fwrite(text, 1, num_bytes, fe->tf_output_file);
 	return 0;
+}
+
+static TPP_FORMATPRINTER_DEFINE(tpp_frontend_emitter_output_printer, arg, text, num_bytes) {
+	tpp_emitter *emitter = (tpp_emitter *)arg;
+	tpp_frontend *fe = tpp_container_of(emitter, tpp_frontend, tf_emitter);
+	return tpp_frontend_output_printer(fe, text, num_bytes);
+}
+
+static TPP_FORMATPRINTER_DEFINE(tpp_frontend_makefile_output_printer, arg, text, num_bytes) {
+	tpp_makefile *makefile = (tpp_makefile *)arg;
+	tpp_frontend *fe = tpp_container_of(makefile, tpp_frontend, tf_makefile);
+	return tpp_frontend_output_printer(fe, text, num_bytes);
 }
 
 static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *filename) {
@@ -95,6 +107,7 @@ static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *fi
 		fclose(self->tf_output_file);
 	if (strcmp(filename, "-") == 0) {
 		self->tf_output_file = NULL; /* Causes `tpp_frontend_output_printer()` to use "stdout" */
+		self->tf_output_filename = NULL;
 		return TPP_EOK;
 	}
 	self->tf_output_file = fopen(filename, "wb");
@@ -102,6 +115,7 @@ static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *fi
 		fprintf(stderr, "failed to open output file: %s\n", filename);
 		return TPP_EIO;
 	}
+	self->tf_output_filename = filename;
 	return TPP_EOK;
 }
 
@@ -508,12 +522,13 @@ int main(int argc, char **argv) {
 
 	/* Initialize frontend */
 	tpp_lexer_init(&fe.tf_lexer);
-	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_output_printer);
-	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, &tpp_frontend_output_printer);
+	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_emitter_output_printer);
+	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, &tpp_frontend_makefile_output_printer);
 	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
 	tpp_makefile_cli_loader_init(&fe.tf_makefile_cli_loader, &fe.tf_makefile);
 	fe.tf_output_file = NULL;
+	fe.tf_output_filename = NULL;
 	fe.tf_cli_state = TPP_FRONTEND_CLI_STATE_NORMAL;
 
 	/* Parse arguments... */
@@ -528,6 +543,13 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
 		goto out_emitter_cli;
 	}
+
+	/* TODO: Support for environment variables, as described here: https://gcc.gnu.org/onlinedocs/cpp/Environment-Variables.html
+	 * TODO: Where possible, these variables should *NOT* be checked-for and parsed *here*,
+	 *       but should instead only be checked-for and parsed when they become relevant:
+	 * - e.g. `SOURCE_DATE_EPOCH` should only be checked just before `tpp_time_now()`
+	 * - e.g. the different include-path variables should be loaded in `tpp_lexer_foreach_include_path()`
+	 */
 
 	/* Parse remainder of argument list using our own CLI handler, as well */
 	if (argc && tpp_strcmp(*argv, "--") == 0) {
@@ -596,7 +618,8 @@ int main(int argc, char **argv) {
 	} while (argc);
 
 	/* Flush CLI loaders */
-	error = tpp_makefile_cli_loader_flush(&fe.tf_makefile_cli_loader);
+	error = tpp_makefile_cli_loader_flush(&fe.tf_makefile_cli_loader,
+	                                      fe.tf_output_filename);
 	if (!TPP_ISERR(error))
 		error = tpp_emitter_cli_loader_flush(&fe.tf_emitter_cli_loader);
 	if (!TPP_ISERR(error))
@@ -624,6 +647,13 @@ int main(int argc, char **argv) {
 			break;
 
 		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
+	}
+
+	/* Flush Makefile output */
+	error = tpp_makefile_flush(&fe.tf_makefile);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to flush makefile: %s\n", tpp_strerror(error));
+		goto out_emitter_file;
 	}
 
 	/* Return "0" if there were no TPP_WSTATE_ERROR-level messages */

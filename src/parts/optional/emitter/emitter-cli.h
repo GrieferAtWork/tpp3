@@ -34,28 +34,28 @@ TPP_DECL_BEGIN
 #define TPP_EMITTER_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
 #define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
-#undef TPP_EMITTER_HAVE_CLI_DASH_FLAGS
-#define TPP_EMITTER_HAVE_CLI_DASH_FLAGS \
+#undef TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
+#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS \
 	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
+#if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 #define _tpp_emitter_cli_loader_flags uint_least32_t
 #define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT32_C(0x00000000)
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
 #define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT32_C(0x00000001) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
-#endif /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#endif /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 
 
 typedef struct tpp_emitter_cli_loader {
 	tpp_emitter *TPP_EMITTER_INTERNAL(tecl_emitter); /* [1..1][const] The emitter being configured by this CLI loader */
 	unsigned int TPP_EMITTER_INTERNAL(tecl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
-#if TPP_EMITTER_HAVE_CLI_DASH_FLAGS
+#if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(tecl_flags);
 #define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tecl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
-#else /* TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#else /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
-#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FLAGS */
+#endif /* !TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 } tpp_emitter_cli_loader;
 
 /* Initialize a CLI loader for `emitter`

@@ -13451,6 +13451,14 @@ TPP_DECL_END
 TPP_DECL_BEGIN
 
 #ifdef tpp_io_handle_IS_BUILTIN
+#ifdef tpp_io_handle_IS_HANDLE
+/* Semi-public API to fix a UNC path on windows */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+_tpp_nt_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
+                     LPWSTR *tpp_restrict plpwFixedFilename);
+#endif /* tpp_io_handle_IS_HANDLE */
+
+
 /* Open a file for reading
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
  * @return: TPP_ENOENT: No such file or directory

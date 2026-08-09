@@ -59,6 +59,7 @@
     <ClCompile Include="..\src\parts\optional\emitter\emitter.c" />
     <ClCompile Include="..\src\parts\optional\makefile\mf-cli.c" />
     <ClCompile Include="..\src\parts\optional\makefile\mf-features.c" />
+    <ClCompile Include="..\src\parts\optional\makefile\mf-io.c" />
     <ClCompile Include="..\src\parts\optional\makefile\mf.c" />
     <ClCompile Include="..\src\parts\preparse.c" />
     <ClCompile Include="..\src\parts\string.c" />
@@ -116,6 +117,7 @@
     <ClInclude Include="..\src\parts\optional\makefile\expose-internals.h" />
     <ClInclude Include="..\src\parts\optional\makefile\mf-cli.h" />
     <ClInclude Include="..\src\parts\optional\makefile\mf-features.h" />
+    <ClInclude Include="..\src\parts\optional\makefile\mf-io.h" />
     <ClInclude Include="..\src\parts\optional\makefile\mf.h" />
     <ClInclude Include="..\src\parts\preparse.h" />
     <ClInclude Include="..\src\parts\string.h" />

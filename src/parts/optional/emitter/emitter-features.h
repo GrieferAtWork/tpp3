@@ -72,7 +72,7 @@ for (local CONF: configs) {
 	print("#endif /" "* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_", CONF, ") *" "/");
 }
 print("	} TPP_EMITTER_INTERNAL(tef_flags);");
-print("	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
+print("	unsigned char TPP_EMITTER_INTERNAL(tef_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
 print("} tpp_emitter_features;");
 print("");
 print("#if !TPP_USE_STATIC");
@@ -80,11 +80,11 @@ print("TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;")
 print("#endif /" "* !TPP_USE_STATIC *" "/");
 print("");
 print("#define tpp_emitter_features_getid(self, id) \\");
-print("	((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_enable(self, id) \\");
-print("	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_disable(self, id) \\");
-print("	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_setid(self, id, enabled) \\");
 print("	((enabled) ? tpp_emitter_features_enable(self, id) : tpp_emitter_features_disable(self, id))");
 print("#define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)");
@@ -240,7 +240,7 @@ typedef union tpp_emitter_features {
 #define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 	} TPP_EMITTER_INTERNAL(tef_flags);
-	unsigned char TPP_EMITTER_INTERNAL(tetf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	unsigned char TPP_EMITTER_INTERNAL(tef_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
 
 #if !TPP_USE_STATIC
@@ -248,11 +248,11 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #endif /* !TPP_USE_STATIC */
 
 #define tpp_emitter_features_getid(self, id) \
-	((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_enable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_disable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tetf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_setid(self, id, enabled) \
 	((enabled) ? tpp_emitter_features_enable(self, id) : tpp_emitter_features_disable(self, id))
 #define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)

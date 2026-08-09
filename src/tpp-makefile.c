@@ -36,6 +36,7 @@
 #include "parts/optional/makefile/expose-internals.h"
 #endif /* !TPP_MAKEFILE_BUILDING */
 
+#include "parts/optional/makefile/mf-io.c"
 #include "parts/optional/makefile/mf-features.c"
 #include "parts/optional/makefile/mf.c"
 #include "parts/optional/makefile/mf-cli.c"
