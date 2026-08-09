@@ -112,6 +112,10 @@ escape_space_or_tab:
 	result += temp;
 	return result;
 err_temp:
+	if (p_num_bytes_printed) {
+		/* Doesn't really matter in this case... */
+		*p_num_bytes_printed = num_bytes_printed;
+	}
 	return temp;
 }
 
@@ -157,6 +161,10 @@ tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
 	tpp_makefile const *const self = (tpp_makefile const *)arg;
 	tpp_makefile_io_handle const file = tpp_makefile_getoutput_io(self);
+#ifndef __OPTIMIZE_SIZE__
+	if (num_bytes == 0)
+		return 0; /* Reduce # of system calls... */
+#endif /* !__OPTIMIZE_SIZE__ */
 	return tpp_makefile_io_write(file, text, num_bytes);
 }
 #endif /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */

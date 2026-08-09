@@ -279,6 +279,31 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 TPP_CONST_DECL char const tpp_makefile_cli_loader_help[];
 #endif /* !TPP_USE_STATIC */
 #endif /* TPP_MAKEFILE_HAVE_CLI_HELP */
+
+/* Print the default target name of `input_filename`, when no explicit output is known.
+ * The default implementation of this function is affected by the following configs:
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION`
+ *
+ * If the desired behavior cannot be achieved using only those function, it is recommended
+ * to fully override this function (which can be done by pre-defining a macro with the same
+ * name as this function before `#include`-ing TPP's **MAKEFILE** source extension), and
+ * then implementing that function such that it behaves as desired.
+ *
+ * @param: self:           The CLI loader (can be used to gain access to the linked makefile/lexer)
+ * @param: printer:        Output printer that the (unescaped) object filename should be printed to
+ * @param: input_filename: The `__BASE_FILE__` filename of the linked lexer
+ * @return: * : Sum of return values of `printer` */
+#ifndef tpp_makefile_cli_print_default_target
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_ssize TPPCALL
+tpp_makefile_cli_print_default_target(tpp_makefile_cli_loader *tpp_restrict self,
+                                      tpp_formatprinter printer, void *arg,
+                                      char const *input_filename);
+#endif /* !tpp_makefile_cli_print_default_target */
+
 #endif /* TPP_MAKEFILE_HAVE_CLI */
 
 TPP_DECL_END

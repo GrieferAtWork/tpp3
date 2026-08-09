@@ -205,6 +205,8 @@ static void tpp_frontend_help_cli(bool all_spellings) {
 	tpp_size padlen, temp;
 	padlen = tpp_help_maxspelling(tpp_cli_loader_help, all_spellings);
 	temp = tpp_help_maxspelling(tpp_emitter_cli_loader_help, all_spellings);
+	if (padlen < temp)
+		padlen = temp;
 	temp = tpp_help_maxspelling(tpp_makefile_cli_loader_help, all_spellings);
 	if (padlen < temp)
 		padlen = temp;

@@ -200,6 +200,65 @@
 #define TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION ".d"
 #endif /* !TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION */
 
+
+/* Configuration macros affecting the behavior of `tpp_makefile_cli_print_default_target()`:
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX`:
+ *   - Printed as a prefix preceding the default target filename
+ *   - When empty, `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY` should be defined to `1`.
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX`:
+ *   - Printed between the last directory component of `__BASE_NAME__` and the its filename portion.
+ *   - When empty, `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY` should be defined to `1`.
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION`:
+ *   - Extension that replaces everything after (and including) the last `.` within the last directory
+ *     component of `__BASE_NAME__`.
+ *   - Should be defined to whatever is the default extension of your compiler's object-file /
+ *     source-cache / precompiled-source / whatever-you-want-to-call-it is.
+ *
+ * If these configuration macros aren't enough to accurately describe how your compiler's default
+ * object file format looks like, you should just override `tpp_makefile_cli_print_default_target()`
+ * directory (which can be done by pre-defining a macro of that same name before `#include`-ing
+ * TPP's **MAKEFILE** source extension)
+ *
+ * Examples:
+ * - C Compiler ("{PATH}/{filename}.o"):
+ *   ```c
+ *   #define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION ".o"
+ *   ```
+ *
+ * - Java Compiler ("{PATH}/{filename}.class"):
+ *   ```c
+ *   #define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION ".class"
+ *   ```
+ *
+ * - Deemon ("{PATH}/.{filename}.dec"):
+ *   ```c
+ *   #define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX "."
+ *   #define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION ".dec"
+ *   ```
+ */
+#ifndef TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX
+#define TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX ""
+#define TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY 1
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX */
+#ifndef TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY
+#define TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY 0
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY */
+#ifndef TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX
+#define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX ""
+#define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY 1
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX */
+#ifndef TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY
+#define TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY 0
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY */
+#ifndef TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION
+#ifdef _MSC_VER
+#define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION ".obj"
+#else /* _MSC_VER */
+#define TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION ".o"
+#endif /* !_MSC_VER */
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION */
+
+
 /*[[[tpp-end]]]*/
 
 #endif /* !GUARD_TPP_OPTIONAL_MAKEFILE_CONFIG_H */

@@ -319,6 +319,10 @@ escape_space_or_tab:
 	result += temp;
 	return result;
 err_temp:
+	if (p_num_bytes_printed) {
+		/* Doesn't really matter in this case... */
+		*p_num_bytes_printed = num_bytes_printed;
+	}
 	return temp;
 }
 
@@ -364,6 +368,10 @@ tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
 	tpp_makefile const *const self = (tpp_makefile const *)arg;
 	tpp_makefile_io_handle const file = tpp_makefile_getoutput_io(self);
+#ifndef __OPTIMIZE_SIZE__
+	if (num_bytes == 0)
+		return 0; /* Reduce # of system calls... */
+#endif /* !__OPTIMIZE_SIZE__ */
 	return tpp_makefile_io_write(file, text, num_bytes);
 }
 #endif /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
@@ -857,6 +865,23 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
 	return result;
 }
 
+struct tpp_makefile_cli_default_target_data {
+	tpp_makefile *tmfcdtd_mf;    /* [1..1][const] Makefile */
+	tpp_size      tmfcdtd_count; /* # of printed bytes */
+};
+
+static TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num_bytes) {
+	tpp_size count;
+	tpp_ssize result;
+	struct tpp_makefile_cli_default_target_data *data;
+	data   = (struct tpp_makefile_cli_default_target_data *)arg;
+	result = tpp_makefile_escape(tpp_makefile_getoutput(data->tmfcdtd_mf),
+	                             data->tmfcdtd_mf, text, num_bytes, &count);
+	data->tmfcdtd_count += count;
+	return result;
+}
+
+
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
  * `TPP_W_MISSING_CLI_ARGUMENT` is emitted on `tpp_makefile_cli_loader_getmakefile(self)`
@@ -1003,16 +1028,24 @@ use_full_filename:
 #endif /* !... */
 	} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
-	{
-		/* TODO: Auto-determine target name based on __BASE_FILE__:
-		 * For C:      `__BASE_FILE__.rpartition(".").first + ".o"`
-		 * For deemon: `__BASE_FILE__.rpartition("/").first + "." + __BASE_FILE__.rpartition("/").last.rsstrip(".dee") + ".dec"`
-		 * ...
-		 * What's done here must be completely overwritable by the user,
-		 * with the default implementation simply doing what's right for C.
-		 */
-		output_count = 4;
-		output_temp = tpp_makefile_output_printraw_conststr(self->tmfcl_mf, "TODO");
+	if (output_filename) {
+		output_count = tpp_strlen(output_filename);
+		output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, output_filename, output_count);
+	} else {
+		/* Auto-determine target name based on __BASE_FILE__ */
+		tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
+		char const *bf_filename = tpp_file_getfilename(bf);
+		if tpp_unlikely(bf_filename == NULL) {
+			output_count = 0;
+			output_temp  = 0;
+		} else {
+			struct tpp_makefile_cli_default_target_data data;
+			data.tmfcdtd_count = 0;
+			data.tmfcdtd_mf    = self->tmfcl_mf;
+			output_temp = tpp_makefile_cli_print_default_target(self, &tpp_makefile_cli_default_target_printer,
+			                                                    &data, bf_filename);
+			output_count = data.tmfcdtd_count;
+		}
 	}
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
@@ -1105,6 +1138,95 @@ TPP_CLI_HELP1("-MMD", "Generate a Makefile\n"
 #undef TPP_CLI_HELP1
 #undef TPP_CLI_HELP2
 #endif /* TPP_MAKEFILE_HAVE_CLI_HELP */
+
+
+/* Print the default target name of `input_filename`, when no explicit output is known.
+ * The default implementation of this function is affected by the following configs:
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY`
+ * - `TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION`
+ *
+ * If the desired behavior cannot be achieved using only those function, it is recommended
+ * to fully override this function (which can be done by pre-defining a macro with the same
+ * name as this function before `#include`-ing TPP's **MAKEFILE** source extension), and
+ * then implementing that function such that it behaves as desired.
+ *
+ * @param: self:           The CLI loader (can be used to gain access to the linked makefile/lexer)
+ * @param: printer:        Output printer that the (unescaped) object filename should be printed to
+ * @param: input_filename: The `__BASE_FILE__` filename of the linked lexer
+ * @return: * : Sum of return values of `printer` */
+#ifndef tpp_makefile_cli_print_default_target
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_ssize TPPCALL
+tpp_makefile_cli_print_default_target(tpp_makefile_cli_loader *tpp_restrict self,
+                                      tpp_formatprinter printer, void *arg,
+                                      char const *input_filename) {
+	/* Auto-determine target name based on __BASE_FILE__ */
+	tpp_ssize temp, result = 0;
+	char const *iter, *after_last_sep, *before_last_dot;
+	(void)self;
+
+	iter = after_last_sep = input_filename;
+	for (;;) {
+		char ch = *iter++;
+		if (!ch)
+			break;
+		if (TPP_FS_ISSEP(ch))
+			after_last_sep = iter;
+	}
+	before_last_dot = iter - 1;
+	tpp_assert(*before_last_dot == '\0');
+	iter = after_last_sep;
+	for (; *iter; ++iter) {
+		if (*iter == '.')
+			before_last_dot = iter;
+	}
+
+	/* Print leading path prefix */
+#if !TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY
+	temp = tpp_formatprinter_print_conststr(printer, arg, TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX);
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY */
+
+	/* Print directory-heading, plus everything up to (but excluding)
+	 * the final '.' preceding the extension. When configured as such,
+	 * also print `TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX`. */
+#if !TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY
+	temp = tpp_formatprinter_print_cstr(printer, arg, input_filename,
+	                                    (tpp_size)(after_last_sep - input_filename));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = tpp_formatprinter_print_conststr(printer, arg, TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX);
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	temp = tpp_formatprinter_print_cstr(printer, arg, after_last_sep,
+	                                    (tpp_size)(before_last_dot - after_last_sep));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+#else /* !TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY */
+	temp = tpp_formatprinter_print_cstr(printer, arg, input_filename,
+	                                    (tpp_size)(before_last_dot - input_filename));
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+#endif /* !TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY */
+
+	/* Print the target's default object-file extension. */
+	temp = tpp_formatprinter_print_conststr(printer, arg, TPP_MAKEFILE_DEFAULT_TARGET_EXTENSION);
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* !tpp_makefile_cli_print_default_target */
 
 #endif /* TPP_MAKEFILE_HAVE_CLI */
 
