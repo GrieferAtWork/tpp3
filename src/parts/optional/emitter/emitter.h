@@ -37,9 +37,9 @@ TPP_DECL_BEGIN
 
 #if TPP_EMITTER_HAVE_CURPOS
 typedef struct tpp_emitter_state_file {
-	tpp_lcinfo          TPP_EMITTER_INTERNAL(tesf_curpos);    /* Current line/column position in output (with respect to emitted `#line` directives) */
-	char const         *TPP_EMITTER_INTERNAL(tesf_fname);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tes_curpos` (or "NULL" if unknown, or this is the first token) */
-	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(tesf_fname_str); /* [0..1] Same as `tes_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
+	tpp_lcstate         TPP_EMITTER_INTERNAL(temsf_curpos);    /* Current line/column position in output (with respect to emitted `#line` directives) */
+	char const         *TPP_EMITTER_INTERNAL(temsf_fname);     /* [0..1] The filename (tpp_file_getfilename()) that goes with `tems_curpos` (or "NULL" if unknown, or this is the first token) */
+	TPP_REF tpp_string *TPP_EMITTER_INTERNAL(temsf_fname_str); /* [0..1] Same as `tems_curfilename`, but keeps a reference to `tpp_file_getfilenamestr()` so custom filename overrides aren't free'd early */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
 #if TPP_HAVE_FILE_SYSHDR && TPP_HAVE_FILE_EXTERN_C
 #define _TPP_EMITTER_STATE_FLAGS_MASK (TPP_FILE_FLAGS_SYSHDR | TPP_FILE_FLAGS_EXTERN_C)
@@ -51,16 +51,16 @@ typedef struct tpp_emitter_state_file {
 #define _TPP_EMITTER_STATE_FLAGS_MASK 0
 #endif /* !... */
 #if _TPP_EMITTER_STATE_FLAGS_MASK
-	tpp_file_flags          TPP_EMITTER_INTERNAL(tesf_flags); /* Set of `_TPP_EMITTER_STATE_FLAGS_MASK` */
+	tpp_file_flags          TPP_EMITTER_INTERNAL(temsf_flags); /* Set of `_TPP_EMITTER_STATE_FLAGS_MASK` */
 #endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 } tpp_emitter_state_file;
 
 typedef struct tpp_emitter_state_files {
-	tpp_emitter_state_file  TPP_EMITTER_INTERNAL(tesfs_file);    /* Most-recent file */
+	tpp_emitter_state_file  TPP_EMITTER_INTERNAL(temsfs_file);    /* Most-recent file */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	tpp_size                TPP_EMITTER_INTERNAL(tesfs_filec);   /* # of dummy files pushed by `# <digit> "filename" 1` */
-	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tesfs_filev);   /* [0..tesfs_filec][owned] Extra files pus */
+	tpp_size                TPP_EMITTER_INTERNAL(temsfs_filec);   /* # of dummy files pushed by `# <digit> "filename" 1` */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(temsfs_filev);   /* [0..temsfs_filec][owned] Extra files pus */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 } tpp_emitter_state_files;
 #endif /* TPP_EMITTER_HAVE_CURPOS */
@@ -87,16 +87,16 @@ typedef struct tpp_emitter_state_files {
 
 typedef struct tpp_emitter_state {
 #if TPP_EMITTER_HAVE_CURPOS
-	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tes_curfile); /* Current file-state. */
+	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tems_curfile); /* Current file-state. */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	tpp_size                TPP_EMITTER_INTERNAL(tes_cached_filec); /* Size of alternate file-state buffer (`tes_cached_filev`). */
-	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tes_cached_filev); /* [0..tes_cached_filec] Alternate file-state buffer (used internally) */
+	tpp_size                TPP_EMITTER_INTERNAL(tems_cached_filec); /* Size of alternate file-state buffer (`tems_cached_filev`). */
+	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tems_cached_filev); /* [0..tems_cached_filec] Alternate file-state buffer (used internally) */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 #if TPP_EMITTER_HAVE_FLAGS
-	tpp_emitter_flags       TPP_EMITTER_INTERNAL(tes_flags);   /* Emitter flags */
+	tpp_emitter_flags       TPP_EMITTER_INTERNAL(tems_flags);   /* Emitter flags */
 #endif /* TPP_EMITTER_HAVE_FLAGS */
-	tpp_token_id            TPP_EMITTER_INTERNAL(tes_prevtok); /* Last token ID (preceding the token currently being emitted).
+	tpp_token_id            TPP_EMITTER_INTERNAL(tems_prevtok); /* Last token ID (preceding the token currently being emitted).
 	                                                            * When the current token is the first, this is `TPP_TOK_EOF` */
 } tpp_emitter_state;
 
@@ -160,26 +160,26 @@ typedef enum tpp_emitter_mode {
 
 typedef struct tpp_emitter {
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
-	tpp_lexer           *TPP_EMITTER_INTERNAL(te_lexer);  /* [1..1][const] The lexer whose tokens are being emitted */
+	tpp_lexer           *TPP_EMITTER_INTERNAL(tem_lexer);  /* [1..1][const] The lexer whose tokens are being emitted */
 #endif /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-	tpp_formatprinter    TPP_EMITTER_INTERNAL(te_output); /* [1..1][const] Emitter output printer (the emitter itself will be passed as argument) */
-	tpp_emitter_state    TPP_EMITTER_INTERNAL(te_state);  /* Emitter output state */
+	tpp_formatprinter    TPP_EMITTER_INTERNAL(tem_output); /* [1..1][const] Emitter output printer (the emitter itself will be passed as argument) */
+	tpp_emitter_state    TPP_EMITTER_INTERNAL(tem_state);  /* Emitter output state */
 #if TPP_EMITTER_HAVE_FEATURES
-	tpp_emitter_features TPP_EMITTER_INTERNAL(te_feat);   /* Emitter feature configuration */
+	tpp_emitter_features TPP_EMITTER_INTERNAL(tem_feat);   /* Emitter feature configuration */
 #endif /* TPP_EMITTER_HAVE_FEATURES */
 #if TPP_EMITTER_MODE_HAVE_MULTIPLE
-	tpp_emitter_mode     TPP_EMITTER_INTERNAL(te_mode);   /* Mode in which tokens are emitted. */
-#define tpp_emitter_getmode(self)    ((self)->TPP_EMITTER_INTERNAL(te_mode))
-#define tpp_emitter_setmode(self, v) (void)((self)->TPP_EMITTER_INTERNAL(te_mode) = (v))
+	tpp_emitter_mode     TPP_EMITTER_INTERNAL(tem_mode);   /* Mode in which tokens are emitted. */
+#define tpp_emitter_getmode(self)    ((self)->TPP_EMITTER_INTERNAL(tem_mode))
+#define tpp_emitter_setmode(self, v) (void)((self)->TPP_EMITTER_INTERNAL(tem_mode) = (v))
 #else /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
 #define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
 #define tpp_emitter_setmode(self, v) (void)(v)
 #endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
 #if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
-	tpp_line             TPP_EMITTER_INTERNAL(te_linethreshold); /* max # of blank lines emitted for alignment purposes */
-#define tpp_emitter_getlinethreshold(self)     ((self)->TPP_EMITTER_INTERNAL(te_linethreshold))
-#define tpp_emitter_setlinethreshold(self, v)  (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = (tpp_line)(v))
-#define tpp_emitter_disablelinethreshold(self) (void)((self)->TPP_EMITTER_INTERNAL(te_linethreshold) = -1)
+	tpp_line             TPP_EMITTER_INTERNAL(tem_linethreshold); /* max # of blank lines emitted for alignment purposes */
+#define tpp_emitter_getlinethreshold(self)     ((self)->TPP_EMITTER_INTERNAL(tem_linethreshold))
+#define tpp_emitter_setlinethreshold(self, v)  (void)((self)->TPP_EMITTER_INTERNAL(tem_linethreshold) = (tpp_line)(v))
+#define tpp_emitter_disablelinethreshold(self) (void)((self)->TPP_EMITTER_INTERNAL(tem_linethreshold) = -1)
 #elif !TPP_EMITTER_CONFIG_LINE_THRESHOLD
 #define tpp_emitter_getlinethreshold(self) (-1)
 #else /* ... */
@@ -209,16 +209,19 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_fini(tpp_emitter *tpp_restrict self);
 
 /* Retrieve components of the emitter. */
-#define tpp_emitter_getoutput(self) (self)->TPP_EMITTER_INTERNAL(te_output)
+#define tpp_emitter_getoutput(self) (self)->TPP_EMITTER_INTERNAL(tem_output)
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
-#define tpp_emitter_getlexer(self)   ((self)->TPP_EMITTER_INTERNAL(te_lexer))
+#define tpp_emitter_getlexer(self)   ((self)->TPP_EMITTER_INTERNAL(tem_lexer))
 #define tpp_emitter_ofcookie(cookie) ((tpp_emitter *)(cookie))
 #else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 #ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
+#if !TPP_IGNORE_INVALID_CONFIGURATION
 #error "Invalid configuration: under '-DTPP_HAVE_HOOK_COOKIES=0' you must specify a macro '#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER (offsetof(MY_CONTAINER, emitter) - offsetof(MY_CONTAINER, lexer))' to specify how to retrieve the emitter from a lexer"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER sizeof(tpp_lexer)
 #endif /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 #define tpp_emitter_getlexer(self)   ((tpp_lexer *)((char *)(self) - TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER))
-#define tpp_emitter_ofcookie(cookie) ((tpp_emitter *)((char *)(self) + TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER))
+#define tpp_emitter_ofcookie(cookie) ((tpp_emitter *)((char *)(cookie) + TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER))
 #endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 
 /* Helpers for quickly printing stuff to the emitter's output.
@@ -237,11 +240,11 @@ tpp_emitter_fini(tpp_emitter *tpp_restrict self);
 
 /* Features... */
 #if TPP_EMITTER_HAVE_FEATURES
-#define tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_x)          tpp_emitter_features_getid(&(self)->TPP_EMITTER_INTERNAL(te_feat), TPP_EMITTER_FEAT_x)
-#define tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_x, enabled) tpp_emitter_features_setid(&(self)->TPP_EMITTER_INTERNAL(te_feat), TPP_EMITTER_FEAT_x, enabled)
-#define tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_x)       tpp_emitter_features_enable(&(self)->TPP_EMITTER_INTERNAL(te_feat), TPP_EMITTER_FEAT_x)
-#define tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_x)      tpp_emitter_features_disable(&(self)->TPP_EMITTER_INTERNAL(te_feat), TPP_EMITTER_FEAT_x)
-#define tpp_emitter_resetfeatures(self)                           tpp_emitter_features_reset(&(self)->TPP_EMITTER_INTERNAL(te_feat))
+#define tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_x)          tpp_emitter_features_getid(&(self)->TPP_EMITTER_INTERNAL(tem_feat), TPP_EMITTER_FEAT_x)
+#define tpp_emitter_setfeature(self, TPP_EMITTER_FEAT_x, enabled) tpp_emitter_features_setid(&(self)->TPP_EMITTER_INTERNAL(tem_feat), TPP_EMITTER_FEAT_x, enabled)
+#define tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_x)       tpp_emitter_features_enable(&(self)->TPP_EMITTER_INTERNAL(tem_feat), TPP_EMITTER_FEAT_x)
+#define tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_x)      tpp_emitter_features_disable(&(self)->TPP_EMITTER_INTERNAL(tem_feat), TPP_EMITTER_FEAT_x)
+#define tpp_emitter_resetfeatures(self)                           tpp_emitter_features_reset(&(self)->TPP_EMITTER_INTERNAL(tem_feat))
 #else /* TPP_EMITTER_HAVE_FEATURES */
 #define tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_x) 0
 #define tpp_emitter_resetfeatures(self)                  (void)0
@@ -249,7 +252,7 @@ tpp_emitter_fini(tpp_emitter *tpp_restrict self);
 
 
 /* Emit the token currently loaded into `tpp_emitter_getlexer(self)`,
- * and update the emitter's `te_state` accordingly
+ * and update the emitter's `tem_state` accordingly
  *
  * @return: * :  Sum of return values of `tpp_emitter_getoutput(self)`
  * @return: < 0: First negative return value of `tpp_emitter_getoutput(self)` */

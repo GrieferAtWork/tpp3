@@ -2025,7 +2025,9 @@ again_ch:
 	{
 	}
 
+#if TPP_HAVE_SMART_FLOAT_TOKENS
 done:
+#endif /* TPP_HAVE_SMART_FLOAT_TOKENS */
 	*p_pos = tpp_file_rel2ptr(file, rel_end);
 	return result;
 }
@@ -3448,7 +3450,7 @@ return_TPP_TOK_SOL_SHELL_COMMENT:
 				}
 			}
 		}
-not_a_trigraph:
+not_a_trigraph:;
 #endif /* TPP_HAVE_TRIGRAPHS */
 /*[[[deemon (printDecoder from ".config")("?");]]]*/
 #if TPP_HAVE_TOK_MC_STARTSWITH_QMARK

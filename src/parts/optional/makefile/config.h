@@ -24,9 +24,9 @@
 
 /*[[[tpp-begin]]]*/
 
-#if !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#if !TPP_IGNORE_INVALID_CONFIGURATION && !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #error "Sorry: In order to use TPP's MAKEFILE source extension, `TPP_HAVE_NEW_DEPENDENCY_HOOK` must be configured to allow runtime overrides"
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION && !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 /* When enabled, only include dependencies if
  * `#include`-stack doesn't contain any system
@@ -122,7 +122,7 @@
  * database of supported commandline flags in a human-readable format that
  * can also be rendered (fairly) easily. */
 #ifndef TPP_MAKEFILE_HAVE_CLI_HELP
-#define TPP_MAKEFILE_HAVE_CLI_HELP (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_CLI)
+#define TPP_MAKEFILE_HAVE_CLI_HELP (TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_CLI_HELP)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_HELP */
 
 /* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */

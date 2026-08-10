@@ -46,6 +46,7 @@
 #include "parts/hooks.h"
 #include "parts/lexer.h"
 #include "parts/cli.h"
+#define GUARD_TPP_AMALGAMATION_H 1
 #endif /* !TPP_DEFS */
 #endif /* !GUARD_TPP_AMALGAMATION_H */
 /* clang-format on */

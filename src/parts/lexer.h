@@ -249,8 +249,8 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
 #define tpp_lexer_getlcfile(self)   tpp_file_getlcfile(tpp_lexer_getfile(self))   /* [1..1] Returns the file that is used to determine `__LINE__` and `__COLUMN__` */
-#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the *base* file (that is: the last one in the `#include`-stack) */
 #define tpp_lexer_gettextfile(self) tpp_file_gettextfile(tpp_lexer_getfile(self)) /* [0..1] Return the last I/O or TEXT file */
+#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the *base* file (that is: the last one in the `#include`-stack) */
 
 /* L/C information helpers */
 #define tpp_lexer_getlcinfoat(self, pos)                 tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)

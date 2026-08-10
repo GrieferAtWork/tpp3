@@ -60,6 +60,10 @@ TPP_DECL_BEGIN
 
 
 #if TPP_HAVE_EXTENSIONS
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+TPP_STATIC_ASSERT_MSG(TPP_EXT_COUNT != 0, "No extensions defined -- you should build with `-DTPP_HAVE_EXTENSIONS=0`");
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+
 static struct tpp_extension_names_struct {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) char ten_##id[sizeof(name) / sizeof(char)];
@@ -74,7 +78,7 @@ static struct tpp_extension_names_struct {
 #undef TPP_DEFS
 };
 
-static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT] = {
+static tpp_size const tpp_extension_name_offsets_byid[TPP_EXT_COUNT ? TPP_EXT_COUNT : 1] = {
 #define TPP_DEFS
 #define TPP_EXTENSION(id, name, default) \
 	/* [id] = */ tpp_offsetof(struct tpp_extension_names_struct, ten_##id),
@@ -390,7 +394,7 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 #else /* ... */
 
 #if TPP_HAVE_EXTENSIONS
-static tpp_size tpp_extension_name_offsets_byname[TPP_EXT_COUNT] = {};
+static tpp_size tpp_extension_name_offsets_byname[TPP_EXT_COUNT ? TPP_EXT_COUNT : 1] = {};
 static int tpp_extension_name_offset_compare(void const *lhs, void const *rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
 	tpp_size rhs_value = *(tpp_size const *)rhs;

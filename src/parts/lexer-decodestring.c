@@ -136,8 +136,8 @@ tpp_token_decodestring_hex_sequence_ex(tpp_lexer *self, tpp_char const **p_iter,
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
 tpp_token_decodestring_hex_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config)
-#define tpp_token_decodestring_hex_sequence_ex(self, p_iter, config, always_allow_big) \
-	tpp_token_decodestring_hex_sequence(self, p_iter, config)
+#define tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, always_allow_big) \
+	tpp_token_decodestring_hex_sequence(self, p_iter, end, config)
 #endif /* !TPP_HAVE_STRING_ESCAPE_HEX_BRACE || !TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 {
 	tpp_char word;

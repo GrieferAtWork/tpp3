@@ -31,11 +31,24 @@
 /* Multi-file TPP should be built using the "all" profile
  * -- Use the amalgamation if you want to use other profiles. */
 #undef TPP_PROFILE
+#if 0
+#define TPP_PROFILE TPP_PROFILE_MINIMAL
+#define TPP_HAVE_CLI 1
+#define TPP_HAVE_CLI_HELP 1
+#define TPP_HAVE_STRERROR 1
+#define TPP_HAVE_CLI_SETINPUTS 1
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER  (sizeof(tpp_lexer))
+#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER (sizeof(tpp_lexer) + 56)
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
+#else
 #define TPP_PROFILE TPP_PROFILE_ALL
+#endif
 
 /* Default-configure everything to use `TPP_CONF_EXT*` instead of features */
 #undef TPP_COMMON_HAVE_FEATURES
 #define TPP_COMMON_HAVE_FEATURES 0
+
 
 /*[[[tpp-begin]]]*/
 
@@ -4445,7 +4458,7 @@ local MC_TOKENS = {
 	{ "!=", "(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS)", "" },
 	{ ">=", "(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS)", "" },
 	{ "<=", "(TPP_HAVE_BUILTIN_PARSEEXPR_HOOK ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS)", "" },
-	{ "...", "(TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
+	{ "...", "((TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS)", "" },
 	{ "+=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "-=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
 	{ "*=", "TPP_COMMON_HAVE_TPP_TOK_C_TOKENS", "" },
@@ -4730,7 +4743,7 @@ print("#endif /" "* !... *" "/");
 /* `...`
  * @detect: #if __TPP_COUNT_TOKENS("...") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-dot_dot_dot" */
+#define TPP_HAVE_TOK_DOT_DOT_DOT ((TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TOK_DOT_DOT_DOT */
 
 /* `//`  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
@@ -5986,13 +5999,13 @@ print("#endif /" "* !... *" "/");
 
 /* When enabled, `TPP_WSTATE_WARN` is treated as `TPP_WSTATE_ERROR_OR_FATAL` instead */
 #ifndef TPP_HAVE_WERROR
-#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWerror" */
+#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_WARNINGS) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWerror" */
 #endif /* !TPP_HAVE_WERROR */
 
 /* When enabled, the `TPP_FILE_FLAGS_SYSHDR` flag of files is ignored,
  * meaning that warnings are emitted as normal within system headers. */
 #ifndef TPP_HAVE_WSYSTEM_HEADERS
-#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
+#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
 #endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
@@ -6503,7 +6516,7 @@ print("#endif /" "* !... *" "/");
  * turn is needed to inject additional whitespace when failure to do so could
  * result in accidental token concatenation during reparsing. */
 #ifndef TPP_HAVE_LEXER_REQUIRE_WHITESPACE
-#if TPP_HAVE_MAGIC_WHITESPACE
+#if TPP_HAVE_PROFILE_ALL || TPP_HAVE_MAGIC_WHITESPACE
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
 #else /* ... */
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 0

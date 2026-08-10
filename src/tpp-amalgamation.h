@@ -5554,6 +5554,9 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define _TPP_STATIC_ASSERT_ID(line) _TPP_STATIC_ASSERT_ID2(line)
 #define TPP_STATIC_ASSERT(expr) typedef int _TPP_STATIC_ASSERT_ID(__LINE__)[(expr) ? 1 : -1]
 #endif /* !TPP_STATIC_ASSERT */
+#ifndef TPP_STATIC_ASSERT_MSG
+#define TPP_STATIC_ASSERT_MSG(expr, msg) TPP_STATIC_ASSERT(expr)
+#endif /* !TPP_STATIC_ASSERT_MSG */
 
 
 
@@ -10033,7 +10036,7 @@ TPP_DECL_END
 /* `...`
  * @detect: #if __TPP_COUNT_TOKENS("...") == 1 */
 #ifndef TPP_HAVE_TOK_DOT_DOT_DOT
-#define TPP_HAVE_TOK_DOT_DOT_DOT (TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS /* "-ftok-dot_dot_dot" */
+#define TPP_HAVE_TOK_DOT_DOT_DOT ((TPP_HAVE_VA_ARGS_IN_MACROS || TPP_HAVE_NAMED_VARARGS_IN_MACROS) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : TPP_COMMON_HAVE_TPP_TOK_C_TOKENS) /* "-ftok-dot_dot_dot" */
 #endif /* !TPP_HAVE_TOK_DOT_DOT_DOT */
 
 /* `//`  (WARNING: This token conflicts with TPP_HAVE_TOK_CXX_COMMENT)
@@ -11288,13 +11291,13 @@ TPP_DECL_END
 
 /* When enabled, `TPP_WSTATE_WARN` is treated as `TPP_WSTATE_ERROR_OR_FATAL` instead */
 #ifndef TPP_HAVE_WERROR
-#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_WARNINGS) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWerror" */
+#define TPP_HAVE_WERROR ((TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_WARNINGS) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWerror" */
 #endif /* !TPP_HAVE_WERROR */
 
 /* When enabled, the `TPP_FILE_FLAGS_SYSHDR` flag of files is ignored,
  * meaning that warnings are emitted as normal within system headers. */
 #ifndef TPP_HAVE_WSYSTEM_HEADERS
-#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
+#define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
 #endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
@@ -11805,7 +11808,7 @@ TPP_DECL_END
  * turn is needed to inject additional whitespace when failure to do so could
  * result in accidental token concatenation during reparsing. */
 #ifndef TPP_HAVE_LEXER_REQUIRE_WHITESPACE
-#if TPP_HAVE_MAGIC_WHITESPACE
+#if TPP_HAVE_PROFILE_ALL || TPP_HAVE_MAGIC_WHITESPACE
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
 #else /* ... */
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 0
@@ -19612,20 +19615,57 @@ typedef enum tpp_file_encoding {
 #define TPP_FILE_ENCODING_ISASCII(enc) ((enc) == TPP_FILE_ENCODING_ASCII)
 #endif /* TPP_HAVE_UNICODE */
 
+typedef struct tpp_lcstate {
+	tpp_lcinfo TPP_INTERNAL(tlcs_info);    /* L/C information */
+#if TPP_HAVE_UNICODE
+	tpp_char   TPP_INTERNAL(tlcs_data)[8]; /* MB-state + Dangling utf-8 bytes */
+#endif /* TPP_HAVE_UNICODE */
+} tpp_lcstate;
+
+#if TPP_HAVE_UNICODE
+#define tpp_lcstate_init(self, l, c)                                \
+	(void)(tpp_lcinfo_init(&(self)->TPP_INTERNAL(tlcs_info), l, c), \
+	       (self)->TPP_INTERNAL(tlcs_data)[0] = 0)
+#define tpp_lcstate_init_invalid(self)                                \
+	(void)(tpp_lcinfo_init_invalid(&(self)->TPP_INTERNAL(tlcs_info)), \
+	       (self)->TPP_INTERNAL(tlcs_data)[0] = 0)
+#define tpp_lcstate_initlc(self, lc)                  \
+	(void)((self)->TPP_INTERNAL(tlcs_info)    = (lc), \
+	       (self)->TPP_INTERNAL(tlcs_data)[0] = 0)
+#define tpp_lcstate_iszeroshift(self) ((self)->TPP_INTERNAL(tlcs_data)[0] == 0)
+#else /* TPP_HAVE_UNICODE */
+#define tpp_lcstate_init(self, l, c) \
+	tpp_lcinfo_init(&(self)->TPP_INTERNAL(tlcs_info), l, c)
+#define tpp_lcstate_init_invalid(self) \
+	tpp_lcinfo_init_invalid(&(self)->TPP_INTERNAL(tlcs_info))
+#define tpp_lcstate_initlc(self, lc) \
+	(void)((self)->TPP_INTERNAL(tlcs_info) = (lc))
+#define tpp_lcstate_iszeroshift(self) 1
+#endif /* !TPP_HAVE_UNICODE */
+#define tpp_lcstate_getlc(self)           (self)->TPP_INTERNAL(tlcs_info)
+#define tpp_lcstate_getline(self)         tpp_lcinfo_getline(tpp_lcstate_getlc(self))
+#define tpp_lcstate_getcol(self)          tpp_lcinfo_getcol(tpp_lcstate_getlc(self))
+#define tpp_lcstate_isvalid(self)         tpp_lcinfo_isvalid(tpp_lcstate_getlc(self))
+#define tpp_lcstate_setlc(self, v)        ((void)((self)->TPP_INTERNAL(tlcs_info) = (v)))
+#define tpp_lcstate_setline(self, v)      tpp_lcinfo_setline(&(self)->TPP_INTERNAL(tlcs_info), v)
+#define tpp_lcstate_setcol(self, v)       tpp_lcinfo_setcol(&(self)->TPP_INTERNAL(tlcs_info), v)
+#define tpp_lcstate_setlcdata(self, l, c) tpp_lcinfo_init(&(self)->TPP_INTERNAL(tlcs_info), l, c)
 
 /* Given a `lc` value for the start of `text`, calculate (and return)
  * a new value that describes the effect value at `text+size`. */
 #if TPP_HAVE_UNICODE
-TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account_ex(tpp_lcinfo lc, tpp_char const *text,
-                      tpp_size size, tpp_file_encoding enc);
-#define tpp_lcinfo_account(lc, text, size) \
-	tpp_lcinfo_account_ex(lc, text, size, TPP_FILE_ENCODING_UTF8)
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lcstate_account_ex(tpp_lcstate *tpp_restrict self,
+                       tpp_char const *text, tpp_size size,
+                       tpp_file_encoding enc);
+#define tpp_lcstate_account(lc, text, size) \
+	tpp_lcstate_account_ex(lc, text, size, TPP_FILE_ENCODING_UTF8)
 #else /* TPP_HAVE_UNICODE */
-TPP_DECL TPP_WUNUSED tpp_lcinfo TPPCALL
-tpp_lcinfo_account(tpp_lcinfo lc, tpp_char const *text, tpp_size size);
-#define tpp_lcinfo_account_ex(lc, text, size, enc) \
-	tpp_lcinfo_account(lc, text, size)
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
+                    tpp_char const *text, tpp_size size);
+#define tpp_lcstate_account_ex(lc, text, size, enc) \
+	tpp_lcstate_account(lc, text, size)
 #endif /* !TPP_HAVE_UNICODE */
 
 
@@ -19756,15 +19796,15 @@ struct tpp_lexer_arginfo;
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
 
 typedef struct tpp_file {
-	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [?..?][valid_if(DID_CALL(tpp_lexer_yieldraw))]
-	                                             * Start of last-loaded token (also valid in `tf_tprev`-files)
+	/* Important: `tf_tpos`, `tf_pos` and `tf_chunk` must come first,
+	 *            so they can shadow the tail of `tpp_token` */
+	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [0..1] Start of last-loaded token
 	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*` APIs
 	                                             *          It is only here so it overlaps with the lexer's token's
 	                                             *          `tt_start` field, such that said field is saved when
 	                                             *          a new file is pushed onto the `#include`-stack, and can
 	                                             *          then be used to calculate line/column information when
 	                                             *          lexer prints its `#include`-stack. */
-	/* Important: `tf_pos` and `tf_chunk` must come first, so they can shadow the tail of `tpp_token` */
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
 	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files)
 	                                             * WARNING: `tf_tpos` / `tf_pos` / `tf_end` may *NOT* necessarily point *into* this chunk (they are only
@@ -19787,7 +19827,7 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 #if TPP_HAVE_FILE_LC_CACHE
 	tpp_char const     *TPP_INTERNAL(tf_lcpos); /* [0..1] Position that `tf_lcval` applies to. */
-	tpp_lcinfo          TPP_INTERNAL(tf_lcval); /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos` */
+	tpp_lcstate         TPP_INTERNAL(tf_lcval); /* [valid_if(tf_lcpos)] Cached line/column at `tf_lcpos` */
 #define _tpp_file_init_lcpos(self) , (self)->TPP_INTERNAL(tf_lcpos) = NULL
 #else /* TPP_HAVE_FILE_LC_CACHE */
 #define _tpp_file_init_lcpos(self) /* nothing */
@@ -19815,7 +19855,7 @@ typedef struct tpp_file {
 	union {
 		struct {
 			char const *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcinfo  TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID` */
+			tpp_lcstate TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID` */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
@@ -19879,7 +19919,7 @@ typedef struct tpp_file {
 
 		struct {
 			char const *TPP_INTERNAL(tft_name);     /* [0..1][const] Filename for messages (if available) */
-			tpp_lcinfo  TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID` */
+			tpp_lcstate TPP_INTERNAL(tft_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID` */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tft_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_text_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_user_filename) = NULL
@@ -19904,7 +19944,7 @@ typedef struct tpp_file {
 #if TPP_HAVE_FILE_DUMMY
 		struct {
 			char const *TPP_INTERNAL(tfd_name);     /* [0..1][const] Filename for messages (if available) */
-			tpp_lcinfo  TPP_INTERNAL(tfd_start_lc); /* Line/Column numbers (0-based), or `TPP_LCINFO_INVALID` */
+			tpp_lcstate TPP_INTERNAL(tfd_start_lc); /* Line/Column numbers (0-based), or `TPP_LCINFO_INVALID` */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tfd_user_filename); /* [0..1] User-defined override for name of this file */
 #endif /* TPP_HAVE_FILE_SETFILENAME */
@@ -19938,12 +19978,12 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 /* Check if "self" includes L/C information */
-#define tpp_file_haslcinfo(self)                                                                             \
-	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                          \
-	  (tpp_file_getchunk(self) == NULL ||                                                                    \
-	   tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc)))) || \
-	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                     \
-	  tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))
+#define tpp_file_haslcinfo(self)                                                                                                 \
+	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                                              \
+	  (tpp_file_getchunk(self) == NULL ||                                                                                        \
+	   tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))) || \
+	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                                         \
+	  tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)))))
 
 
 /* Access macro information */
@@ -20304,7 +20344,8 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
 	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
 #define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                          \
-	(void)((self)->TPP_INTERNAL(tf_pos)   = NULL,                                                 \
+	(void)((self)->TPP_INTERNAL(tf_tpos)  = NULL,                                                 \
+	       (self)->TPP_INTERNAL(tf_pos)   = NULL,                                                 \
 	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                 \
 	       (self)->TPP_INTERNAL(tf_end)   = NULL                                                  \
 	       _tpp_file_init_prev(self),                                                             \
@@ -20345,25 +20386,26 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #define tpp_file_init_text_utf8(self, filename, chunk, text, text_size, start_lc, flags) \
 	tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, TPP_FILE_ENCODING_FORCE_UTF8)
 #endif /* TPP_HAVE_UNICODE */
-#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding)        \
-	(void)((self)->TPP_INTERNAL(tf_pos)   = (tpp_char const *)(text),                                   \
-	       (self)->TPP_INTERNAL(tf_chunk) = (chunk),                                                    \
-	       (self)->TPP_INTERNAL(tf_end)   = (tpp_char const *)(text) + (text_size)                      \
-	       _tpp_file_init_prev(self),                                                                   \
-	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT                                           \
-	       _tpp_file_init_enc_ex(self, encoding)                                                        \
-	       _tpp_file_init_flags(self, flags)                                                            \
-	       _tpp_file_init_common(self)                                                                  \
-	       _tpp_file_init_text_user_filename(self),                                                     \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name)     = (filename), \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc) = (start_lc))
+#define tpp_file_init_text_ex(self, filename, chunk, text, text_size, start_lc, flags, encoding)    \
+	(void)((self)->TPP_INTERNAL(tf_end) = ((self)->TPP_INTERNAL(tf_tpos) =                          \
+	                                       (self)->TPP_INTERNAL(tf_pos) =                           \
+	                                       (tpp_char const *)(text)) + (text_size),                 \
+	       (self)->TPP_INTERNAL(tf_chunk) = (chunk)                                                 \
+	       _tpp_file_init_prev(self),                                                               \
+	       (self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT                                       \
+	       _tpp_file_init_enc_ex(self, encoding)                                                    \
+	       _tpp_file_init_flags(self, flags)                                                        \
+	       _tpp_file_init_common(self)                                                              \
+	       _tpp_file_init_text_user_filename(self),                                                 \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_name) = (filename), \
+	       tpp_lcstate_initlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc), (start_lc)))
 
 
 /* Initialize `self` as a macro expansion file (internal API) */
 #if TPP_HAVE_CPP_MACROS
 #define _tpp_file_init_macro(self, prev_file, /*inherit(always)*/ macro, \
                              /*inherit(always)*/ chunk, start, end)      \
-	(void)((self)->tf_pos   = (start),                                   \
+	(void)((self)->tf_tpos = (self)->tf_pos = (start),                   \
 	       (self)->tf_chunk = (chunk),                                   \
 	       (self)->tf_end   = (end)                                      \
 	       _tpp_file_init_common(file),                                  \
@@ -20662,7 +20704,8 @@ tpp_file_popdummy(tpp_file *tpp_restrict self);
 #endif /* TPP_HAVE_FILE_DUMMY */
 
 #else /* TPP_HAVE_INCLUDE_STACK */
-#define tpp_file_getlcfile(self) ((tpp_file *)(self))
+#define tpp_file_getlcfile(self)   ((tpp_file *)(self))
+#define tpp_file_getbasefile(self) ((tpp_file *)(self))
 #if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
 #define tpp_file_gettextfile(self)                         \
 	(((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO || \
@@ -22865,7 +22908,10 @@ typedef enum tpp_hook_include_kind {
 #define TPP_HAVE_HOOKS 0
 #endif /* !... */
 
-#if TPP_HAVE_HOOKS
+#if !TPP_HAVE_HOOKS
+struct tpp_lexer;
+#define tpp_hook_cookie struct tpp_lexer *
+#else /* !TPP_HAVE_HOOKS */
 #if TPP_HAVE_HOOK_COOKIES
 #define tpp_hook_cookie void *
 #else /* TPP_HAVE_HOOK_COOKIES */
@@ -24405,8 +24451,8 @@ typedef struct tpp_lexer {
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))
 #define tpp_lexer_getfilekind(self) tpp_file_getkind(tpp_lexer_getfile(self))
 #define tpp_lexer_getlcfile(self)   tpp_file_getlcfile(tpp_lexer_getfile(self))   /* [1..1] Returns the file that is used to determine `__LINE__` and `__COLUMN__` */
-#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the *base* file (that is: the last one in the `#include`-stack) */
 #define tpp_lexer_gettextfile(self) tpp_file_gettextfile(tpp_lexer_getfile(self)) /* [0..1] Return the last I/O or TEXT file */
+#define tpp_lexer_getbasefile(self) tpp_file_getbasefile(tpp_lexer_getfile(self)) /* [1..1] Return the *base* file (that is: the last one in the `#include`-stack) */
 
 /* L/C information helpers */
 #define tpp_lexer_getlcinfoat(self, pos)                 tpp_file_getlcinfo(tpp_lexer_getfile(self), pos)
@@ -27102,6 +27148,7 @@ TPP_CONST_DECL char const tpp_cli_loader_help[];
 
 TPP_DECL_END
 
+#define GUARD_TPP_AMALGAMATION_H 1
 #endif /* !TPP_DEFS */
 #endif /* !GUARD_TPP_AMALGAMATION_H */
 /* clang-format on */

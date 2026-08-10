@@ -65,23 +65,23 @@ TPP_DECL_BEGIN
 
 
 typedef struct tpp_makefile_cli_loader {
-	tpp_makefile *TPP_MAKEFILE_INTERNAL(tmfcl_mf);      /* [1..1][const] The makefile being configured by this CLI loader */
-	unsigned int  TPP_MAKEFILE_INTERNAL(tmfcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
+	tpp_makefile *TPP_MAKEFILE_INTERNAL(tmkfcl_mf);      /* [1..1][const] The makefile being configured by this CLI loader */
+	unsigned int  TPP_MAKEFILE_INTERNAL(tmkfcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-	char const   *TPP_MAKEFILE_INTERNAL(tmfcl_target);  /* [0..1][const] Target specified by `-MT TARGET` or `-MQ TARGET` */
-#define _tpp_makefile_cli_loader_init_target(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = NULL
+	char const   *TPP_MAKEFILE_INTERNAL(tmkfcl_target);  /* [0..1][const] Target specified by `-MT TARGET` or `-MQ TARGET` */
+#define _tpp_makefile_cli_loader_init_target(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = NULL
 #else /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #define _tpp_makefile_cli_loader_init_target(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MT && !TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF
-	char const   *TPP_MAKEFILE_INTERNAL(tmfcl_outfile); /* [0..1][const] Filename specified by `-MF FILE` */
-#define _tpp_makefile_cli_loader_init_outfile(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_outfile) = NULL
+	char const   *TPP_MAKEFILE_INTERNAL(tmkfcl_outfile); /* [0..1][const] Filename specified by `-MF FILE` */
+#define _tpp_makefile_cli_loader_init_outfile(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_outfile) = NULL
 #else /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 #define _tpp_makefile_cli_loader_init_outfile(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
-	_tpp_makefile_cli_loader_flags TPP_MAKEFILE_INTERNAL(tmfcl_flags);
-#define _tpp_makefile_cli_loader_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) = _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
+	_tpp_makefile_cli_loader_flags TPP_MAKEFILE_INTERNAL(tmkfcl_flags);
+#define _tpp_makefile_cli_loader_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) = _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
 #else /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 #define _tpp_makefile_cli_loader_init_flags(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
@@ -94,8 +94,8 @@ typedef struct tpp_makefile_cli_loader {
  * file has already been initialized doesn't matter (the CLI loader will never
  * make persistent modifications to a lexer's current file/token). */
 #define tpp_makefile_cli_loader_init(self, makefile)                                         \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_mf)    = (makefile),                          \
-	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL \
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_mf)    = (makefile),                          \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_state) = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL \
 	       _tpp_makefile_cli_loader_init_target(self)                                        \
 	       _tpp_makefile_cli_loader_init_outfile(self)                                       \
 	       _tpp_makefile_cli_loader_init_flags(self))
@@ -104,7 +104,7 @@ typedef struct tpp_makefile_cli_loader {
 
 /* Return the makefile that is being initialized by the given CLI loader. */
 #define tpp_makefile_cli_loader_getmakefile(self) \
-	(self)->TPP_MAKEFILE_INTERNAL(tmfcl_mf)
+	(self)->TPP_MAKEFILE_INTERNAL(tmkfcl_mf)
 
 /* Check if a "--" argument was encountered during CLI parsing.
  * Once that is the case, `tpp_makefile_cli_loader_parsearg()` will
@@ -112,20 +112,20 @@ typedef struct tpp_makefile_cli_loader {
  * arguments should be treated as input files (for the compiler
  * that you're building) */
 #define tpp_makefile_cli_loader_hasddash(self) \
-	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_DDASH)
+	((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_DDASH)
 
 
 /* Control if `tpp_makefile_cli_loader_flush()` will turn eanble the makefile */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
 #define tpp_makefile_cli_loader_getmakefileenabled(self)  \
-	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+	((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
 #define tpp_makefile_cli_loader_setmakefileenabled(self, v) \
 	((v) ? tpp_makefile_cli_loader_enablemakefile(self)     \
 	     : tpp_makefile_cli_loader_disablemakefile(self))
 #define tpp_makefile_cli_loader_enablemakefile(self) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
 #define tpp_makefile_cli_loader_disablemakefile(self) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED)
 #else /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
 #define tpp_makefile_cli_loader_enablemakefile(self)     (void)0
 #define tpp_makefile_cli_loader_getmakefileenabled(self) 1
@@ -134,23 +134,23 @@ typedef struct tpp_makefile_cli_loader {
 
 /* Get/set the target, as specified by `-MT` and `-MQ` */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-#define tpp_makefile_cli_loader_gettarget(self) (self)->TPP_MAKEFILE_INTERNAL(tmfcl_target)
+#define tpp_makefile_cli_loader_gettarget(self) (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target)
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 #define tpp_makefile_cli_loader_settarget_mt(self, target)         \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target), \
-	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = (target), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
 #define tpp_makefile_cli_loader_settarget_mq(self, target)         \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target), \
-	       (self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
-#define tpp_makefile_cli_loader_gettarget_ismt(self) ((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = (target), \
+	       (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
+#define tpp_makefile_cli_loader_gettarget_ismt(self) ((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE)
 #define tpp_makefile_cli_loader_gettarget_ismq(self) (!tpp_makefile_cli_loader_gettarget_ismt(self))
 #elif TPP_MAKEFILE_HAVE_CLI_DASH_MT
-#define tpp_makefile_cli_loader_settarget_mt(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target))
+#define tpp_makefile_cli_loader_settarget_mt(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = (target))
 #define tpp_makefile_cli_loader_gettarget_ismt(self)       1
 #define tpp_makefile_cli_loader_gettarget_ismq(self)       0
 #elif TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-#define tpp_makefile_cli_loader_settarget_mq(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_target) = (target))
+#define tpp_makefile_cli_loader_settarget_mq(self, target) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = (target))
 #define tpp_makefile_cli_loader_gettarget_ismt(self)       0
 #define tpp_makefile_cli_loader_gettarget_ismq(self)       1
 #endif /* ... */
@@ -172,14 +172,14 @@ typedef struct tpp_makefile_cli_loader {
  * this token-consumption step from happening as well. */
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 #define tpp_makefile_cli_loader_getonlymakefile(self) \
-	((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+	((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
 #define tpp_makefile_cli_loader_setonlymakefile(self, v)    \
 	((v) ? tpp_makefile_cli_loader_enableonlymakefile(self) \
 	     : tpp_makefile_cli_loader_disableonlymakefile(self))
 #define tpp_makefile_cli_loader_enableonlymakefile(self) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
 #define tpp_makefile_cli_loader_disableonlymakefile(self) \
-	(void)((self)->TPP_MAKEFILE_INTERNAL(tmfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
+	(void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE)
 #else /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 #define tpp_makefile_cli_loader_getonlymakefile(self)     0
 #define tpp_makefile_cli_loader_disableonlymakefile(self) (void)0

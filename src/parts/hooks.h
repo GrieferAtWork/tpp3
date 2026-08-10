@@ -115,7 +115,10 @@ print("#else /" "* ... *" "/");
 print("#define TPP_HAVE_HOOKS 0");
 print("#endif /" "* !... *" "/");
 print;
-print("#if TPP_HAVE_HOOKS");
+print("#if !TPP_HAVE_HOOKS");
+print("struct tpp_lexer;");
+print("#define tpp_hook_cookie struct tpp_lexer *");
+print("#else /" "* !TPP_HAVE_HOOKS *" "/");
 print("#if TPP_HAVE_HOOK_COOKIES");
 print("#define tpp_hook_cookie void *");
 print("#else /" "* TPP_HAVE_HOOK_COOKIES *" "/");
@@ -304,7 +307,10 @@ print(")");
 #define TPP_HAVE_HOOKS 0
 #endif /* !... */
 
-#if TPP_HAVE_HOOKS
+#if !TPP_HAVE_HOOKS
+struct tpp_lexer;
+#define tpp_hook_cookie struct tpp_lexer *
+#else /* !TPP_HAVE_HOOKS */
 #if TPP_HAVE_HOOK_COOKIES
 #define tpp_hook_cookie void *
 #else /* TPP_HAVE_HOOK_COOKIES */

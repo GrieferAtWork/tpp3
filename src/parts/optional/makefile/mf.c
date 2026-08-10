@@ -119,58 +119,6 @@ err_temp:
 	return temp;
 }
 
-#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
-	(void)arg;
-	(void)text;
-	return (tpp_ssize)num_bytes;
-}
-#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
-
-#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
-                    tpp_keyword const *tpp_restrict dep) {
-	tpp_assert(self->tmf_depc <= self->tmf_depa);
-	if (self->tmf_depc >= self->tmf_depa) {
-		tpp_keyword const **new_depv;
-		tpp_size new_depa = self->tmf_depa * 2;
-		if (new_depa < 8)
-			new_depa = 8;
-		new_depv = (tpp_keyword const **)tpp_tryrealloc(self->tmf_depv,
-		                                                new_depa *
-		                                                sizeof(tpp_keyword const *));
-		if tpp_unlikely(!new_depv) {
-			new_depa = self->tmf_depc + 1;
-			new_depv = (tpp_keyword const **)tpp_realloc(self->tmf_depv,
-			                                             new_depa *
-			                                             sizeof(tpp_keyword const *));
-			if tpp_unlikely(!new_depv)
-				return TPP_ENOMEM;
-		}
-		self->tmf_depa = new_depa;
-		self->tmf_depv = new_depv;
-	}
-	self->tmf_depv[self->tmf_depc++] = dep;
-	return TPP_EOK;
-}
-
-#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
-                    tpp_keyword const *tpp_restrict dep) {
-	tpp_size i = self->tmf_depc;
-	while (i--) {
-		tpp_keyword const *mydep = self->tmf_depv[i];
-		if (tpp_keyword_equals(dep, mydep))
-			return true;
-	}
-	return false;
-}
-#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-
-
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
 	tpp_makefile const *const self = (tpp_makefile const *)arg;
@@ -231,8 +179,8 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 #if TPP_MAKEFILE_HAVE_PHONY
 	if (tpp_makefile_has(self, PHONY)) {
 		tpp_size i;
-		for (i = 0; i < self->tmf_depc; ++i) {
-			tpp_keyword const *dep = self->tmf_depv[i];
+		for (i = 0; i < self->tmkf_depc; ++i) {
+			tpp_keyword const *dep = self->tmkf_depv[i];
 			tpp_char const *const filename = tpp_keyword_getstr(dep);
 			tpp_size const filename_len    = tpp_keyword_getlen(dep);
 			output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -250,6 +198,59 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 	return TPP_EOK;
 }
 
+
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_assert(self->tmkf_depc <= self->tmkf_depa);
+	if (self->tmkf_depc >= self->tmkf_depa) {
+		tpp_keyword const **new_depv;
+		tpp_size new_depa = self->tmkf_depa * 2;
+		if (new_depa < 8)
+			new_depa = 8;
+		new_depv = (tpp_keyword const **)tpp_tryrealloc(self->tmkf_depv,
+		                                                new_depa *
+		                                                sizeof(tpp_keyword const *));
+		if tpp_unlikely(!new_depv) {
+			new_depa = self->tmkf_depc + 1;
+			new_depv = (tpp_keyword const **)tpp_realloc(self->tmkf_depv,
+			                                             new_depa *
+			                                             sizeof(tpp_keyword const *));
+			if tpp_unlikely(!new_depv)
+				return TPP_ENOMEM;
+		}
+		self->tmkf_depa = new_depa;
+		self->tmkf_depv = new_depv;
+	}
+	self->tmkf_depv[self->tmkf_depc++] = dep;
+	return TPP_EOK;
+}
+
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_size i = self->tmkf_depc;
+	while (i--) {
+		tpp_keyword const *mydep = self->tmkf_depv[i];
+		if (tpp_keyword_equals(dep, mydep))
+			return true;
+	}
+	return false;
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
+
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
+	(void)arg;
+	(void)text;
+	return (tpp_ssize)num_bytes;
+}
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
@@ -281,7 +282,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 
 	/* Check if we need to wrap the filename before printing it. */
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	if (self->tmf_curcol > 0) {
+	if (self->tmkf_curcol > 0) {
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0
 		if (tpp_makefile_getmaxcol(self) >= 0)
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
@@ -290,12 +291,12 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 			output_len += (tpp_size)tpp_makefile_escape(&tpp_makefile_strlen_printer,
 			                                            NULL, filename, filename_len,
 			                                            NULL);
-			if ((self->tmf_curcol + (tpp_column)output_len) >= tpp_makefile_getmaxcol(self)) {
+			if ((self->tmkf_curcol + (tpp_column)output_len) >= tpp_makefile_getmaxcol(self)) {
 				/* Force a line-wrap */
 				output_temp = tpp_makefile_output_printraw_conststr(self, " \\\n");
 				if (output_temp < 0)
 					return TPP_SSIZE_ASERR(output_temp);
-				self->tmf_curcol = 0;
+				self->tmkf_curcol = 0;
 			}
 		}
 	}
@@ -306,7 +307,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	self->tmf_curcol += 1;
+	self->tmkf_curcol += 1;
 	{
 		tpp_size count;
 		output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -314,7 +315,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 		                                  &count);
 		if (output_temp < 0)
 			return TPP_SSIZE_ASERR(output_temp);
-		self->tmf_curcol += (tpp_column)count;
+		self->tmkf_curcol += (tpp_column)count;
 	}
 #else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 	output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -325,14 +326,17 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 #endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 	return TPP_EOK;
 }
+#endif /* ... */
 
 /* The main (mandatory) `NEW_DEPENDECY` hook that's used to
  * get notified whenever the lexer encounters a new dependency */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
 	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
 	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
 }
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 /* Handle missing file dependencies by (blindly) emitting them to the makefile */
 #if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES

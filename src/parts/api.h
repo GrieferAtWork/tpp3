@@ -552,6 +552,9 @@
 #define _TPP_STATIC_ASSERT_ID(line) _TPP_STATIC_ASSERT_ID2(line)
 #define TPP_STATIC_ASSERT(expr) typedef int _TPP_STATIC_ASSERT_ID(__LINE__)[(expr) ? 1 : -1]
 #endif /* !TPP_STATIC_ASSERT */
+#ifndef TPP_STATIC_ASSERT_MSG
+#define TPP_STATIC_ASSERT_MSG(expr, msg) TPP_STATIC_ASSERT(expr)
+#endif /* !TPP_STATIC_ASSERT_MSG */
 
 
 

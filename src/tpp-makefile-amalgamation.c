@@ -38,24 +38,24 @@
 /************************************************************************/
 /* If "tpp-emitter-amalgamation.h" was already included, re-define
  * `TPP_MAKEFILE_INTERNAL()` identifers to their unescaped names. */
-#define tmfcl_mf               TPP_MAKEFILE_INTERNAL(tmfcl_mf)
-#define tmfcl_state            TPP_MAKEFILE_INTERNAL(tmfcl_state)
-#define tmfcl_target           TPP_MAKEFILE_INTERNAL(tmfcl_target)
-#define tmfcl_outfile          TPP_MAKEFILE_INTERNAL(tmfcl_outfile)
-#define tmfcl_flags            TPP_MAKEFILE_INTERNAL(tmfcl_flags)
-#define tmf_feat               TPP_MAKEFILE_INTERNAL(tmf_feat)
-#define tmf_flags              TPP_MAKEFILE_INTERNAL(tmf_flags)
-#define tmf_bitset             TPP_MAKEFILE_INTERNAL(tmf_bitset)
-#define tmff_USER_DEPENDENCIES TPP_MAKEFILE_INTERNAL(tmff_USER_DEPENDENCIES)
-#define tmff_PHONY             TPP_MAKEFILE_INTERNAL(tmff_PHONY)
-#define tmf_lexer              TPP_MAKEFILE_INTERNAL(tmf_lexer)
-#define tmf_output             TPP_MAKEFILE_INTERNAL(tmf_output)
-#define tmf_output_file        TPP_MAKEFILE_INTERNAL(tmf_output_file)
-#define tmf_depc               TPP_MAKEFILE_INTERNAL(tmf_depc)
-#define tmf_depa               TPP_MAKEFILE_INTERNAL(tmf_depa)
-#define tmf_depv               TPP_MAKEFILE_INTERNAL(tmf_depv)
-#define tmf_curcol             TPP_MAKEFILE_INTERNAL(tmf_curcol)
-#define tmf_maxcol             TPP_MAKEFILE_INTERNAL(tmf_maxcol)
+#define tmkfcl_mf               TPP_MAKEFILE_INTERNAL(tmkfcl_mf)
+#define tmkfcl_state            TPP_MAKEFILE_INTERNAL(tmkfcl_state)
+#define tmkfcl_target           TPP_MAKEFILE_INTERNAL(tmkfcl_target)
+#define tmkfcl_outfile          TPP_MAKEFILE_INTERNAL(tmkfcl_outfile)
+#define tmkfcl_flags            TPP_MAKEFILE_INTERNAL(tmkfcl_flags)
+#define tmkf_feat               TPP_MAKEFILE_INTERNAL(tmkf_feat)
+#define tmkf_flags              TPP_MAKEFILE_INTERNAL(tmkf_flags)
+#define tmkf_bitset             TPP_MAKEFILE_INTERNAL(tmkf_bitset)
+#define tmkff_USER_DEPENDENCIES TPP_MAKEFILE_INTERNAL(tmkff_USER_DEPENDENCIES)
+#define tmkff_PHONY             TPP_MAKEFILE_INTERNAL(tmkff_PHONY)
+#define tmkf_lexer              TPP_MAKEFILE_INTERNAL(tmkf_lexer)
+#define tmkf_output             TPP_MAKEFILE_INTERNAL(tmkf_output)
+#define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
+#define tmkf_depc               TPP_MAKEFILE_INTERNAL(tmkf_depc)
+#define tmkf_depa               TPP_MAKEFILE_INTERNAL(tmkf_depa)
+#define tmkf_depv               TPP_MAKEFILE_INTERNAL(tmkf_depv)
+#define tmkf_curcol             TPP_MAKEFILE_INTERNAL(tmkf_curcol)
+#define tmkf_maxcol             TPP_MAKEFILE_INTERNAL(tmkf_maxcol)
 
 #endif /* !TPP_MAKEFILE_BUILDING */
 
@@ -222,12 +222,12 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 
 #if TPP_MAKEFILE_HAVE_FEATURES
 TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
-	/* .tmf_flags = */ {
+	/* .tmkf_flags = */ {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
-		/* .tmff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
+		/* .tmkff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
-		/* .tmff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
+		/* .tmkff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
 	}
 };
@@ -326,58 +326,6 @@ err_temp:
 	return temp;
 }
 
-#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
-	(void)arg;
-	(void)text;
-	return (tpp_ssize)num_bytes;
-}
-#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
-
-#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
-                    tpp_keyword const *tpp_restrict dep) {
-	tpp_assert(self->tmf_depc <= self->tmf_depa);
-	if (self->tmf_depc >= self->tmf_depa) {
-		tpp_keyword const **new_depv;
-		tpp_size new_depa = self->tmf_depa * 2;
-		if (new_depa < 8)
-			new_depa = 8;
-		new_depv = (tpp_keyword const **)tpp_tryrealloc(self->tmf_depv,
-		                                                new_depa *
-		                                                sizeof(tpp_keyword const *));
-		if tpp_unlikely(!new_depv) {
-			new_depa = self->tmf_depc + 1;
-			new_depv = (tpp_keyword const **)tpp_realloc(self->tmf_depv,
-			                                             new_depa *
-			                                             sizeof(tpp_keyword const *));
-			if tpp_unlikely(!new_depv)
-				return TPP_ENOMEM;
-		}
-		self->tmf_depa = new_depa;
-		self->tmf_depv = new_depv;
-	}
-	self->tmf_depv[self->tmf_depc++] = dep;
-	return TPP_EOK;
-}
-
-#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
-tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
-                    tpp_keyword const *tpp_restrict dep) {
-	tpp_size i = self->tmf_depc;
-	while (i--) {
-		tpp_keyword const *mydep = self->tmf_depv[i];
-		if (tpp_keyword_equals(dep, mydep))
-			return true;
-	}
-	return false;
-}
-#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-
-
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
 	tpp_makefile const *const self = (tpp_makefile const *)arg;
@@ -438,8 +386,8 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 #if TPP_MAKEFILE_HAVE_PHONY
 	if (tpp_makefile_has(self, PHONY)) {
 		tpp_size i;
-		for (i = 0; i < self->tmf_depc; ++i) {
-			tpp_keyword const *dep = self->tmf_depv[i];
+		for (i = 0; i < self->tmkf_depc; ++i) {
+			tpp_keyword const *dep = self->tmkf_depv[i];
 			tpp_char const *const filename = tpp_keyword_getstr(dep);
 			tpp_size const filename_len    = tpp_keyword_getlen(dep);
 			output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -457,6 +405,59 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self) {
 	return TPP_EOK;
 }
 
+
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_adddep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_assert(self->tmkf_depc <= self->tmkf_depa);
+	if (self->tmkf_depc >= self->tmkf_depa) {
+		tpp_keyword const **new_depv;
+		tpp_size new_depa = self->tmkf_depa * 2;
+		if (new_depa < 8)
+			new_depa = 8;
+		new_depv = (tpp_keyword const **)tpp_tryrealloc(self->tmkf_depv,
+		                                                new_depa *
+		                                                sizeof(tpp_keyword const *));
+		if tpp_unlikely(!new_depv) {
+			new_depa = self->tmkf_depc + 1;
+			new_depv = (tpp_keyword const **)tpp_realloc(self->tmkf_depv,
+			                                             new_depa *
+			                                             sizeof(tpp_keyword const *));
+			if tpp_unlikely(!new_depv)
+				return TPP_ENOMEM;
+		}
+		self->tmkf_depa = new_depa;
+		self->tmkf_depv = new_depv;
+	}
+	self->tmkf_depv[self->tmkf_depc++] = dep;
+	return TPP_EOK;
+}
+
+#if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
+tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
+                    tpp_keyword const *tpp_restrict dep) {
+	tpp_size i = self->tmkf_depc;
+	while (i--) {
+		tpp_keyword const *mydep = self->tmkf_depv[i];
+		if (tpp_keyword_equals(dep, mydep))
+			return true;
+	}
+	return false;
+}
+#endif /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#endif /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
+
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
+	(void)arg;
+	(void)text;
+	return (tpp_ssize)num_bytes;
+}
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
@@ -488,7 +489,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 
 	/* Check if we need to wrap the filename before printing it. */
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	if (self->tmf_curcol > 0) {
+	if (self->tmkf_curcol > 0) {
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0
 		if (tpp_makefile_getmaxcol(self) >= 0)
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
@@ -497,12 +498,12 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 			output_len += (tpp_size)tpp_makefile_escape(&tpp_makefile_strlen_printer,
 			                                            NULL, filename, filename_len,
 			                                            NULL);
-			if ((self->tmf_curcol + (tpp_column)output_len) >= tpp_makefile_getmaxcol(self)) {
+			if ((self->tmkf_curcol + (tpp_column)output_len) >= tpp_makefile_getmaxcol(self)) {
 				/* Force a line-wrap */
 				output_temp = tpp_makefile_output_printraw_conststr(self, " \\\n");
 				if (output_temp < 0)
 					return TPP_SSIZE_ASERR(output_temp);
-				self->tmf_curcol = 0;
+				self->tmkf_curcol = 0;
 			}
 		}
 	}
@@ -513,7 +514,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	self->tmf_curcol += 1;
+	self->tmkf_curcol += 1;
 	{
 		tpp_size count;
 		output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -521,7 +522,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 		                                  &count);
 		if (output_temp < 0)
 			return TPP_SSIZE_ASERR(output_temp);
-		self->tmf_curcol += (tpp_column)count;
+		self->tmkf_curcol += (tpp_column)count;
 	}
 #else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 	output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self),
@@ -532,14 +533,17 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 #endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 	return TPP_EOK;
 }
+#endif /* ... */
 
 /* The main (mandatory) `NEW_DEPENDECY` hook that's used to
  * get notified whenever the lexer encounters a new dependency */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
 	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
 	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
 }
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 /* Handle missing file dependencies by (blindly) emitting them to the makefile */
 #if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
@@ -668,7 +672,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
-	switch (self->tmfcl_state) {
+	switch (self->tmkfcl_state) {
 
 	case TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL: {
 		if (*arg++ != '-')
@@ -680,7 +684,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			switch (*arg++) {
 
 			case '\0':
-				self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_DDASH; /* -- */
+				self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_DDASH; /* -- */
 				return TPP_EOK;
 
 			case 'd':
@@ -697,7 +701,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 			case 'u':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 				if (tpp_streq(arg, "ser-dependencies\0")) { /* --user-dependencies */
-					tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+					tpp_makefile_enablefeature(self->tmkfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
 					tpp_makefile_cli_loader_enable_with_makefile_only(self);
 					return TPP_EOK;
 				} else
@@ -710,7 +714,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MG
 				if (tpp_streq(arg, "rint-missing-file-dependencies\0")) { /* --print-missing-file-dependencies */
 					tpp_makefile_cli_loader_enable_with_makefile_only(self);
-					return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+					return tpp_makefile_enable_missing_file_dependencies(self->tmkfcl_mf);
 				} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 				{
@@ -724,15 +728,15 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 		case 'M':
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MMD
 			if (tpp_streq(arg, "MD\0")) {
-				self->tmfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
-				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+				self->tmkfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
+				tpp_makefile_enablefeature(self->tmkfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
 				tpp_makefile_cli_loader_enablemakefile(self);
 				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MD
 			if (tpp_streq(arg, "D\0")) {
-				self->tmfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
+				self->tmkfcl_flags |= _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT;
 				tpp_makefile_cli_loader_enablemakefile(self);
 				return TPP_EOK;
 			} else
@@ -740,16 +744,16 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF
 			if (*arg == 'F') {
 				if (*++arg) {
-					self->tmfcl_outfile = arg; /* -MFfoo.m */
+					self->tmkfcl_outfile = arg; /* -MFfoo.m */
 				} else {
-					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MF; /* -MF foo.m */
+					self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MF; /* -MF foo.m */
 				}
 				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MP
 			if (tpp_streq(arg, "P\0")) {
-				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_PHONY);
+				tpp_makefile_enablefeature(self->tmkfcl_mf, TPP_MAKEFILE_FEAT_PHONY);
 				return TPP_EOK;
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MP */
@@ -758,7 +762,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 				if (*++arg) {
 					tpp_makefile_cli_loader_settarget_mt(self, arg); /* -MTmain.o */
 				} else {
-					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MT; /* -MT main.o */
+					self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MT; /* -MT main.o */
 				}
 				return TPP_EOK;
 			} else
@@ -768,7 +772,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 				if (*++arg) {
 					tpp_makefile_cli_loader_settarget_mq(self, arg); /* -MQmain.o */
 				} else {
-					self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MQ; /* -MQ main.o */
+					self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_MQ; /* -MQ main.o */
 				}
 				return TPP_EOK;
 			} else
@@ -776,12 +780,12 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MG
 			if (tpp_streq(arg, "G\0")) {
 				tpp_makefile_cli_loader_enable_with_makefile_only(self);
-				return tpp_makefile_enable_missing_file_dependencies(self->tmfcl_mf);
+				return tpp_makefile_enable_missing_file_dependencies(self->tmkfcl_mf);
 			} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MM
 			if (tpp_streq(arg, "M\0")) {
-				tpp_makefile_enablefeature(self->tmfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+				tpp_makefile_enablefeature(self->tmkfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
 				tpp_makefile_cli_loader_enable_with_makefile_only(self);
 				return TPP_EOK;
 			} else
@@ -805,21 +809,21 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF
 	case TPP_MAKEFILE_CLI_LOADER_STATE_MF:
-		self->tmfcl_state   = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
-		self->tmfcl_outfile = arg;
+		self->tmkfcl_state   = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		self->tmkfcl_outfile = arg;
 		return TPP_EOK;
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT
 	case TPP_MAKEFILE_CLI_LOADER_STATE_MT:
-		self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
 		tpp_makefile_cli_loader_settarget_mt(self, arg);
 		return TPP_EOK;
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT */
 
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 	case TPP_MAKEFILE_CLI_LOADER_STATE_MQ:
-		self->tmfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
+		self->tmkfcl_state = TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL;
 		tpp_makefile_cli_loader_settarget_mq(self, arg);
 		return TPP_EOK;
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
@@ -977,9 +981,9 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 
 	/* Emit a warning if the CLI loader isn't in a neutral state */
 #if TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT
-	if (self->tmfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL &&
-	    self->tmfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_DDASH) {
-		error = tpp_makefile_cli_warnf(self->tmfcl_mf, NULL, 0,
+	if (self->tmkfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL &&
+	    self->tmkfcl_state != TPP_MAKEFILE_CLI_LOADER_STATE_DDASH) {
+		error = tpp_makefile_cli_warnf(self->tmkfcl_mf, NULL, 0,
 		                               TPP_W_MISSING_CLI_ARGUMENT);
 		if (TPP_ISERR(error))
 			return error;
@@ -993,18 +997,18 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
 
 	/* Turn on the linked makefile */
-	error = tpp_makefile_enable(self->tmfcl_mf);
+	error = tpp_makefile_enable(self->tmkfcl_mf);
 	if (TPP_ISERR(error))
 		return error;
 
 	/* Redirect output to a custom file */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF
-	if (self->tmfcl_outfile) {
+	if (self->tmkfcl_outfile) {
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
-		if (tpp_strcmp(self->tmfcl_outfile, "-") == 0) {
+		if (tpp_strcmp(self->tmkfcl_outfile, "-") == 0) {
 #ifdef tpp_makefile_io_getstdout
 			tpp_makefile_io_handle handle = tpp_makefile_io_getstdout();
-			tpp_makefile_setoutput_io_ex(self->tmfcl_mf, handle, true);
+			tpp_makefile_setoutput_io_ex(self->tmkfcl_mf, handle, true);
 #else /* tpp_makefile_io_getstdout */
 #if !TPP_IGNORE_INVALID_CONFIGURATION
 #error "Invalid configuration: 'TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH' is enabled, but no way to retrieve STDOUT handle"
@@ -1013,8 +1017,8 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 		} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH */
 		{
-			error = tpp_makefile_setoutput_file(self->tmfcl_mf,
-			                                    self->tmfcl_outfile);
+			error = tpp_makefile_setoutput_file(self->tmkfcl_mf,
+			                                    self->tmkfcl_outfile);
 			if (TPP_ISERR(error))
 				return error;
 		}
@@ -1022,7 +1026,7 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 	{
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD
-		if (self->tmfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT) {
+		if (self->tmkfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT) {
 			char const *filename = output_filename;
 			char const *filename_end;
 			tpp_size filename_len;
@@ -1032,7 +1036,7 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 			if (filename == NULL) {
 				/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
 				 *       (i.e.: the *first* file to get compiled) */
-				tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
+				tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmkfcl_mf));
 				filename = tpp_file_getrealfilename(bf);
 				if (filename == NULL)
 					filename = ""; /* Unknown filename :( */
@@ -1061,7 +1065,7 @@ use_full_filename:
 			tpp_memcpy(ptr, TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION,
 			           sizeof(TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION));
 			/* Use this one as filename */
-			error = tpp_makefile_setoutput_file(self->tmfcl_mf, output_buf);
+			error = tpp_makefile_setoutput_file(self->tmkfcl_mf, output_buf);
 			tpp_free(output_buf);
 			if (TPP_ISERR(error))
 				return error;
@@ -1071,35 +1075,35 @@ use_full_filename:
 
 	/* Print makefile target */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-	if (self->tmfcl_target) {
+	if (self->tmkfcl_target) {
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-		if (self->tmfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE) {
-			output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmfcl_mf), self->tmfcl_mf,
-			                                  (tpp_char const *)self->tmfcl_target,
-			                                  tpp_strlen(self->tmfcl_target),
+		if (self->tmkfcl_flags & _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE) {
+			output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmkfcl_mf), self->tmkfcl_mf,
+			                                  (tpp_char const *)self->tmkfcl_target,
+			                                  tpp_strlen(self->tmkfcl_target),
 			                                  &output_count);
 		} else {
-			output_count = tpp_strlen(self->tmfcl_target);
-			output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, self->tmfcl_target, output_count);
+			output_count = tpp_strlen(self->tmkfcl_target);
+			output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, self->tmkfcl_target, output_count);
 		}
 #elif TPP_MAKEFILE_HAVE_CLI_DASH_MT
-		output_count = tpp_strlen(self->tmfcl_target);
-		output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, self->tmfcl_target, output_count);
+		output_count = tpp_strlen(self->tmkfcl_target);
+		output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, self->tmkfcl_target, output_count);
 #else /* ... */
-		output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmfcl_mf), self->tmfcl_mf,
-		                                  (tpp_char const *)self->tmfcl_target,
-		                                  tpp_strlen(self->tmfcl_target), &output_count);
+		output_temp = tpp_makefile_escape(tpp_makefile_getoutput(self->tmkfcl_mf), self->tmkfcl_mf,
+		                                  (tpp_char const *)self->tmkfcl_target,
+		                                  tpp_strlen(self->tmkfcl_target), &output_count);
 #endif /* !... */
 	} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 	if (output_filename) {
 		output_count = tpp_strlen(output_filename);
-		output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, output_filename, output_count);
+		output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, output_filename, output_count);
 	} else {
 		/* Auto-determine target name based on __BASE_FILE__ */
 		/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
 		 *       (i.e.: the *first* file to get compiled) */
-		tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
+		tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmkfcl_mf));
 		char const *bf_filename = tpp_file_getrealfilename(bf);
 		if tpp_unlikely(bf_filename == NULL) {
 			output_count = 0;
@@ -1107,7 +1111,7 @@ use_full_filename:
 		} else {
 			struct tpp_makefile_cli_default_target_data data;
 			data.tmfcdtd_count = 0;
-			data.tmfcdtd_mf    = self->tmfcl_mf;
+			data.tmfcdtd_mf    = self->tmkfcl_mf;
 			output_temp = tpp_makefile_cli_print_default_target(self, &tpp_makefile_cli_default_target_printer,
 			                                                    &data, bf_filename);
 			output_count = data.tmfcdtd_count;
@@ -1117,15 +1121,15 @@ use_full_filename:
 		return TPP_SSIZE_ASERR(output_temp);
 	(void)output_count;
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	self->tmfcl_mf->tmf_curcol = (tpp_column)output_count;
+	self->tmkfcl_mf->tmkf_curcol = (tpp_column)output_count;
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
 	/* Print the trailing `:` following the target name */
-	output_temp = tpp_makefile_output_printraw_conststr(self->tmfcl_mf, ":");
+	output_temp = tpp_makefile_output_printraw_conststr(self->tmkfcl_mf, ":");
 	if (output_temp < 0)
 		return TPP_SSIZE_ASERR(output_temp);
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	self->tmfcl_mf->tmf_curcol += 1;
+	self->tmkfcl_mf->tmkf_curcol += 1;
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
 	/* TODO: Emit dependencies for every (distinct) file currently
@@ -1136,7 +1140,7 @@ use_full_filename:
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 	if (tpp_makefile_cli_loader_getonlymakefile(self)) {
 		tpp_token_id tok;
-		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmfcl_mf);
+		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmkfcl_mf);
 		do {
 			tok = tpp_lexer_yield(lexer);
 		} while (!TPP_TOK_ISERR_OR_EOF(tok));

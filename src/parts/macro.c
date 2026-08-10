@@ -645,6 +645,7 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
                       tpp_string const *expanded_text,
                       tpp_char const *pos,
                       tpp_lcinfo_ex *tpp_restrict result) {
+	tpp_lcstate lcstate;
 	tpp_macro_func_lcscan_vars vars;
 	tpp_assert(tpp_macro_isfunction(self));
 	tpp_assert(expanded_text != self->tm_body_chunk);
@@ -666,9 +667,11 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 	/* Encode LC info as position within the macro's body. */
 	tpp_assert(vars.tmflcsv_body_start >= self->tm_body_start);
 	tpp_assert(vars.tmflcsv_body_start <= self->tm_body_end);
-	result->tlcix_info = tpp_lcinfo_account_ex(self->tm_body_lc, self->tm_body_start,
-	                                           (tpp_size)(vars.tmflcsv_body_start - self->tm_body_start),
-	                                           self->tm_body_enc);
+	tpp_lcstate_initlc(&lcstate, self->tm_body_lc);
+	tpp_lcstate_account_ex(&lcstate, self->tm_body_start,
+	                       (tpp_size)(vars.tmflcsv_body_start - self->tm_body_start),
+	                       self->tm_body_enc);
+	result->tlcix_info = tpp_lcstate_getlc(&lcstate);
 
 	/* Check if position belongs to a macro argument */
 	if (vars.tmflcsv_argopcode != NULL && expanded_text_file->tf_tprev) {

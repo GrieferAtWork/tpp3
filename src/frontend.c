@@ -17,6 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+//#define USE_AMALGAMATION
 #define TPP_BUILDING_OPTIONAL 1
 #ifdef USE_AMALGAMATION
 #define TPP_PROFILE TPP_PROFILE_ALL /* Enable everything */
@@ -36,10 +37,20 @@
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN    0
 #define TPP_HAVE_LEXER_PUSHFILE_TEXT    0
 
-/* Pull in TPP sources */
-#include "tpp-amalgamation.c"          /* CORE */
-#include "tpp-emitter-amalgamation.c"  /* Source extension: EMITTER */
-#include "tpp-makefile-amalgamation.c" /* Source extension: MAKEFILE */
+#if 1 /* Since we're building everything statically, we don't need hook cookies,
+       * but can instead instruct TPP to determine emitter/makefile via offsets
+       * from the current lexer. */
+#define TPP_HAVE_HOOK_COOKIES 0
+#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER \
+	(offsetof(tpp_frontend, tf_emitter) - offsetof(tpp_frontend, tf_lexer))
+#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
+	(offsetof(tpp_frontend, tf_makefile) - offsetof(tpp_frontend, tf_lexer))
+#endif
+
+/* Pull in TPP headers */
+#include "tpp-amalgamation.h"          /* CORE */
+#include "tpp-emitter-amalgamation.h"  /* Source extension: EMITTER */
+#include "tpp-makefile-amalgamation.h" /* Source extension: MAKEFILE */
 #else /* USE_AMALGAMATION */
 #include "tpp.h"
 #include "tpp-emitter.h"
@@ -81,6 +92,15 @@ typedef struct tpp_frontend {
 	tpp_makefile_cli_loader tf_makefile_cli_loader; /* CLI loader for makefile */
 	tpp_frontend_cli_state  tf_cli_state;           /* CLI parsing state */
 } tpp_frontend;
+
+/* Pull in TPP sources */
+#ifdef USE_AMALGAMATION
+TPP_DECL_END
+#include "tpp-amalgamation.c"          /* CORE */
+#include "tpp-emitter-amalgamation.c"  /* Source extension: EMITTER */
+#include "tpp-makefile-amalgamation.c" /* Source extension: MAKEFILE */
+TPP_DECL_BEGIN
+#endif /* USE_AMALGAMATION */
 
 static tpp_ssize TPPCALL
 tpp_frontend_output_printer(tpp_frontend *fe, tpp_char const *text, tpp_size num_bytes) {
@@ -224,6 +244,7 @@ static void tpp_frontend_help_cli(bool all_spellings) {
 }
 
 static void tpp_frontend_help_extensions(void) {
+#if TPP_HAVE_EXTENSIONS
 	tpp_extension_id id;
 	for (id = (tpp_extension_id)0; id < TPP_EXT_COUNT;
 	     id = (tpp_extension_id)((unsigned int)id + 1)) {
@@ -231,9 +252,11 @@ static void tpp_frontend_help_extensions(void) {
 		if (name)
 			printf("-f[no-]%s\n", name);
 	}
+#endif /* TPP_HAVE_EXTENSIONS */
 }
 
 static void tpp_frontend_help_warnings(void) {
+#if TPP_HAVE_WARNINGS
 	tpp_warning_group_id id;
 	for (id = (tpp_warning_group_id)0; id < TPP_WG_COUNT;
 	     id = (tpp_warning_group_id)((unsigned int)id + 1)) {
@@ -248,6 +271,7 @@ static void tpp_frontend_help_warnings(void) {
 			putchar('\n');
 		}
 	}
+#endif /* TPP_HAVE_WARNINGS */
 }
 
 static void tpp_frontend_help(char const *appname, int argc, char **argv) {
@@ -495,6 +519,7 @@ int main(int argc, char **argv) {
 	tpp_frontend fe;
 	char *appname = argv[0];
 	char *fallback_input_filename;
+	bool only_makefile;
 	if (argc)
 		--argc, ++argv; /* Skip "appname" argument */
 
@@ -584,6 +609,7 @@ int main(int argc, char **argv) {
 		error = tpp_cli_loader_flush(&fe.tf_cli_loader);
 
 	/* Finalize CLI loaders */
+	only_makefile = tpp_makefile_cli_loader_getonlymakefile(&fe.tf_makefile_cli_loader);
 	tpp_makefile_cli_loader_fini(&fe.tf_makefile_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
 	tpp_cli_loader_fini(&fe.tf_cli_loader);
@@ -594,16 +620,18 @@ int main(int argc, char **argv) {
 		goto out_emitter_file;
 	}
 
-	/* Yield & re-emit tokens. */
-	for (;;) {
-		tpp_token_id const tok = tpp_lexer_yield(&fe.tf_lexer);
-		if (TPP_TOK_ISERR(tok)) {
-			fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
-			goto out_emitter_file;
+	/* Yield & re-emit tokens (unless consumed by Makefile). */
+	if (!only_makefile) {
+		for (;;) {
+			tpp_token_id const tok = tpp_lexer_yield(&fe.tf_lexer);
+			if (TPP_TOK_ISERR(tok)) {
+				fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
+				goto out_emitter_file;
+			}
+			(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
+			if (tok == TPP_TOK_EOF)
+				break;
 		}
-		(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
-		if (tok == TPP_TOK_EOF)
-			break;
 	}
 
 	/* Flush Makefile output */

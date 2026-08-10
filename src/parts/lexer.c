@@ -163,6 +163,8 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
  * using one of the `tpp_lexer_initfile_*` functions below. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self) {
+	(void)self;
+
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_init(&self->tl_kwds);
 #endif /* TPP_HAVE_USER_KEYWORDS */

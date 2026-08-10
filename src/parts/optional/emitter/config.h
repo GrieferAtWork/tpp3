@@ -188,7 +188,7 @@
  *           +50
  * ``` */
 #ifndef TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN
-#define TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
+#define TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN ((TPP_EMITTER_HAVE_MODE_EMIT && TPP_HAVE_CPP_MACROS) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN */
 
 /* Use `# <linenum>` instead of `#line` to align tokens */
@@ -368,7 +368,7 @@
  * database of supported commandline flags in a human-readable format that
  * can also be rendered (fairly) easily. */
 #ifndef TPP_EMITTER_HAVE_CLI_HELP
-#define TPP_EMITTER_HAVE_CLI_HELP (TPP_HAVE_PROFILE_ALL && TPP_EMITTER_HAVE_CLI)
+#define TPP_EMITTER_HAVE_CLI_HELP (TPP_EMITTER_HAVE_CLI && TPP_HAVE_CLI_HELP)
 #endif /* !TPP_EMITTER_HAVE_CLI_HELP */
 
 /* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */

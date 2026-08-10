@@ -482,6 +482,9 @@ tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
                              void *const _printer_arg,
                              tpp_warning_id const _id, va_list _args) {
 	tpp_ssize _printer_temp, _printer_result = 0;
+	(void)_self;
+	(void)_info;
+	(void)_args;
 	switch (_id) {
 
 /************************************************************************/

@@ -67,12 +67,12 @@ print("typedef union tpp_emitter_features {");
 print("	struct {");
 for (local CONF: configs) {
 	print("#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_", CONF, ")");
-	print("		unsigned int TPP_EMITTER_INTERNAL(teff_", CONF, "): 1;");
-	print("#define _tpp_emitter_has_", CONF, "(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_", CONF, ")");
+	print("		unsigned int TPP_EMITTER_INTERNAL(temff_", CONF, "): 1;");
+	print("#define _tpp_emitter_has_", CONF, "(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_", CONF, ")");
 	print("#endif /" "* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_", CONF, ") *" "/");
 }
-print("	} TPP_EMITTER_INTERNAL(tef_flags);");
-print("	unsigned char TPP_EMITTER_INTERNAL(tef_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
+print("	} TPP_EMITTER_INTERNAL(temf_flags);");
+print("	unsigned char TPP_EMITTER_INTERNAL(temf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
 print("} tpp_emitter_features;");
 print("");
 print("#if !TPP_USE_STATIC");
@@ -80,11 +80,11 @@ print("TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;")
 print("#endif /" "* !TPP_USE_STATIC *" "/");
 print("");
 print("#define tpp_emitter_features_getid(self, id) \\");
-print("	((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_enable(self, id) \\");
-print("	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_disable(self, id) \\");
-print("	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
+print("	(void)((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))");
 print("#define tpp_emitter_features_setid(self, id, enabled) \\");
 print("	((enabled) ? tpp_emitter_features_enable(self, id) : tpp_emitter_features_disable(self, id))");
 print("#define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)");
@@ -176,71 +176,71 @@ typedef enum tpp_emitter_feature_id {
 typedef union tpp_emitter_features {
 	struct {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_SPACE): 1;
-#define _tpp_emitter_has_NORMALIZE_SPACE(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_SPACE)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_SPACE): 1;
+#define _tpp_emitter_has_NORMALIZE_SPACE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_SPACE)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_LF): 1;
-#define _tpp_emitter_has_NORMALIZE_LF(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_LF)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_LF): 1;
+#define _tpp_emitter_has_NORMALIZE_LF(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_LF)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_STRING): 1;
-#define _tpp_emitter_has_NORMALIZE_C_STRING(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_STRING)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_STRING): 1;
+#define _tpp_emitter_has_NORMALIZE_C_STRING(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_STRING)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_INT): 1;
-#define _tpp_emitter_has_NORMALIZE_C_INT(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_C_INT)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_INT): 1;
+#define _tpp_emitter_has_NORMALIZE_C_INT(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_INT)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_KEYWORDS): 1;
-#define _tpp_emitter_has_NORMALIZE_KEYWORDS(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_KEYWORDS)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_KEYWORDS): 1;
+#define _tpp_emitter_has_NORMALIZE_KEYWORDS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_KEYWORDS)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_BSE): 1;
-#define _tpp_emitter_has_NORMALIZE_BSE(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_BSE)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_BSE): 1;
+#define _tpp_emitter_has_NORMALIZE_BSE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_BSE)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_TRIGRAPHS): 1;
-#define _tpp_emitter_has_NORMALIZE_TRIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_TRIGRAPHS)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_TRIGRAPHS): 1;
+#define _tpp_emitter_has_NORMALIZE_TRIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_TRIGRAPHS)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NORMALIZE_DIGRAPHS): 1;
-#define _tpp_emitter_has_NORMALIZE_DIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NORMALIZE_DIGRAPHS)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_DIGRAPHS): 1;
+#define _tpp_emitter_has_NORMALIZE_DIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_DIGRAPHS)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
-		unsigned int TPP_EMITTER_INTERNAL(teff_NOLINE): 1;
-#define _tpp_emitter_has_NOLINE(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_NOLINE)
+		unsigned int TPP_EMITTER_INTERNAL(temff_NOLINE): 1;
+#define _tpp_emitter_has_NOLINE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NOLINE)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
-		unsigned int TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN): 1;
-#define _tpp_emitter_has_RELAXED_MACRO_COLUMN(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_RELAXED_MACRO_COLUMN)
+		unsigned int TPP_EMITTER_INTERNAL(temff_RELAXED_MACRO_COLUMN): 1;
+#define _tpp_emitter_has_RELAXED_MACRO_COLUMN(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_RELAXED_MACRO_COLUMN)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
-		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT): 1;
-#define _tpp_emitter_has_USE_CPP_DIGIT(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT)
+		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_FLAGS): 1;
-#define _tpp_emitter_has_USE_CPP_DIGIT_FLAGS(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_FLAGS)
+		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_FLAGS): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT_FLAGS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_FLAGS)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
-		unsigned int TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_WORKING_DIRECTORY): 1;
-#define _tpp_emitter_has_USE_CPP_DIGIT_WORKING_DIRECTORY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_USE_CPP_DIGIT_WORKING_DIRECTORY)
+		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_WORKING_DIRECTORY): 1;
+#define _tpp_emitter_has_USE_CPP_DIGIT_WORKING_DIRECTORY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_WORKING_DIRECTORY)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
-		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY): 1;
-#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_LAZY)
+		unsigned int TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_LAZY): 1;
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_LAZY)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
-		unsigned int TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY): 1;
-#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
+		unsigned int TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY): 1;
+#define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
-		unsigned int TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES): 1;
-#define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(te_feat).TPP_EMITTER_INTERNAL(tef_flags).TPP_EMITTER_INTERNAL(teff_TRACE_INCLUDES)
+		unsigned int TPP_EMITTER_INTERNAL(temff_TRACE_INCLUDES): 1;
+#define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_TRACE_INCLUDES)
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
-	} TPP_EMITTER_INTERNAL(tef_flags);
-	unsigned char TPP_EMITTER_INTERNAL(tef_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
+	} TPP_EMITTER_INTERNAL(temf_flags);
+	unsigned char TPP_EMITTER_INTERNAL(temf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
 
 #if !TPP_USE_STATIC
@@ -248,11 +248,11 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #endif /* !TPP_USE_STATIC */
 
 #define tpp_emitter_features_getid(self, id) \
-	((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] & (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_enable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] |= (1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_disable(self, id) \
-	(void)((self)->TPP_EMITTER_INTERNAL(tef_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
+	(void)((self)->TPP_EMITTER_INTERNAL(temf_bitset)[(unsigned int)(id) / TPP_CHAR_BIT] &= ~(1 << ((unsigned int)(id) % TPP_CHAR_BIT)))
 #define tpp_emitter_features_setid(self, id, enabled) \
 	((enabled) ? tpp_emitter_features_enable(self, id) : tpp_emitter_features_disable(self, id))
 #define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)
