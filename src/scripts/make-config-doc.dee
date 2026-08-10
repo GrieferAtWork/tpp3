@@ -22,10 +22,20 @@ import * from deemon;
 import ..parts.config;
 import posix;
 
+class Context {
+	this = default;
+	public final member tppAmalgamationH: string;
+	public final member configFilename: string;
+}
+
+global final CORE_CONTEXT = Context(
+		tppAmalgamationH: "tpp-amalgamation.h",
+		configFilename: "parts/config.h");
+
 local SRC_DIR = posix.joinpath(posix.headof(__FILE__), "..");
 
-global final CONFIG_H = File
-	.open(posix.joinpath(SRC_DIR, "parts/config.h"), "rb")
+function loadConfigHeader(filename: string): Bytes -> File
+	.open(posix.joinpath(SRC_DIR, filename), "rb")
 	.read()
 	.unifylines()
 	.replace("\\\n", "")
@@ -68,8 +78,7 @@ global final CONFIG_H = File
 		r"\s*#\s*define\s+\2\s+([^\n]+)\n"
 		r"\s*#\s*endif\b[^\n]*\n",
 		"\n#define \\2 \\1 ? \\3 : \\4\n",
-	)
-;
+	);
 
 global final MC_TOKEN_CONFIG_MACROS: {string...} = HashSet.Frozen(
 	for (local mc: config.MC_TOKENS)
@@ -174,10 +183,10 @@ class Config {
 		}
 	}
 
-	public printDesc(currentFile: string, fp: File): string {
+	public printDesc(currentFile: string, fp: File, context: Context): string {
 		print fp: f"## {name}\n"
 			f"\n"
-			f"{formatDoc(currentFile, doc)}\n"
+			f"{formatDoc(currentFile, doc, context)}\n"
 			f"\n"
 			f"<details><summary>Details</summary>\n"
 			f"\n"
@@ -210,14 +219,19 @@ class Config {
 	}
 }
 
-function _getAvailableConfigs(): {Config...} {
-	local i = 0, len = #CONFIG_H;
+function _getAvailableConfigs(context: Context): {Config...} {
+	local configHeaderData = loadConfigHeader(context.configFilename);
+	local i = 0, len = #configHeaderData;
 	final local REGION_SEPARATOR = "/************************************************************************/";
-	local apiLimitsStart = CONFIG_H.index(REGION_SEPARATOR,
-		CONFIG_H.index("API limits:")) + #REGION_SEPARATOR;
-	local apiLimitsEnd = CONFIG_H.index(REGION_SEPARATOR, apiLimitsStart);
+	local apiLimitsStart = configHeaderData.find("API limits:");
+	local apiLimitsEnd = -1;
+	if (apiLimitsStart >= 0) {
+		apiLimitsStart = configHeaderData.find(REGION_SEPARATOR, apiLimitsStart) + #REGION_SEPARATOR;
+		if (apiLimitsStart >= 0)
+			apiLimitsEnd = configHeaderData.index(REGION_SEPARATOR, apiLimitsStart);
+	}
 	while (i < len) {
-		local match = CONFIG_H
+		local match = configHeaderData
 			.regfind(
 				r'\s*#\s*ifndef\s*(TPP_\w*)\b\s*\n+'
 				r'\s*#\s*define\s*\1\b([^\n]*/\*\s*"(-f[^"\n]+)"\s*\*/|[^\n]*)\n+'
@@ -227,19 +241,19 @@ function _getAvailableConfigs(): {Config...} {
 			break;
 		local parts = (
 			for (local lo, hi: match[1:])
-				lo is none ? none : CONFIG_H[lo:hi]
+				lo is none ? none : configHeaderData[lo:hi]
 		).frozen;
 		local featureName = parts[0];
 		local featureExpr = normalizePpExpr(parts[1]);
 		local extensionName = parts[2].strip();
 		local commentEnd = match.first.first;
-		while (commentEnd && CONFIG_H.isspace(commentEnd - 1))
+		while (commentEnd && configHeaderData.isspace(commentEnd - 1))
 			--commentEnd;
 		local comment = "";
-		if (CONFIG_H.endswith("*/", 0, commentEnd)) {
-			local commentStart = CONFIG_H.rindex("/*", 0, commentEnd - 2);
-			if (!CONFIG_H.reendswith(r"#\s*endif\s*", 0, commentStart)) {
-				comment = CONFIG_H[commentStart + 2:commentEnd - 2]
+		if (configHeaderData.endswith("*/", 0, commentEnd)) {
+			local commentStart = configHeaderData.rindex("/*", 0, commentEnd - 2);
+			if (!configHeaderData.reendswith(r"#\s*endif\s*", 0, commentStart)) {
+				comment = configHeaderData[commentStart + 2:commentEnd - 2]
 					.replace("\n * ", "\n")
 					.replace("\n *\n", "\n\n")
 					.strip();
@@ -247,18 +261,18 @@ function _getAvailableConfigs(): {Config...} {
 		} else {
 			local origCommentEnd = commentEnd;
 			for (;;) {
-				local sol = CONFIG_H.rfind("\n", 0, commentEnd) + 1;
+				local sol = configHeaderData.rfind("\n", 0, commentEnd) + 1;
 				local soc = sol;
-				while (soc < commentEnd && CONFIG_H.isspace(soc))
+				while (soc < commentEnd && configHeaderData.isspace(soc))
 					++soc;
-				if (!CONFIG_H.startswith("//", soc))
+				if (!configHeaderData.startswith("//", soc))
 					break;
 				commentEnd = sol;
-				while (commentEnd && CONFIG_H.isspace(commentEnd - 1))
+				while (commentEnd && configHeaderData.isspace(commentEnd - 1))
 					--commentEnd;
 			}
 			if (commentEnd < origCommentEnd) {
-				comment = CONFIG_H[commentEnd:origCommentEnd]
+				comment = configHeaderData[commentEnd:origCommentEnd]
 					.striplines()
 					.replace("\n// ", "\n")
 					.replace("\n//", "\n")
@@ -313,25 +327,34 @@ function _getAvailableConfigs(): {Config...} {
 	}
 }
 
-function getAvailableConfigs(): {Config...} {
-	static local result = _getAvailableConfigs().cached;
+function getAvailableConfigs(context: Context): {Config...} {
+	static local cache: {string: {Config...}} = Dict();
+	local configFilename = context.configFilename;
+	local result = cache.get(configFilename);
+	if (result is none)
+		result = cache[configFilename] = _getAvailableConfigs(context).cached;
 	return result;
 }
 
-function getAvailableConfigsByName(): {string: Config} {
-	static local result = Dict.Frozen(
-		for (local conf: getAvailableConfigs())
-			{conf.name, conf}
-	);
+function getAvailableConfigsByName(context: Context): {string: Config} {
+	static local cache: {string: {string: Config}} = Dict();
+	local configFilename = context.configFilename;
+	local result = cache.get(configFilename);
+	if (result is none) {
+		result = cache[configFilename] = Dict.Frozen(
+			for (local conf: getAvailableConfigs(context))
+				{conf.name, conf}
+		);
+	}
 	return result;
 }
 
 
-function _getAmalgamationHLines(): {string: int} {
+function _getAmalgamationHLines(context: Context): {string: int} {
 	local result: {string: int} = Dict();
 	local identPriority: {string: int} = Dict();
 	local lastLineEndsWithTPPCALL = false;
-	for (local lno, line: File.open(posix.joinpath(SRC_DIR, "tpp-amalgamation.h"), "rb")
+	for (local lno, line: File.open(posix.joinpath(SRC_DIR, context.tppAmalgamationH), "rb")
 			.read().splitlines(false).enumerate()) {
 		local match = line.regmatch(r"^\s*#\s*define\s+(\w+)\b"); /* Macro */
 		local prio = 0;
@@ -368,14 +391,18 @@ function _getAmalgamationHLines(): {string: int} {
 	return result;
 }
 
-function getAmalgamationHLines(): {string: int} {
-	static local result: {string: int} = _getAmalgamationHLines();
+function getAmalgamationHLines(context: Context): {string: int} {
+	static local cache: {string: {string: int}} = Dict();
+	local tppAmalgamationH: string = context.tppAmalgamationH;
+	local result = cache.get(tppAmalgamationH);
+	if (result is none)
+		result = cache[tppAmalgamationH] = _getAmalgamationHLines(context);
 	return result;
 }
 
 
 
-function formatDoc(currentFile: string, doc: string): string {
+function formatDoc(currentFile: string, doc: string, context: Context): string {
 	doc = doc
 		.replace(":\n-", ":\n\n-")
 		.replace(":\n```", ":\n\n```");
@@ -387,9 +414,16 @@ function formatDoc(currentFile: string, doc: string): string {
 		if (nextTick < 0)
 			break;
 		local content = doc[tick + 1:nextTick];
-		local conf: Config | none = getAvailableConfigsByName().get(content);
+		local confContext = context;
+		local conf: Config | none = getAvailableConfigsByName(confContext).get(content);
+		if (conf is none && confContext !== CORE_CONTEXT) {
+			confContext = CORE_CONTEXT;
+			conf = getAvailableConfigsByName(confContext).get(content);
+		}
 		if (conf !is none) {
-			local refFile = conf.refFile;
+			local refFile = currentFile;
+			if (confContext === CORE_CONTEXT)
+				refFile = conf.refFile;
 			local newContent = f'[`{content}`]({
 				refFile == currentFile ? "" : refFile
 			}#{conf.name.lower()})';
@@ -411,9 +445,15 @@ function formatDoc(currentFile: string, doc: string): string {
 					functionName = functionName[:lparen].strip();
 			}
 			if (functionName.issymbol()) {
-				local lineNumber = getAmalgamationHLines().get(functionName);
+				local lineNumberContext = context;
+				local lineNumber = getAmalgamationHLines(lineNumberContext).get(functionName);
+				if (lineNumber is none && lineNumberContext !== CORE_CONTEXT) {
+					lineNumberContext = CORE_CONTEXT;
+					lineNumber = getAmalgamationHLines(lineNumberContext).get(functionName);
+				}
 				if (lineNumber !is none) {
-					local newContent = f'[`{content}`](../src/tpp-amalgamation.h#L{lineNumber})';
+					local newContent = f'[`{content}`](../src/{
+						lineNumberContext.tppAmalgamationH}#L{lineNumber})';
 					doc = doc[:tick] + newContent + doc[nextTick+1:];
 					nextTick += #newContent - #content;
 				}
@@ -426,7 +466,7 @@ function formatDoc(currentFile: string, doc: string): string {
 
 
 
-function updateConfigMd(filename: string) {
+function updateConfigMd(filename: string, context: Context) {
 	print("Updating ", repr filename);
 	local currentFile = filename.rpartition("/").last;
 	local oldData = File.open(filename, "rb").read();
@@ -448,7 +488,7 @@ function updateConfigMd(filename: string) {
 		case "token":
 			newData << "| Token | Config | Extension |\n"
 			           "| ----- | ------ | --------- |\n";
-			for (local conf: getAvailableConfigs()) {
+			for (local conf: getAvailableConfigs(context)) {
 				if (conf.kind == "token") {
 					local mcReprFull = conf.name.lsstrip("TPP_HAVE_TOK_");
 					local mcRepr = config.MC_TOKENS
@@ -465,14 +505,14 @@ function updateConfigMd(filename: string) {
 			break;
 
 		case "warn":
-			for (local conf: getAvailableConfigs()) {
+			for (local conf: getAvailableConfigs(context)) {
 				if (conf.kind == "warn")
 					print newData: f"- <a name=\"{conf.name.lower()}\"></a>`{conf.name}`";
 			}
 			break;
 
 		case "builtin_hook":
-			for (local conf: getAvailableConfigs()) {
+			for (local conf: getAvailableConfigs(context)) {
 				if (conf.kind == "builtin_hook")
 					print newData: f"- <a name=\"{conf.name.lower()}\"></a>`{conf.name}`";
 			}
@@ -496,7 +536,7 @@ function updateConfigMd(filename: string) {
 					f"{prototypePrefix}TPP_HOOK_{name}{prototypeSuffix};\n"
 					f"```\n"
 					f"\n"
-					f"{formatDoc(currentFile, doc.partition("\n@").first)}\n"
+					f"{formatDoc(currentFile, doc.partition("\n@").first, context)}\n"
 					f"\n"
 					f"<details><summary>Details</summary>\n"
 					f"\n"
@@ -533,38 +573,48 @@ function updateConfigMd(filename: string) {
 		case "glossary": {
 			local knownFiles = HashSet();
 			local isFirst = true;
-			for (local conf: getAvailableConfigs()) {
+			for (local conf: getAvailableConfigs(context)) {
 				if (!isFirst)
 					print newData: " ",;
 				isFirst = false;
-				local refFile = conf.refFile;
+				local refFile = filename;
+				if (context === CORE_CONTEXT)
+					refFile = conf.refFile;
 				if (refFile !in knownFiles) {
-					if (posix.stat.isreg(f"{SRC_DIR}/../doc/{refFile}")) {
+					if (refFile == filename ||
+					    posix.stat.isreg(f"{SRC_DIR}/../doc/{refFile}")) {
 						knownFiles.insert(refFile);
 					} else {
 						print newData: f"<!-- ?: {conf.name} -->",;
 					}
 				}
 				if (refFile in knownFiles)
-					print newData: f"[`{conf.name}`]({refFile}#{conf.name.lower()})",;
+					print newData: f"[`{conf.name}`]({refFile == filename ? "" : refFile}#{conf.name.lower()})",;
 			}
-			for (local doc, name, default_TPP_HAVE_FOO_HOOK,
-			     builtin_FOO_HOOK, prototypePrefix,
-			     prototypeSuffix, prototypeArgs,
-			     disabled_RETURN_VALUE: config.HOOKS) {
-				if (!isFirst)
-					print newData: " ",;
-				isFirst = false;
-				print newData: f"[`TPP_HAVE_{name}_HOOK`](config-hook.md#tpp_have_{name.lower()}_hook)",;
+			if (context === CORE_CONTEXT) {
+				for (local doc, name, default_TPP_HAVE_FOO_HOOK,
+				     builtin_FOO_HOOK, prototypePrefix,
+				     prototypeSuffix, prototypeArgs,
+				     disabled_RETURN_VALUE: config.HOOKS) {
+					if (!isFirst)
+						print newData: " ",;
+					isFirst = false;
+					print newData: f"[`TPP_HAVE_{name}_HOOK`](config-hook.md#tpp_have_{name.lower()}_hook)",;
+				}
 			}
 			print newData:;
 		}	break;
 
+		case "all":
+			for (local conf: getAvailableConfigs(context))
+				conf.printDesc(currentFile, newData, context);
+			break;
+
 		default: {
 			local foundAny = false;
-			for (local conf: getAvailableConfigs()) {
+			for (local conf: getAvailableConfigs(context)) {
 				if (conf.kind == tag) {
-					conf.printDesc(currentFile, newData);
+					conf.printDesc(currentFile, newData, context);
 					foundAny = true;
 				}
 			}
@@ -589,16 +639,25 @@ function updateConfigMd(filename: string) {
 
 
 #ifdef __MAIN__
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-limit.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-core.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-conf.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-token.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-value.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-warn.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-hook.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-common.md"));
-updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-cli.md"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-limit.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-core.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-conf.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-token.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-value.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-warn.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-hook.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-common.md"), CORE_CONTEXT);
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/config-cli.md"), CORE_CONTEXT);
+
+/* Docs for source extensions */
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/ext-config-emitter.md"), Context(
+		tppAmalgamationH: "tpp-emitter-amalgamation.h",
+		configFilename: "parts/optional/emitter/config.h"));
+updateConfigMd(posix.joinpath(SRC_DIR, "../doc/ext-config-makefile.md"), Context(
+		tppAmalgamationH: "tpp-makefile-amalgamation.h",
+		configFilename: "parts/optional/makefile/config.h"));
+
 #endif /* __MAIN__ */
 
 
