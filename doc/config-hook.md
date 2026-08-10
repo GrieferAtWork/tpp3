@@ -67,7 +67,7 @@ TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
 Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26796) to print warning messages.
-Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](../src/tpp-amalgamation.h#L9136) is also overwritten
+Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](#tpp_have_warnhandler_hook) is also overwritten
 
 <details><summary>Details</summary>
 
@@ -538,7 +538,7 @@ tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_hook_cookie cookie, tpp_token_id mode, 
 ```
 
 Extra callback invoked by [`tpp_lexer_foreach_embed_path()`](../src/tpp-amalgamation.h#L26098) at different points
-during the process of enumerating embed paths. (s.a. [`TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`](../src/tpp-amalgamation.h#L9659))
+during the process of enumerating embed paths. (s.a. [`TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`](#tpp_have_system_include_path_hook))
 
 <details><summary>Details</summary>
 

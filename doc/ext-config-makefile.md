@@ -56,7 +56,7 @@ TPP_HAVE_FILE_SYSHDR ? TPP_CONF_FEAT0 : 0
 
 ## TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 
-Enable API support for handling `TPP_HOOK_INCLUDE_NOT_FOUND` by emitting
+Enable API support for handling [`TPP_HOOK_INCLUDE_NOT_FOUND`](config-hook.md#tpp_have_include_not_found_hook) by emitting
 the associated file as an additional dependency. Useful when wanting to
 (somewhat accurately) determine dependencies, where some of them might
 not exist, yet.

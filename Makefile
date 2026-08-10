@@ -61,7 +61,7 @@ src/tpp-makefile-amalgamation.c: Makefile.autoformat src/tpp-makefile.c src/scri
 	deemon src/scripts/make-amalgamation.dee src/tpp-makefile.c '' > src/tpp-makefile-amalgamation.c
 
 # Generated documentation
-doc/config.md: Makefile.autoformat src/parts/.format-cache/config.h src/parts/optional/emitter/config.h src/parts/optional/makefile/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h
+doc/config.md: Makefile.autoformat src/parts/.format-cache/config.h src/parts/optional/emitter/config.h src/parts/optional/makefile/config.h src/scripts/make-config-doc.dee src/tpp-amalgamation.h src/tpp-emitter-amalgamation.h src/tpp-makefile-amalgamation.h
 	deemon src/scripts/make-config-doc.dee
 
 

@@ -430,6 +430,28 @@ function formatDoc(currentFile: string, doc: string, context: Context): string {
 			doc = doc[:tick] + newContent + doc[nextTick+1:];
 			nextTick += #newContent - #content;
 		} else {
+			local hookName = none;
+			if (content.startswith("TPP_HAVE_") && content.endswith("_HOOK")) {
+				hookName = content[#"TPP_HAVE_":-#"_HOOK"];
+			} else if (content.startswith("TPP_HOOK_")) {
+				hookName = content[#"TPP_HOOK_":];
+			}
+			if (hookName !is none) {
+				for (local hookDoc, name, default_TPP_HAVE_FOO_HOOK,
+				     builtin_FOO_HOOK, prototypePrefix,
+				     prototypeSuffix, prototypeArgs,
+				     disabled_RETURN_VALUE: config.HOOKS) {
+					if (name == hookName) {
+						local newContent = f'[`{content}`]({
+							currentFile != "config-hook.md" ? "config-hook.md" : ""
+						}#tpp_have_{hookName.lower()}_hook)';
+						doc = doc[:tick] + newContent + doc[nextTick+1:];
+						nextTick += #newContent - #content;
+						goto continue_after_next_tick;
+					}
+				}
+			}
+
 			/* When it's the name of a function/macro from the C API,
 			 * then encode a link to `tpp-amalgamation.h#L<lineno>`
 			 * here -- since that file is also generated, we can easily
@@ -459,6 +481,7 @@ function formatDoc(currentFile: string, doc: string, context: Context): string {
 				}
 			}
 		}
+continue_after_next_tick:
 		i = nextTick + 1;
 	}
 	return doc;

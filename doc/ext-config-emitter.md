@@ -490,7 +490,7 @@ TPP_EMITTER_HAVE_USE_CPP_DIGIT ? TPP_CONF_FEAT0 : 0
 ## TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
 
 Enable support for re-emission of unknown pragmas. Requires that the TPP core
-is configured to allow runtime override of its [`TPP_HAVE_UNKNOWN_PRAGMA_HOOK`](../src/tpp-amalgamation.h#L9253)
+is configured to allow runtime override of its [`TPP_HAVE_UNKNOWN_PRAGMA_HOOK`](config-hook.md#tpp_have_unknown_pragma_hook)
 hook (since the emitter needs to be able to override that hook during its
 initialization)
 
@@ -520,7 +520,7 @@ TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) ? 1 : 0
 
 Enable support for re-emission of `#define` and `#undef` directives.
 Requires that the TPP core is configured to allow runtime override of
-its [`TPP_HAVE_MACRO_DEFINED_HOOK`](../src/tpp-amalgamation.h#L9522) and [`TPP_HAVE_MACRO_UNDEFINED_HOOK`](../src/tpp-amalgamation.h#L9571)
+its [`TPP_HAVE_MACRO_DEFINED_HOOK`](config-hook.md#tpp_have_macro_defined_hook) and [`TPP_HAVE_MACRO_UNDEFINED_HOOK`](config-hook.md#tpp_have_macro_undefined_hook)
 hooks (since the emitter needs to be able to override these hook during
 its initialization)
 
@@ -551,7 +551,7 @@ Default:
 Similar end result to [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions),
 but taking a completely different approach in order to get there:
 
-- Hook [`TPP_HAVE_FILE_PUSHED_HOOK`](../src/tpp-amalgamation.h#L9334) to get informed whenever a file
+- Hook [`TPP_HAVE_FILE_PUSHED_HOOK`](config-hook.md#tpp_have_file_pushed_hook) to get informed whenever a file
   is pushed onto the `#include`-stack. If that file turns out to
   be a macro, see if that macro's most-recent definition has already
   been dumped.
@@ -625,7 +625,7 @@ Enable support for re-emission of `#include`, `#include_next`, `#import`
 and `#embed` directives.
 
 Requires that the TPP core is configured to allow runtime override of
-its [`TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK`](../src/tpp-amalgamation.h#L9428) hook (since the emitter needs
+its [`TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK`](config-hook.md#tpp_have_include_encountered_hook) hook (since the emitter needs
 to be able to override that hook during its initialization)
 
 Can be configured in one of 3 ways:
@@ -660,7 +660,7 @@ whenever an I/O file is pushed to the `#include`-stack:
 print("." * NUMBER_OF_IO_FILES_ON_INCLUDE_STACK, " ", tpp_file_getrealfilename(file));
 ```
 
-Because this feature uses the [`TPP_HAVE_FILE_PUSHED_HOOK`](../src/tpp-amalgamation.h#L9334) hook, it
+Because this feature uses the [`TPP_HAVE_FILE_PUSHED_HOOK`](config-hook.md#tpp_have_file_pushed_hook) hook, it
 must be turned on using the following APIs, rather than directly
 setting its feature:
 
