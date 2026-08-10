@@ -2177,6 +2177,20 @@ Default:
 ```
 </details>
 
+## TPP_HAVE_LEXER_PUSHFILE_OFR
+
+Provide an API [`tpp_lexer_pushfile_ofr()`](../src/tpp-amalgamation.h#L25322) that can be used to quickly push
+a [`tpp_lexer_openfile_result`](../src/tpp-amalgamation.h#L25098) object onto the lexer's `#include`-stack.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || TPP_HAVE_CLI_DASH_INCLUDE
+```
+</details>
+
 ## TPP_HAVE_LEXER_PUSHFILE_TEXT
 
 Provide an API [`tpp_lexer_pushfile_text_ex()`](../src/tpp-amalgamation.h#L25347) that can be used to
@@ -2192,20 +2206,6 @@ Default:
 
 ```c
 (TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_INCLUDE_STACK
-```
-</details>
-
-## TPP_HAVE_LEXER_PUSHFILE_OFR
-
-Provide an API [`tpp_lexer_pushfile_ofr()`](../src/tpp-amalgamation.h#L25322) that can be used to quickly push
-a [`tpp_lexer_openfile_result`](../src/tpp-amalgamation.h#L25098) object onto the lexer's `#include`-stack.
-
-<details><summary>Details</summary>
-
-Default:
-
-```c
-((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || TPP_HAVE_CLI_DASH_INCLUDE
 ```
 </details>
 

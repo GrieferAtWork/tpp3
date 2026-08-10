@@ -591,10 +591,11 @@ typedef struct tpp_makefile {
 	       _tpp_makefile_init_flags(self)                       \
 	       _tpp_makefile_init_depv(self)                        \
 	       _tpp_makefile_init_col(self))
-#define tpp_makefile_fini(self)                  \
-	(void)((void)0 _tpp_makefile_fini_depv(self) \
-	       _tpp_makefile_fini_output_file(self), \
-	       /* TODO: Clear all lexer hooks */     \
+#define tpp_makefile_fini(self)                                  \
+	(void)((void)0 _tpp_makefile_fini_depv(self)                 \
+	       _tpp_makefile_fini_output_file(self),                 \
+	       tpp_makefile_disable(self),                           \
+	       tpp_makefile_disable_missing_file_dependencies(self), \
 	       tpp_dbg_memset(self, sizeof(tpp_makefile)))
 
 /* Retrieve components of the makefile. */

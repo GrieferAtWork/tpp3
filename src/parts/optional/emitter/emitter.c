@@ -662,6 +662,7 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	} else {
 		temp = 0; /* Files are about to be pushed, so no need for a line-setter */
 		++i;
+		tpp_assert(i < new_file_count);
 	}
 	if (temp < 0)
 		goto err_temp;
@@ -1642,7 +1643,7 @@ tpp_emitter_maybe_set_files_changes(tpp_emitter *tpp_restrict self,
 }
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 
-#if _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
+#if TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 #if TPP_EMITTER_HAVE_TRACE_INCLUDES
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_trace_include_printdots(tpp_lexer *tpp_restrict lexer, tpp_size count) {
@@ -1775,7 +1776,7 @@ _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie) {
 
 	return TPP_EOK;
 }
-#endif /* _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+#endif /* TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
 
 /* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS

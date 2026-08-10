@@ -213,7 +213,13 @@ typedef struct tpp_file {
 	                                             *          `tt_start` field, such that said field is saved when
 	                                             *          a new file is pushed onto the `#include`-stack, and can
 	                                             *          then be used to calculate line/column information when
-	                                             *          lexer prints its `#include`-stack. */
+	                                             *          lexer prints its `#include`-stack.
+	                                             * FIXME: The `valid_if(DID_CALL(tpp_lexer_yieldraw))` breaks if the
+	                                             *        user pushes multiple files onto the #include-stack at the
+	                                             *        very start. In that case, only the top-most file's `tf_tpos`
+	                                             *        will be initialized (after `tpp_lexer_yieldraw()`), but that
+	                                             *        still breaks #include-tracebacks which will access outdated
+	                                             *        source positions! */
 	/* Important: `tf_pos` and `tf_chunk` must come first, so they can shadow the tail of `tpp_token` */
 	tpp_char const     *TPP_INTERNAL(tf_pos);   /* [0..1][<= tf_end] File pointer to next unread byte. */
 	TPP_REF tpp_string *TPP_INTERNAL(tf_chunk); /* [0..1][const_if(tf_kind != TPP_FILE_KIND_IO)] Currently loaded text-chunk (mutable for text-files)

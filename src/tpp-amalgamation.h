@@ -12611,7 +12611,7 @@ TPP_DECL_END
 #define TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME "<stdin>"
 #endif /* !TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME */
 
-/* TODO: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
+/* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
 
 /* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
  *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
@@ -12663,6 +12663,17 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_PUSHFILE_OPEN */
 
+/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
+ * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
+#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
+#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || \
+     TPP_HAVE_CLI_DASH_INCLUDE)
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
+
 /* Provide an API `tpp_lexer_pushfile_text_ex()` that can be used to
  * quickly push pre-loaded text files onto the lexer's `#include`-stack:
  * - `tpp_lexer_pushfile_text()`
@@ -12675,17 +12686,6 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_PUSHFILE_TEXT 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_PUSHFILE_TEXT */
-
-/* Provide an API `tpp_lexer_pushfile_ofr()` that can be used to quickly push
- * a `tpp_lexer_openfile_result` object onto the lexer's `#include`-stack. */
-#ifndef TPP_HAVE_LEXER_PUSHFILE_OFR
-#if ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_INCLUDE_STACK && TPP_HAVE_LEXER_INIT_OPEN) || \
-     TPP_HAVE_CLI_DASH_INCLUDE)
-#define TPP_HAVE_LEXER_PUSHFILE_OFR 1
-#else /* ... */
-#define TPP_HAVE_LEXER_PUSHFILE_OFR 0
-#endif /* !... */
-#endif /* !TPP_HAVE_LEXER_PUSHFILE_OFR */
 
 /* Provide a function `tpp_lexer_define()` + `tpp_lexer_undef()`
  * that can be used to define/undef commandline-defined macros. */

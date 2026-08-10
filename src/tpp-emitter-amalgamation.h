@@ -1186,15 +1186,15 @@ _tpp_emitter_hook_include_encountered(tpp_hook_cookie cookie,
                                       tpp_hook_include_kind include_kind);
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
-#undef _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
+#undef TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 #if (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || \
      TPP_EMITTER_HAVE_TRACE_INCLUDES ||                \
      TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-#define _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 1
+#define TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 1
 #else /* ... */
-#define _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 0
+#define TPP_EMITTER_HAVE_HOOK_FILE_PUSHED 0
 #endif /* !... */
-#if _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
+#if TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie);
 #if TPP_HAVE_HOOK_COOKIES
@@ -1233,7 +1233,7 @@ _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie);
 #else /* ... */
 #define _tpp_emitter_disable_file_pushed_hook(self) (void)0
 #endif /* !... */
-#endif /* _TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+#endif /* TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
 
 /* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS

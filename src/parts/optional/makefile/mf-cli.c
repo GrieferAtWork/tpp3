@@ -475,8 +475,10 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 			/* Auto-determine output filename when -MD or -MMD was used,
 			 * based on `output_filename`, or if not given: __BASE_FILE__ */
 			if (filename == NULL) {
+				/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
+				 *       (i.e.: the *first* file to get compiled) */
 				tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
-				filename = tpp_file_getfilename(bf);
+				filename = tpp_file_getrealfilename(bf);
 				if (filename == NULL)
 					filename = ""; /* Unknown filename :( */
 			}
@@ -540,8 +542,10 @@ use_full_filename:
 		output_temp = tpp_makefile_output_printraw_cstr(self->tmfcl_mf, output_filename, output_count);
 	} else {
 		/* Auto-determine target name based on __BASE_FILE__ */
+		/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
+		 *       (i.e.: the *first* file to get compiled) */
 		tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmfcl_mf));
-		char const *bf_filename = tpp_file_getfilename(bf);
+		char const *bf_filename = tpp_file_getrealfilename(bf);
 		if tpp_unlikely(bf_filename == NULL) {
 			output_count = 0;
 			output_temp  = 0;
@@ -568,6 +572,10 @@ use_full_filename:
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
 	self->tmfcl_mf->tmf_curcol += 1;
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+
+	/* TODO: Emit dependencies for every (distinct) file currently
+	 *       on the #include-stack (since those won't appear as
+	 *       "new" dependencies anymore after this point!) */
 
 	/* Consume all tokens from the lexer (if enabled) */
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE

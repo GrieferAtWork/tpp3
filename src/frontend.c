@@ -31,10 +31,10 @@
 #define TPP_HAVE_KEYWORDS_RESETFLAGS    0
 #define TPP_HAVE_KEYWORDS_RESETFEATURES 0
 #define TPP_HAVE_KEYWORDS_RESETCOUNTERS 0
-#define TPP_HAVE_LEXER_PUSHFILE_TEXT    0
 #define TPP_HAVE_LEXER_INIT_OPEN        0
 #define TPP_HAVE_LEXER_PUSHFILE_IO      0
 #define TPP_HAVE_LEXER_PUSHFILE_OPEN    0
+#define TPP_HAVE_LEXER_PUSHFILE_TEXT    0
 
 /* Pull in TPP sources */
 #include "tpp-amalgamation.c"          /* CORE */
