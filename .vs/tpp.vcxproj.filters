@@ -384,5 +384,14 @@
       <Filter>src\scripts</Filter>
     </None>
     <None Include="..\Makefile" />
+    <None Include="..\doc\ext-config-emitter.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\ext-config-makefile.md">
+      <Filter>doc</Filter>
+    </None>
+    <None Include="..\doc\config-cli.md">
+      <Filter>doc</Filter>
+    </None>
   </ItemGroup>
 </Project>

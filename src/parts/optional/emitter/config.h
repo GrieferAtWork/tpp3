@@ -382,8 +382,8 @@
  *   is pushed onto the `#include`-stack. If that file turns out to
  *   be a macro, see if that macro's most-recent definition has already
  *   been dumped.
- *   - If not, or if the macro's definition has changed, dump it now
- *     If there was a different definition, emit a `#undef` first
+ *   - If not, or if the macro's definition has changed, dump it now.
+ *     If there was a different definition, emit a `#undef` first.
  * - Whenever a `TPP_TOK_ISKEYWORD()`-token is emitted (`tpp_emitter_emitcurrent()`
  *   is called while a keyword-token is loaded into the lexer), and the
  *   linked keyword doesn't have a user-defined macro definition (i.e.
@@ -412,7 +412,11 @@
  * - `TPP_CONF_FEAT0`: Available (disabled by default)
  * - `TPP_CONF_FEAT1`: Available (enabled by default) */
 #ifndef TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
-#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY ((TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_KEYWORD_USERDATA && TPP_HAVE_MACRO_NAME) ? TPP_CONF_FEAT0 : 0)
+#define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY  \
+	((TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) &&       \
+	  TPP_HAVE_KEYWORD_USERDATA && TPP_HAVE_MACRO_NAME) \
+	 ? TPP_CONF_FEAT0                                   \
+	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
 /* Extension to `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS` and
@@ -543,7 +547,7 @@
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS
 #define TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS \
-	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE && (TPP_HAVE_TOK_SPACE && TPP_HAVE_TOK_LF))
+	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE)
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS */
 
 /* `-dM`, `--dump=M`:

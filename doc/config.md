@@ -39,8 +39,8 @@ Similarly to the TPP core, source extensions can also be configured, though some
 
 | Name | Description |
 | ---- | ----------- |
-| [**EMITTER**](ext-config-emitter.md) | Standardized ways of re-emitting tokens (think: `gcc -E`), whilst injecting `#line` directives to ensure that `__FILE__`, `__LINE__` and `__COLUMN__` are retained for every token.<br/>Also used to implement TPP's [frontend](#frontend) |
-| [**MAKEFILE**](ext-config-makefile.md) | Helpers for generating a *Makefile*-compatible dependency descriptor of the parsed input file, and implementing support for GCC CLI switches `-M`, `-MM`, `-MF`, `-MG`, `-MP`, `-MT`, `-MQ`, `-MD`, `-MMD`.<br/>Also used to implement TPP's [frontend](#frontend) |
+| [**EMITTER**](ext-config-emitter.md) | Standardized ways of re-emitting tokens (think: `gcc -E`), whilst injecting `#line` directives to ensure that `__FILE__`, `__LINE__` and `__COLUMN__` are retained for every token |
+| [**MAKEFILE**](ext-config-makefile.md) | Helpers for generating a *Makefile*-compatible dependency descriptor of the parsed input file, and implementing support for GCC CLI switches `-M`, `-MM`, `-MF`, `-MG`, `-MP`, `-MT`, `-MQ`, `-MD`, `-MMD` |
 | - | - |
 
 
