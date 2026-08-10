@@ -711,6 +711,11 @@
 #define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdigit-directives" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
+/* TODO: Add an API to `tpp_lexer` to expose a custom "working directory", which can
+ *       be assigned by user-code via a `# 1 "/path/to/current/directory//"` directive
+ *       is received (i.e.: when `TPP_HAVE_CPP_DIGIT_LINE` is used to assign a filename
+ *       that ends with 2 trailing `//`) */
+
 /* Support for `#line 42 "foo.h"`-directives */
 #ifndef TPP_HAVE_CPP_LINE
 #define TPP_HAVE_CPP_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fline-directives" */

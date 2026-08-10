@@ -118,7 +118,7 @@ TPP_CONF_FEAT0
 
 (soft-)limit on how long lines in the dependency output should get.
 Whenever a line (tries to) become longer than this, the next dependency
-isn't appended to the same line, and instead a \-escaped linefeed is
+isn't appended to the same line, and instead a `\`-escaped linefeed is
 inserted and the dependency is emitted to the next line.
 
 - When negative, the limit becomes configurable at runtime, with the

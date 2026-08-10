@@ -218,6 +218,7 @@
  * 1 line.
  *
  * Can be used to implement the `-P` CLI switch
+ * (see `TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS`)
  *
  * Configure as one of:
  * - `TPP_CONF_0`, `0`: Disabled
@@ -229,8 +230,9 @@
 #endif /* !TPP_EMITTER_HAVE_NOLINE */
 
 /* When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, tokens emitted
- * from within a macro do not require proper alignment with __COLUMN__,
- * so-as to prevent every token from causing another `#line`-directive
+ * from within a macro do not require proper alignment with `__COLUMN__`.
+ *
+ * So-as to prevent every token from causing another `#line`-directive
  * being emitted, don't be too precise in terms of *all* tokens needing
  * to have the proper column:
  * ```c
@@ -273,6 +275,10 @@
 
 /* Use `# <linenum>` instead of `#line` to align tokens
  *
+ * s.a.:
+ * - `TPP_HAVE_CPP_DIGIT_LINE`
+ * - `TPP_HAVE_CPP_LINE`
+ *
  * Configure as one of:
  * - `TPP_CONF_0`, `0`: Disabled
  * - `TPP_CONF_1`, `1`: Enabled
@@ -282,7 +288,16 @@
 #define TPP_EMITTER_HAVE_USE_CPP_DIGIT (TPP_EMITTER_HAVE_MODE_EMIT ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT */
 
-/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also emit `1/2/3/4` flags:
+ *
+ * - `1`: Push a dummy-file containing the old file/line/column onto the `#include`-stack,
+ *        before applying the new line/filename.
+ * - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack.
+ * - `3`: Set `TPP_FILE_FLAGS_SYSHDR` for the current text-file. When this flag is not
+ *        supplied, `TPP_FILE_FLAGS_SYSHDR` is instead cleared for the current text-file.
+ * - `4`: Same as flag `3`, except for the `TPP_FILE_FLAGS_EXTERN_C` flag.
+ *
+ * s.a. `TPP_HAVE_CPP_DIGIT_LINE`
  *
  * Configure as one of:
  * - `TPP_CONF_0`, `0`: Disabled
@@ -293,8 +308,20 @@
 #define TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS ((TPP_EMITTER_HAVE_USE_CPP_DIGIT && TPP_HAVE_FILE_PUSHED_HOOK && TPP_HAVE_FILE_POPPED_HOOK && (TPP_HAVE_FILE_SYSHDR || TPP_HAVE_FILE_EXTERN_C)) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 
-/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: the first time a `# <linenum>` directive is emitted,
- * emit it 2 times, and in-between those to emissions, emit another line `# <linenum> "$(PWD)//"`
+/* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`:
+ * the first time a `# <linenum>` directive is emitted,
+ * emit it 2 times, and in-between those to emissions,
+ * emit another line `# <linenum> "$(PWD)//"`:
+ *
+ * ```c
+ * # 1 "input.c"
+ * # 1 "/opt/my-project//"
+ * # 1 "input.c"
+ * ```
+ *
+ * A(nother) preprocessor consuming TPP's emitter output
+ * will then know how relative filenames can be resolved
+ * if the intend is to turn them into absolute paths.
  *
  * Configure as one of:
  * - `TPP_CONF_0`, `0`: Disabled
