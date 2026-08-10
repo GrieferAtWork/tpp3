@@ -23277,24 +23277,24 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 	if (self->tlcs_data[0]) {
 		/* Inside of a dangling unicode character */
 		tpp_char needed = tpp_unicode_utf8seqlen_mb_getmax(self->tlcs_data[0]);
-		tpp_char have = (tpp_char)tpp_strnlen((char const *)self->tlcs_data, 8);
+		tpp_char have = (tpp_char)tpp_strnlen((char const *)self->tlcs_data, sizeof(self->tlcs_data) / sizeof(tpp_char));
 		tpp_char missing = needed - have;
 		tpp_char consume = missing < size ? missing : (tpp_char)size;
 		tpp_char const *ptr;
 		tpp_assert(needed > have);
 		tpp_assert(needed >= 2);
-		tpp_assert(needed <= 8);
-		tpp_assert((have + consume) <= 8);
+		tpp_assert(needed <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
+		tpp_assert((have + consume) <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		tpp_memcpy(self->tlcs_data + have, text, consume * sizeof(tpp_char));
 		have += consume;
-		tpp_assert(have <= 8);
+		tpp_assert(have <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		if (have < needed)
 			return; /* Buffer too small */
 
 		/* Read unicode character */
 		ptr = self->tlcs_data;
 		uch = tpp_unicode_readutf8(&ptr, self->tlcs_data + have);
-		tpp_memset(self->tlcs_data, 0, 8 * sizeof(tpp_char));
+		tpp_memset(self->tlcs_data, 0, sizeof(self->tlcs_data));
 		goto handle_uch;
 	}
 #endif /* TPP_HAVE_UNICODE */
@@ -23327,17 +23327,24 @@ handle_linefeed:
 		default:
 #if TPP_HAVE_UNICODE
 			if (TPP_FILE_ENCODING_ISUTF8(enc) && tpp_ascii_ismb(ch)) {
+				tpp_size reqlen, avllen;
 				/* Check for unicode linefeed characters */
 				--text;
-				/* FIXME: What if the load-process of the current chunk has stopped in the
-				 *        middle of a utf-8 sequence? When that happens, we'd be getting some
-				 *        weak undefined result from `tpp_unicode_readutf8()`, and our column
-				 *        counter could go out of whack (and if it would have been a unicode
-				 *        linefeed, then our line counter might even break)
-				 * Solution: when unicode is enabled, this function must also take some kind
-				 *           of extra read/write state parameter (akin to `mbstate_t`) that
-				 *           we can update if the memory being accounted ends in the middle
-				 *           of a utf-8 sequence. */
+
+				/* If the unicode character isn't fully within loaded text,
+				 * then we have to make use of `self->tlcs_data` as a form
+				 * of "mbstate_t"-like storage. */
+				reqlen = tpp_unicode_utf8seqlen_mb_getmax(ch);
+				avllen = (tpp_size)(endp - text);
+				if tpp_unlikely(reqlen > avllen) {
+					tpp_char *writer;
+					tpp_assert(avllen >= 1);
+					tpp_assert(avllen < sizeof(self->tlcs_data));
+					writer = (tpp_char *)tpp_mempcpy(self->tlcs_data, text, avllen);
+					tpp_memset(writer, 0, sizeof(self->tlcs_data) - avllen);
+					goto done;
+				}
+
 				uch = tpp_unicode_readutf8(&text, endp);
 handle_uch:
 				if (tpp_unicode_islf(uch))
@@ -23364,6 +23371,9 @@ handle_linefeed:
 			break;
 		}
 	}
+#if TPP_HAVE_UNICODE
+done:
+#endif /* TPP_HAVE_UNICODE */
 	tpp_lcstate_setlcdata(self, line, col);
 }
 
