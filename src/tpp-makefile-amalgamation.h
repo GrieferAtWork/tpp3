@@ -68,7 +68,13 @@
 
 /* When enabled, only include dependencies if
  * `#include`-stack doesn't contain any system
- * headers */
+ * headers
+ *
+ * Configure as one of:
+ * - `TPP_CONF_0`, `0`: Disabled
+ * - `TPP_CONF_1`, `1`: Enabled
+ * - `TPP_CONF_FEAT0`: Available (disabled by default)
+ * - `TPP_CONF_FEAT1`: Available (enabled by default) */
 #ifndef TPP_MAKEFILE_HAVE_USER_DEPENDENCIES
 #define TPP_MAKEFILE_HAVE_USER_DEPENDENCIES (TPP_HAVE_FILE_SYSHDR ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_MAKEFILE_HAVE_USER_DEPENDENCIES */
@@ -88,7 +94,11 @@
  *
  * Note that even when this is enabled, printing of missing file
  * dependencies is disabled by default (enable it by making a
- * call to `tpp_makefile_enable_missing_file_dependencies()`). */
+ * call to `tpp_makefile_enable_missing_file_dependencies()`).
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
 #define TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #endif /* !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
@@ -99,7 +109,13 @@
  * dependencies is deleted, since otherwise Makefile will complain about
  * deleted files when reading in dependencies again.
  *
- * Used to implement the `-MP` CLI switch */
+ * Used to implement the `-MP` CLI switch
+ *
+ * Configure as one of:
+ * - `TPP_CONF_0`, `0`: Disabled
+ * - `TPP_CONF_1`, `1`: Enabled
+ * - `TPP_CONF_FEAT0`: Available (disabled by default)
+ * - `TPP_CONF_FEAT1`: Available (enabled by default) */
 #ifndef TPP_MAKEFILE_HAVE_PHONY
 #define TPP_MAKEFILE_HAVE_PHONY (TPP_CONF_FEAT0)
 #endif /* !TPP_MAKEFILE_HAVE_PHONY */
@@ -120,28 +136,44 @@
 
 /* Provide an API surrounding `tpp_makefile_io_handle` that can be used to
  * open/create files for writing, and then write to those files. This in
- * turn is necessary to implement stuff like the `-MF` CLI switch. */
+ * turn is necessary to implement stuff like the `-MF` CLI switch.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_IO_HANDLE
 #define TPP_MAKEFILE_HAVE_IO_HANDLE (TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_MAKEFILE_HAVE_IO_HANDLE */
 
 /* Provide an API `tpp_makefile_setoutput_io()` that can be used to override
  * the makefile's output printer with one that prints data into a linked I/O
- * handle of type `tpp_makefile_io_handle`. */
+ * handle of type `tpp_makefile_io_handle`.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 #define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_IO_HANDLE)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
 
 /* Provide an API `tpp_makefile_setoutput_io_ex()` that can also be used to
  * set a flag specifying that the specified I/O handle should *not* be closed
- * when the makefile is finalized (or a different output is assigned) */
+ * when the makefile is finalized (or a different output is assigned)
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
 #define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 
 /* Provide an API `tpp_makefile_setoutput_file()` that is a concenience
  * wrapper around `tpp_makefile_setoutput_io()` by automatically opening
- * the file in question and assigning its output. */
+ * the file in question and assigning its output.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE
 #define TPP_MAKEFILE_HAVE_OUTPUT_FILE (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE */
@@ -151,31 +183,51 @@
 /* MAKEFILE CLI CONFIG                                                  */
 /************************************************************************/
 
-/* Enable support for `tpp_makefile_cli_loader` */
+/* Enable support for `tpp_makefile_cli_loader`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI
 #define TPP_MAKEFILE_HAVE_CLI TPP_HAVE_CLI
 #endif /* !TPP_MAKEFILE_HAVE_CLI */
 
 /* Enable support for `tpp_makefile_cli_loader_help`, which exposes a small
  * database of supported commandline flags in a human-readable format that
- * can also be rendered (fairly) easily. */
+ * can also be rendered (fairly) easily.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_HELP
 #define TPP_MAKEFILE_HAVE_CLI_HELP (TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_CLI_HELP)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_HELP */
 
-/* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options. */
+/* Include extra spellings (i.e.: in addition to the primary spelling) of CLI options.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS
 #define TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_MAKEFILE_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS */
 
 /* `-M`, `--dependencies`: Turn on makefile generator, and
  * set the CLI loader's `ONLYMAKEFILE` flag such that it will
- * consume all of the lexer's tokens during its flush phase. */
+ * consume all of the lexer's tokens during its flush phase.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_M
 #define TPP_MAKEFILE_HAVE_CLI_DASH_M (TPP_MAKEFILE_HAVE_CLI)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_M */
 
-/* `-MM`, `--user-dependencies`: Like `-M` but also turn on `TPP_MAKEFILE_HAVE_USER_DEPENDENCIES` */
+/* `-MM`, `--user-dependencies`: Like `-M` but also turn on `TPP_MAKEFILE_HAVE_USER_DEPENDENCIES`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MM
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MM \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES))
@@ -183,14 +235,22 @@
 
 /* `-MF file`: Redirect makefile output to `file` (but doesn't clear the `ONLYMAKEFILE`
  * flag if used with `-M` or `-MM` -- for that, you must use `-MD` or `-MMD` instead,
- * which also (optionally) accept this flag) */
+ * which also (optionally) accept this flag)
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MF
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MF \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_OUTPUT_FILE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 
 /* Extension to `TPP_MAKEFILE_HAVE_CLI_DASH_MF`: when the
- * specified filename is `-`, output to `stdout` instead */
+ * specified filename is `-`, output to `stdout` instead
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH \
 	(TPP_MAKEFILE_HAVE_CLI_DASH_MF && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE)
@@ -198,18 +258,30 @@
 
 /* `-MG`, `--print-missing-file-dependencies`:
  * Turn on printing of missing file dependencies within the linked makefile/lexer.
- * Also disables regular preprocessor output like `TPP_MAKEFILE_HAVE_CLI_DASH_M`. */
+ * Also disables regular preprocessor output like `TPP_MAKEFILE_HAVE_CLI_DASH_M`.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MG
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MG \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MG */
 
-/* `-MT TARGET`: Specifies the exact text that to use as the makefile target name. */
+/* `-MT TARGET`: Specifies the exact text that to use as the makefile target name.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MT
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MT (TPP_MAKEFILE_HAVE_CLI)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MT */
 
-/* `-MQ TARGET`: Same as `TPP_MAKEFILE_HAVE_CLI_DASH_MT`, but perform makefile escaping on `TARGET` */
+/* `-MQ TARGET`: Same as `TPP_MAKEFILE_HAVE_CLI_DASH_MT`, but perform makefile escaping on `TARGET`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MQ (TPP_MAKEFILE_HAVE_CLI)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
@@ -223,19 +295,31 @@
  *   which case the `".d"` is simply appended as-is)
  *   NOTE: The `".d"` here can be configured by `TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION`
  * - If `output_filename` isn't given, `__BASE_FILE__` is used instead
- *   of it, but with the same transformation as described above. */
+ *   of it, but with the same transformation as described above.
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MD
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MD \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_OUTPUT_FILE)
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MD */
 
-/* `-MMD`: Same as `-MD`, but also turn on `TPP_MAKEFILE_HAVE_USER_DEPENDENCIES` */
+/* `-MMD`: Same as `-MD`, but also turn on `TPP_MAKEFILE_HAVE_USER_DEPENDENCIES`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MMD
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MMD \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_MAKEFILE_HAVE_OUTPUT_FILE && TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES))
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
 
-/* `-MP`: Turn on `TPP_MAKEFILE_HAVE_PHONY` */
+/* `-MP`: Turn on `TPP_MAKEFILE_HAVE_PHONY`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_DASH_MP
 #define TPP_MAKEFILE_HAVE_CLI_DASH_MP \
 	(TPP_MAKEFILE_HAVE_CLI && TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_PHONY))
@@ -252,7 +336,11 @@
  *
  * s.a.:
  * - `tpp_makefile_cli_loader_getonlymakefile()`
- * - `tpp_makefile_cli_loader_setonlymakefile()` */
+ * - `tpp_makefile_cli_loader_setonlymakefile()`
+ *
+ * Configure as one of:
+ * - `0`: Disabled
+ * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
 #define TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE \
 	(TPP_MAKEFILE_HAVE_CLI_DASH_M || TPP_MAKEFILE_HAVE_CLI_DASH_MM || TPP_MAKEFILE_HAVE_CLI_DASH_MG)
