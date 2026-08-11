@@ -909,7 +909,7 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	tpp_ssize temp, result = 0;
 	tpp_emitter_state_file const *oldent, *newent;
 	tpp_emitter_state_files const *const old_files = &self->tem_state.tems_curfile;
-	tpp_size num_identical, i;
+	tpp_size num_identical, i, pop_until;
 	tpp_size const old_file_count = old_files->temsfs_filec + 1;
 	tpp_size const new_file_count = new_files->temsfs_filec + 1;
 	tpp_size const num_common = old_file_count < new_file_count ? old_file_count : new_file_count;
@@ -935,9 +935,14 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	/* Must emit directives to transform
 	 * `old_files[num_identical:old_file_count]` into
 	 * `new_files[num_identical:new_file_count]` */
+	tpp_assert(num_identical <= old_file_count);
+	tpp_assert(num_identical <= new_file_count);
 
 	/* Emit directives to pop files */
-	for (i = old_file_count - 1; i > num_identical;) {
+	pop_until = num_identical + 1;
+	if (new_file_count == num_identical)
+		--pop_until;
+	for (i = old_file_count - 1; i > pop_until;) {
 		oldent = tpp_emitter_state_files_getfile(old_files, --i);
 		temp = tpp_emitter_print_cpp_digit_popfile(self, oldent, oldent->temsf_fname);
 		if (temp < 0)
@@ -949,9 +954,8 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	}
 
 	/* Emit directives to re-adjust the last shared file */
-	oldent = tpp_emitter_state_files_getfile(old_files, num_identical);
 	newent = tpp_emitter_state_files_getfile(new_files, num_identical);
-	if (i > num_identical || (i == num_identical && new_file_count < old_file_count)) {
+	if (i > num_identical || i == new_file_count) {
 		temp = tpp_emitter_print_cpp_digit_popfile(self, newent, newent->temsf_fname);
 #if TPP_DEBUG
 		--delta;
@@ -973,6 +977,7 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 			result += temp;
 		}
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+		oldent = tpp_emitter_state_files_getfile(old_files, num_identical);
 		temp = tpp_emitter_print_cpp_digit_setfile(self, newent,
 		                                           (oldent->temsf_fname == newent->temsf_fname
 		                                            ? NULL
@@ -981,7 +986,6 @@ tpp_emitter_print_files_diff(tpp_emitter *tpp_restrict self,
 	} else {
 		temp = 0; /* Files are about to be pushed, so no need for a line-setter */
 		++i;
-		tpp_assert(i < new_file_count);
 	}
 	if (temp < 0)
 		goto err_temp;
