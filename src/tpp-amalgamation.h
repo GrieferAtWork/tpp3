@@ -5471,11 +5471,9 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !tpp_unlikely */
 
 #ifndef tpp_size
-#define tpp_size size_t
-#endif /* !tpp_size */
-#ifndef TPP_SIZE_MAX
+#define tpp_size     size_t
 #define TPP_SIZE_MAX SIZE_MAX
-#endif /* !TPP_SIZE_MAX */
+#endif /* !tpp_size */
 #ifndef TPP_SIZEOF_tpp_size
 #if TPP_SIZE_MAX == UINT32_C(0xffffffff)
 #define TPP_SIZEOF_tpp_size 4
@@ -5535,7 +5533,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_UINTMAX_C   UINTMAX_C
 #endif /* !tpp_intmax */
 
-/* Counter type used to implement __COUNTER__ and __TPP_COUNTER */
+/* Counter type used to implement `__COUNTER__` and `__TPP_COUNTER` */
 #ifndef tpp_counter
 #define tpp_counter tpp_size
 #endif /* !tpp_counter */

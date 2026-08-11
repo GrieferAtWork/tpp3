@@ -148,7 +148,7 @@ tpp_itoa(char buf[TPP_ITOA_MAXLEN], tpp_intmax value) {
 #if TPP_HAVE_FTOA
 TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
 tpp_inplace_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
-	char *p = tpp_utoa(buf, value);
+	char const *const p = tpp_utoa(buf, value);
 	tpp_size len = (tpp_size)((buf + TPP_UTOA_MAXLEN) - p);
 	tpp_memmovedown(buf, p, len);
 	return buf + len;
@@ -243,6 +243,9 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
  *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
+#ifdef tpp_alloca
+TPP_NOINLINE
+#endif /* tpp_alloca */
 TPP_IMPL TPP_WUNUSED tpp_size TPPCALL
 tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len) {
