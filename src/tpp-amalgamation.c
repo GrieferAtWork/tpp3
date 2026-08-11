@@ -25413,7 +25413,7 @@ tpp_keyword_popmacro(tpp_keyword *tpp_restrict self) {
 	--last->tmpe_count;
 	if (last->tmpe_count == 0) {
 		/* Remove stack element. */
-		if (last->tmpe_macro)
+		if (_TPP_KEYWORD_MACRO_ISDEFINED(last->tmpe_macro))
 			tpp_refcnt_dec(&last->tmpe_macro->tm_refcnt);
 		--misc->tkm_macro_pushstack.tmps_cnt;
 #ifndef __OPTIMIZE_SIZE__
@@ -42722,7 +42722,7 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 		} else {
 			tpp_assert(!TPP_ISERR(result));
 #if TPP_HAVE_MACRO_DEFINED_HOOK
-			if (keyword->tk_macro)
+			if (_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro))
 				result = tpp_lexer_callhook_macro_defined(lexer, keyword, keyword->tk_macro);
 #endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
 		}

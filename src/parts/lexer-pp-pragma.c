@@ -97,7 +97,7 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 		} else {
 			tpp_assert(!TPP_ISERR(result));
 #if TPP_HAVE_MACRO_DEFINED_HOOK
-			if (keyword->tk_macro)
+			if (_TPP_KEYWORD_MACRO_ISDEFINED(keyword->tk_macro))
 				result = tpp_lexer_callhook_macro_defined(lexer, keyword, keyword->tk_macro);
 #endif /* TPP_HAVE_MACRO_DEFINED_HOOK */
 		}
