@@ -1244,6 +1244,8 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_MACRO___FILE_NAME__ (TPP_HAVE_CPP_BUILTIN_MACROS ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-f__FILE_NAME__" */
 #endif /* !TPP_HAVE_MACRO___FILE_NAME__ */
 
+/* XXX: `__BASE_FILE_NAME__` -- Be to `__BASE_FILE__` what `__FILE_NAME__` is to `__FILE__` */
+
 /* Support for the builtin macro `__INCLUDE_LEVEL__`,
  * which expands to numerical representation of include depth.
  * Whilst inside the *base*-file, it expands to `0`

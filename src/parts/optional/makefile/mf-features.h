@@ -31,7 +31,8 @@ TPP_DECL_BEGIN
 /*[[[deemon
 import * from deemon;
 local configs: {string...} = [];
-for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(false)) {
+for (local line: File.open("config.h", "rb").read().decode("utf-8")
+		.replace("\\\n", "").splitlines(false)) {
 	local TPP_MAKEFILE_HAVE_FOO, defValue;
 	try {
 		TPP_MAKEFILE_HAVE_FOO, defValue = line.rescanf(r'#\s*define\s+(\w+)\s*([^/]+)')...;

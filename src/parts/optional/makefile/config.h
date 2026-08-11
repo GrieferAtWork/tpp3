@@ -250,13 +250,13 @@
 
 /* `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
  * output filename (unless specified by `-MF FILE`) based on the `output_filename`
- * argument passed to `tpp_makefile_cli_loader_flush()` or `__BASE_FILE__`:
+ * argument passed to `tpp_makefile_cli_loader_flush()` or `__FILE__`:
  * - If `output_filename` is given, then the makefile output is
  *   `output_filename.rpartition(".").first + ".d"` (unless that
  *   file does not contain a `"."` in its last path component, in
  *   which case the `".d"` is simply appended as-is)
  *   NOTE: The `".d"` here can be configured by `TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION`
- * - If `output_filename` isn't given, `__BASE_FILE__` is used instead
+ * - If `output_filename` isn't given, `__FILE__` is used instead
  *   of it, but with the same transformation as described above.
  *
  * Configure as one of:

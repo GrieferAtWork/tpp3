@@ -288,13 +288,13 @@
 
 /* `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
  * output filename (unless specified by `-MF FILE`) based on the `output_filename`
- * argument passed to `tpp_makefile_cli_loader_flush()` or `__BASE_FILE__`:
+ * argument passed to `tpp_makefile_cli_loader_flush()` or `__FILE__`:
  * - If `output_filename` is given, then the makefile output is
  *   `output_filename.rpartition(".").first + ".d"` (unless that
  *   file does not contain a `"."` in its last path component, in
  *   which case the `".d"` is simply appended as-is)
  *   NOTE: The `".d"` here can be configured by `TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION`
- * - If `output_filename` isn't given, `__BASE_FILE__` is used instead
+ * - If `output_filename` isn't given, `__FILE__` is used instead
  *   of it, but with the same transformation as described above.
  *
  * Configure as one of:
@@ -1125,7 +1125,7 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
  *                                 a fallback dependency filename for `-MD` / `-MMD`)
  *                                 If present, also used as the default name of the
  *                                 target that's written in the makefile (otherwise,
- *                                 that target is derived from `__BASE_FILE__`)
+ *                                 that target is derived from `__FILE__`)
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
@@ -1158,7 +1158,7 @@ TPP_CONST_DECL char const tpp_makefile_cli_loader_help[];
  *
  * @param: self:           The CLI loader (can be used to gain access to the linked makefile/lexer)
  * @param: printer:        Output printer that the (unescaped) object filename should be printed to
- * @param: input_filename: The `__BASE_FILE__` filename of the linked lexer
+ * @param: input_filename: The `__FILE__` filename of the linked lexer
  * @return: * : Sum of return values of `printer` */
 #ifndef tpp_makefile_cli_print_default_target
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_ssize TPPCALL

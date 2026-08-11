@@ -44,10 +44,16 @@ for (local name: fs.dir(".").sorted()) {
 			identifiers.append(ident);
 	}
 }
+local reservedNames = Set.frozen(
+	File.open("../../expose-internals.h", "rb").read()
+		.reglocateall(r"\n\s*#\s*define\s*([a-zA-Z0-9_]+)\b")
+		.each[1]);
 local maxLen = identifiers.each.length > ...;
-for (local ident: identifiers)
+for (local ident: identifiers) {
+	if (ident in reservedNames)
+		throw Error(f"Identifier {repr ident} conflicts with TPP core");
 	print("#define ", ident, " " * (maxLen - #ident), " TPP_MAKEFILE_INTERNAL(", ident, ")");
-// TODO: Assert that none of the names conflict with the TPP core, or other source extensions
+}
 ]]]*/
 #define tmkfcl_mf               TPP_MAKEFILE_INTERNAL(tmkfcl_mf)
 #define tmkfcl_state            TPP_MAKEFILE_INTERNAL(tmkfcl_state)

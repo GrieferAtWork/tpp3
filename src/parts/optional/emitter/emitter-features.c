@@ -34,7 +34,8 @@ TPP_DECL_BEGIN
 /*[[[deemon
 import * from deemon;
 local configs: {string...} = [];
-for (local line: File.open("config.h", "rb").read().decode("utf-8").splitlines(false)) {
+for (local line: File.open("config.h", "rb").read().decode("utf-8")
+		.replace("\\\n", "").splitlines(false)) {
 	local TPP_EMITTER_HAVE_FOO, defValue;
 	try {
 		TPP_EMITTER_HAVE_FOO, defValue = line.rescanf(r'#\s*define\s+(\w+)\s*([^/]+)')...;
@@ -102,6 +103,9 @@ TPP_CONST_IMPL tpp_emitter_features const tpp_emitter_features_default = {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
 		/* .temff_USE_CPP_DIGIT_WORKING_DIRECTORY    = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+		/* .temff_REEMIT_MACRO_DEFINITIONS_LAZY      = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY),
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 		/* .temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY = */ TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY),
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */

@@ -407,7 +407,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, te
  *                                 a fallback dependency filename for `-MD` / `-MMD`)
  *                                 If present, also used as the default name of the
  *                                 target that's written in the makefile (otherwise,
- *                                 that target is derived from `__BASE_FILE__`)
+ *                                 that target is derived from `__FILE__`)
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
@@ -473,12 +473,10 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 			tpp_size filename_len;
 			char *output_buf, *ptr;
 			/* Auto-determine output filename when -MD or -MMD was used,
-			 * based on `output_filename`, or if not given: __BASE_FILE__ */
+			 * based on `output_filename`, or if not given: __FILE__ */
 			if (filename == NULL) {
-				/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
-				 *       (i.e.: the *first* file to get compiled) */
-				tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmkfcl_mf));
-				filename = tpp_file_getrealfilename(bf);
+				tpp_file const *lc = tpp_lexer_getlcfile(tpp_makefile_getlexer(self->tmkfcl_mf));
+				filename = tpp_file_getrealfilename(lc);
 				if (filename == NULL)
 					filename = ""; /* Unknown filename :( */
 			}
@@ -541,12 +539,10 @@ use_full_filename:
 		output_count = tpp_strlen(output_filename);
 		output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, output_filename, output_count);
 	} else {
-		/* Auto-determine target name based on __BASE_FILE__ */
-		/* TODO: This shouldn't be __BASE_FILE__, but should be __FILE__
-		 *       (i.e.: the *first* file to get compiled) */
-		tpp_file const *bf = tpp_lexer_getbasefile(tpp_makefile_getlexer(self->tmkfcl_mf));
-		char const *bf_filename = tpp_file_getrealfilename(bf);
-		if tpp_unlikely(bf_filename == NULL) {
+		/* Auto-determine target name based on __FILE__ */
+		tpp_file const *lc = tpp_lexer_getlcfile(tpp_makefile_getlexer(self->tmkfcl_mf));
+		char const *lc_filename = tpp_file_getrealfilename(lc);
+		if tpp_unlikely(lc_filename == NULL) {
 			output_count = 0;
 			output_temp  = 0;
 		} else {
@@ -554,7 +550,7 @@ use_full_filename:
 			data.tmfcdtd_count = 0;
 			data.tmfcdtd_mf    = self->tmkfcl_mf;
 			output_temp = tpp_makefile_cli_print_default_target(self, &tpp_makefile_cli_default_target_printer,
-			                                                    &data, bf_filename);
+			                                                    &data, lc_filename);
 			output_count = data.tmfcdtd_count;
 		}
 	}
@@ -573,9 +569,26 @@ use_full_filename:
 	self->tmkfcl_mf->tmkf_curcol += 1;
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 
-	/* TODO: Emit dependencies for every (distinct) file currently
-	 *       on the #include-stack (since those won't appear as
-	 *       "new" dependencies anymore after this point!) */
+	/* Emit dependencies for every (distinct) file currently
+	 * on the #include-stack (since those won't appear as
+	 * "new" dependencies anymore after this point!) */
+#if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+	{
+		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmkfcl_mf);
+		tpp_file const *file = tpp_lexer_getfile(lexer);
+		do {
+			tpp_keyword const *kwd = tpp_file_getrealfilenamekwd(file);
+			if (kwd) {
+				tpp_keyword *wkwd = tpp_lexer_kwds_copybuiltin(lexer, kwd);
+				if tpp_unlikely(!wkwd)
+					return TPP_ENOMEM;
+				error = _tpp_makefile_new_dependency_hook(lexer, wkwd);
+				if (TPP_ISERR(error))
+					return error;
+			}
+		} while ((file = tpp_file_getprev(file)) != NULL);
+	}
+#endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 	/* Consume all tokens from the lexer (if enabled) */
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
@@ -681,14 +694,14 @@ TPP_CLI_HELP1("-MMD", "Generate a Makefile\n"
  *
  * @param: self:           The CLI loader (can be used to gain access to the linked makefile/lexer)
  * @param: printer:        Output printer that the (unescaped) object filename should be printed to
- * @param: input_filename: The `__BASE_FILE__` filename of the linked lexer
+ * @param: input_filename: The `__FILE__` filename of the linked lexer
  * @return: * : Sum of return values of `printer` */
 #ifndef tpp_makefile_cli_print_default_target
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_ssize TPPCALL
 tpp_makefile_cli_print_default_target(tpp_makefile_cli_loader *tpp_restrict self,
                                       tpp_formatprinter printer, void *arg,
                                       char const *input_filename) {
-	/* Auto-determine target name based on __BASE_FILE__ */
+	/* Auto-determine target name based on __FILE__ */
 	tpp_ssize temp, result = 0;
 	char const *iter, *after_last_sep, *before_last_dot;
 	(void)self;

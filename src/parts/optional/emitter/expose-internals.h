@@ -17,7 +17,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*!depends *.h, *.c*/
+/*!depends *.h, *.c, ../../expose-internals.h*/
 #ifndef GUARD_TPP_OPTIONAL_EMITTER_EXPOSE_INTERNALS_H
 #define GUARD_TPP_OPTIONAL_EMITTER_EXPOSE_INTERNALS_H 1
 
@@ -44,10 +44,16 @@ for (local name: fs.dir(".").sorted()) {
 			identifiers.append(ident);
 	}
 }
+local reservedNames = Set.frozen(
+	File.open("../../expose-internals.h", "rb").read()
+		.reglocateall(r"\n\s*#\s*define\s*([a-zA-Z0-9_]+)\b")
+		.each[1]);
 local maxLen = identifiers.each.length > ...;
-for (local ident: identifiers)
+for (local ident: identifiers) {
+	if (ident in reservedNames)
+		throw Error(f"Identifier {repr ident} conflicts with TPP core");
 	print("#define ", ident, " " * (maxLen - #ident), " TPP_EMITTER_INTERNAL(", ident, ")");
-// TODO: Assert that none of the names conflict with the TPP core, or other source extensions
+}
 ]]]*/
 #define temcl_emitter                            TPP_EMITTER_INTERNAL(temcl_emitter)
 #define temcl_state                              TPP_EMITTER_INTERNAL(temcl_state)
@@ -68,6 +74,7 @@ for (local ident: identifiers)
 #define temff_USE_CPP_DIGIT                      TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT)
 #define temff_USE_CPP_DIGIT_FLAGS                TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_FLAGS)
 #define temff_USE_CPP_DIGIT_WORKING_DIRECTORY    TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_WORKING_DIRECTORY)
+#define temff_REEMIT_MACRO_DEFINITIONS_LAZY      TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_LAZY)
 #define temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 #define temff_TRACE_INCLUDES                     TPP_EMITTER_INTERNAL(temff_TRACE_INCLUDES)
 #define temsf_curpos                             TPP_EMITTER_INTERNAL(temsf_curpos)
