@@ -382,7 +382,7 @@ handle_space:
  *                  pointed-to by it is 00h) */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) int TPPCALL
 tpp_unam_token_parser_strcmp_text(tpp_unam_token_parser *tpp_restrict self,
-                                  tpp_char const **p_compressed_text) {
+                                  tpp_char const **tpp_restrict p_compressed_text) {
 	int result;
 	tpp_unam_text_reader reader;
 	tpp_unam_text_reader_init(&reader, *p_compressed_text);
@@ -496,7 +496,7 @@ tpp_unam_token_parser_skip_tokenid(tpp_unam_token_parser *tpp_restrict self,
  *                     Contents are undefined on failure */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_unam_token_parser_skip_token(tpp_unam_token_parser *tpp_restrict self,
-                                 tpp_char const **p_db_token) {
+                                 tpp_char const **tpp_restrict p_db_token) {
 	int compare_result;
 	tpp_char const *db_token = *p_db_token;
 	tpp_unam_tokenid token_id = tpp_decode_uleb128_tokenid(&db_token);
@@ -919,12 +919,12 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
  * @return: * : # of unicode ordinals written to `uc` */
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
                           struct tpp_lexer const *tpp_restrict lexer)
 #else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC])
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 {

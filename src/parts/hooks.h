@@ -616,7 +616,7 @@ typedef struct tpp_hooks {
 	tpp_hook_cookie TPP_INTERNAL(th_system_embed_path_cookie); /* [?..?] Cookie argument for `th_system_embed_path` */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
+	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
 	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -638,7 +638,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
 	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
+	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
 	tpp_hook_cookie TPP_INTERNAL(th_unknown_string_escape_cookie); /* [?..?] Cookie argument for `th_unknown_string_escape` */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 

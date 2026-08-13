@@ -44,11 +44,11 @@ TPP_DECL_BEGIN
  * to describe '<' before `true` is returned. */
 #if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
      TPP_HAVE_TOK_MC_STARTSWITH_LANGLE)
-static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 4)) bool TPPCALL
 tpp_lexer_istok(tpp_lexer *tpp_restrict self,
                 tpp_token_id tok,
                 tpp_token_id expected,
-                tpp_char const **p_pos) {
+                tpp_char const **tpp_restrict p_pos) {
 	if (tok == expected)
 		return true;
 	if (expected == '<') {

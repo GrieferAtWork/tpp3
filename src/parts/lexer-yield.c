@@ -2766,7 +2766,7 @@ again:
 /* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_blocking(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_token_id result;
 again:
 	result = tpp_lexer_yieldraw_at(self, p_pos);

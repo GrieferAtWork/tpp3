@@ -40,7 +40,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_char const *pos = *p_pos;
@@ -118,8 +118,7 @@ handle_error:
 
 #if TPP_HAVE_FILE_NONBLOCK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self,
-                                              tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_token_id result;
 again:
 	result = tpp_lexer_yieldraw_at_include_string(self, p_pos);

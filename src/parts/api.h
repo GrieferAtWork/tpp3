@@ -284,6 +284,24 @@
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
 
+#ifndef tpp_assume
+#ifdef _MSC_VER
+#define tpp_assume(x) __assume(x)
+#elif  TPP_HOST_HAS_BUILTIN(__builtin_assume)
+#define tpp_assume(x) __builtin_assume(x)
+#elif  TPP_HOST_HAS_ATTRIBUTE(__assume__) || TPP_GCC_VERSION_NUM >= 130000
+#define tpp_assume(x) __attribute__((__assume__(x)))
+#elif TPP_HOST_HAS_BUILTIN(__builtin_unreachable) || TPP_GCC_VERSION_NUM >= 40600
+#define tpp_assume(x)                \
+	do {                             \
+		if (!(x))                    \
+			__builtin_unreachable(); \
+	} while (0)
+#else /* ... */
+#define tpp_assume(x) (void)0
+#endif /* !... */
+#endif /* !tpp_assume */
+
 #ifndef tpp_restrict
 #ifdef restrict
 #define tpp_restrict restrict

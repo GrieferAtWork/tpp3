@@ -457,7 +457,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
  * @return: * :         Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
-                             tpp_char const **p_directive_start) {
+                             tpp_char const **tpp_restrict p_directive_start) {
 	tpp_errno result;
 	tpp_token_id tok;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -526,12 +526,12 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive_ex(tpp_lexer *tpp_restrict self,
-                                   tpp_char const **p_directive_start,
+                                   tpp_char const **tpp_restrict p_directive_start,
                                    tpp_keyword const **p_macro_keyword)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
-                                tpp_char const **p_directive_start)
+                                tpp_char const **tpp_restrict p_directive_start)
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 {
 	tpp_errno result;

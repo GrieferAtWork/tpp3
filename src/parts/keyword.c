@@ -635,10 +635,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer);
+tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                                 tpp_lexer const *tpp_restrict lexer);
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
+_tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char const *end)
 #define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
 	_tpp_decode_find_unmatched_rbrace(p_iter, end);
 #endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
@@ -657,14 +658,16 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
                          tpp_char const *end _tpp_esc_lexer__PARAM,
                          bool *tpp_restrict p_continue)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
 #else /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
                          tpp_char const *end _tpp_esc_lexer__PARAM)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
@@ -736,7 +739,8 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 	tpp_decode_bsi_(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                tpp_char const **tpp_restrict p_iter,
                 tpp_char const *end _tpp_esc_lexer__PARAM
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
                 , bool *tpp_restrict p_continue

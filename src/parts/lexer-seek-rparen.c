@@ -196,7 +196,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,
                            tpp_lexer_arginfo *tpp_restrict p_argv,
                            tpp_size *tpp_restrict p_argc,
-                           tpp_char const **p_rollback_pos,
+                           tpp_char const **tpp_restrict p_rollback_pos,
                            char const *opt_function_name_for_messages,
                            unsigned int flags, tpp_token_id lparen_kind)
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
@@ -204,7 +204,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         tpp_lexer_arginfo *tpp_restrict p_argv,
                         tpp_size *tpp_restrict p_argc,
-                        tpp_char const **p_rollback_pos,
+                        tpp_char const **tpp_restrict p_rollback_pos,
                         char const *opt_function_name_for_messages,
                         unsigned int flags)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */

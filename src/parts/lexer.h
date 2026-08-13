@@ -864,7 +864,7 @@ for (local doc, name,
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -1526,7 +1526,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos);
 
 
 typedef struct tpp_lexer_seek_backup {
@@ -1734,7 +1734,7 @@ tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
 /* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_blocking(tpp_lexer *self, tpp_char const **p_pos);
 #else /* TPP_HAVE_FILE_NONBLOCK */
 #define tpp_lexer_yield_blocking(self)              tpp_lexer_yield(self)
 #define tpp_lexer_yieldpp_blocking(self)            tpp_lexer_yieldpp(self)
@@ -1830,10 +1830,10 @@ tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
 #define tpp_lexer_yield_include_string(self) tpp_lexer_yieldraw_include_string(self)
 #endif /* !TPP_HAVE_CPP_MACROS */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *self, tpp_char const **p_pos);
 #if TPP_HAVE_FILE_NONBLOCK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *self, tpp_char const **p_pos);
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);

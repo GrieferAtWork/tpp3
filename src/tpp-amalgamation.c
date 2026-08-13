@@ -16732,7 +16732,7 @@ handle_space:
  *                  pointed-to by it is 00h) */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) int TPPCALL
 tpp_unam_token_parser_strcmp_text(tpp_unam_token_parser *tpp_restrict self,
-                                  tpp_char const **p_compressed_text) {
+                                  tpp_char const **tpp_restrict p_compressed_text) {
 	int result;
 	tpp_unam_text_reader reader;
 	tpp_unam_text_reader_init(&reader, *p_compressed_text);
@@ -16846,7 +16846,7 @@ tpp_unam_token_parser_skip_tokenid(tpp_unam_token_parser *tpp_restrict self,
  *                     Contents are undefined on failure */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_unam_token_parser_skip_token(tpp_unam_token_parser *tpp_restrict self,
-                                 tpp_char const **p_db_token) {
+                                 tpp_char const **tpp_restrict p_db_token) {
 	int compare_result;
 	tpp_char const *db_token = *p_db_token;
 	tpp_unam_tokenid token_id = tpp_decode_uleb128_tokenid(&db_token);
@@ -17269,12 +17269,12 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
  * @return: * : # of unicode ordinals written to `uc` */
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
                           struct tpp_lexer const *tpp_restrict lexer)
 #else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC])
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 {
@@ -17399,12 +17399,11 @@ TPP_DECL_BEGIN
  * ... both of which allow encoding of unicode ordinals */
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
-                            tpp_unichar result[1],
-                            tpp_lexer const *tpp_restrict lexer)
+tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                            tpp_unichar result[1], tpp_lexer const *tpp_restrict lexer)
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                              tpp_unichar result[1])
 #define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape_xml(p_iter, end, result)
@@ -17552,12 +17551,12 @@ nope:
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
 #if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer)
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN])
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 {
@@ -25611,10 +25610,11 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len) {
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer);
+tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                                 tpp_lexer const *tpp_restrict lexer);
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
+_tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char const *end)
 #define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
 	_tpp_decode_find_unmatched_rbrace(p_iter, end);
 #endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
@@ -25633,14 +25633,16 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
                          tpp_char const *end _tpp_esc_lexer__PARAM,
                          bool *tpp_restrict p_continue)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
 #else /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
                          tpp_char const *end _tpp_esc_lexer__PARAM)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
@@ -25712,7 +25714,8 @@ _tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p
 	tpp_decode_bsi_(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN], tpp_char const **p_iter,
+tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                tpp_char const **tpp_restrict p_iter,
                 tpp_char const *end _tpp_esc_lexer__PARAM
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
                 , bool *tpp_restrict p_continue
@@ -34512,7 +34515,7 @@ tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
+tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end) {
 	tpp_char const *pos = *p_pos;
 	tpp_unichar uc;
 	if tpp_unlikely(pos >= end)
@@ -34586,7 +34589,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end) {
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
 	uint_least8_t seqlen = 1;
@@ -35004,8 +35007,8 @@ return_error:
  *
  * When BSE isn't enabled, or the `\`-character doesn't escape a line-feed, don't alter `*p_pos`
  */
-static tpp_errno TPPCALL
-tpp_lexer_skip_bse(tpp_lexer *self, tpp_char const **p_pos) {
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_skip_bse(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_char ch;
 	tpp_char const *scan = *p_pos;
@@ -35154,7 +35157,7 @@ return_error:
  * NOTE: This function does NOT handle BSE!
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_end_of_keyword(tpp_lexer *self, tpp_char const **p_pos) {
+tpp_lexer_seek_end_of_keyword(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -36125,7 +36128,7 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	/* C says that (implementations can threat) this:
 	 * >> char const *\U0001f431 = "cat";
 	 *
@@ -36274,7 +36277,7 @@ done:
  * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_seek_end_of_c_float(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos,
+                              tpp_char const **tpp_restrict p_pos,
                               tpp_token_id result) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
@@ -36511,7 +36514,7 @@ done:
  * @return: TPP_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_c_int(tpp_lexer *tpp_restrict self,
-                            tpp_char const **p_pos) {
+                            tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -36637,7 +36640,7 @@ tpp_file_check_sol(tpp_file *tpp_restrict file,
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_pound(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos) {
+                              tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -36673,7 +36676,7 @@ return_error:
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_slash(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos) {
+                              tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -36754,7 +36757,7 @@ return_error:
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_at(tpp_lexer *tpp_restrict self,
-                           tpp_char const **p_pos) {
+                           tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -36846,7 +36849,7 @@ return_error:
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos) {
 #undef NEED_read_ch2
 #if (NEED_tpp_lexer_seek_eol ||                   \
      NEED_tpp_lexer_seek_end_of_string ||         \
@@ -36874,14 +36877,37 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_size rel_start;
 #if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
 	int curtoken_is_at_sol = -1;
-#define tpp_lexer_curtoken_getsol()                                 \
-	(curtoken_is_at_sol < 0                                         \
+#define tpp_lexer_curtoken_getsol()                                \
+	(curtoken_is_at_sol < 0                                        \
 	 ? tpp_file_check_sol(file, tpp_file_rel2ptr(file, rel_start)) \
 	 : (curtoken_is_at_sol != 0))
 #define tpp_lexer_curtoken_setsol(v) (void)(curtoken_is_at_sol = (v))
 #else /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 #define tpp_lexer_curtoken_setsol(v) (void)0
 #endif /* !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+
+	/* Hint at compiler that `p_pos` never aliases certain fields of `self`.
+	 * The only field it can ever alias is `file->tf_pos`, but sadly, there's
+	 * no way to just directly tell the compiler:
+	 * >> tpp_assume(p_pos == &file->tf_pos || IS_RESTRICT(p_pos));
+	 *
+	 * At least we only have to instruct the compiler that `p_pos` doesn't
+	 * alias fields of type `tpp_char const *`, since the C standard already
+	 * disallows aliasing between different types. */
+	tpp_assume(p_pos != &file->tf_tpos);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_tpos);
+	tpp_assume(p_pos != &token->tt_start);
+	tpp_assume(p_pos != &tpp_lexer_gettoken(self)->tt_start);
+	tpp_assume(p_pos != &file->tf_end);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_end);
+#if TPP_HAVE_FILE_LC_CACHE
+	tpp_assume(p_pos != &file->tf_lcpos);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_lcpos);
+#endif /* TPP_HAVE_FILE_LC_CACHE */
+#if TPP_HAVE_FILE_KEEPPOS
+	tpp_assume(p_pos != &file->tf_data.td_io.ttf_keep);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_data.td_io.ttf_keep);
+#endif /* TPP_HAVE_FILE_KEEPPOS */
 
 #if TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE
 again:
@@ -40220,7 +40246,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen_ex(tpp_lexer *tpp_restrict self,
                            tpp_lexer_arginfo *tpp_restrict p_argv,
                            tpp_size *tpp_restrict p_argc,
-                           tpp_char const **p_rollback_pos,
+                           tpp_char const **tpp_restrict p_rollback_pos,
                            char const *opt_function_name_for_messages,
                            unsigned int flags, tpp_token_id lparen_kind)
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
@@ -40228,7 +40254,7 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_token_id TPPCALL
 tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         tpp_lexer_arginfo *tpp_restrict p_argv,
                         tpp_size *tpp_restrict p_argc,
-                        tpp_char const **p_rollback_pos,
+                        tpp_char const **tpp_restrict p_rollback_pos,
                         char const *opt_function_name_for_messages,
                         unsigned int flags)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
@@ -40984,7 +41010,7 @@ tpp_macro_builder_newargument(tpp_macro_builder *tpp_restrict self) {
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
-                          tpp_char const **p_pos,
+                          tpp_char const **tpp_restrict p_pos,
                           tpp_token_id lparen_token) {
 	(void)lparen_token;
 	switch (tpp_lexer_gettoken(self)->tt_id) {
@@ -41054,7 +41080,7 @@ tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_macro_builder_parse_params(tpp_macro_builder *tpp_restrict builder,
                                tpp_lexer *tpp_restrict self,
-                               tpp_char const **p_pos) {
+                               tpp_char const **tpp_restrict p_pos) {
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const lparen_token = token->tt_id;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -42260,8 +42286,8 @@ tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
  * @return: * :      Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
-                                 TPP_REF tpp_macro **p_macro,
-                                 tpp_char const **p_pos,
+                                 TPP_REF tpp_macro **tpp_restrict p_macro,
+                                 tpp_char const **tpp_restrict p_pos,
                                  tpp_lcinfo deflc) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -44966,11 +44992,11 @@ tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self) {
  * to describe '<' before `true` is returned. */
 #if (TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS && \
      TPP_HAVE_TOK_MC_STARTSWITH_LANGLE)
-static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1, 4)) bool TPPCALL
 tpp_lexer_istok(tpp_lexer *tpp_restrict self,
                 tpp_token_id tok,
                 tpp_token_id expected,
-                tpp_char const **p_pos) {
+                tpp_char const **tpp_restrict p_pos) {
 	if (tok == expected)
 		return true;
 	if (expected == '<') {
@@ -46090,7 +46116,7 @@ tpp_file_maybe_delete_include_guard_keyword(tpp_file *tpp_restrict self) {
  * @return: * :         Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
-                             tpp_char const **p_directive_start) {
+                             tpp_char const **tpp_restrict p_directive_start) {
 	tpp_errno result;
 	tpp_token_id tok;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -46159,12 +46185,12 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 	tpp_lexer_parse_ifdef_directive_ex(self, p_directive_start, NULL)
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive_ex(tpp_lexer *tpp_restrict self,
-                                   tpp_char const **p_directive_start,
+                                   tpp_char const **tpp_restrict p_directive_start,
                                    tpp_keyword const **p_macro_keyword)
 #else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parse_ifdef_directive(tpp_lexer *tpp_restrict self,
-                                tpp_char const **p_directive_start)
+                                tpp_char const **tpp_restrict p_directive_start)
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 {
 	tpp_errno result;
@@ -52570,7 +52596,7 @@ again:
 /* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_blocking(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_token_id result;
 again:
 	result = tpp_lexer_yieldraw_at(self, p_pos);
@@ -53036,7 +53062,7 @@ tpp_lexer_skip(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 
 #if TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_char const *pos = *p_pos;
@@ -53114,8 +53140,7 @@ handle_error:
 
 #if TPP_HAVE_FILE_NONBLOCK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self,
-                                              tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *self, tpp_char const **p_pos) {
 	tpp_token_id result;
 again:
 	result = tpp_lexer_yieldraw_at_include_string(self, p_pos);
@@ -53793,7 +53818,8 @@ tpp_lexer_open_embed_string(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_STRING_ESCAPE_OCT_BRACE
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_oct_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+tpp_token_decodestring_oct_sequence(tpp_lexer *tpp_restrict self,
+                                    tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
 	tpp_uintmax bigword;
@@ -53864,14 +53890,16 @@ done:
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BIG
 #if TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG)
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_hex_sequence_ex(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+tpp_token_decodestring_hex_sequence_ex(tpp_lexer *tpp_restrict self,
+                                       tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                                        tpp_lexer_decodestring_config const *tpp_restrict config,
                                        bool always_allow_big)
 #define tpp_token_decodestring_hex_sequence(self, p_iter, end, config) \
 	tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, false)
 #else /* TPP_HAVE_STRING_ESCAPE_HEX_BRACE && TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BIG) */
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_hex_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+tpp_token_decodestring_hex_sequence(tpp_lexer *tpp_restrict self,
+                                    tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config)
 #define tpp_token_decodestring_hex_sequence_ex(self, p_iter, end, config, always_allow_big) \
 	tpp_token_decodestring_hex_sequence(self, p_iter, end, config)
@@ -54003,7 +54031,8 @@ print_word_as_byte:
 
 #if TPP_HAVE_STRING_ESCAPE_UNI_BRACE
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tpp_char const *end,
+tpp_token_decodestring_uni_sequence(tpp_lexer *tpp_restrict self,
+                                    tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                                     tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize result;
 	tpp_char utf8_buf[TPP_UTF8_MAXLEN];
@@ -54073,12 +54102,11 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *self, tpp_char const **p_iter, tp
  * ... both of which allow encoding of unicode ordinals */
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
-                            tpp_unichar result[1],
-                            tpp_lexer const *tpp_restrict lexer);
+tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                            tpp_unichar result[1], tpp_lexer const *tpp_restrict lexer);
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                              tpp_unichar result[1]);
 #define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape_xml(p_iter, end, result)
@@ -54113,10 +54141,12 @@ _tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
      TPP_HAVE_STRING_ESCAPE_HEX_BRACE)
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
-tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end, tpp_lexer const *lexer)
+tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                                 tpp_lexer const *tpp_restrict lexer)
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_char const *TPPCALL
-_tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
+_tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter,
+                                  tpp_char const *end)
 #define tpp_decode_find_unmatched_rbrace(p_iter, end, lexer) \
 	_tpp_decode_find_unmatched_rbrace(p_iter, end)
 #endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
@@ -54167,7 +54197,8 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **p_iter, tpp_char const *end)
  * case, emit a warning `TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE` referencing
  * the skipped portion of input. */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **p_iter, tpp_char const *end,
+tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **tpp_restrict p_iter,
+                                                  tpp_char const *end,
                                                   tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE
 	tpp_char const *unmatched_start = *p_iter;
@@ -55022,7 +55053,7 @@ tpp_block_string_loadprefix(tpp_lexer *tpp_restrict lexer,
 static TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_char const *TPPCALL
 tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
                         tpp_char const *start, tpp_char const *end,
-                        tpp_char const **p_eol_start) {
+                        tpp_char const **tpp_restrict p_eol_start) {
 	while (start < end) {
 		tpp_char ch = *start++;
 		if (tpp_ascii_islf(ch)) {

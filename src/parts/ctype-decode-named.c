@@ -37,12 +37,11 @@ TPP_DECL_BEGIN
  * ... both of which allow encoding of unicode ordinals */
 #if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
-                            tpp_unichar result[1],
-                            tpp_lexer const *tpp_restrict lexer)
+tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                            tpp_unichar result[1], tpp_lexer const *tpp_restrict lexer)
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape_xml(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                              tpp_unichar result[1])
 #define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape_xml(p_iter, end, result)
@@ -190,12 +189,12 @@ nope:
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
 #if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer)
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN])
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 {

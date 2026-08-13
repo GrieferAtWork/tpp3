@@ -3548,7 +3548,7 @@ local HOOKS = {
 		"UNKNOWN_STRING_ESCAPE",
 		"(TPP_HAVE_STRING_ESCAPE && TPP_HAVE_LEXER_DECODESTRING && TPP_HAVE_PROFILE_ALL)",
 		"", // No builtin default
-		"tpp_ssize (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config)", { "cookie", "p_pos", "end", "config" },
+		"tpp_ssize (TPPCALL *", ")(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config)", { "cookie", "p_pos", "end", "config" },
 		"TPP_SSIZE_OFERR(TPP_ENOENT)"
 	},
 
@@ -4280,7 +4280,7 @@ for (local doc, name,
 #error "Invalid configuration: `TPP_HOOK_SYSTEM_EMBED_PATH` is defined, but `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.

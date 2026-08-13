@@ -45,7 +45,7 @@ TPP_DECL_BEGIN
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
+tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end) {
 	tpp_char const *pos = *p_pos;
 	tpp_unichar uc;
 	if tpp_unlikely(pos >= end)
@@ -119,7 +119,7 @@ tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end) {
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end) {
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
 	uint_least8_t seqlen = 1;
@@ -537,8 +537,8 @@ return_error:
  *
  * When BSE isn't enabled, or the `\`-character doesn't escape a line-feed, don't alter `*p_pos`
  */
-static tpp_errno TPPCALL
-tpp_lexer_skip_bse(tpp_lexer *self, tpp_char const **p_pos) {
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_skip_bse(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_char ch;
 	tpp_char const *scan = *p_pos;
@@ -687,7 +687,7 @@ return_error:
  * NOTE: This function does NOT handle BSE!
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_end_of_keyword(tpp_lexer *self, tpp_char const **p_pos) {
+tpp_lexer_seek_end_of_keyword(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -1658,7 +1658,7 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_skip_bsi(tpp_lexer *tpp_restrict self, tpp_char const **tpp_restrict p_pos) {
 	/* C says that (implementations can threat) this:
 	 * >> char const *\U0001f431 = "cat";
 	 *
@@ -1807,7 +1807,7 @@ done:
  * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_seek_end_of_c_float(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos,
+                              tpp_char const **tpp_restrict p_pos,
                               tpp_token_id result) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
@@ -2044,7 +2044,7 @@ done:
  * @return: TPP_EUSER(*):    User-defined error from hook */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_c_int(tpp_lexer *tpp_restrict self,
-                            tpp_char const **p_pos) {
+                            tpp_char const **tpp_restrict p_pos) {
 	tpp_errno error;
 	tpp_file const *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -2202,7 +2202,7 @@ print(f"				\}");
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_POUND
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_pound(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos) {
+                              tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -2244,7 +2244,7 @@ return_error:
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_SLASH
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_slash(tpp_lexer *tpp_restrict self,
-                              tpp_char const **p_pos) {
+                              tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -2341,7 +2341,7 @@ return_error:
 #if TPP_HAVE_TPP_LEXER_STARTSWITH_MC_AT
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_startswith_mc_at(tpp_lexer *tpp_restrict self,
-                           tpp_char const **p_pos) {
+                           tpp_char const **tpp_restrict p_pos) {
 	tpp_char ch2;
 	tpp_errno error = TPP_EOK;
 	tpp_char const *pos = *p_pos;
@@ -2449,7 +2449,7 @@ return_error:
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
+tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos) {
 #undef NEED_read_ch2
 #if (NEED_tpp_lexer_seek_eol ||                   \
      NEED_tpp_lexer_seek_end_of_string ||         \
@@ -2477,14 +2477,37 @@ tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos) {
 	tpp_size rel_start;
 #if TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
 	int curtoken_is_at_sol = -1;
-#define tpp_lexer_curtoken_getsol()                                 \
-	(curtoken_is_at_sol < 0                                         \
+#define tpp_lexer_curtoken_getsol()                                \
+	(curtoken_is_at_sol < 0                                        \
 	 ? tpp_file_check_sol(file, tpp_file_rel2ptr(file, rel_start)) \
 	 : (curtoken_is_at_sol != 0))
 #define tpp_lexer_curtoken_setsol(v) (void)(curtoken_is_at_sol = (v))
 #else /* TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
 #define tpp_lexer_curtoken_setsol(v) (void)0
 #endif /* !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE */
+
+	/* Hint at compiler that `p_pos` never aliases certain fields of `self`.
+	 * The only field it can ever alias is `file->tf_pos`, but sadly, there's
+	 * no way to just directly tell the compiler:
+	 * >> tpp_assume(p_pos == &file->tf_pos || IS_RESTRICT(p_pos));
+	 *
+	 * At least we only have to instruct the compiler that `p_pos` doesn't
+	 * alias fields of type `tpp_char const *`, since the C standard already
+	 * disallows aliasing between different types. */
+	tpp_assume(p_pos != &file->tf_tpos);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_tpos);
+	tpp_assume(p_pos != &token->tt_start);
+	tpp_assume(p_pos != &tpp_lexer_gettoken(self)->tt_start);
+	tpp_assume(p_pos != &file->tf_end);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_end);
+#if TPP_HAVE_FILE_LC_CACHE
+	tpp_assume(p_pos != &file->tf_lcpos);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_lcpos);
+#endif /* TPP_HAVE_FILE_LC_CACHE */
+#if TPP_HAVE_FILE_KEEPPOS
+	tpp_assume(p_pos != &file->tf_data.td_io.ttf_keep);
+	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_data.td_io.ttf_keep);
+#endif /* TPP_HAVE_FILE_KEEPPOS */
 
 #if TPP_HAVE_INCLUDE_STACK || TPP_HAVE_BSE
 again:

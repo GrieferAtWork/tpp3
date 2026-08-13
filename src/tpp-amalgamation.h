@@ -5286,6 +5286,24 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_CONST_DECL TPP_DECL
 #endif /* !TPP_CONST_DECL */
 
+#ifndef tpp_assume
+#ifdef _MSC_VER
+#define tpp_assume(x) __assume(x)
+#elif  TPP_HOST_HAS_BUILTIN(__builtin_assume)
+#define tpp_assume(x) __builtin_assume(x)
+#elif  TPP_HOST_HAS_ATTRIBUTE(__assume__) || TPP_GCC_VERSION_NUM >= 130000
+#define tpp_assume(x) __attribute__((__assume__(x)))
+#elif TPP_HOST_HAS_BUILTIN(__builtin_unreachable) || TPP_GCC_VERSION_NUM >= 40600
+#define tpp_assume(x)                \
+	do {                             \
+		if (!(x))                    \
+			__builtin_unreachable(); \
+	} while (0)
+#else /* ... */
+#define tpp_assume(x) (void)0
+#endif /* !... */
+#endif /* !tpp_assume */
+
 #ifndef tpp_restrict
 #ifdef restrict
 #define tpp_restrict restrict
@@ -9730,7 +9748,7 @@ TPP_DECL_END
 #error "Invalid configuration: `TPP_HOOK_SYSTEM_EMBED_PATH` is defined, but `TPP_HAVE_SYSTEM_EMBED_PATH_HOOK` isn't using it"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_SYSTEM_EMBED_PATH && !TPP_HOOK_USESUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+/* >> tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -13174,13 +13192,13 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
+tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end);
 
 /* Same as `tpp_unicode_readutf8()`, but read in reverse, such
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end);
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end);
 #endif /* TPP_HAVE_UNICODE */
 
 
@@ -13303,12 +13321,12 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
                           struct tpp_lexer const *tpp_restrict lexer);
 #else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC]);
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 #endif /* !tpp_unicode_byname_lookup */
@@ -13336,12 +13354,12 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 #if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer);
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
 #define tpp_decode_named_escape(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape(p_iter, end, result)
@@ -23222,7 +23240,7 @@ typedef struct tpp_hooks {
 	tpp_hook_cookie TPP_INTERNAL(th_system_embed_path_cookie); /* [?..?] Cookie argument for `th_system_embed_path` */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
+	/* >> tpp_ssize (TPPCALL *th_unknown_string_escape)(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config);
 	 * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
 	 * This hook can be used to define additional, user-defined escape sequences, or any other
 	 * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -23244,7 +23262,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
 	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
-	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
+	tpp_ssize (TPPCALL *TPP_INTERNAL(th_unknown_string_escape))(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [0..1] */
 	tpp_hook_cookie TPP_INTERNAL(th_unknown_string_escape_cookie); /* [?..?] Cookie argument for `th_unknown_string_escape` */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
@@ -25024,7 +25042,7 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_hook_cookie cookie, tpp_char const **p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
+/* >> tpp_ssize tpp_lexer_callhook_unknown_string_escape(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
  * Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -25685,7 +25703,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos);
 
 
 typedef struct tpp_lexer_seek_backup {
@@ -25893,7 +25911,7 @@ tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
 /* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_blocking(tpp_lexer *self, tpp_char const **p_pos);
 #else /* TPP_HAVE_FILE_NONBLOCK */
 #define tpp_lexer_yield_blocking(self)              tpp_lexer_yield(self)
 #define tpp_lexer_yieldpp_blocking(self)            tpp_lexer_yieldpp(self)
@@ -25989,10 +26007,10 @@ tpp_lexer_yield_include_string(tpp_lexer *tpp_restrict self);
 #define tpp_lexer_yield_include_string(self) tpp_lexer_yieldraw_include_string(self)
 #endif /* !TPP_HAVE_CPP_MACROS */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_include_string(tpp_lexer *self, tpp_char const **p_pos);
 #if TPP_HAVE_FILE_NONBLOCK
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *tpp_restrict self, tpp_char const **p_pos);
+tpp_lexer_yieldraw_at_include_string_blocking(tpp_lexer *self, tpp_char const **p_pos);
 #if TPP_HAVE_CPP_MACROS
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);

@@ -141,7 +141,7 @@ tpp_macro_builder_newargument(tpp_macro_builder *tpp_restrict self) {
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
-                          tpp_char const **p_pos,
+                          tpp_char const **tpp_restrict p_pos,
                           tpp_token_id lparen_token) {
 	(void)lparen_token;
 	switch (tpp_lexer_gettoken(self)->tt_id) {
@@ -211,7 +211,7 @@ tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_macro_builder_parse_params(tpp_macro_builder *tpp_restrict builder,
                                tpp_lexer *tpp_restrict self,
-                               tpp_char const **p_pos) {
+                               tpp_char const **tpp_restrict p_pos) {
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const lparen_token = token->tt_id;
 	tpp_file *const file = tpp_lexer_getfile(self);
@@ -1417,8 +1417,8 @@ tpp_token_sol_shell_find_after_pound(tpp_lexer const *tpp_restrict self);
  * @return: * :      Error */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_parse_macro_definition(tpp_lexer *tpp_restrict self,
-                                 TPP_REF tpp_macro **p_macro,
-                                 tpp_char const **p_pos,
+                                 TPP_REF tpp_macro **tpp_restrict p_macro,
+                                 tpp_char const **tpp_restrict p_pos,
                                  tpp_lcinfo deflc) {
 	tpp_errno error;
 	tpp_file *const file = tpp_lexer_getfile(self);

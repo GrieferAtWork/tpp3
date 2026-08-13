@@ -289,13 +289,13 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
  *          allowing over-long utf-8 sequences, as well as
  *          incorrectly positioned UTF-8 continuation bytes. */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8(tpp_char const **p_pos, tpp_char const *end);
+tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end);
 
 /* Same as `tpp_unicode_readutf8()`, but read in reverse, such
  * that the last byte of the returned character is `(*p_end)[-1]`
  * (assuming that `*p_end > base`). */
 TPP_DECL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **p_end);
+tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end);
 #endif /* TPP_HAVE_UNICODE */
 
 
@@ -418,12 +418,12 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
                           struct tpp_lexer const *tpp_restrict lexer);
 #else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
+tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC]);
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 #endif /* !tpp_unicode_byname_lookup */
@@ -451,12 +451,12 @@ tpp_unicode_byname_lookup(tpp_char const **p_iter, tpp_char const *end,
 #if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer);
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **p_iter, tpp_char const *end,
+_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                          tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
 #define tpp_decode_named_escape(p_iter, end, result, lexer) \
 	_tpp_decode_named_escape(p_iter, end, result)
