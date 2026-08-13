@@ -5507,6 +5507,11 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !TPP_SIZEOF_tpp_size */
 #ifndef tpp_ssize
 #define tpp_ssize ptrdiff_t
+#ifdef PTRDIFF_MAX
+#define TPP_SSIZE_MAX PTRDIFF_MAX
+#else /* PTRDIFF_MAX */
+#define TPP_SSIZE_MAX ((TPP_SIZE_MAX >> 1) - 1)
+#endif /* !PTRDIFF_MAX */
 #endif /* !tpp_ssize */
 #ifndef tpp_hash
 #if UINT_FAST32_MAX == UINT32_C(0xffffffff)
@@ -5583,7 +5588,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 #define tpp_strlen      strlen
 #define tpp_strchr      strchr
-#define tpp_strnlen     strnlen
+#define _tpp_strnlen    strnlen
 #define tpp_strcmp      strcmp
 #define tpp_memcmp      memcmp
 #define tpp_memcpy      memcpy
@@ -5596,6 +5601,20 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_memmem      memmem
 #endif
 #endif /* !tpp_memcpy */
+
+/* Use our own, custom definition of `strnlen()` to:
+ * - Prevent GCC `-Wstringop-overread` warnings:
+ *   src/tpp-amalgamation.h:5602:25: warning: 'strnlen' specified bound 9223372036854775807 exceeds source size 9223372036854775806 [-Wstringop-overread]
+ * - Slightly improve performance since calls to `strnlen()`
+ *   with a very large limit get turned into call to `strlen()` */
+#ifndef tpp_strnlen
+#if defined(__GNUC__) || TPP_HOST_HAS_BUILTIN(__builtin_constant_p)
+#define tpp_strnlen(s, n) ((__builtin_constant_p(n) && (n) >= TPP_SSIZE_MAX) ? tpp_strlen(s) : _tpp_strnlen(s, n))
+#else /* ... */
+#define tpp_strnlen _tpp_strnlen
+#endif /* !... */
+#endif /* !tpp_strnlen */
+
 #ifndef tpp_mempcpy
 #define tpp_mempcpy(d, s, n) ((void *)((char *)tpp_memcpy(d, s, n) + (n)))
 #endif /* !tpp_mempcpy */
