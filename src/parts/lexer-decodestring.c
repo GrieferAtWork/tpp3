@@ -491,7 +491,7 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
  *                 ^start          ^end
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                              tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
 	void *const arg = config->tldsc_arg;
@@ -1330,7 +1330,7 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
  *  ^ start@.
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_block(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_block(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                              tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
 	struct tpp_block_string_prefix common_prefix;
@@ -1399,7 +1399,7 @@ handle_empty_prefix:
  * >> typedef int x[sizeof(foo) == 5 ? 1 : -1]; // 5: {'a','\\','\n','b',0}, as opposed to 3: {'a','b',0}
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_raw_bse(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                                tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
 	tpp_char const *iter;

@@ -81,7 +81,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
  * @return: >= 0:   Sum of return values of `printer`
  * @return: < 0:    First negative return value of `printer` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
-tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_printf_warning(tpp_lexer const *tpp_restrict self,
+                         tpp_lexer_printf_info *tpp_restrict info,
                          tpp_formatprinter printer, void *arg,
                          char const *format, ...) {
 	tpp_ssize result;
@@ -108,13 +109,15 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_quote_start(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+tpp_format_quote_start(tpp_lexer const *tpp_restrict self,
+                       tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_quote_end(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+tpp_format_quote_end(tpp_lexer const *tpp_restrict self,
+                     tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
@@ -148,7 +151,8 @@ tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
 #endif /* TPP_HAVE_UNICODE */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_token_data(tpp_lexer const *self, tpp_formatprinter printer, void *arg,
+tpp_format_token_data(tpp_lexer const *tpp_restrict self,
+                      tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
 	/* Escape line-feeds while printing token body */
 	tpp_char const *iter = start, *end = start + length;
@@ -223,7 +227,8 @@ err_temp:
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
-tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_vprintf_warning(tpp_lexer const *tpp_restrict self,
+                          tpp_lexer_printf_info *tpp_restrict info,
                           tpp_formatprinter printer, void *arg,
                           char const *format, va_list args) {
 	static char const null_str[] = "(null)";

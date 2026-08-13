@@ -103,10 +103,11 @@ TPP_DECL_BEGIN
 #endif /* USE_AMALGAMATION */
 
 static tpp_ssize TPPCALL
-tpp_frontend_output_printer(tpp_frontend *fe, tpp_char const *text, tpp_size num_bytes) {
-	if (fe->tf_output_file == NULL)
-		fe->tf_output_file = stdout;
-	fwrite(text, 1, num_bytes, fe->tf_output_file);
+tpp_frontend_output_printer(tpp_frontend *tpp_restrict self,
+                            tpp_char const *text, tpp_size num_bytes) {
+	if (self->tf_output_file == NULL)
+		self->tf_output_file = stdout;
+	fwrite(text, 1, num_bytes, self->tf_output_file);
 	return 0;
 }
 
@@ -122,7 +123,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_frontend_makefile_output_printer, arg, text,
 	return tpp_frontend_output_printer(fe, text, num_bytes);
 }
 
-static tpp_errno tpp_frontend_set_output_file(tpp_frontend *self, char const *filename) {
+static tpp_errno tpp_frontend_set_output_file(tpp_frontend *tpp_restrict self, char const *filename) {
 	if (self->tf_output_file != NULL)
 		fclose(self->tf_output_file);
 	if (strcmp(filename, "-") == 0) {
@@ -303,7 +304,7 @@ static void tpp_frontend_version(void) {
 	       TPP_API_VERSION, TPP_PREPROCESSOR_VERSION);
 }
 
-static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
+static tpp_errno tpp_frontend_parsearg(tpp_frontend *tpp_restrict self, char const *arg) {
 #define tpp_streq(at, CONSTstr) \
 	(tpp_memcmp(at, CONSTstr, sizeof(CONSTstr) - sizeof(char)) == 0)
 	switch (self->tf_cli_state) {
@@ -448,7 +449,7 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *self, char const *arg) {
 #undef tpp_streq
 }
 
-static tpp_errno tpp_frontend_parseargv(tpp_frontend *self, int *p_argc, char ***p_argv) {
+static tpp_errno tpp_frontend_parseargv(tpp_frontend *tpp_restrict self, int *p_argc, char ***p_argv) {
 	tpp_errno result = TPP_EOK;
 	int argc    = *p_argc;
 	char **argv = *p_argv;

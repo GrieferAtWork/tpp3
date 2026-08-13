@@ -441,7 +441,7 @@ struct tpp_lexer_pragma_warning_state_data {
 };
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pragma_warning_setstate_impl(tpp_lexer *self,
+tpp_lexer_pragma_warning_setstate_impl(tpp_lexer *tpp_restrict self,
                                        tpp_char const *str, tpp_size length,
                                        tpp_warning_state state) {
 	tpp_warning_group_id gid;

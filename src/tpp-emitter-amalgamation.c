@@ -2005,7 +2005,8 @@ tpp_emitter_trace_include_printdots(tpp_lexer *tpp_restrict lexer, tpp_size coun
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_emitter_trace_include(tpp_emitter *self, tpp_file const *file) {
+tpp_emitter_trace_include(tpp_emitter *tpp_restrict self,
+                          tpp_file const *tpp_restrict file) {
 	tpp_ssize temp;
 	tpp_errno error;
 	tpp_size depth = 1;

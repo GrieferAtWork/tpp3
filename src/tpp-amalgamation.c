@@ -32301,7 +32301,8 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 }
 #if TPP_HAVE_FILE_POPPED_HOOK
 static TPP_NOINLINE TPP_NONNULL((1, 2)) void TPPCALL
-tpp_lexer_manualpopfile_callhook(tpp_lexer *self, tpp_file *file_to_pop) {
+tpp_lexer_manualpopfile_callhook(tpp_lexer *tpp_restrict self,
+                                 tpp_file *tpp_restrict file_to_pop) {
 	tpp_file *const lexer_file = tpp_lexer_getfile(self);
 	tpp_file *saved_prev, *saved_tprev;
 
@@ -32397,7 +32398,8 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
  * @return: >= 0:   Sum of return values of `printer`
  * @return: < 0:    First negative return value of `printer` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
-tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_printf_warning(tpp_lexer const *tpp_restrict self,
+                         tpp_lexer_printf_info *tpp_restrict info,
                          tpp_formatprinter printer, void *arg,
                          char const *format, ...) {
 	tpp_ssize result;
@@ -32424,13 +32426,15 @@ tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_quote_start(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+tpp_format_quote_start(tpp_lexer const *tpp_restrict self,
+                       tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_quote_end(tpp_lexer const *self, tpp_formatprinter printer, void *arg) {
+tpp_format_quote_end(tpp_lexer const *tpp_restrict self,
+                     tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
@@ -32464,7 +32468,8 @@ tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
 #endif /* TPP_HAVE_UNICODE */
 
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_format_token_data(tpp_lexer const *self, tpp_formatprinter printer, void *arg,
+tpp_format_token_data(tpp_lexer const *tpp_restrict self,
+                      tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
 	/* Escape line-feeds while printing token body */
 	tpp_char const *iter = start, *end = start + length;
@@ -32539,7 +32544,8 @@ err_temp:
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
-tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_vprintf_warning(tpp_lexer const *tpp_restrict self,
+                          tpp_lexer_printf_info *tpp_restrict info,
                           tpp_formatprinter printer, void *arg,
                           char const *format, va_list args) {
 	static char const null_str[] = "(null)";
@@ -43092,7 +43098,7 @@ struct tpp_lexer_pragma_warning_state_data {
 };
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pragma_warning_setstate_impl(tpp_lexer *self,
+tpp_lexer_pragma_warning_setstate_impl(tpp_lexer *tpp_restrict self,
                                        tpp_char const *str, tpp_size length,
                                        tpp_warning_state state) {
 	tpp_warning_group_id gid;
@@ -45424,7 +45430,7 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 
 
 
-/* Decode the current token (which should be TPP_TOK_ISINT) into an integer
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into an integer
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_ENOMEM:    Out of memory
@@ -45441,7 +45447,7 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
-/* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_ENOMEM:    Out of memory
@@ -54253,7 +54259,7 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
  *                 ^start          ^end
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                              tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
 	void *const arg = config->tldsc_arg;
@@ -55092,7 +55098,7 @@ tpp_block_string_seeklf(tpp_lexer *tpp_restrict lexer,
  *  ^ start@.
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_block(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_block(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                              tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
 	struct tpp_block_string_prefix common_prefix;
@@ -55161,7 +55167,7 @@ handle_empty_prefix:
  * >> typedef int x[sizeof(foo) == 5 ? 1 : -1]; // 5: {'a','\\','\n','b',0}, as opposed to 3: {'a','b',0}
  */
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_raw_bse(tpp_lexer *self, tpp_char const *start, tpp_char const *end,
+tpp_token_decodestring_raw_bse(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
                                tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
 	tpp_char const *iter;
@@ -58110,7 +58116,7 @@ tpp_lexer_dumper_printkeywords(tpp_lexer_dumper *tpp_restrict self,
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 /* Return the default (or last-configured) value of "id" */
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
-tpp_lexer_dumper_getextdefault(tpp_lexer_dumper const *self, tpp_extension_id id) {
+tpp_lexer_dumper_getextdefault(tpp_lexer_dumper const *tpp_restrict self, tpp_extension_id id) {
 	(void)self;
 	switch (id) {
 #if TPP_HAVE_CPP_MACROS

@@ -728,7 +728,8 @@ _tpp_lexer_manualpopfile_break_rollback(tpp_lexer *tpp_restrict self,
 }
 #if TPP_HAVE_FILE_POPPED_HOOK
 static TPP_NOINLINE TPP_NONNULL((1, 2)) void TPPCALL
-tpp_lexer_manualpopfile_callhook(tpp_lexer *self, tpp_file *file_to_pop) {
+tpp_lexer_manualpopfile_callhook(tpp_lexer *tpp_restrict self,
+                                 tpp_file *tpp_restrict file_to_pop) {
 	tpp_file *const lexer_file = tpp_lexer_getfile(self);
 	tpp_file *saved_prev, *saved_tprev;
 

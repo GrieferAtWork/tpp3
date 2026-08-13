@@ -544,7 +544,7 @@ tpp_lexer_dumper_printkeywords(tpp_lexer_dumper *tpp_restrict self,
 #if TPP_HAVE_PRAGMA_EXTENSION || TPP_HAVE_PRAGMA_TPP_EXTENSION
 /* Return the default (or last-configured) value of "id" */
 static TPP_WUNUSED TPP_NONNULL((1)) bool TPPCALL
-tpp_lexer_dumper_getextdefault(tpp_lexer_dumper const *self, tpp_extension_id id) {
+tpp_lexer_dumper_getextdefault(tpp_lexer_dumper const *tpp_restrict self, tpp_extension_id id) {
 	(void)self;
 	switch (id) {
 #if TPP_HAVE_CPP_MACROS

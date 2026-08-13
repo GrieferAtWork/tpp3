@@ -57,7 +57,9 @@ typedef struct tm tpp_tm;
 #define tpp_tm_fromtime(self, p_time) (localtime_r(p_time, self) ? TPP_EOK : TPP_EIO)
 #else /* TPP_CONFIG_HAVE_LOCALTIME_R */
 #define tpp_tm_fromtime tpp_tm_fromtime
-TPP_INLINE tpp_errno TPPCALL tpp_tm_fromtime(tpp_tm *self, tpp_time *p_time) {
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_tm_fromtime(tpp_tm *tpp_restrict self,
+                tpp_time *tpp_restrict p_time) {
 	struct tm *tmp = localtime(p_time);
 	if (!tmp)
 		return TPP_EIO;

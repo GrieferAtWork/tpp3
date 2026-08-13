@@ -2269,7 +2269,7 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 	tpp_lexer_decodeint_ex(self, result, NULL)
 #endif /* TPP_HAVE_LEXER_DECODEINT */
 
-/* Decode the current token (which should be TPP_TOK_ISINT) into an integer
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into an integer
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_ENOMEM:    Out of memory
@@ -2296,7 +2296,7 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 	tpp_lexer_decodefloat_ex(self, result, NULL)
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 
-/* Decode the current token (which should be TPP_TOK_ISFLOAT) into a float
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float
  * @return: TPP_EOK:       Success
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_ENOMEM:    Out of memory
@@ -2592,11 +2592,13 @@ typedef struct tpp_lexer_printf_info {
  * @return: >= 0:   Sum of return values of `printer`
  * @return: < 0:    First negative return value of `printer` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
-tpp_lexer_printf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_printf_warning(tpp_lexer const *tpp_restrict self,
+                         tpp_lexer_printf_info *tpp_restrict info,
                          tpp_formatprinter printer, void *arg,
                          char const *format, ...);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
-tpp_lexer_vprintf_warning(tpp_lexer const *self, tpp_lexer_printf_info *info,
+tpp_lexer_vprintf_warning(tpp_lexer const *tpp_restrict self,
+                          tpp_lexer_printf_info *tpp_restrict info,
                           tpp_formatprinter printer, void *arg,
                           char const *format, va_list args);
 
