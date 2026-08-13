@@ -38,6 +38,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-yield-macro.c", which was already included */
 /* Perform the expansion of a user-defined `macro`, with the lexer's
  * current token set to point at the macro's identifier (meaning that
  * you have to seek ahead in order to find the opening `(` token in
@@ -50,6 +51,7 @@ TPP_DECL_BEGIN
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
 tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
                        tpp_macro *tpp_restrict macro);
+/*[[[tpp-begin]]]*/
 
 #undef TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
 #define TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC \
@@ -545,6 +547,7 @@ seek_end_of_macro:
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
 
 
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-pp-pragma.c", which was already included */
 #if TPP_HAVE_PRAGMA
 /* Process a `#pragma` directive, start at the first token that comes after
  * the leading `#pragma` (i.e.: the first token of the actual directive
@@ -558,6 +561,7 @@ seek_end_of_macro:
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
 #endif /* TPP_HAVE_PRAGMA */
+/*[[[tpp-begin]]]*/
 
 
 #if TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma
@@ -1153,10 +1157,12 @@ struct tpp_embed_builder_handle_param_forhas_result {
 };
 #endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
 
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-yieldpp.c", which was already included */
 /* Minimal/adjusted parameter handler for __has_embed */
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
                                       tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
+/*[[[tpp-begin]]]*/
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {

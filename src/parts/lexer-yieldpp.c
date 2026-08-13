@@ -38,6 +38,7 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_DIRECTIVES
 
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-yieldraw.c", which was already included */
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
 #undef tpp_lexer_seek_eol__STYLE_PARAM
 #undef tpp_lexer_seek_eol__STYLE_ARG
@@ -55,6 +56,7 @@ tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
                    tpp_lexer_seek_eol__STYLE_PARAM);
 #endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE */
+/*[[[tpp-begin]]]*/
 
 
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
@@ -81,6 +83,7 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
 
 /************************************************************************/
 #if TPP_HAVE_PRAGMA
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-pp-pragma.c", which was already included */
 /* Process a `#pragma` directive, start at the first token that comes after
  * the leading `#pragma` (i.e.: the first token of the actual directive
  * itself)
@@ -92,6 +95,7 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
  * @return: TPP_E*:     Error */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
+/*[[[tpp-begin]]]*/
 
 /* Process a pragma directive, starting after the `TPP_KWD_pragma` keyword */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -225,11 +229,13 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 
 /************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-pp-define.c", which was already included */
 /* Handle a `#define` directive, with `self` pointing at the macro's name-keyword
  * @return: TPP_TOK_ISERR: Error
  * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
 TPP_INTERN_DECL TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self);
+/*[[[tpp-begin]]]*/
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_define_directive(tpp_lexer *tpp_restrict self) {
@@ -1824,10 +1830,6 @@ struct tpp_embed_builder_handle_param_forhas_result {
 #endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
 
 /* Minimal/adjusted parameter handler for __has_embed */
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
-                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
-
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
                                       tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd) {

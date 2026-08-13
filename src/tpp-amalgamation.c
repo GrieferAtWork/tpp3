@@ -35466,22 +35466,10 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos` will be updated to point *after* the LF character (or *at* the EOF) */
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM);
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM)
-#else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_TOK_SOL_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE && !TPP_HAVE_CPP_LINE */
-{
+                   tpp_lexer_seek_eol__STYLE_PARAM) {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -36109,10 +36097,8 @@ warn_premature_eof:
 #endif /* NEED_tpp_lexer_seek_end_of_raw_string */
 
 
-#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
-#ifndef tpp_lexer_warn_unknown_named_escape_sequence
-#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
+#if ((TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) && \
+     TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE)
 static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
                                              tpp_char const *start,
@@ -36123,14 +36109,23 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 	tpp_char const *const saved_end = token->tt_end;
 	token->tt_start = start;
 	token->tt_end   = end;
+	/* TODO: Also print name of *closest* unicode name (and yes I
+	 *       know: determining the closest is an O(n) operation)
+	 *
+	 * For this purpose, there are actually 2 databases that we
+	 * need to consult in order to determine the closest match:
+	 * - if the name starts with "&" and `ESCAPE_NAMED_XML` is
+	 *   enabled, consult `tpp_xml_entity_lookup()`
+	 * - otherwise, and if `ESCAPE_NAMED_UNICODE_NAMES` is enabled,
+	 *   consult `tpp_unicode_byname_lookup()` */
 	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
 	token->tt_start = saved_start;
 	token->tt_end   = saved_end;
 	return error;
 }
-#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+#endif /* ... */
 
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
@@ -45702,26 +45697,6 @@ yield_at_eof_when_expecting_int:;
 /************************************************************************/
 
 #if TPP_HAVE_CPP_DIRECTIVES
-
-#if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
-#undef tpp_lexer_seek_eol__STYLE_PARAM
-#undef tpp_lexer_seek_eol__STYLE_ARG
-#if TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
-#define tpp_lexer_seek_eol__STYLE_PARAM  , tpp_token_id comment_style
-#define tpp_lexer_seek_eol__STYLE_ARG(x) , x
-#else /* TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-#define tpp_lexer_seek_eol__STYLE_PARAM  /* nothing */
-#define tpp_lexer_seek_eol__STYLE_ARG(x) /* nothing */
-#endif /* !TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED */
-
-/* From "./lexer-yieldraw.c" */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM);
-#endif /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE */
-
-
 #undef TPP_HAVE_TPP_LEXER_YIELDRAW_EOL
 #define TPP_HAVE_TPP_LEXER_YIELDRAW_EOL \
 	(TPP_HAVE_CPP_DEFINE || TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_ASSERT)
@@ -45746,18 +45721,6 @@ tpp_lexer_yieldraw_eol(tpp_lexer *tpp_restrict self) {
 
 /************************************************************************/
 #if TPP_HAVE_PRAGMA
-/* Process a `#pragma` directive, start at the first token that comes after
- * the leading `#pragma` (i.e.: the first token of the actual directive
- * itself)
- *
- * @return: TPP_EOK:    Success (but there may still be garbage after
- *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
- *                      `TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`)
- * @return: TPP_E*:     Error */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
-
 /* Process a pragma directive, starting after the `TPP_KWD_pragma` keyword */
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_pragma_directive(tpp_lexer *tpp_restrict self) {
@@ -45890,12 +45853,6 @@ tpp_lexer_handle_error_directive(tpp_lexer *tpp_restrict self,
 
 /************************************************************************/
 #if TPP_HAVE_CPP_DEFINE
-/* Handle a `#define` directive, with `self` pointing at the macro's name-keyword
- * @return: TPP_TOK_ISERR: Error
- * @return: TPP_TOK_EOF: Success; caller should yield the next raw token */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_process_define_directive(tpp_lexer *tpp_restrict self);
-
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_handle_define_directive(tpp_lexer *tpp_restrict self) {
 	tpp_token_id result;
@@ -47489,10 +47446,6 @@ struct tpp_embed_builder_handle_param_forhas_result {
 #endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
 
 /* Minimal/adjusted parameter handler for __has_embed */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
-                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
-
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
                                       tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd) {
@@ -49873,20 +49826,6 @@ err_nomem:
 /************************************************************************/
 
 #if TPP_HAVE_CPP_MACROS
-
-/* Perform the expansion of a user-defined `macro`, with the lexer's
- * current token set to point at the macro's identifier (meaning that
- * you have to seek ahead in order to find the opening `(` token in
- * case of a function-style macro).
- *
- * @return: tpp_lexer_gettoken(self)->tt_id : Function-style macro cannot be expanded
- * @return: TPP_TOK_EOF: Success -- caller should yield again to load the
- *                                  first macro's first expansion token.
- * @return: TPP_TOK_ENOMEM: Out of memory */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
-tpp_lexer_expand_macro(tpp_lexer *tpp_restrict self,
-                       tpp_macro *tpp_restrict macro);
-
 #undef TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC
 #define TPP_HAVE_LEXER_PUSH_TEXTFILE_STRING_ESC \
 	(TPP_HAVE_MACRO___FILE__ ||                 \
@@ -50379,23 +50318,6 @@ seek_end_of_macro:
 #undef tpp_feature_test_macro_expansion
 }
 #endif /* TPP_HAVE_TPP_LEXER_HANDLE_FEATURE_TEST_MACRO */
-
-
-#if TPP_HAVE_PRAGMA
-/* Process a `#pragma` directive, start at the first token that comes after
- * the leading `#pragma` (i.e.: the first token of the actual directive
- * itself)
- *
- * @return: TPP_EOK:    Success (but there may still be garbage after
- *                      the directive that hasn't been parsed, yet).
- * @return: TPP_ENOENT: Unknown pragma (soft-error; caller should not emit
- *                      `TPP_W_EXTRA_TOKENS_AFTER_PRAGMA_DIRECTIVE`)
- * @return: TPP_E*:     Error */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_process_pragma(tpp_lexer *tpp_restrict self);
-#endif /* TPP_HAVE_PRAGMA */
-
-
 #if TPP_HAVE_MACRO__Pragma || TPP_HAVE_MACRO___pragma
 static TPP_WUNUSED tpp_errno TPPCALL
 tpp_lexer_process_pragma_until_eof(tpp_lexer *tpp_restrict self) {
@@ -50988,12 +50910,6 @@ struct tpp_embed_builder_handle_param_forhas_result {
 #endif /* TPP_HAVE_CPP_EMBED_OFFSET */
 };
 #endif /* !tpp_embed_builder_handle_param_forhas_result_DEFINED */
-
-/* Minimal/adjusted parameter handler for __has_embed */
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_embed_builder_handle_param_forhas(struct tpp_embed_builder_handle_param_forhas_result *tpp_restrict res,
-                                      tpp_lexer *tpp_restrict lexer, tpp_token_id param_kwd);
-
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___has_embed(tpp_lexer *tpp_restrict self) {
 	tpp_lexer_openfile_result ofr;
@@ -54099,27 +54015,6 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *tpp_restrict self,
 	return result;
 }
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
-
-
-#if TPP_HAVE_STRING_ESCAPE_XML
-/* In addition to `tpp_xml_entity_lookup()`, must also support:
- * - &#<decimal>;
- * - &#x<hex>;
- * ... both of which allow encoding of unicode ordinals */
-#if _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS)
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
-tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                            tpp_unichar result[1], tpp_lexer const *tpp_restrict lexer);
-#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                             tpp_unichar result[1]);
-#define tpp_decode_named_escape_xml(p_iter, end, result, lexer) \
-	_tpp_decode_named_escape_xml(p_iter, end, result)
-#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
-#endif /* TPP_HAVE_STRING_ESCAPE_XML */
-
-
 #if TPP_HAVE_TRIGRAPHS
 #define tpp_token_decodestring_is_lbrace(self, ch, p_iter, end) \
 	((ch) == '{' || ((ch) == '?' && (*(p_iter) + 2) < end &&    \
@@ -54231,30 +54126,6 @@ tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **tpp_restrict 
 #endif /* !TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE */
 }
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
-
-
-#if TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
-#ifndef tpp_lexer_warn_unknown_named_escape_sequence
-#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
-                                             tpp_char const *start,
-                                             tpp_char const *end) {
-	tpp_errno error;
-	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_char const *const saved_start = token->tt_start;
-	tpp_char const *const saved_end = token->tt_end;
-	token->tt_start = start;
-	token->tt_end   = end;
-	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
-	token->tt_start = saved_start;
-	token->tt_end   = saved_end;
-	return error;
-}
-#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
-#endif /* TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
-
-
 /* Decode string: "foobar fdasudfad"
  *                 ^start          ^end
  */

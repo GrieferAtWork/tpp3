@@ -990,22 +990,21 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 
 /* Seek forward until *after* the next line-feed character (or true EOF)
  * Given `*p_pos` will be updated to point *after* the LF character (or *at* the EOF) */
+/*[[[tpp-end]]]*/ /* Only needs to have internal linkage if needed in "lexer-yieldpp.c".
+                   * However, within the amalgamation, `TPP_INTERN_IMPL` always becomes
+                   * `static`, so inside there, both variants become identical. So to
+                   * keep things optimized, don't emit this `#if` inside the amalgamation! */
 #if TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE
-TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM);
+/*[[[tpp-begin]]]*/
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
-                   tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM)
+/*[[[tpp-end]]]*/
 #else /* TPP_HAVE_CPP_ERROR || TPP_HAVE_CPP_WARNING || TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT || TPP_HAVE_CPP_EMBED || TPP_HAVE_CPP_DIGIT_LINE || TPP_HAVE_CPP_LINE */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_TOK_SOL_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE && !TPP_HAVE_CPP_LINE */
+/*[[[tpp-begin]]]*/
 tpp_lexer_seek_eol(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos
-                   tpp_lexer_seek_eol__STYLE_PARAM)
-#endif /* !TPP_HAVE_CPP_ERROR && !TPP_HAVE_CPP_WARNING && !TPP_HAVE_TOK_SHELL_COMMENT && !TPP_HAVE_TOK_SOL_SHELL_COMMENT && !TPP_HAVE_CPP_EMBED && !TPP_HAVE_CPP_DIGIT_LINE && !TPP_HAVE_CPP_LINE */
-{
+                   tpp_lexer_seek_eol__STYLE_PARAM) {
 	tpp_errno error = TPP_EOK;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
@@ -1633,11 +1632,9 @@ warn_premature_eof:
 #endif /* NEED_tpp_lexer_seek_end_of_raw_string */
 
 
-#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
-#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
-#ifndef tpp_lexer_warn_unknown_named_escape_sequence
-#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+#if ((TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) && \
+     TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE)
+TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
                                              tpp_char const *start,
                                              tpp_char const *end) {
@@ -1647,14 +1644,23 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 	tpp_char const *const saved_end = token->tt_end;
 	token->tt_start = start;
 	token->tt_end   = end;
+	/* TODO: Also print name of *closest* unicode name (and yes I
+	 *       know: determining the closest is an O(n) operation)
+	 *
+	 * For this purpose, there are actually 2 databases that we
+	 * need to consult in order to determine the closest match:
+	 * - if the name starts with "&" and `ESCAPE_NAMED_XML` is
+	 *   enabled, consult `tpp_xml_entity_lookup()`
+	 * - otherwise, and if `ESCAPE_NAMED_UNICODE_NAMES` is enabled,
+	 *   consult `tpp_unicode_byname_lookup()` */
 	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
 	token->tt_start = saved_start;
 	token->tt_end   = saved_end;
 	return error;
 }
-#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
-#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+#endif /* ... */
 
+#if TPP_HAVE_IDENTIFIER_ESCAPE_UNI || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 /* Seek end of unichar: foo\U12345678XY
  *                         ^=in      ^out */
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL

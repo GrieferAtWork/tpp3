@@ -48,16 +48,25 @@ function getFile(filename: string): Bytes {
 	local data: Bytes;
 	with (local fp = File.open(filename, "rb"))
 		data = fp.readall();
-	final local START = "/*[[[tpp-begin]]]*/";
-	final local END   = "/*[[[tpp-end]]]*/";
-	local start = data.index(START) + #START;
-	local end   = data.index(END);
-	while (data.isspace(start))
-		++start;
-	while (data.isspace(end - 1))
-		--end;
-	data = data[start:end].unifylines();
-	data = removeDeemonScripts(data);
+	local filteredData = File.Writer(hint: "bytes");
+	for (local i = 0;;) {
+		final local START = "/*[[[tpp-begin]]]*/";
+		final local END   = "/*[[[tpp-end]]]*/";
+		local start = data.find(START, i);
+		if (start < 0)
+			break;
+		start += #START;
+		local end = data.index(END, start);
+		while (data.isspace(start))
+			++start;
+		while (data.isspace(end - 1))
+			--end;
+		if (i)
+			filteredData.write("\n");
+		filteredData.write(data[start:end].unifylines());
+		i = end;
+	}
+	data = removeDeemonScripts(filteredData.bytes);
 	data = data.replace("/* clang-format off */\n", "");
 	data = data.replace("/* clang-format on */\n", "");
 	data = data.replace("// clang-format off\n", "");

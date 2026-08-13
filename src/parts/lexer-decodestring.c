@@ -333,6 +333,7 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE */
 
 
+/*[[[tpp-end]]]*/ /* --- Defined in "ctype-decode-named.c", which was already included */
 #if TPP_HAVE_STRING_ESCAPE_XML
 /* In addition to `tpp_xml_entity_lookup()`, must also support:
  * - &#<decimal>;
@@ -350,6 +351,7 @@ _tpp_decode_named_escape_xml(tpp_char const **tpp_restrict p_iter, tpp_char cons
 	_tpp_decode_named_escape_xml(p_iter, end, result)
 #endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 #endif /* TPP_HAVE_STRING_ESCAPE_XML */
+/*[[[tpp-begin]]]*/
 
 
 #if TPP_HAVE_TRIGRAPHS
@@ -464,27 +466,14 @@ tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **tpp_restrict 
 }
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
 
-
+/*[[[tpp-end]]]*/ /* --- Defined in "lexer-yieldraw.c", which was already included */
 #if TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
-#ifndef tpp_lexer_warn_unknown_named_escape_sequence
-#define tpp_lexer_warn_unknown_named_escape_sequence tpp_lexer_warn_unknown_named_escape_sequence
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
                                              tpp_char const *start,
-                                             tpp_char const *end) {
-	tpp_errno error;
-	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_char const *const saved_start = token->tt_start;
-	tpp_char const *const saved_end = token->tt_end;
-	token->tt_start = start;
-	token->tt_end   = end;
-	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
-	token->tt_start = saved_start;
-	token->tt_end   = saved_end;
-	return error;
-}
-#endif /* !tpp_lexer_warn_unknown_named_escape_sequence */
+                                             tpp_char const *end);
 #endif /* TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+/*[[[tpp-begin]]]*/
 
 
 /* Decode string: "foobar fdasudfad"

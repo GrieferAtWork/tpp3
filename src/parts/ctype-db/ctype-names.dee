@@ -193,7 +193,7 @@ function getUnicodeNames(warnConflicts: bool = true): {string: {int...}} {
 			 * - https://unicode.org/Public/cldr/48/
 			 *   -> core.zip/common/annotations/en.xml
 			 *
-			 * So we should somehow get that file, parse it, and add its character
+			 * So below we also get that file, parse it, and add its character
 			 * names to the big name table we're building as well!
 			 *
 			 * Example:
