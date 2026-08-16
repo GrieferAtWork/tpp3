@@ -1396,7 +1396,7 @@ tpp_keywords_inskeyword(tpp_keywords *tpp_restrict self,
 					goto err_oom;
 			}
 		}
-		tpp_memset(new_table, 0, (new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
+		tpp_bzero(new_table, (new_mask + 1) * sizeof(TPP_REF tpp_keyword *));
 
 		/* Transfer "self->tks_bckv" (old table) into "new_table" */
 		for (i = 0; i <= self->tks_bckm; ++i) {

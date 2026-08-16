@@ -320,7 +320,7 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 		/* Read unicode character */
 		ptr = self->tlcs_data;
 		uch = tpp_unicode_readutf8(&ptr, self->tlcs_data + have);
-		tpp_memset(self->tlcs_data, 0, sizeof(self->tlcs_data));
+		tpp_bzero(self->tlcs_data, sizeof(self->tlcs_data));
 		goto handle_uch;
 	}
 #endif /* TPP_HAVE_UNICODE */
@@ -367,7 +367,7 @@ handle_linefeed:
 					tpp_assert(avllen >= 1);
 					tpp_assert(avllen < sizeof(self->tlcs_data));
 					writer = (tpp_char *)tpp_mempcpy(self->tlcs_data, text, avllen);
-					tpp_memset(writer, 0, sizeof(self->tlcs_data) - avllen);
+					tpp_bzero(writer, sizeof(self->tlcs_data) - avllen);
 					goto done;
 				}
 
