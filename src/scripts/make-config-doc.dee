@@ -34,7 +34,7 @@ global final CORE_CONTEXT = Context(
 
 local SRC_DIR = posix.joinpath(posix.headof(__FILE__), "..");
 
-function loadConfigHeader(filename: string): Bytes -> File
+function loadConfigHeader(filename: string): string -> File
 	.open(posix.joinpath(SRC_DIR, filename), "rb")
 	.read()
 	.unifylines()
@@ -220,7 +220,7 @@ class Config {
 }
 
 function _getAvailableConfigs(context: Context): {Config...} {
-	local configHeaderData = loadConfigHeader(context.configFilename);
+	local configHeaderData: string = loadConfigHeader(context.configFilename);
 	local i = 0, len = #configHeaderData;
 	final local REGION_SEPARATOR = "/************************************************************************/";
 	local apiLimitsStart = configHeaderData.find("API limits:");

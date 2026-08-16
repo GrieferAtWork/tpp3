@@ -5892,7 +5892,7 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(p_self, line, col)        \
+#define tpp_lcinfo_init(self, line, col)          \
 	(void)((self)->TPP_INTERNAL(lci_line) = line, \
 	       (self)->TPP_INTERNAL(lci_col)  = col)
 
@@ -7997,7 +7997,11 @@ TPP_DECL_END
 
 /* Support for: `#pragma GCC dependency` */
 #ifndef TPP_HAVE_PRAGMA_GCC_DEPENDENCY
-#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0) /* "-fpragma-gcc-dependency" */
+#if defined(tpp_io_compare_mtime) || (TPP_OS_WINDOWS || TPP_OS_UNIX)
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY (TPP_HAVE_PRAGMA ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : TPP_HAVE_PROFILE_NOT_MINIMAL) : 0)
+#else /* ... */
+#define TPP_HAVE_PRAGMA_GCC_DEPENDENCY 0 /* "-fpragma-gcc-dependency" */
+#endif /* !... */
 #endif /* !TPP_HAVE_PRAGMA_GCC_DEPENDENCY */
 
 /* Support for: `#pragma TPP warning(...)`  (same as `TPP_HAVE_PRAGMA_WARNING`, but doesn't require `"-fpragma-warning"`) */
@@ -11621,8 +11625,7 @@ TPP_DECL_END
  * This is the underlying system function needed for
  * `#pragma GCC dependency` (see `TPP_HAVE_PRAGMA_GCC_DEPENDENCY`) */
 #ifndef TPP_HAVE_IO_COMPARE_MTIME
-#if ((TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY) && \
-     (defined(tpp_io_compare_mtime) || (TPP_OS_WINDOWS || TPP_OS_UNIX)))
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_GCC_DEPENDENCY)
 #define TPP_HAVE_IO_COMPARE_MTIME 1
 #else /* ... */
 #define TPP_HAVE_IO_COMPARE_MTIME 0

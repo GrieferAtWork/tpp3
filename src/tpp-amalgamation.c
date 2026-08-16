@@ -23469,7 +23469,10 @@ tpp_io_open(/*utf-8*/ char const *tpp_restrict filename,
 	TPP_SYSCALL({
 		result = fopen(filename, "rb");
 	}, return);
-	return result;
+	if (!result)
+		return TPP_ENOENT;
+	*p_result = result;
+	return TPP_EOK;
 #endif /* tpp_io_handle_IS_FILE */
 }
 

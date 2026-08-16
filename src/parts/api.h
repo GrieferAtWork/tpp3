@@ -902,7 +902,7 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(p_self, line, col)        \
+#define tpp_lcinfo_init(self, line, col)          \
 	(void)((self)->TPP_INTERNAL(lci_line) = line, \
 	       (self)->TPP_INTERNAL(lci_col)  = col)
 
