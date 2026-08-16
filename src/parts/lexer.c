@@ -143,7 +143,7 @@ TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_ENOMEM));
 TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_EIO));
 TPP_STATIC_ASSERT(TPP_TOK_ISCHAR(TPP_TOK_EOF));
 TPP_STATIC_ASSERT(TPP_TOK_ISCHAR(TPP_TOK_AMP));
-TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) + 1));
+TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_MULTICHAR_BEGIN + 1));
 
 TPP_STATIC_ASSERT(TPP_TOK_OFCHAR('~') == TPP_TOK_TILDE);
 TPP_STATIC_ASSERT(TPP_TOK_OFCHAR('&') == TPP_TOK_AMP);
@@ -700,8 +700,9 @@ tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
-	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check `tpp_lexer_manualpopfile_canpopfile()`)");
+	tpp_file *const prev = file->tf_prev;
+	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check "
+	                           "`tpp_lexer_manualpopfile_canpopfile()`)");
 	file->tf_prev = prev->tf_prev;
 	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
 }

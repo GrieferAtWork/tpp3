@@ -35,13 +35,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
 
-#define tpp_do(err, expr)                    \
-	do {                                     \
-		if tpp_unlikely((temp = (expr)) < 0) \
-			goto err;                        \
-		result += temp;                      \
-	} while (0)
-
 typedef struct tpp_lexer_dumper {
 	tpp_lexer        *tld_lexer;   /* [1..1][const] Lexer */
 	tpp_formatprinter tld_printer; /* [1..1][const] Printer */

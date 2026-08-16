@@ -367,7 +367,7 @@ tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
 	old_dtor = misc->tkm_userdata_dtor;
 	misc->tkm_userdata_ptr  = ptr;
 	misc->tkm_userdata_dtor = dtor;
-	if (destroy_prev && old_dtor && old_dtor)
+	if (destroy_prev && old_dtor && old_ptr)
 		(*old_dtor)(old_ptr);
 	return TPP_EOK;
 }
@@ -658,22 +658,20 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char
 
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
-                         tpp_char const **tpp_restrict p_iter,
-                         tpp_char const *end _tpp_esc_lexer__PARAM,
-                         bool *tpp_restrict p_continue)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
 #else /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
-                         tpp_char const **tpp_restrict p_iter,
-                         tpp_char const *end _tpp_esc_lexer__PARAM)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-{
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
+                         tpp_char const *end _tpp_esc_lexer__PARAM
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+                         , bool *tpp_restrict p_continue
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+                         ) {
 	tpp_size named_index, named_count;
 	tpp_unichar named_uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 	tpp_char *buf_iter;

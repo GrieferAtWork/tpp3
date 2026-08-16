@@ -224,11 +224,11 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 }
 
 
-#define tpp_include_paths_fini_common(self)                             \
-	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
-	 _tpp_include_paths_fini_quote(self)                                \
-	 _tpp_include_paths_fini_syshdr(self)                               \
-	 _tpp_include_paths_fini_after(self)                                \
+#define tpp_include_paths_fini_common(self)               \
+	(tpp_include_path_list_fini(&(self)->tip_system_list) \
+	 _tpp_include_paths_fini_quote(self)                  \
+	 _tpp_include_paths_fini_syshdr(self)                 \
+	 _tpp_include_paths_fini_after(self)                  \
 	 _tpp_include_paths_fini_embed(self))
 
 

@@ -12536,13 +12536,18 @@ static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[0x2a] = {
 
 /* Database sizes:
  *    token:  27_090
+ *    tokof:   7_532  (if `TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST`)
  *    radix: 334_407
- * #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
- *    entry:   5_466
+ *    entry:   5_466  (if `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE`)
+ * #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST && TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ *    total: 374_495
+ * #elif TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+ *    total: 369_029
+ * #elif TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
  *    total: 366_963
- * #else // TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ * #else // ...
  *    total: 361_497
- * #endif // !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ * #endif // !...
  */
 
 TPP_DECL_END

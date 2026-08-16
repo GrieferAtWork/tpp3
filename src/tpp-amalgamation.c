@@ -743,7 +743,6 @@
 #define tks_kwdc                                           TPP_INTERNAL(tks_kwdc)
 #define tks_bckm                                           TPP_INTERNAL(tks_bckm)
 #define tks_bckv                                           TPP_INTERNAL(tks_bckv)
-#define TPP_TOK_MULTICHAR_BEGIN                            TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN)
 #define tpp_lexer_core                                     TPP_INTERNAL(tpp_lexer_core)
 #define tlc_tok                                            TPP_INTERNAL(tlc_tok)
 #define tt_start                                           TPP_INTERNAL(tt_start)
@@ -814,24 +813,25 @@
 #define tmf_expand                                         TPP_INTERNAL(tmf_expand)
 #define tmd_func                                           TPP_INTERNAL(tmd_func)
 #define tm_data                                            TPP_INTERNAL(tm_data)
-#define tpp_string_empty_struct                            TPP_INTERNAL(tpp_string_empty_struct)
 #define ts_refcnt                                          TPP_INTERNAL(ts_refcnt)
 #define ts_len                                             TPP_INTERNAL(ts_len)
 #define ts_str                                             TPP_INTERNAL(ts_str)
 #define ts_nul                                             TPP_INTERNAL(ts_nul)
+#define tpp_string_empty_struct                            TPP_INTERNAL(tpp_string_empty_struct)
 #define tsb_buf                                            TPP_INTERNAL(tsb_buf)
 #define tsb_len                                            TPP_INTERNAL(tsb_len)
-#define tip_system_list                                    TPP_INTERNAL(tip_system_list)
 #define tipe_pathstr                                       TPP_INTERNAL(tipe_pathstr)
 #define tipe_path                                          TPP_INTERNAL(tipe_path)
 #define tipl_list                                          TPP_INTERNAL(tipl_list)
 #define tipl_size                                          TPP_INTERNAL(tipl_size)
+#define tip_system_list                                    TPP_INTERNAL(tip_system_list)
 #define tip_quote_list                                     TPP_INTERNAL(tip_quote_list)
 #define tip_syshdr_list                                    TPP_INTERNAL(tip_syshdr_list)
 #define tip_after_list                                     TPP_INTERNAL(tip_after_list)
 #define tip_embed_list                                     TPP_INTERNAL(tip_embed_list)
 #define tip_pushcnt                                        TPP_INTERNAL(tip_pushcnt)
 #define tip_prev                                           TPP_INTERNAL(tip_prev)
+#define TPP_TOK_MULTICHAR_BEGIN                            TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN)
 #define _TPP_TOK_INTLIKE_MIN                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN)
 #define _TPP_TOK_INTLIKE_MAX                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX)
 #define _TPP_TOK_FLOATLIKE_MIN                             TPP_INTERNAL(_TPP_TOK_FLOATLIKE_MIN)
@@ -16686,13 +16686,18 @@ static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[0x2a] = {
 
 /* Database sizes:
  *    token:  27_090
+ *    tokof:   7_532  (if `TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST`)
  *    radix: 334_407
- * #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
- *    entry:   5_466
+ *    entry:   5_466  (if `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE`)
+ * #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST && TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ *    total: 374_495
+ * #elif TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+ *    total: 369_029
+ * #elif TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
  *    total: 366_963
- * #else // TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ * #else // ...
  *    total: 361_497
- * #endif // !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
+ * #endif // !...
  */
 
 /************************************************************************/
@@ -18533,7 +18538,7 @@ tpp_string_malloc(tpp_size len) {
 	return result;
 }
 
-TPP_IMPL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty = {
+TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
 	/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),
 	/* .ts_len    = */ 0,
 	/* .ts_nul    = */ 0,
@@ -26179,7 +26184,7 @@ tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
 	old_dtor = misc->tkm_userdata_dtor;
 	misc->tkm_userdata_ptr  = ptr;
 	misc->tkm_userdata_dtor = dtor;
-	if (destroy_prev && old_dtor && old_dtor)
+	if (destroy_prev && old_dtor && old_ptr)
 		(*old_dtor)(old_ptr);
 	return TPP_EOK;
 }
@@ -26470,22 +26475,20 @@ _tpp_decode_find_unmatched_rbrace(tpp_char const **tpp_restrict p_iter, tpp_char
 
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 #if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
-                         tpp_char const **tpp_restrict p_iter,
-                         tpp_char const *end _tpp_esc_lexer__PARAM,
-                         bool *tpp_restrict p_continue)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer), p_continue)
 #else /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
-_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
-                         tpp_char const **tpp_restrict p_iter,
-                         tpp_char const *end _tpp_esc_lexer__PARAM)
 #define tpp_decode_bsi_continue(buf, p_iter, end, lexer, p_continue) \
 	_tpp_decode_bsi_continue(buf, p_iter, end _tpp_esc_lexer__ARG(lexer))
 #endif /* !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
-{
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+_tpp_decode_bsi_continue(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
+                         tpp_char const **tpp_restrict p_iter,
+                         tpp_char const *end _tpp_esc_lexer__PARAM
+#if TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY
+                         , bool *tpp_restrict p_continue
+#endif /* TPP_HAVE_IDENTIFIER_ESCAPE_NAMED_MANY */
+                         ) {
 	tpp_size named_index, named_count;
 	tpp_unichar named_uc[TPP_DECODE_NAMED_ESCAPE_MAXLEN];
 	tpp_char *buf_iter;
@@ -32131,11 +32134,11 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 }
 
 
-#define tpp_include_paths_fini_common(self)                             \
-	(tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_system_list)) \
-	 _tpp_include_paths_fini_quote(self)                                \
-	 _tpp_include_paths_fini_syshdr(self)                               \
-	 _tpp_include_paths_fini_after(self)                                \
+#define tpp_include_paths_fini_common(self)               \
+	(tpp_include_path_list_fini(&(self)->tip_system_list) \
+	 _tpp_include_paths_fini_quote(self)                  \
+	 _tpp_include_paths_fini_syshdr(self)                 \
+	 _tpp_include_paths_fini_after(self)                  \
 	 _tpp_include_paths_fini_embed(self))
 
 
@@ -32545,7 +32548,7 @@ TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_ENOMEM));
 TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_EIO));
 TPP_STATIC_ASSERT(TPP_TOK_ISCHAR(TPP_TOK_EOF));
 TPP_STATIC_ASSERT(TPP_TOK_ISCHAR(TPP_TOK_AMP));
-TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN) + 1));
+TPP_STATIC_ASSERT(!TPP_TOK_ISCHAR(TPP_TOK_MULTICHAR_BEGIN + 1));
 
 TPP_STATIC_ASSERT(TPP_TOK_OFCHAR('~') == TPP_TOK_TILDE);
 TPP_STATIC_ASSERT(TPP_TOK_OFCHAR('&') == TPP_TOK_AMP);
@@ -33102,8 +33105,9 @@ tpp_swapmem(void *a, void *b, tpp_size num_bytes) {
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_manualpopfile_popfile(tpp_lexer *tpp_restrict self) {
 	tpp_file *const file = tpp_lexer_getfile(self);
-	tpp_file *const prev = file->TPP_INTERNAL(tf_prev);
-	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check `tpp_lexer_manualpopfile_canpopfile()`)");
+	tpp_file *const prev = file->tf_prev;
+	tpp_assert(prev != NULL && "Nowhere to pop to (caller didn't check "
+	                           "`tpp_lexer_manualpopfile_canpopfile()`)");
 	file->tf_prev = prev->tf_prev;
 	tpp_swapmem(file, prev, sizeof(tpp_file)); /* NOTE: This could skip "tf_prev", since that's equal in both */
 }
@@ -34194,7 +34198,7 @@ tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {
 
 /* Invoke operators on expression values. */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
-static char const *TPPCALL
+static TPP_CONSTCALL TPP_WUNUSED char const *TPPCALL
 tpp_expr_value_kindrepr(_tpp_expr_value_kind kind) {
 	switch (kind) {
 	case _TPP_EXPR_VALUE_KIND_INT: return "<int>";
@@ -58410,13 +58414,6 @@ _tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_r
 /************************************************************************/
 
 #if TPP_HAVE_LEXER_DUMP_DEFINITIONS
-
-#define tpp_do(err, expr)                    \
-	do {                                     \
-		if tpp_unlikely((temp = (expr)) < 0) \
-			goto err;                        \
-		result += temp;                      \
-	} while (0)
 
 typedef struct tpp_lexer_dumper {
 	tpp_lexer        *tld_lexer;   /* [1..1][const] Lexer */

@@ -1147,7 +1147,7 @@ handle_group_start:
 	@@```
 	@@
 	@@@return size of generated tables (in bytes)
-	public function printTokenTable(): int {
+	public function printTokenTable(): (int, int) {
 		print File.stderr: "Generating token table...";
 		print("/* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */");
 		local sortedTokenReprs: {string...} = this.tokensToId.keys.sorted();
@@ -1212,6 +1212,7 @@ handle_group_start:
 		print("#define tpp_unam_token_offsets tpp_unam_token_offsets");
 		print("static ", tokenToStringOffsetType, " const tpp_unam_token_offsets[",
 			tokenIdCount.hex(), "] = {");
+		local offsetBlobSize = tokenIdCount * uintLeastSizeof(tokenToStringOffsetType);
 		if (PRETTY_PRINT) {
 			local idToToken: {int: string} = Dict();
 			for (local token, id: this.tokensToId)
@@ -1235,7 +1236,7 @@ handle_group_start:
 		print("};");
 		print("#endif /* TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST */");
 		print;
-		return blobSize;
+		return (blobSize, offsetBlobSize);
 	}
 
 	public function printTopLevelTokenEntryTable(): int {
@@ -1359,7 +1360,7 @@ function printDatabase(db: {string: {int...}}) {
 	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unam_tokenid;');
 
 	/* Token decoding table */
-	local tokenTableBlobSize = ser.printTokenTable();
+	local tokenTableBlobSize, tokenTableOffsetBlobSize = ser.printTokenTable()...;
 
 	print("/* By-name radix tree -- see `ctype-names.dee:serializeTreeNode()` for binary format */");
 	local radixTreeBlobSize: int;
@@ -1416,15 +1417,24 @@ function printDatabase(db: {string: {int...}}) {
 	local final RJUST = 7;
 	print("/* Database sizes:");
 	print(" *    token: ", tokenTableBlobSize.tostr(10, 0, "_").rjust(RJUST));
+	print(" *    tokof: ", tokenTableOffsetBlobSize.tostr(10, 0, "_").rjust(RJUST),
+		"  (if `TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST`)");
 	print(" *    radix: ", radixTreeBlobSize.tostr(10, 0, "_").rjust(RJUST));
-	print(" * #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
-	local total = tokenTableBlobSize + radixTreeBlobSize + entryTableBlobSize;
-	print(" *    entry: ", entryTableBlobSize.tostr(10, 0, "_").rjust(RJUST));
+	print(" *    entry: ", entryTableBlobSize.tostr(10, 0, "_").rjust(RJUST),
+		"  (if `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE`)");
+	print(" * #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST && TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	local total = tokenTableBlobSize + tokenTableOffsetBlobSize + radixTreeBlobSize + entryTableBlobSize;
 	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
-	print(" * #else // TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	print(" * #elif TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST");
+	local total = tokenTableBlobSize + tokenTableOffsetBlobSize + radixTreeBlobSize;
+	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
+	print(" * #elif TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	local total = tokenTableBlobSize + radixTreeBlobSize + entryTableBlobSize;
+	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
+	print(" * #else // ...");
 	local total = tokenTableBlobSize + radixTreeBlobSize;
 	print(" *    total: ", total.tostr(10, 0, "_").rjust(RJUST));
-	print(" * #endif // !TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE");
+	print(" * #endif // !...");
 	print(" */");
 
 #if 0

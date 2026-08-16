@@ -36,7 +36,7 @@ TPP_DECL_BEGIN
 
 /* Invoke operators on expression values. */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
-static char const *TPPCALL
+static TPP_CONSTCALL TPP_WUNUSED char const *TPPCALL
 tpp_expr_value_kindrepr(_tpp_expr_value_kind kind) {
 	switch (kind) {
 	case _TPP_EXPR_VALUE_KIND_INT: return "<int>";
