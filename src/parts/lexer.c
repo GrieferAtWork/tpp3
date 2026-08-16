@@ -581,24 +581,24 @@ tpp_prng_next(tpp_hash x) {
 	x |= x == 0; /* Can't be zero */
 	/* From: https://en.wikipedia.org/wiki/Xorshift
 	 * and   https://stackoverflow.com/a/65668437 */
-#if TPP_SIZEOF_tpp_hash == 4
-	x ^= x << 13;
-	x ^= x >> 17;
-	x ^= x << 5;
-#elif TPP_SIZEOF_tpp_hash == 8
+#if defined(tpp_uint_least64) && TPP_HASH_MAX >= TPP_UINT_LEAST64_C(0xffffffffffffffff)
 	x ^= x << 13;
 	x ^= x >> 7;
 	x ^= x << 17;
-#elif TPP_SIZEOF_tpp_hash == 2
+#elif TPP_HASH_MAX >= TPP_UINT_LEAST32_C(0xffffffff)
+	x ^= x << 13;
+	x ^= x >> 17;
+	x ^= x << 5;
+#elif TPP_HASH_MAX >= TPP_UINT_LEAST16_C(0xffff)
 	x ^= x << 5;
 	x ^= x >> 7;
 	x ^= x << 14;
-#elif TPP_SIZEOF_tpp_hash == 1
+#elif TPP_HASH_MAX >= TPP_UINT_LEAST8_C(0xff)
 	x ^= x << 5;
 	x ^= x >> 3;
 	x ^= x << 6;
 #elif !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Unsupported 'TPP_SIZEOF_tpp_hash'"
+#error "Unsupported 'TPP_HASH_MAX'"
 #endif /* ... */
 	return x;
 }

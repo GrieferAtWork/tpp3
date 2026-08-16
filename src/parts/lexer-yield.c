@@ -1861,18 +1861,6 @@ again_yield:
 #endif /* TPP_HAVE_MACRO___TPP_RANDOM || TPP_HAVE_MACRO___TPP_STR_SUBSTR */
 
 #if TPP_HAVE_MACRO___TPP_RANDOM
-#if TPP_SIZEOF_tpp_hash == 4
-#define TPP_HASH_MAX TPP_HASH_C(0xffffffff)
-#elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_HASH_MAX TPP_HASH_C(0xffffffffffffffff)
-#elif TPP_SIZEOF_tpp_hash == 2
-#define TPP_HASH_MAX TPP_HASH_C(0xffff)
-#elif TPP_SIZEOF_tpp_hash == 1
-#define TPP_HASH_MAX TPP_HASH_C(0xff)
-#else /* ... */
-#error "Unsupported 'TPP_SIZEOF_tpp_hash'"
-#endif /* !... */
-
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle___TPP_RANDOM(tpp_lexer *tpp_restrict self) {
 	tpp_intmax lo, hi, result;
@@ -1910,7 +1898,7 @@ tpp_lexer_yield_handle___TPP_RANDOM(tpp_lexer *tpp_restrict self) {
 		tpp_uintmax uresult = tpp_lexer_nextrand(self);
 #if TPP_HASH_MAX < TPP_UINTMAX_MAX
 		if (range > TPP_HASH_MAX) {
-			uresult <<= (TPP_SIZEOF_tpp_hash * TPP_CHAR_BIT);
+			uresult <<= (sizeof(tpp_hash) * TPP_CHAR_BIT);
 			uresult |= tpp_lexer_nextrand(self);
 		}
 #endif /* TPP_HASH_MAX < TPP_UINTMAX_MAX */

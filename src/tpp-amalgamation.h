@@ -5506,7 +5506,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_least8 uint_least8_t
 #define TPP_UINT_LEAST8_MAX UINT_LEAST8_MAX
 #ifdef UINT8_C
-#define TPP_UINT_LEAST8_C UINT8_C
+#define TPP_UINT_LEAST8_C(x) UINT8_C(x)
 #endif /* UINT8_C */
 #else /* UINT_LEAST8_MAX */
 #define tpp_int_least8  signed char
@@ -5524,7 +5524,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_least16 uint_least16_t
 #define TPP_UINT_LEAST16_MAX UINT_LEAST16_MAX
 #ifdef UINT16_C
-#define TPP_UINT_LEAST16_C UINT16_C
+#define TPP_UINT_LEAST16_C(x) UINT16_C(x)
 #endif /* UINT16_C */
 #else /* UINT_LEAST16_MAX */
 #define tpp_int_least16  signed short
@@ -5561,7 +5561,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_least64 uint_least64_t
 #define TPP_UINT_LEAST64_MAX UINT_LEAST64_MAX
 #ifdef UINT64_C
-#define TPP_UINT_LEAST64_C UINT64_C
+#define TPP_UINT_LEAST64_C(x) UINT64_C(x)
 #endif /* UINT64_C */
 #endif /* !UINT_LEAST64_MAX */
 #endif /* !tpp_uint_least64 */
@@ -5575,17 +5575,17 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_fast8     uint_fast8_t
 #define TPP_UINT_FAST8_MAX UINT_FAST8_MAX
 #ifdef UINT8_C
-#define TPP_UINT_FAST8_C UINT8_C
+#define TPP_UINT_FAST8_C(x) UINT8_C(x)
 #endif /* UINT8_C */
 #else /* UINT_FAST8_MAX */
-#define tpp_int_fast8      tpp_int_least8
-#define tpp_uint_fast8     tpp_uint_least8
-#define TPP_UINT_FAST8_MAX TPP_UINT_LEAST8_MAX
-#define TPP_UINT_FAST8_C   TPP_UINT_LEAST8_C
+#define tpp_int_fast8       tpp_int_least8
+#define tpp_uint_fast8      tpp_uint_least8
+#define TPP_UINT_FAST8_MAX  TPP_UINT_LEAST8_MAX
+#define TPP_UINT_FAST8_C(x) TPP_UINT_LEAST8_C(x)
 #endif /* !UINT_FAST8_MAX */
 #endif /* !tpp_uint_fast8 */
 #ifndef TPP_UINT_FAST8_C
-#define TPP_UINT_FAST8_C TPP_UINT_LEAST8_C
+#define TPP_UINT_FAST8_C(x) TPP_UINT_LEAST8_C(x)
 #endif /* !TPP_UINT_FAST8_C */
 
 #ifndef tpp_uint_fast16
@@ -5594,17 +5594,17 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_fast16     uint_fast16_t
 #define TPP_UINT_FAST16_MAX UINT_FAST16_MAX
 #ifdef UINT16_C
-#define TPP_UINT_FAST16_C UINT16_C
+#define TPP_UINT_FAST16_C(x) UINT16_C(x)
 #endif /* UINT16_C */
 #else /* UINT_FAST16_MAX */
-#define tpp_int_fast16      tpp_int_least16
-#define tpp_uint_fast16     tpp_uint_least16
-#define TPP_UINT_FAST16_MAX TPP_UINT_LEAST16_MAX
-#define TPP_UINT_FAST16_C   TPP_UINT_LEAST16_C
+#define tpp_int_fast16       tpp_int_least16
+#define tpp_uint_fast16      tpp_uint_least16
+#define TPP_UINT_FAST16_MAX  TPP_UINT_LEAST16_MAX
+#define TPP_UINT_FAST16_C(x) TPP_UINT_LEAST16_C(x)
 #endif /* !UINT_FAST16_MAX */
 #endif /* !tpp_uint_fast16 */
 #ifndef TPP_UINT_FAST16_C
-#define TPP_UINT_FAST16_C TPP_UINT_LEAST16_C
+#define TPP_UINT_FAST16_C(x) TPP_UINT_LEAST16_C(x)
 #endif /* !TPP_UINT_FAST16_C */
 
 #ifndef tpp_uint_fast32
@@ -5613,18 +5613,46 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_uint_fast32     uint_fast32_t
 #define TPP_UINT_FAST32_MAX UINT_FAST32_MAX
 #ifdef UINT32_C
-#define TPP_UINT_FAST32_C UINT32_C
+#define TPP_UINT_FAST32_C(x) UINT32_C(x)
 #endif /* UINT32_C */
 #else /* UINT_FAST32_MAX */
-#define tpp_int_fast32      tpp_int_least32
-#define tpp_uint_fast32     tpp_uint_least32
-#define TPP_UINT_FAST32_MAX TPP_UINT_LEAST32_MAX
-#define TPP_UINT_FAST32_C   TPP_UINT_LEAST32_C
+#define tpp_int_fast32       tpp_int_least32
+#define tpp_uint_fast32      tpp_uint_least32
+#define TPP_UINT_FAST32_MAX  TPP_UINT_LEAST32_MAX
+#define TPP_UINT_FAST32_C(x) TPP_UINT_LEAST32_C(x)
 #endif /* !UINT_FAST32_MAX */
 #endif /* !tpp_uint_fast32 */
 #ifndef TPP_UINT_FAST32_C
-#define TPP_UINT_FAST32_C TPP_UINT_LEAST32_C
+#define TPP_UINT_FAST32_C(x) TPP_UINT_LEAST32_C(x)
 #endif /* !TPP_UINT_FAST32_C */
+#ifndef tpp_intmax
+#ifdef UINTMAX_MAX
+#define tpp_intmax      intmax_t
+#define tpp_uintmax     uintmax_t
+#define TPP_UINTMAX_MAX UINTMAX_MAX
+#ifdef UINTMAX_C
+#define TPP_UINTMAX_C   UINTMAX_C
+#endif /* UINTMAX_C */
+#elif defined(tpp_uint_least64)
+#define tpp_intmax       tpp_int_least64
+#define tpp_uintmax      tpp_uint_least64
+#define TPP_UINTMAX_MAX  TPP_UINT_LEAST64_MAX
+#define TPP_UINTMAX_C(x) TPP_UINT_LEAST64_C(x)
+#else /* ... */
+#define tpp_intmax       tpp_int_least32
+#define tpp_uintmax      tpp_uint_least32
+#define TPP_UINTMAX_MAX  TPP_UINT_LEAST32_MAX
+#define TPP_UINTMAX_C(x) TPP_UINT_LEAST32_C(x)
+#endif /* !... */
+#endif /* !tpp_intmax */
+#ifndef TPP_UINTMAX_C
+#ifdef tpp_uint_least64
+#define TPP_UINTMAX_C(x) TPP_UINT_LEAST64_C(x)
+#else /* tpp_uint_least64 */
+#define TPP_UINTMAX_C(x) TPP_UINT_LEAST32_C(x)
+#endif /* !tpp_uint_least64 */
+#endif /* !TPP_UINTMAX_C */
+
 #ifndef tpp_size
 #define tpp_size size_t
 #ifdef SIZE_MAX
@@ -5642,31 +5670,18 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !tpp_ssize */
 
 #ifndef tpp_hash
-#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
-#define TPP_SIZEOF_tpp_hash 4
-#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
-#define TPP_SIZEOF_tpp_hash 8
-#else /* TPP_UINT_FAST32_MAX == ... */
-#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
-#endif /* TPP_UINT_FAST32_MAX != ... */
-#define tpp_hash   tpp_uint_fast32
-#define TPP_HASH_C TPP_UINT_FAST32_C
+#define tpp_hash      tpp_uint_fast32
+#define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
+#define TPP_HASH_MAX  TPP_UINT_FAST32_MAX
 #endif /* !tpp_hash */
 
 #ifndef tpp_line
-#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
-#define TPP_SIZEOF_tpp_line   4
-#define TPP_SIZEOF_tpp_column 4
-#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
-#define TPP_SIZEOF_tpp_line   8
-#define TPP_SIZEOF_tpp_column 8
-#else /* TPP_UINT_FAST32_MAX == ... */
-#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
-#endif /* TPP_UINT_FAST32_MAX != ... */
 #define tpp_line   tpp_int_fast32
 #define tpp_column tpp_int_fast32
 #endif /* !tpp_line */
 
+/* WARNING: You probably don't want to override this one:
+ * `tpp_char` is assumed to be unsigned by lots of TPP APIs */
 #ifndef tpp_char
 #define tpp_char unsigned char
 #endif /* !tpp_char */
@@ -5676,37 +5691,9 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_UNICHAR_C TPP_UINT_LEAST32_C
 #endif /* !tpp_unichar */
 
-#ifndef tpp_intmax
-#ifdef UINTMAX_MAX
-#define tpp_intmax      intmax_t
-#define tpp_uintmax     uintmax_t
-#define TPP_UINTMAX_MAX UINTMAX_MAX
-#ifdef UINTMAX_C
-#define TPP_UINTMAX_C   UINTMAX_C
-#endif /* UINTMAX_C */
-#elif defined(tpp_uint_least64)
-#define tpp_intmax      tpp_int_least64
-#define tpp_uintmax     tpp_uint_least64
-#define TPP_UINTMAX_MAX TPP_UINT_LEAST64_MAX
-#define TPP_UINTMAX_C   TPP_UINT_LEAST64_C
-#else /* ... */
-#define tpp_intmax      tpp_int_least32
-#define tpp_uintmax     tpp_uint_least32
-#define TPP_UINTMAX_MAX TPP_UINT_LEAST32_MAX
-#define TPP_UINTMAX_C   TPP_UINT_LEAST32_C
-#endif /* !... */
-#endif /* !tpp_intmax */
-#ifndef TPP_UINTMAX_C
-#ifdef tpp_uint_least64
-#define TPP_UINTMAX_C TPP_UINT_LEAST64_C
-#else /* tpp_uint_least64 */
-#define TPP_UINTMAX_C TPP_UINT_LEAST32_C
-#endif /* !tpp_uint_least64 */
-#endif /* !TPP_UINTMAX_C */
-
 /* Counter type used to implement `__COUNTER__` and `__TPP_COUNTER` */
 #ifndef tpp_counter
-#define tpp_counter tpp_size
+#define tpp_counter tpp_uint_least32
 #endif /* !tpp_counter */
 
 #ifndef tpp_float
@@ -5714,8 +5701,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !tpp_float */
 
 #ifndef TPP_REF
-#define TPP_REF       /* nothing */
-#define TPP_REF_IF(c) /* nothing */
+#define TPP_REF /* nothing */
 #endif /* !TPP_REF */
 
 #ifndef TPP_STATIC_ASSERT
@@ -5791,6 +5777,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_free(p)          free(p)
 #endif /* !tpp_malloc */
 
+/* Optional: stack allocation */
 #ifndef tpp_alloca
 #if TPP_HOST_HAS_BUILTIN(__builtin_alloca) || TPP_GCC_VERSION_NUM >= 29700
 #define tpp_alloca __builtin_alloca

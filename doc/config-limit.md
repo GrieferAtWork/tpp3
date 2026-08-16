@@ -16,8 +16,8 @@ the builtin `__COLUMN__` macro (see [`TPP_HAVE_MACRO___COLUMN__`](config-conf.md
 - when positive: compile-time hard-code
 - when negative: runtime-configurable, with absolute value being used as default
 
-**Getter**: [`tpp_gettabsize()`](../src/tpp-amalgamation.h#L21031)<br/>
-**Setter**: [`tpp_settabsize(v)`](../src/tpp-amalgamation.h#L21037)
+**Getter**: [`tpp_gettabsize()`](../src/tpp-amalgamation.h#L21018)<br/>
+**Setter**: [`tpp_settabsize(v)`](../src/tpp-amalgamation.h#L21024)
 
 <details><summary>Details</summary>
 
@@ -30,16 +30,16 @@ Default:
 
 ## TPP_ERROR_LIMIT
 
-Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L22404) (continue compilation and fail later) warnings that
-can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22409) (fail
+Max # of [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L22391) (continue compilation and fail later) warnings that
+can be emitted before the next one will be treated as [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22396) (fail
 immediately)
 
 - `0`:  Set limit to `0` (when not also overwritten, causes `TPP_HAVE_WARNING_ERROR=0`)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L24653)<br/>
-**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L24654)
+**Getter**: [`tpp_lexer_geterrorlimit(lexer)`](../src/tpp-amalgamation.h#L24640)<br/>
+**Setter**: [`tpp_lexer_seterrorlimit(lexer, v)`](../src/tpp-amalgamation.h#L24641)
 
 <details><summary>Details</summary>
 
@@ -60,8 +60,8 @@ appear on the `#include`-stack before a warning [`TPP_W_INCLUDE_RECURSION_LIMIT_
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L24675)<br/>
-**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L24676)
+**Getter**: [`tpp_lexer_getinclusionlimit(lexer)`](../src/tpp-amalgamation.h#L24662)<br/>
+**Setter**: [`tpp_lexer_setinclusionlimit(lexer, v)`](../src/tpp-amalgamation.h#L24663)
 
 <details><summary>Details</summary>
 
@@ -90,8 +90,8 @@ NOTE: When [`TPP_HAVE_MACRO_RECURSION`](config-conf.md#tpp_have_macro_recursion)
 - `N`:  Limit is hard-coded to `N` and cannot be overwritten at runtime
 - `-N`: Limit can be overwritten at runtime, with `N` being used as the default
 
-**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L24691)<br/>
-**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L24692)
+**Getter**: [`tpp_lexer_getrecursivemacrolimit(lexer)`](../src/tpp-amalgamation.h#L24678)<br/>
+**Setter**: [`tpp_lexer_setrecursivemacrolimit(lexer, v)`](../src/tpp-amalgamation.h#L24679)
 
 <details><summary>Details</summary>
 
