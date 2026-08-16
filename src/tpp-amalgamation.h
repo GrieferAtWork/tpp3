@@ -10714,14 +10714,17 @@ TPP_DECL_END
 /************************************************************************/
 
 /* Format to use for file+line+column log messages.
- * When `TPP_HAVE_RT_FILE_AND_LINE_FORMAT` is enabled, this is
- * only the *default*-format, with the actual format being overwritable
- * at runtime. */
+ *
+ * When `TPP_HAVE_RT_FILE_AND_LINE_FORMAT` is enabled, this is only
+ * the *default*-format, with the actual format being overwritable
+ * at runtime.
+ *
+ * For documentation on available format-codes, see `tpp_lexer_printf_warning()` */
 #ifndef TPP_CONFIG_FILE_AND_LINE_FORMAT
 #if defined(_MSC_VER)
-#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf%?P{(%Pl, %Pc)%}: "
 #else /* _MSC_VER */
-#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf:%?P{%Pl:%Pc:%} "
 #endif /* !_MSC_VER */
 #endif /* !TPP_CONFIG_FILE_AND_LINE_FORMAT */
 
@@ -26865,21 +26868,21 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_WARNINGS
 typedef struct tpp_lexer_printf_info {
-	tpp_file       *tlpfi_file;     /* [0..1] Current file (source for filename, and basis for `tlpfi_pos`) */
-	tpp_char const *tlpfi_pos;      /* [0..1][valid_if(tlpfi_file != NULL)] Current position in `tlpfi_file` */
-	char const     *tlpfi_filename; /* [0..1] Filename used by `%Pf`, or `NULL` if `tlpfi_file` must be used */
-	tpp_lcinfo      tlpfi_lc;       /* L/C info to use, or `TPP_LCINFO_INVALID` if `tlpfi_pos` must be used */
+	tpp_file       *TPP_INTERNAL(tlpfi_file);     /* [0..1] Current file (source for filename, and basis for `tlpfi_pos`) */
+	tpp_char const *TPP_INTERNAL(tlpfi_pos);      /* [0..1][valid_if(tlpfi_file != NULL)] Current position in `tlpfi_file` */
+	char const     *TPP_INTERNAL(tlpfi_filename); /* [0..1] Filename used by `%Pf`, or `NULL` if `tlpfi_file` must be used */
+	tpp_lcinfo      TPP_INTERNAL(tlpfi_lc);       /* L/C info to use, or `TPP_LCINFO_INVALID` if `tlpfi_pos` must be used */
 } tpp_lexer_printf_info;
 
-#define tpp_lexer_printf_info_init_at(self, file, pos) \
-	(void)((self)->tlpfi_file     = (file),            \
-	       (self)->tlpfi_pos      = (pos),             \
-	       (self)->tlpfi_filename = NULL,              \
-	       tpp_lcinfo_init_invalid(&(self)->tlpfi_lc))
-#define tpp_lexer_printf_info_init_lc(self, filename, lc) \
-	(void)((self)->tlpfi_file     = NULL,                 \
-	       (self)->tlpfi_filename = (filename),           \
-	       (self)->tlpfi_lc       = (lc))
+#define tpp_lexer_printf_info_init_at(self, file, pos)    \
+	(void)((self)->TPP_INTERNAL(tlpfi_file)     = (file), \
+	       (self)->TPP_INTERNAL(tlpfi_pos)      = (pos),  \
+	       (self)->TPP_INTERNAL(tlpfi_filename) = NULL,   \
+	       tpp_lcinfo_init_invalid(&(self)->TPP_INTERNAL(tlpfi_lc)))
+#define tpp_lexer_printf_info_init_lc(self, filename, lc)     \
+	(void)((self)->TPP_INTERNAL(tlpfi_file)     = NULL,       \
+	       (self)->TPP_INTERNAL(tlpfi_filename) = (filename), \
+	       (self)->TPP_INTERNAL(tlpfi_lc)       = (lc))
 
 /* Interpret + print a warning-message `format` string.
  * The following %-encoded escape sequences are recognized:
@@ -26897,6 +26900,10 @@ typedef struct tpp_lexer_printf_info {
  * - `%u`    As defined by stdc, using va_arg(args, unsigned int)
  * - `%c`    As defined by stdc, using va_arg(args, int)
  * - `%%`    `%` (emit a singular %-character)
+ * - `%?P{`  Begin a conditional block: `if (tpp_lcinfo_isvalid(...))`
+ *           Block is omitted if `%Pl` / `%Pc` would print `?` because
+ *           no line/column information is available
+ * - `%}`    End a conditional block
  *
  * @param: info:    Information for special format descriptors
  *                  (unpopulated parts may be populated lazily)

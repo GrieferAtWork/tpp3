@@ -5375,14 +5375,17 @@ print("#endif /" "* !... *" "/");
 /************************************************************************/
 
 /* Format to use for file+line+column log messages.
- * When `TPP_HAVE_RT_FILE_AND_LINE_FORMAT` is enabled, this is
- * only the *default*-format, with the actual format being overwritable
- * at runtime. */
+ *
+ * When `TPP_HAVE_RT_FILE_AND_LINE_FORMAT` is enabled, this is only
+ * the *default*-format, with the actual format being overwritable
+ * at runtime.
+ *
+ * For documentation on available format-codes, see `tpp_lexer_printf_warning()` */
 #ifndef TPP_CONFIG_FILE_AND_LINE_FORMAT
 #if defined(_MSC_VER)
-#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf(%Pl, %Pc): "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf%?P{(%Pl, %Pc)%}: "
 #else /* _MSC_VER */
-#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf:%Pl:%Pc: "
+#define TPP_CONFIG_FILE_AND_LINE_FORMAT "%Pf:%?P{%Pl:%Pc:%} "
 #endif /* !_MSC_VER */
 #endif /* !TPP_CONFIG_FILE_AND_LINE_FORMAT */
 

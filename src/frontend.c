@@ -342,11 +342,11 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *tpp_restrict self, char con
 						arg += (sizeof("essage-format=") - sizeof(char));
 						if (tpp_streq(arg, "gcc\0")) {
 							tpp_lexer_setfileandlineformat(&self->tf_lexer,
-							                               "%Pf:%Pl:%Pc: ");
+							                               "%Pf:%?P{%Pl:%Pc:%} ");
 							return TPP_EOK;
 						} else if (tpp_streq(arg, "msvc\0")) {
 							tpp_lexer_setfileandlineformat(&self->tf_lexer,
-							                               "%Pf(%Pl, %Pc): ");
+							                               "%Pf%?P{(%Pl, %Pc)%}: ");
 							return TPP_EOK;
 						}
 					}

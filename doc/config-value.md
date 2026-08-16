@@ -6,16 +6,19 @@ These configurations all define something other than an enabled/disabled state.
 ## TPP_CONFIG_FILE_AND_LINE_FORMAT
 
 Format to use for file+line+column log messages.
-When [`TPP_HAVE_RT_FILE_AND_LINE_FORMAT`](config-core.md#tpp_have_rt_file_and_line_format) is enabled, this is
-only the *default*-format, with the actual format being overwritable
+
+When [`TPP_HAVE_RT_FILE_AND_LINE_FORMAT`](config-core.md#tpp_have_rt_file_and_line_format) is enabled, this is only
+the *default*-format, with the actual format being overwritable
 at runtime.
+
+For documentation on available format-codes, see `tpp_lexer_printf_warning()`
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
+defined(_MSC_VER) ? "%Pf%?P{(%Pl, %Pc)%}: " : "%Pf:%?P{%Pl:%Pc:%} "
 ```
 </details>
 
@@ -23,7 +26,7 @@ defined(_MSC_VER) ? "%Pf(%Pl, %Pc): " : "%Pf:%Pl:%Pc: "
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L22723)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L22726)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -44,7 +47,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25624)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25627)
 
 <details><summary>Details</summary>
 
@@ -148,7 +151,7 @@ Default:
 
 ## TPP_CONFIG_CLI_DEFAULT_SYSROOT
 
-The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L27080)
+The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L27087)
 
 <details><summary>Details</summary>
 

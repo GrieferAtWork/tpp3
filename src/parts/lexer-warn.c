@@ -71,6 +71,10 @@ TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, 
  * - `%u`    As defined by stdc, using va_arg(args, unsigned int)
  * - `%c`    As defined by stdc, using va_arg(args, int)
  * - `%%`    `%` (emit a singular %-character)
+ * - `%iP{`  Begin a conditional block: `if (tpp_lcinfo_isvalid(...))`
+ *           Block is omitted if `%Pl` / `%Pc` would print `?` because
+ *           no line/column information is available
+ * - `%}`    End a conditional block
  *
  * @param: info:    Information for special format descriptors
  *                  (unpopulated parts may be populated lazily)
@@ -226,6 +230,42 @@ err_temp:
 	return temp;
 }
 
+/* Return a pointer after the first unmatched `%}` in `format` */
+static TPP_WUNUSED TPP_PURECALL TPP_RETNONNULL TPP_NONNULL((1)) char const *TPPCALL
+tpp_lexer_vprintf_warning_skipblock(char const *format) {
+	unsigned int recursion = 0;
+	for (;;) {
+		switch (*format++) {
+		case '\0':
+			return format - 1;
+		case '%':
+			switch (*format++) {
+			case '?':
+				while (*format != '{') {
+					if (*format == '\0')
+						return format;
+					++format;
+				}
+				++recursion;
+				++format;
+				break;
+
+			case '}':
+				if (recursion == 0)
+					return format;
+				--recursion;
+				break;
+
+			default: break;
+			}
+			break;
+
+		default: break;
+		}
+	}
+	tpp_unreachable();
+}
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *tpp_restrict self,
                           tpp_lexer_printf_info *tpp_restrict info,
@@ -339,6 +379,40 @@ handle_eof:
 			goto again;
 		}
 		break;
+
+	case '?':
+		/* Start of conditional block */
+		ch = *iter++;
+		switch (ch) {
+
+		case 'P':
+			if (*iter == '{') {
+				++iter;
+				if (!tpp_lcinfo_isvalid(info->tlpfi_lc) &&
+				    (info->tlpfi_file && info->tlpfi_pos)) {
+					info->tlpfi_lc = tpp_file_getlcinfo(info->tlpfi_file,
+					                                    info->tlpfi_pos);
+				}
+				if (!tpp_lcinfo_isvalid(info->tlpfi_lc)) {
+					/* Skip conditional block if there is no L/C info */
+					iter = tpp_lexer_vprintf_warning_skipblock(iter);
+				}
+				format = iter;
+				goto again;
+			}
+			break;
+
+		case '\0':
+			goto handle_eof;
+		default: break;
+		}
+		format = iter - 3;
+		goto again;
+
+	case '}':
+		/* End of (tt) conditional block */
+		format = iter;
+		goto again;
 
 	case 's': {
 		/* "%s"    As defined by stdc, using va_arg(args, char *) */
@@ -656,8 +730,6 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
-		/* TODO: tpp_lexer_getfileandlineformat should be allowed to include custom if-line-not-present
-		 *       blocks such that the "(%Pl, %Pc)" / "%Pl:%Pc" can be skipped if nothing's there. */
 		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
 		                                        tpp_lexer_getfileandlineformat(self));
 		if (print_status < 0)

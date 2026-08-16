@@ -4920,8 +4920,8 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef TPPLEXER_FLAG_WERROR                /* Use tpp_lexer_setextension(TPP_EXT_WERROR) */
 #undef TPPLEXER_FLAG_WSYSTEMHEADERS        /* Use tpp_lexer_setextension(WSYSTEM_HEADERS) */
 #undef TPPLEXER_FLAG_NO_DEPRECATED         /* Use `tpp_lexer_getwarninggrp(TPP_WG_DEPRECATED)` / `tpp_lexer_setwarninggrp(TPP_WG_DEPRECATED)` */
-#undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf(%Pl, %Pc): ")` to enable
-                                            * Use `tpp_lexer_setfileandlineformat("%Pf:%Pl:%Pc: ")` to disable */
+#undef TPPLEXER_FLAG_MSVC_MESSAGEFORMAT    /* Use `tpp_lexer_setfileandlineformat("%Pf%?P{(%Pl, %Pc)%}: ")` to enable
+                                            * Use `tpp_lexer_setfileandlineformat("%Pf:%?P{%Pl:%Pc:%} ")` to disable */
 #define TPPLEXER_FLAG_NO_WARNINGS TPP_LEXER_STATE_FLAG_NOWARNINGS
 #undef TPPLEXER_FLAG_NO_ENCODING           /* No longer supported; encoding detection can be disabled on a per-file basis, though */
 #undef TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA /* No longer supported; define your own hook that gets called for unknown pragmas */
