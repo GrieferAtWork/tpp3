@@ -33801,6 +33801,8 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
+		/* TODO: tpp_lexer_getfileandlineformat should be allowed to include custom if-line-not-present
+		 *       blocks such that the "(%Pl, %Pc)" / "%Pl:%Pc" can be skipped if nothing's there. */
 		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
 		                                        tpp_lexer_getfileandlineformat(self));
 		if (print_status < 0)
@@ -33809,8 +33811,8 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
 
 	/* Print what this is about... */
 	print_status = tpp_warning_invokeinfo_getstate(invokeinfo) == TPP_WSTATE_WARN
-	               ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning[")
-	               : tpp_formatprinter_print_conststr(printer, printer_arg, "error[");
+	               ? tpp_formatprinter_print_conststr(printer, printer_arg, "warning")
+	               : tpp_formatprinter_print_conststr(printer, printer_arg, "error");
 	if (print_status < 0)
 		goto err_printer;
 
@@ -33819,30 +33821,35 @@ _tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
 	if (tpp_warning_context_id_isnumber(ctxid)) {
 		tpp_warning_id ctx_wid = tpp_warning_context_id_aswarning(ctxid);
 		unsigned int number = tpp_warning_getnumbers(ctx_wid)[0];
-		print_status = tpp_unlikely(number == TPP_WARNING_NUMBER_INVALID)
-		               ? tpp_formatprinter_print_conststr(printer, printer_arg, "?")
-		               : tpp_format_print_uint(printer, printer_arg, number);
-		if (print_status < 0)
-			goto err_printer;
+		if tpp_likely(number != TPP_WARNING_NUMBER_INVALID) {
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "[");
+			if (print_status < 0)
+				goto err_printer;
+			print_status = tpp_format_print_uint(printer, printer_arg, number);
+			if (print_status < 0)
+				goto err_printer;
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]");
+			if (print_status < 0)
+				goto err_printer;
+		}
 	} else
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 	{
 		tpp_warning_group_id group_id = tpp_warning_context_id_asgroup(ctxid);
 		char const *group_name = tpp_warning_group_getnames(group_id);
-		if tpp_unlikely(group_name == NULL) {
-			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "?");
-			if (print_status < 0)
-				goto err_printer;
-		} else {
-			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "-W");
+		if tpp_likely(group_name != NULL) {
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "[-W");
 			if (print_status < 0)
 				goto err_printer;
 			print_status = tpp_formatprinter_print_cstr(printer, printer_arg, group_name, tpp_strlen(group_name));
 			if (print_status < 0)
 				goto err_printer;
+			print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]");
+			if (print_status < 0)
+				goto err_printer;
 		}
 	}
-	print_status = tpp_formatprinter_print_conststr(printer, printer_arg, "]: ");
+	print_status = tpp_formatprinter_print_conststr(printer, printer_arg, ": ");
 	if (print_status < 0)
 		goto err_printer;
 
