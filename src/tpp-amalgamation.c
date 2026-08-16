@@ -17965,7 +17965,7 @@ tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 
 	/* Parse+normalize given "start...+=end" buffer to:
-	 * - Replace all space characters with U+0020 SPACE
+	 * - Replace all space- and _-characters with U+0020 SPACE
 	 * - Convert lower-case to upper-case
 	 * - Skip over BSE sequences */
 	{
@@ -17977,14 +17977,14 @@ tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
 			while (iter < end) {
 				tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
 				iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
-				if (tpp_unicode_isspace(uc)) {
+				if (tpp_unicode_isspace(uc) || uc == '_') {
 again_skip_space_utf8:
 					/* Skip consecutive space characters */
 					if (iter >= end)
 						break;
 					uc = tpp_unicode_readutf8(&iter, end);
 					iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
-					if (tpp_unicode_isspace(uc))
+					if (tpp_unicode_isspace(uc) || uc == '_')
 						goto again_skip_space_utf8;
 					*dst++ = ' ';
 					if (dst >= dst_end)
@@ -18011,14 +18011,14 @@ again_skip_space_utf8:
 			while (iter < end) {
 				tpp_char ch = *iter++;
 				iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
-				if (tpp_ascii_isspace(ch)) {
+				if (tpp_ascii_isspace(ch) || ch == '_') {
 again_skip_space:
 					/* Skip consecutive space characters */
 					if (iter >= end)
 						break;
 					ch = *iter++;
 					iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
-					if (tpp_ascii_isspace(ch))
+					if (tpp_ascii_isspace(ch) || ch == '_')
 						goto again_skip_space;
 					*dst++ = ' ';
 					if (dst >= dst_end)
