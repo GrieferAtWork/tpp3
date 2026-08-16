@@ -2230,6 +2230,64 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 	}
 	return TPP_XML_ENTITY_LOOKUP_UNKNOWN;
 }
+
+#if TPP_HAVE_XML_ENTITY_PRINTNEAREST
+/* Print the name (including a trailing `;` if there is one) of
+ * some XML entity that matches the given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL
+tpp_xml_entity_printnearest(char const *tpp_restrict name,
+                            bool has_trailing_semicolon,
+                            tpp_formatprinter printer, void *arg) {
+	tpp_ssize result, temp;
+	tpp_char const *winner = tpp_xml_entity_db;
+	tpp_size winner_score = TPP_SIZE_MAX;
+	tpp_size namelen = tpp_strlen(name);
+	tpp_char const *iter = tpp_xml_entity_db;
+	tpp_char const *end = tpp_xml_entity_db + sizeof(tpp_xml_entity_db) - 5;
+	bool winner_has_trailing_semicolon;
+	while (iter < end) {
+		tpp_char const *entry = iter;
+		tpp_size iterlen, score = 0;
+		if (*iter == 1) {
+			++iter;
+		} else if (!has_trailing_semicolon) {
+			score += 0xff; /* Missing trailing `;` for this one... */
+		}
+		iterlen = tpp_strlen((char const *)iter);
+		score += tpp_fuzzy_memcmp(iter, iterlen, (tpp_char const *)name, namelen);
+		if (winner_score > score) {
+			winner_score = score;
+			winner = entry;
+		}
+		iter += iterlen + 1; /* Seek until start of UTF-8 sequence */
+		iterlen = tpp_strlen((char const *)iter);
+		iter += iterlen + 1; /* Seek until start of next character */
+	}
+
+	/* Print winning entry. */
+	winner_has_trailing_semicolon = true;
+	if (*winner == 1) {
+		winner_has_trailing_semicolon = false;
+		++winner;
+	}
+	result = tpp_formatprinter_print(printer, arg, winner,
+	                                 tpp_strlen((char const *)winner));
+	if (result < 0)
+		return result;
+	if (winner_has_trailing_semicolon) {
+		temp = tpp_formatprinter_print_conststr(printer, arg, ";");
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* TPP_HAVE_XML_ENTITY_PRINTNEAREST */
 #endif /* !tpp_xml_entity_lookup */
 #endif /* TPP_HAVE_XML_ENTITY_LOOKUP */
 

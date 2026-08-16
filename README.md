@@ -94,9 +94,9 @@ NOTES:
 
 ### Source Extensions
 
-In addition to the amalgamations, TPP also offers some additional, secondary amalgamations that can be used to gain additional functionality that has intentionally not been included within the TPP core.
+In addition to the amalgamation [header](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) and [source](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c), TPP also offers some additional, secondary amalgamations that can be used to unlock extra functionality that has been intentionally excluded from the TPP core.
 
-Each of these extensions can be included the same way as the TPP core can be, each coming with its own stand-alone amalgamation-header and source. To use any one of these, simply download its header and source, and put them in the same directory as you've put [`tpp-amalgamation.h`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) and [`tpp-amalgamation.c`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c). Then, you can simply `#include` the extra amalgamations just like you're already doing with the core ones.
+Each of these extensions can be included the same way as the TPP core can be, each coming with its own stand-alone amalgamation-header and source. To use any of these, simply download its header and source, and put them in the same directory as you've put [`tpp-amalgamation.h`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.h) and [`tpp-amalgamation.c`](https://raw.githubusercontent.com/GrieferAtWork/tpp3/refs/heads/master/src/tpp-amalgamation.c). Then, you can simply `#include` the extra amalgamations just like you're already doing with the core ones.
 
 | Name | Header | Source | Description |
 | ---- | ------ | ------ | ----------- |
@@ -107,16 +107,16 @@ Each of these extensions can be included the same way as the TPP core can be, ea
 
 ## Implementation Notes
 
-- Disregarding macros and other functions that obviously require dynamic allocation, TPP has `O(1)` memory usage, meaning it automatically unloads old, unreferenced and already processed parts of input files at the same time as new parts are loaded
-- TPP can preprocess input on-the-fly, meaning it (normally) doesn't need to load an entire file into memory all-at-once. As a consequence, TPP also falls under the category of *single-pass* preprocessors
-- TPP is *text-based*, meaning it converts raw input strings into tokens on-the-fly, rather than operating on an already tokenized input stream. Meanwhile, a *token-based* preprocessor would initially convert its input to a stream of distinct tokens, with all further processing then performed on those tokens. Both approaches have their advantages and disadvantages:
+- Disregarding macros and other functions that obviously require dynamic allocation, TPP has `O(1)` memory usage, meaning it automatically unloads old, unreferenced and already processed parts of input files at the same time as new parts are loaded.
+- TPP can preprocess input on-the-fly, meaning it (normally) doesn't need to load an entire file into memory all-at-once. As a consequence, TPP also falls under the category of *single-pass* preprocessors.
+- TPP is *text-based*, meaning it converts raw input strings into tokens on-the-fly, rather than operating on an already tokenized input stream. Meanwhile, a *token-based* preprocessor would initially convert its input to a stream of distinct tokens, with all further processing then performed on those tokens. When compared, *text-based* preprocessing has both advantages and disadvantages:
 	- Advantage: Faster, because no conversion step is required
 	- Advantage: Because the original input can be re-used for every step, TPP doesn't require any heap memory to preprocess inputs that are already loaded into memory (and doesn't contain anything that requires dynamic definitions, like macros or keywords)
 	- Advantage: It becomes trivial to convert between token types, escape/unescape strings, or figure out where tokens originate from (file/line/column)
 	- Advantage: Availability and behavior of tokens can be (re-)configured on-the-fly and will immediately show results (as opposed to requiring something along the lines of a *retokenization pass*)
-	- Disadvantage: sometimes, tokens have to be parsed multiple times, meaning that certain error messages (like `-Wmultiline-string`) may be emitted multiple times for the same string location
+	- Disadvantage: sometimes, tokens have to be parsed multiple times, meaning that certain error messages (like `-Wmultiline-string`) may be emitted multiple times for the same source location
 	- Disadvantage: TPP has to be careful not to accidentally concatenate pasted tokens in situations where input has to be re-processed (s.a. `TPP_HAVE_MAGIC_WHITESPACE`)
-- Not every combination of features will necessarily be able to compile. All features are automatically turned on if they're needed (or based on `TPP_PROFILE`), but if you manually disable a feature needed to implement something that is enabled, you'll probably get syntax/linker errors complaining about undefined functions
+- Not every combination of features will necessarily be able to compile. All features are automatically turned on if they're needed (or based on `TPP_PROFILE`), but if you manually disable a feature needed to implement something that is enabled, you'll probably get syntax/linker errors complaining about undefined functions.
 
 
 

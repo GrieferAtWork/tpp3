@@ -80,6 +80,6 @@
 #include "parts/lexer-parseexpr.c"
 #include "parts/lexer-dump.c"
 #include "parts/cli.c"
-#define GUARD_TPP_AMALGAMATION_H
+#define GUARD_TPP_AMALGAMATION_H 1
 #endif /* !GUARD_TPP_AMALGAMATION_C */
 /* clang-format on */

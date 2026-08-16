@@ -4717,8 +4717,20 @@ TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(412
 
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #define TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+TPP_WARNING_EX(TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 0(), ~, {
+	tpp_warn_printf0(tpp_current_info(), "unknown named escaped sequence: %Pt, did you mean %[");
+	tpp_do(tpp_decode_named_printnearest(tpp_lexer_gettokenstart(tpp_current_lexer()),
+	                                     tpp_lexer_gettokenend(tpp_current_lexer()),
+	                                     tpp_current_printer(),
+	                                     tpp_current_printer_arg(),
+	                                     tpp_current_lexer()));
+	tpp_warn_printf0(tpp_current_info(), "%]\n");
+})
+#else /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 TPP_WARNING(TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 0(), ~,
             "unknown named escaped sequence: %Pt")
+#endif /* !TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 
 

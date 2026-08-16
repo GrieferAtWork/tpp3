@@ -404,6 +404,18 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 
 #define TPP_XML_ENTITY_LOOKUP_MAXLEN 31 /* Length of the longest, known XML entity */
 #define TPP_XML_ENTITY_LOOKUP_MINLEN 2  /* Length of the shortest, known XML entity */
+
+#if TPP_HAVE_XML_ENTITY_PRINTNEAREST
+/* Print the name (including a trailing `;` if there is one) of
+ * some XML entity that matches the given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL
+tpp_xml_entity_printnearest(char const *tpp_restrict name,
+                            bool has_trailing_semicolon,
+                            tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_XML_ENTITY_PRINTNEAREST */
 #endif /* !tpp_xml_entity_lookup */
 #endif /* TPP_HAVE_XML_ENTITY_LOOKUP */
 
@@ -426,6 +438,27 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC]);
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+
+
+#if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+/* Print the name of some unicode character name that matches the
+ * given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+struct tpp_lexer;
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg,
+                                struct tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg);
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+#endif /*  TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST*/
+
 #endif /* !tpp_unicode_byname_lookup */
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 
@@ -463,9 +496,21 @@ _tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *e
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 #define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
-#define tpp_decode_named_escape(p_iter, end, result, lexer) \
-	TPP_SSIZE_OFERR(TPP_ENOENT)
+#define tpp_decode_named_escape(p_iter, end, result, lexer) TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
+#if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+#ifndef tpp_decode_named_printnearest
+/* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
+ * that automatically does the right thing, including adding a leading `&` before printing
+ * the name of a (potentially) closest matching XML escape sequence. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
+                              tpp_formatprinter printer, void *arg,
+                              struct tpp_lexer const *tpp_restrict lexer);
+#endif /* !tpp_decode_named_printnearest */
+#endif /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

@@ -1037,7 +1037,7 @@ handle_group_start:
 	@@
 	@@Data types:
 	@@- TOKEN: see @serializeToken
-	@@- NUMBER_SUFFIX_DESC: see @serializeNumberSuffix
+	@@- NUMBER_SUFFIX_DESC: see @serializeNumberSuffixGroup
 	public function serializeTreeNode(
 #define PutLineCallback Callable with (/*prefix:*/{string...}, /*node:*/RadixTreeNode, /*line:*/Bytes)
 			prefix: {string...}, putLine: PutLineCallback,
@@ -1170,27 +1170,71 @@ handle_group_start:
 
 		blobSize += 2; /* For leading "0,1" */
 		print("static tpp_char const tpp_unam_tokens[", blobSize.hex(), "] = {");
+		local tokenIdToOffset: {int: int} = Dict();
 		if (PRETTY_PRINT) {
 			print("	0,1, /* Needed so the start of the first token record can be determined */");
-			local blobOffset = 0;
+			local blobOffset = 2;
 			for (local line, tokenRepr, tokenId: tokenReprLines) {
 				print("\t/*", blobOffset.tostr(16, 4, "X"),
 					"*/ ", ",".join(for (local b: line) b < 10 ? b : b.hex(2)),
 					", /* '", tokenRepr.encode("c-escape"), "' -> ",
 					tokenId.hex(), " */");
+				tokenIdToOffset[tokenId] = blobOffset;
 				blobOffset += #line;
 			}
 		} else {
 			local serialBlob = File.Writer(hint: "bytes");
 			serialBlob.putc(0); /* Needed so the start of the first ... */
 			serialBlob.putc(1); /* ... token record can be determined */
-			for (local line, none, none: tokenReprLines)
+			local blobOffset = 2;
+			for (local line, none, tokenId: tokenReprLines) {
 				serialBlob.write(line);
+				tokenIdToOffset[tokenId] = blobOffset;
+				blobOffset += #line;
+			}
 			serialBlob = serialBlob.bytes;
 			for (local line: serialBlob.segments(32))
 				print("\t", ",".join(line), ",");
 		}
 		print("};");
+
+		print File.stderr: "Generating token-to-string table...";
+		local tokenToStringOffsetType = uintLeastTypeFor(tokenIdToOffset.values.max());
+		local tokenIdCount = tokenIdToOffset.keys.max() + 1;
+		print;
+
+		/* NOTE: Always enable 'tpp_unam_token_offsets' when it would be needed by
+		 *       `TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST` -- the fallback that exists
+		 *       to enumerate the database when we leave this disabled *works*, but
+		 *       is soooooo slow that it takes multiple seconds to enumerate every
+		 *       unicode character name (which just isn't acceptable) */
+		print("#if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST");
+		print("#define tpp_unam_token_offsets tpp_unam_token_offsets");
+		print("static ", tokenToStringOffsetType, " const tpp_unam_token_offsets[",
+			tokenIdCount.hex(), "] = {");
+		if (PRETTY_PRINT) {
+			local idToToken: {int: string} = Dict();
+			for (local token, id: this.tokensToId)
+				idToToken[id] = token;
+			local zlen = (tokenIdCount - 1).tostr(16).length;
+			for (local id: [:tokenIdCount]) {
+				print("	/* [0x", id.tostr(16).zfill(zlen), "] = */ ",
+					tokenIdToOffset.get(id, 0).hex(), ","),;
+				local name = idToToken.get(id);
+				if (name !is none)
+					print(" /* '", name.encode("c-escape"), "' */"),;
+				print;
+			}
+		} else {
+			local values = List();
+			for (local id: [:tokenIdCount])
+				values.append(tokenIdToOffset.get(id, 0));
+			for (local row: values.segments(16))
+				print("\t", ",".join(row), ",");
+		}
+		print("};");
+		print("#endif /* TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST */");
+		print;
 		return blobSize;
 	}
 
@@ -1308,6 +1352,10 @@ function printDatabase(db: {string: {int...}}) {
 	print(f'#define TPP_UNAM_LOOKUP_MAXTOKENID     {maxTokenId.hex()} /* Greatest token ID */');
 	print(f'#define TPP_UNAM_LOOKUP_NUMTOKENIDS    {(#ser.tokensToId).hex()} /* # of distinct token IDs */');
 	print(f'#define TPP_UNAM_LOOKUP_NODES          {(#ser.db).hex()} /* # of nodes in `tpp_unam_tree` */');
+	local longestKeyLengthBytes = db.keys.each.encode("utf-8").length > ...;
+	print(f'#define TPP_UNAM_LOOKUP_NAME_MAXLEN    {longestKeyLengthBytes} /* Length of longest name (in bytes, including number-suffix) */');
+	local longestTokenLengthBytes = ser.tokensToId.keys.each.encode("utf-8").length > ...;
+	print(f'#define TPP_UNAM_LOOKUP_TOKEN_MAXLEN   {longestTokenLengthBytes} /* Length of longest token (in bytes) */');
 	print(f'typedef {uintLeastTypeFor(maxTokenId)} tpp_unam_tokenid;');
 
 	/* Token decoding table */

@@ -1461,8 +1461,8 @@ tpp_warning_group_byname_ex(char const *tpp_restrict name, tpp_size name_maxlen)
 			lo = mid + 1;
 		} else {
 			/* Found offset into name-table. Now find the matching offset in
-			 * "tpp_warning_group_name_offsets_byid" (which is sorted by said offset),
-			 * at which point the index into "tpp_warning_group_name_offsets_byid"
+			 * "tpp_warning_group_name_offsets_bynameid" (which is sorted by said offset),
+			 * at which point the index into "tpp_warning_group_name_offsets_bynameid"
 			 * will be the warning_group id. */
 			return tpp_warning_group_byname_offset(mid_offset);
 		}

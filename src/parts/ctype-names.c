@@ -29,7 +29,7 @@
 #include "lexer.h"
 
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP
-#ifndef tpp_unam_lookup
+#ifndef tpp_unicode_byname_lookup
 
 #include "ctype-names.h"
 
@@ -575,11 +575,10 @@ tpp_unam_node_match_text_token_after_1char(tpp_unam_node const *tpp_restrict db_
 	do {
 		int cmp;
 		tpp_unam_text_reader reader;
-		tpp_unam_node const *next_node;
+		tpp_unam_node const *next_node = NULL;
 		tpp_char const *db_iter = db_self;
 		tpp_char features;
 		tpp_unichar rhs_uc;
-		next_node = NULL;
 		features  = tpp_unam_node_getfeatures(db_iter);
 		++db_iter; /* Skip over feature-word */
 		if (features & TPP_UNAM_NODE_FEAT_HAS_SIBLING) {
@@ -1033,10 +1032,468 @@ tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *
 	return 0;
 }
 
+#if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+
+typedef struct tpp_unicode_byname_enumerate_data {
+	unsigned int tubned_flags;     /* Set of `TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX | TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_HEX | TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE` */
+	tpp_unichar  tubned_ns_minval; /* [valid_if(TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX)] number-suffix min value */
+	tpp_unichar  tubned_ns_maxval; /* [valid_if(TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX)] number-suffix max value */
+	tpp_size     tubned_size;      /* [<= TPP_UNAM_LOOKUP_NAME_MAXLEN] Length of string repr */
+	char         tubned_repr[TPP_UNAM_LOOKUP_NAME_MAXLEN]; /* [tubned_size] String repr */
+} tpp_unicode_byname_enumerate_data;
+
+static TPP_NONNULL((2)) char *TPPCALL
+tpp_unicode_byname_enumerate_repr_tokenid(tpp_unam_tokenid id,
+                                          char *tpp_restrict dst) {
+#ifdef tpp_unam_token_offsets
+	/* Have a table that speeds up this function using a static lookup-table,
+	 * where the index is the token-id, and the value is the offset into the
+	 * token data-base, pointing to the start of the compressed TEXT segment
+	 * describing that token's representation. */
+	tpp_unichar uc;
+	tpp_unam_text_reader reader;
+	tpp_char const *compressed_name;
+	tpp_assert(id < tpp_lengthof(tpp_unam_token_offsets));
+	compressed_name = tpp_unam_tokens + tpp_unam_token_offsets[id];
+	tpp_unam_text_reader_init(&reader, compressed_name);
+	while ((uc = tpp_unam_text_reader_readchar(&reader)) != 0)
+		dst = (char *)tpp_unicode_writeutf8((tpp_char *)dst, uc);
+#else /* tpp_unam_token_offsets */
+	/* NOTE: This fallback code is too slow to actually be usable */
+	tpp_char const *db_iter = tpp_unam_tokens + 2;
+	for (;;) {
+		tpp_unam_tokenid iter_id;
+		tpp_char const *before_text = db_iter;
+		tpp_assert(db_iter < (tpp_unam_tokens + sizeof(tpp_unam_tokens)));
+		db_iter = tpp_unam_skiptext(db_iter);
+		if (db_iter[-1])
+			++db_iter; /* Skip extra NUL byte */
+		iter_id = tpp_decode_uleb128_tokenid(&db_iter);
+		if (iter_id == id) {
+			/* Found it! */
+			tpp_unichar uc;
+			tpp_unam_text_reader reader;
+			tpp_unam_text_reader_init(&reader, before_text);
+			while ((uc = tpp_unam_text_reader_readchar(&reader)) != 0)
+				dst = (char *)tpp_unicode_writeutf8((tpp_char *)dst, uc);
+			break;
+		}
+	}
+#endif /* !tpp_unam_token_offsets */
+	return dst;
+}
+
+/* Decode a TOKEN element at `*p_iter` and write its textual representation to `dst` */
+static TPP_NONNULL((1, 2)) char *TPPCALL
+tpp_unicode_byname_enumerate_decode_token(tpp_char const **tpp_restrict p_iter,
+                                          char *tpp_restrict dst) {
+	tpp_char const *db_iter = *p_iter;
+	if (*db_iter) {
+		/* Token ID */
+		tpp_unam_tokenid id = tpp_decode_uleb128_tokenid(&db_iter);
+		dst = tpp_unicode_byname_enumerate_repr_tokenid(id, dst);
+	} else {
+		/* Inline text... */
+		tpp_unichar uc;
+		tpp_unam_text_reader reader;
+		++db_iter; /* Skip leading NUL-marker-byte */
+		tpp_unam_text_reader_init(&reader, db_iter);
+		while ((uc = tpp_unam_text_reader_readchar(&reader)) != 0)
+			dst = (char *)tpp_unicode_writeutf8((tpp_char *)dst, uc);
+		db_iter = reader.tuntr_ptr;
+	}
+	*p_iter = db_iter;
+	return dst;
+}
+
+/* Decode a list of number-suffix groups and invoke "cb" for each of them. */
+static TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
+tpp_unicode_byname_enumerate_decode_ns(tpp_char const **tpp_restrict p_iter,
+                                       tpp_unicode_byname_enumerate_data *data,
+                                       tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
+	tpp_ssize temp, result = 0;
+	tpp_char const *db_iter = *p_iter;
+	for (;;) {
+		tpp_char ns_features = *db_iter++;
+		tpp_unichar ns_range;
+		(void)tpp_decode_uleb128_unichar(&db_iter); /* MINORD */
+		ns_range = tpp_decode_uleb128_unichar(&db_iter);
+		data->tubned_ns_minval = ns_features & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_BASE;
+		if (data->tubned_ns_minval == TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_BASE)
+			data->tubned_ns_minval = tpp_decode_uleb128_unichar(&db_iter);
+		data->tubned_ns_maxval = data->tubned_ns_minval + ns_range;
+		data->tubned_flags &= ~(TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_HEX |
+		                        TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE);
+		data->tubned_flags |= ns_features & (TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_HEX |
+		                                     TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE);
+		temp = (*cb)(data);
+		if (temp < 0)
+			return temp;
+		result += temp;
+		if (ns_features & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_LAST)
+			break;
+	}
+	*p_iter = db_iter;
+	return result;
+}
+
+static TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
+tpp_unicode_byname_enumerate_impl(tpp_unicode_byname_enumerate_data *tpp_restrict data,
+                                  tpp_char const *tpp_restrict db_iter,
+                                  tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
+	tpp_ssize temp, result = 0;
+	tpp_char feat;
+	tpp_size basesize = data->tubned_size;
+	do {
+		tpp_char const *next_node = NULL;
+		bool has_ord;
+		char *write_dst;
+		feat = *db_iter++;
+		data->tubned_flags = feat;
+		if (feat & TPP_UNAM_NODE_FEAT_HAS_SIBLING) {
+			tpp_size node_size = tpp_decode_uleb128_size((tpp_char const **)&db_iter);
+			next_node = db_iter + node_size;
+		}
+		write_dst = data->tubned_repr + basesize;
+		write_dst = tpp_unicode_byname_enumerate_decode_token((tpp_char const **)&db_iter, write_dst);
+		if (!(feat & TPP_UNAM_NODE_FEAT_ONE_TOKEN)) {
+			/* Multiple token -> decode more (and inject spaces) */
+			while (*db_iter != 0x01) {
+				*write_dst++ = ' ';
+				write_dst = tpp_unicode_byname_enumerate_decode_token((tpp_char const **)&db_iter, write_dst);
+			}
+			++db_iter; /* Skip over token list termination byte */
+		}
+		data->tubned_size = (tpp_size)(write_dst - data->tubned_repr);
+		tpp_assert(data->tubned_size <= TPP_UNAM_LOOKUP_NAME_MAXLEN);
+		if (feat & TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX) {
+			temp = tpp_unicode_byname_enumerate_decode_ns((tpp_char const **)&db_iter, data, cb);
+			if (temp < 0)
+				return temp;
+			result += temp;
+		}
+		if (feat & TPP_UNAM_NODE_FEAT_ONE_ORD) {
+			has_ord = true;
+			(void)tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
+		} else {
+			has_ord = false;
+			while (*db_iter) {
+				(void)tpp_decode_uleb128_unichar((tpp_char const **)&db_iter);
+				has_ord = true;
+			}
+			++db_iter;
+		}
+
+		/* Invoke for ordinal (if there is one) */
+		if (has_ord) {
+			temp = (*cb)(data);
+			if (temp < 0)
+				return temp;
+			result += temp;
+		}
+
+		/* Recurse for children */
+		if (feat & TPP_UNAM_NODE_FEAT_HAS_CHILDREN) {
+			tpp_assert(data->tubned_size < TPP_UNAM_LOOKUP_NAME_MAXLEN);
+			data->tubned_repr[data->tubned_size++] = ' ';
+			temp = tpp_unicode_byname_enumerate_impl(data, db_iter, cb);
+			if (temp < 0)
+				return temp;
+			result += temp;
+		}
+		db_iter = next_node;
+	} while (db_iter);
+	return result;
+}
+
+static TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_unicode_byname_enumerate(tpp_unicode_byname_enumerate_data *data,
+                             tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
+	data->tubned_size = 0;
+	return tpp_unicode_byname_enumerate_impl(data, tpp_unam_tree, cb);
+}
+
+
+typedef struct tpp_unicode_byname_printnearest_data {
+	tpp_unicode_byname_enumerate_data tubnpnd_enum;      /* Enumeration data */
+	tpp_size                          tubnpnd_win_score; /* Winner score */
+	tpp_unicode_byname_enumerate_data tubnpnd_win_data;  /* Winner data */
+	tpp_size                          tubnpnd_usr_size;  /* User-specified string size (w/ number suffix) */
+	char                              tubnpnd_usr_name[TPP_UNAM_LOOKUP_NAME_MAXLEN]; /* [tubnpnd_usr_size] User-specified string */
+	tpp_size                          tubnpnd_usr_nsdsiz; /* [<= tubnpnd_usr_size] Size of user-defined name with decimal number-suffix removed */
+	tpp_unichar                       tubnpnd_usr_nsdval; /* [valid_if(tubnpnd_usr_nsdsiz < tubnpnd_usr_size)] Number-suffix decimal value */
+	tpp_size                          tubnpnd_usr_nsxsiz; /* [<= tubnpnd_usr_size] Size of user-defined name with hex number-suffix removed */
+	tpp_unichar                       tubnpnd_usr_nsxval; /* [valid_if(tubnpnd_usr_bsize < tubnpnd_usr_size)] Number-suffix hex value */
+} tpp_unicode_byname_printnearest_data;
+
+static tpp_ssize TPPCALL
+tpp_unicode_byname_printnearest_cb(tpp_unicode_byname_enumerate_data *data) {
+	tpp_unicode_byname_printnearest_data *self;
+	tpp_size this_score = 0, usr_size;
+	self = tpp_container_of(data, tpp_unicode_byname_printnearest_data, tubnpnd_enum);
+	/*printf("NAME: '%.*s'\n",
+	       (int)self->tubnpnd_enum.tubned_size,
+	       self->tubnpnd_enum.tubned_repr);*/
+	if (self->tubnpnd_enum.tubned_flags & TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX) {
+		bool hex = (self->tubnpnd_enum.tubned_flags & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_HEX) != 0;
+		tpp_unichar usr_nsval;
+		usr_size = hex ? self->tubnpnd_usr_nsxsiz : self->tubnpnd_usr_nsdsiz;
+		usr_nsval = hex ? self->tubnpnd_usr_nsxval : self->tubnpnd_usr_nsdval;
+		if (self->tubnpnd_enum.tubned_flags & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE) {
+			if (usr_size && self->tubnpnd_usr_name[usr_size - 1] == ' ') {
+				--usr_size;
+			} else {
+				this_score += 0xff;
+			}
+		}
+
+		/* Add score if ranges don't match */
+		if (usr_nsval < self->tubnpnd_enum.tubned_ns_minval) {
+			this_score += self->tubnpnd_enum.tubned_ns_minval - usr_nsval;
+		} else if (usr_nsval > self->tubnpnd_enum.tubned_ns_maxval) {
+			this_score += usr_nsval - self->tubnpnd_enum.tubned_ns_maxval;
+		}
+	} else {
+		usr_size = self->tubnpnd_usr_size;
+	}
+
+	/* Fuzzy compare character names */
+	this_score += tpp_fuzzy_memcmp((tpp_char const *)self->tubnpnd_enum.tubned_repr,
+	                               self->tubnpnd_enum.tubned_size,
+	                               (tpp_char const *)self->tubnpnd_usr_name,
+	                               usr_size);
+
+	/* Compare score against winning score */
+	if (this_score < self->tubnpnd_win_score) {
+		/* We got a new leader! */
+		self->tubnpnd_win_score = this_score;
+		self->tubnpnd_win_data  = self->tubnpnd_enum;
+	}
+	return 0;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
+tpp_utoa_hex(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
+	char *ptr = buf + TPP_UTOA_MAXLEN;
+	do {
+		tpp_char nibble = (tpp_char)(value & 0xf);
+		*--ptr = tpp_ascii_touprxdigit(nibble);
+		value >>= 3;
+	} while (value);
+	return ptr;
+}
+
+
+/* Print the name of some unicode character name that matches the
+ * given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg,
+                                struct tpp_lexer const *tpp_restrict lexer)
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg)
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+{
+	tpp_ssize temp, result;
+	tpp_unicode_byname_printnearest_data data;
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+	(void)lexer;
+#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+
+	/* Parse+normalize given "start...+=end" buffer to:
+	 * - Replace all space characters with U+0020 SPACE
+	 * - Convert lower-case to upper-case
+	 * - Skip over BSE sequences */
+	{
+		tpp_char const *iter = start;
+		char *dst, *dst_end;
+		dst_end = (dst = data.tubnpnd_usr_name) + sizeof(data.tubnpnd_usr_name);
+#if TPP_HAVE_UNICODE
+		if (tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
+			while (iter < end) {
+				tpp_unichar uc = tpp_unicode_readutf8(&iter, end);
+				iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
+				if (tpp_unicode_isspace(uc)) {
+again_skip_space_utf8:
+					/* Skip consecutive space characters */
+					if (iter >= end)
+						break;
+					uc = tpp_unicode_readutf8(&iter, end);
+					iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
+					if (tpp_unicode_isspace(uc))
+						goto again_skip_space_utf8;
+					*dst++ = ' ';
+					if (dst >= dst_end)
+						break;
+				}
+				if (uc >= 'a' && uc <= 'z')
+					uc -= 'a' - 'A';
+				if (uc < 0x80) {
+					*dst++ = (tpp_char)uc;
+				} else {
+					tpp_char buf[TPP_UTF8_MAXLEN];
+					tpp_size buflen;
+					buflen = tpp_unicode_writeutf8(buf, uc) - buf;
+					if ((dst + buflen) > dst_end)
+						break;
+					dst = (char *)tpp_mempcpy(dst, buf, buflen);
+				}
+				if (dst >= dst_end)
+					break;
+			}
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			while (iter < end) {
+				tpp_char ch = *iter++;
+				iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
+				if (tpp_ascii_isspace(ch)) {
+again_skip_space:
+					/* Skip consecutive space characters */
+					if (iter >= end)
+						break;
+					ch = *iter++;
+					iter = tpp_preparse_skipbse_fwd(lexer, iter, end);
+					if (tpp_ascii_isspace(ch))
+						goto again_skip_space;
+					*dst++ = ' ';
+					if (dst >= dst_end)
+						break;
+				}
+				if (ch >= 'a' && ch <= 'z')
+					ch -= 'a' - 'A';
+				*dst++ = ch;
+				if (dst >= dst_end)
+					break;
+			}
+		}
+		data.tubnpnd_usr_size = (tpp_size)(dst - data.tubnpnd_usr_name);
+	}
+
+	/* Try to decode trailing hex/decimal number suffixes */
+	data.tubnpnd_usr_nsdsiz = data.tubnpnd_usr_size;
+	data.tubnpnd_usr_nsxsiz = data.tubnpnd_usr_size;
+	if (data.tubnpnd_usr_size) {
+		tpp_char lastch = (tpp_char)data.tubnpnd_usr_name[data.tubnpnd_usr_size - 1];
+		if (tpp_ascii_isxdigit(lastch)) {
+			tpp_unichar dval = 0;
+			tpp_unichar xval = tpp_ascii_asxdigit(lastch);
+			tpp_unichar dmul = 1;
+			tpp_unichar xmul = 1;
+			char const *xend = data.tubnpnd_usr_name + data.tubnpnd_usr_size - 1;
+			char const *dend = data.tubnpnd_usr_name + data.tubnpnd_usr_size;
+			if (tpp_ascii_isdigit(lastch)) {
+				dval = xval;
+				dend = xend;
+			}
+			while (xend > data.tubnpnd_usr_name) {
+				tpp_unichar digit;
+				lastch = (tpp_char)xend[-1];
+				if (!tpp_ascii_isxdigit(lastch))
+					break;
+				digit = tpp_ascii_asxdigit(lastch);
+				if (dend == xend && digit < 10 && (dmul * 16) < dmul) {
+					dmul *= 10;
+					dval += dmul * digit;
+					dend = xend - 1;
+				}
+				if ((xmul * 16) < xmul)
+					break;
+				xmul *= 16;
+				xval += xmul * digit;
+				--xend;
+			}
+			data.tubnpnd_usr_nsdsiz = (tpp_size)((data.tubnpnd_usr_name + data.tubnpnd_usr_size) - dend);
+			data.tubnpnd_usr_nsdval = dval;
+			data.tubnpnd_usr_nsxsiz = (tpp_size)((data.tubnpnd_usr_name + data.tubnpnd_usr_size) - xend);
+			data.tubnpnd_usr_nsxval = xval;
+
+			/* Skip over leading 0-characters */
+			while (data.tubnpnd_usr_nsdsiz && data.tubnpnd_usr_name[data.tubnpnd_usr_nsdsiz - 1] == '0')
+				--data.tubnpnd_usr_nsdsiz;
+			while (data.tubnpnd_usr_nsxsiz && data.tubnpnd_usr_name[data.tubnpnd_usr_nsxsiz - 1] == '0')
+				--data.tubnpnd_usr_nsxsiz;
+		}
+	}
+
+	/* Enumerate unicode name database to find closest matching name */
+	data.tubnpnd_win_score = TPP_SIZE_MAX;
+	data.tubnpnd_win_data.tubned_size = 0;
+	data.tubnpnd_win_data.tubned_flags = 0;
+	(void)tpp_unicode_byname_enumerate(&data.tubnpnd_enum, &tpp_unicode_byname_printnearest_cb);
+
+	/* Print name of closest unicode character name */
+	result = tpp_formatprinter_print_cstr(printer, arg,
+	                                      data.tubnpnd_win_data.tubned_repr,
+	                                      data.tubnpnd_win_data.tubned_size);
+	if (result < 0)
+		return result;
+
+	/* Deal with special case: if winner has a number-suffix, also print that suffix:
+	 * >> MY UNICODE CHAR {<lo>,...,<hi>}    <-- If "TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE"
+	 * >> MY UNICODE CHAR{<lo>,...,<hi>}
+	 */
+	if (data.tubnpnd_win_data.tubned_flags & TPP_UNAM_NODE_FEAT_HAS_NUMBER_SUFFIX) {
+		char minbuf[TPP_UTOA_MAXLEN], *minptr;
+		char maxbuf[TPP_UTOA_MAXLEN], *maxptr;
+		if (data.tubnpnd_win_data.tubned_flags & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_REQUIRES_SPACE) {
+			temp = tpp_formatprinter_print_conststr(printer, arg, " ");
+			if (temp < 0)
+				return temp;
+			result += temp;
+		}
+		if (data.tubnpnd_win_data.tubned_flags & TPP_UNAM_NODE_NUMBER_SUFFIX_FEAT_HEX) {
+			minptr = tpp_utoa_hex(minbuf, data.tubnpnd_win_data.tubned_ns_minval);
+			maxptr = tpp_utoa_hex(maxbuf, data.tubnpnd_win_data.tubned_ns_maxval);
+		} else {
+			minptr = tpp_utoa(minbuf, data.tubnpnd_win_data.tubned_ns_minval);
+			maxptr = tpp_utoa(maxbuf, data.tubnpnd_win_data.tubned_ns_maxval);
+		}
+		temp = tpp_formatprinter_print_conststr(printer, arg, "{");
+		if (temp < 0)
+			return temp;
+		result += temp;
+		temp = tpp_formatprinter_print_cstr(printer, arg, minptr,
+		                                    (tpp_size)((minbuf + TPP_UTOA_MAXLEN) - minptr));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		if (data.tubnpnd_win_data.tubned_ns_minval == data.tubnpnd_win_data.tubned_ns_maxval) {
+			/* ... */
+			temp = 0;
+		} else if ((data.tubnpnd_win_data.tubned_ns_minval + 1) == data.tubnpnd_win_data.tubned_ns_maxval) {
+			/* ... */
+			temp = tpp_formatprinter_print_conststr(printer, arg, ", ");
+		} else {
+			temp = tpp_formatprinter_print_conststr(printer, arg, ", ..., ");
+		}
+		if (temp < 0)
+			return temp;
+		result += temp;
+		temp = tpp_formatprinter_print_cstr(printer, arg, maxptr,
+		                                    (tpp_size)((maxbuf + TPP_UTOA_MAXLEN) - maxptr));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		temp = tpp_formatprinter_print_conststr(printer, arg, "}");
+		if (temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+#endif /*  TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST*/
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 
-#endif /* !tpp_unam_lookup */
+#endif /* !tpp_unicode_byname_lookup */
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 
 #endif /* !GUARD_TPP_CTYPE_NAMES_C */

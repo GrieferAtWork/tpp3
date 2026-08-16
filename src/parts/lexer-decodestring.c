@@ -467,12 +467,12 @@ tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **tpp_restrict 
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI_BRACE || TPP_HAVE_STRING_ESCAPE_OCT_BRACE || TPP_HAVE_STRING_ESCAPE_HEX_BRACE */
 
 /*[[[tpp-end]]]*/ /* --- Defined in "lexer-yieldraw.c", which was already included */
-#if TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#if (TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML) && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 TPP_INTERN_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
                                              tpp_char const *start,
                                              tpp_char const *end);
-#endif /* TPP_HAVE_STRING_ESCAPE_NAMED && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+#endif /* (TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML) && TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 /*[[[tpp-begin]]]*/
 
 
@@ -646,15 +646,35 @@ print_ch_as_byte:
 #else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
 		count = tpp_decode_named_escape_xml(&iter, end, &uc);
 #endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) */
-		if (count == 0)
-			goto handle_unknown_escape_sequence;
-		tpp_assert(count == 1);
-		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
-		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
-		                               config->tldsc_arg, utf8_buf, utf8_len);
-		if (temp < 0)
-			goto err_temp;
-		result += temp;
+		if (count == 0) {
+			tpp_char const *named_start = iter;
+			while (iter < end &&
+			       iter < (named_start + TPP_XML_ENTITY_LOOKUP_MAXLEN)) {
+				if (*iter++ == ';')
+					break;
+			}
+#if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+			{
+				tpp_errno error;
+				tpp_char const *esc_first = esc_start + 1;
+#if TPP_HAVE_TRIGRAPHS
+				if (*esc_start == '?')
+					esc_first += 2;
+#endif /* TPP_HAVE_TRIGRAPHS */
+				error = tpp_lexer_warn_unknown_named_escape_sequence(self, esc_first, iter);
+				if (TPP_ISERR(error))
+					return TPP_SSIZE_OFERR(error);
+			}
+#endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
+		} else {
+			tpp_assert(count == 1);
+			utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
+			temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+			                               config->tldsc_arg, utf8_buf, utf8_len);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+		}
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_XML */
 

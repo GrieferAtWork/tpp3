@@ -308,6 +308,73 @@ nope:
 }
 #endif /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 
+#if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+#ifndef tpp_decode_named_printnearest
+/* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
+ * that automatically does the right thing, including adding a leading `&` before printing
+ * the name of a (potentially) closest matching XML escape sequence. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
+                              tpp_formatprinter printer, void *arg,
+                              struct tpp_lexer const *tpp_restrict lexer) {
+	(void)start;
+	(void)end;
+	(void)printer;
+	(void)arg;
+	(void)lexer;
+
+#if TPP_HAVE_XML_ENTITY_PRINTNEAREST
+	if (start < end && *start == '&' && tpp_lexer_has(lexer, ESCAPE_NAMED_XML)) {
+		tpp_ssize temp, result;
+		char xmlname[TPP_XML_ENTITY_LOOKUP_MAXLEN + 1];
+		bool has_trailing_semicolon = false;
+		tpp_size xmlname_size = 0;
+		++start;
+		while (start < end && xmlname_size < TPP_XML_ENTITY_LOOKUP_MAXLEN) {
+			xmlname[xmlname_size++] = *start++;
+			start = tpp_preparse_skipbse_fwd(lexer, start, end);
+		}
+		if (xmlname_size && xmlname[xmlname_size - 1] == ';') {
+			has_trailing_semicolon = true;
+			--xmlname_size;
+		} else if (start < end && *start == ';') {
+			has_trailing_semicolon = true;
+		}
+		xmlname[xmlname_size] = '\0';
+		result = tpp_formatprinter_print_conststr(printer, arg, "&");
+		if (result < 0)
+			return result;
+		temp = tpp_xml_entity_printnearest(xmlname, has_trailing_semicolon,
+		                                   printer, arg);
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+	}
+#endif /* TPP_HAVE_XML_ENTITY_PRINTNEAREST */
+
+
+#if TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES
+#if TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+	if (tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_NAMES))
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+	{
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+		return tpp_unicode_byname_printnearest(start, end, printer, arg, lexer);
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+		return tpp_unicode_byname_printnearest(start, end, printer, arg);
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+	}
+#endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
+
+#if TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES)
+	return 0;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
+}
+#endif /* !tpp_decode_named_printnearest */
+#endif /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
+
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

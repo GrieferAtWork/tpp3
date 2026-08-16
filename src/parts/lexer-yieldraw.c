@@ -1632,7 +1632,8 @@ warn_premature_eof:
 #endif /* NEED_tpp_lexer_seek_end_of_raw_string */
 
 
-#if ((TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) && \
+#if ((TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML || \
+      TPP_HAVE_IDENTIFIER_ESCAPE_NAMED) &&                          \
      TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE)
 TPP_INTERN_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
@@ -1644,15 +1645,6 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 	tpp_char const *const saved_end = token->tt_end;
 	token->tt_start = start;
 	token->tt_end   = end;
-	/* TODO: Also print name of *closest* unicode name (and yes I
-	 *       know: determining the closest is an O(n) operation)
-	 *
-	 * For this purpose, there are actually 2 databases that we
-	 * need to consult in order to determine the closest match:
-	 * - if the name starts with "&" and `ESCAPE_NAMED_XML` is
-	 *   enabled, consult `tpp_xml_entity_lookup()`
-	 * - otherwise, and if `ESCAPE_NAMED_UNICODE_NAMES` is enabled,
-	 *   consult `tpp_unicode_byname_lookup()` */
 	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
 	token->tt_start = saved_start;
 	token->tt_end   = saved_end;

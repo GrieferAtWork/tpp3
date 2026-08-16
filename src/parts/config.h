@@ -5524,7 +5524,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #define TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED))
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
@@ -6673,20 +6673,6 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
-/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
- * *fuzziness* of how close 2 memory-blocks are to each other.
- *
- * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
- * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
-#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
-#if (TPP_HAVE_TPP_EXTENSION_NEAREST || \
-     TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
-#define TPP_HAVE_TPP_FUZZY_MEMCMP 1
-#else /* ... */
-#define TPP_HAVE_TPP_FUZZY_MEMCMP 0
-#endif /* !... */
-#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
-
 /* Every token/keyword that TPP needs to pre-define for one reason or another
  * is defined as an enum in `tpp_token_id` under the name `TPP_KWD_<keyword>`
  * for keywords and `TPP_TOK_<DESCRIPTION>` for tokens.
@@ -6889,6 +6875,70 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 0
 #endif /* !... */
 #endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
+/* Provide an API `tpp_xml_entity_printnearest()` that can be used to
+ * print the name of the *nearest* known XML entity to the name
+ * that was given to the function as argument. */
+#ifndef TPP_HAVE_XML_ENTITY_PRINTNEAREST
+#if (TPP_HAVE_XML_ENTITY_LOOKUP &&                     \
+     (TPP_HAVE_PROFILE_ALL ||                          \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE && \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_XML_ENTITY_PRINTNEAREST */
+
+/* Provide an API `tpp_unicode_byname_printnearest()` that can be used to
+ * print the name of the *nearest* known unicode entity name when compared
+ * to the name that was given to the function as argument. */
+#ifndef TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+#if (TPP_HAVE_UNICODE_BYNAME_LOOKUP &&                 \
+     (TPP_HAVE_PROFILE_ALL ||                          \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE && \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST */
+
+/* Provide an API `tpp_decode_named_printnearest()` that can be used to
+ * print the name of the *nearest* known XML/unicode entity name when
+ * compared to the name that was given to the function as argument.
+ *
+ * If available, used by `TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE`
+ * to give you a suggestion of the unicode character name that you've
+ * ~probably~ meant to write */
+#ifndef TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+#if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                                                    \
+     ((TPP_HAVE_ESCAPE_NAMED_XML && TPP_HAVE_XML_ENTITY_PRINTNEAREST) ||                \
+      (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES && TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST)) && \
+     (TPP_HAVE_PROFILE_ALL ||                                                           \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE &&                                  \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
+
+/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
+ * *fuzziness* of how close 2 memory-blocks are to each other.
+ *
+ * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
+ * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
+#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
+#if (TPP_HAVE_TPP_EXTENSION_NEAREST ||     \
+     TPP_HAVE_TPP_WARNING_GROUP_NEAREST || \
+     TPP_HAVE_XML_ENTITY_PRINTNEAREST ||   \
+     TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST)
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 1
+#else /* ... */
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 /************************************************************************/
 /************************************************************************/

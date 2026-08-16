@@ -4505,8 +4505,20 @@ TPP_WARNING(TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 1(412
 
 #if TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #define TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
+#if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+TPP_WARNING_EX(TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 0(), ~, {
+	tpp_warn_printf0(tpp_current_info(), "unknown named escaped sequence: %Pt, did you mean %[");
+	tpp_do(tpp_decode_named_printnearest(tpp_lexer_gettokenstart(tpp_current_lexer()),
+	                                     tpp_lexer_gettokenend(tpp_current_lexer()),
+	                                     tpp_current_printer(),
+	                                     tpp_current_printer_arg(),
+	                                     tpp_current_lexer()));
+	tpp_warn_printf0(tpp_current_info(), "%]\n");
+})
+#else /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 TPP_WARNING(TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE, 1(TPP_WG_STRING_ESCAPE), 0(), ~,
             "unknown named escaped sequence: %Pt")
+#endif /* !TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 
 
@@ -10851,7 +10863,7 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #define TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE \
-	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED))
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML))
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE */
 #ifndef TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST
 #define TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
@@ -12000,20 +12012,6 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_TPP_WARNING_GROUP_NEAREST */
 
-/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
- * *fuzziness* of how close 2 memory-blocks are to each other.
- *
- * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
- * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
-#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
-#if (TPP_HAVE_TPP_EXTENSION_NEAREST || \
-     TPP_HAVE_TPP_WARNING_GROUP_NEAREST)
-#define TPP_HAVE_TPP_FUZZY_MEMCMP 1
-#else /* ... */
-#define TPP_HAVE_TPP_FUZZY_MEMCMP 0
-#endif /* !... */
-#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
-
 /* Every token/keyword that TPP needs to pre-define for one reason or another
  * is defined as an enum in `tpp_token_id` under the name `TPP_KWD_<keyword>`
  * for keywords and `TPP_TOK_<DESCRIPTION>` for tokens.
@@ -12216,6 +12214,70 @@ TPP_DECL_END
 #define TPP_HAVE_PREPARSE_SKIPSPACE_BCK 0
 #endif /* !... */
 #endif /* !TPP_HAVE_PREPARSE_SKIPSPACE_BCK */
+
+/* Provide an API `tpp_xml_entity_printnearest()` that can be used to
+ * print the name of the *nearest* known XML entity to the name
+ * that was given to the function as argument. */
+#ifndef TPP_HAVE_XML_ENTITY_PRINTNEAREST
+#if (TPP_HAVE_XML_ENTITY_LOOKUP &&                     \
+     (TPP_HAVE_PROFILE_ALL ||                          \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE && \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_XML_ENTITY_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_XML_ENTITY_PRINTNEAREST */
+
+/* Provide an API `tpp_unicode_byname_printnearest()` that can be used to
+ * print the name of the *nearest* known unicode entity name when compared
+ * to the name that was given to the function as argument. */
+#ifndef TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+#if (TPP_HAVE_UNICODE_BYNAME_LOOKUP &&                 \
+     (TPP_HAVE_PROFILE_ALL ||                          \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE && \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST */
+
+/* Provide an API `tpp_decode_named_printnearest()` that can be used to
+ * print the name of the *nearest* known XML/unicode entity name when
+ * compared to the name that was given to the function as argument.
+ *
+ * If available, used by `TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE`
+ * to give you a suggestion of the unicode character name that you've
+ * ~probably~ meant to write */
+#ifndef TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+#if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                                                    \
+     ((TPP_HAVE_ESCAPE_NAMED_XML && TPP_HAVE_XML_ENTITY_PRINTNEAREST) ||                \
+      (TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES && TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST)) && \
+     (TPP_HAVE_PROFILE_ALL ||                                                           \
+      (TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE &&                                  \
+       TPP_HAVE_PROFILE_NOT_MINIMAL)))
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST 1
+#else /* ... */
+#define TPP_HAVE_DECODE_NAMED_PRINTNEAREST 0
+#endif /* !... */
+#endif /* !TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
+
+/* Provide a function `tpp_fuzzy_memcmp()` to quantify the
+ * *fuzziness* of how close 2 memory-blocks are to each other.
+ *
+ * Needed to implement `TPP_HAVE_TPP_EXTENSION_NEAREST` and
+ * `TPP_HAVE_TPP_WARNING_GROUP_NEAREST`. */
+#ifndef TPP_HAVE_TPP_FUZZY_MEMCMP
+#if (TPP_HAVE_TPP_EXTENSION_NEAREST ||     \
+     TPP_HAVE_TPP_WARNING_GROUP_NEAREST || \
+     TPP_HAVE_XML_ENTITY_PRINTNEAREST ||   \
+     TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST)
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 1
+#else /* ... */
+#define TPP_HAVE_TPP_FUZZY_MEMCMP 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 /************************************************************************/
 /************************************************************************/
@@ -13326,6 +13388,18 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 
 #define TPP_XML_ENTITY_LOOKUP_MAXLEN 31 /* Length of the longest, known XML entity */
 #define TPP_XML_ENTITY_LOOKUP_MINLEN 2  /* Length of the shortest, known XML entity */
+
+#if TPP_HAVE_XML_ENTITY_PRINTNEAREST
+/* Print the name (including a trailing `;` if there is one) of
+ * some XML entity that matches the given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL
+tpp_xml_entity_printnearest(char const *tpp_restrict name,
+                            bool has_trailing_semicolon,
+                            tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_XML_ENTITY_PRINTNEAREST */
 #endif /* !tpp_xml_entity_lookup */
 #endif /* TPP_HAVE_XML_ENTITY_LOOKUP */
 
@@ -13348,6 +13422,27 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
 tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC]);
 #endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+
+
+#if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
+/* Print the name of some unicode character name that matches the
+ * given `name` most closely.
+ *
+ * @return: * : Sum of return values of `printer`
+ * @return: <0: First negative return value of `printer` */
+#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
+struct tpp_lexer;
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg,
+                                struct tpp_lexer const *tpp_restrict lexer);
+#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
+tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
+                                tpp_formatprinter printer, void *arg);
+#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
+#endif /*  TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST*/
+
 #endif /* !tpp_unicode_byname_lookup */
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 
@@ -13385,9 +13480,21 @@ _tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *e
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 #define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
-#define tpp_decode_named_escape(p_iter, end, result, lexer) \
-	TPP_SSIZE_OFERR(TPP_ENOENT)
+#define tpp_decode_named_escape(p_iter, end, result, lexer) TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
+
+#if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
+#ifndef tpp_decode_named_printnearest
+/* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
+ * that automatically does the right thing, including adding a leading `&` before printing
+ * the name of a (potentially) closest matching XML escape sequence. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
+                              tpp_formatprinter printer, void *arg,
+                              struct tpp_lexer const *tpp_restrict lexer);
+#endif /* !tpp_decode_named_printnearest */
+#endif /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
+
 
 /************************************************************************/
 /* File: parts/string.h                                                 */
