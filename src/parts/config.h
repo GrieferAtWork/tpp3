@@ -7350,7 +7350,7 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
 
-/* Enable support for `tpp_cli_loader_setinputss()`, which can be used
+/* Enable support for `tpp_cli_loader_setinputs()`, which can be used
  * to easily implement a high-level wrapper around the different APIs
  * that exist to load files into the lexer:
  * - `tpp_lexer_initfile_open()`
@@ -7360,7 +7360,7 @@ print("#endif /" "* !... *" "/");
  *
  * When this API is enabled and being used, it also becomes possible
  * to enable some additional CLI options such as `-fsearch-include-path`
- * (s.a. `TODO: TPP_HAVE_CLI_* option for that switch`)  */
+ * (s.a. `TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH`)  */
 #ifndef TPP_HAVE_CLI_SETINPUTS
 #define TPP_HAVE_CLI_SETINPUTS (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_HAVE_CLI_SETINPUTS */
@@ -7379,15 +7379,25 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME "<stdin>"
 #endif /* !TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME */
 
-/* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
+/* `-fsearch-include-path[=kind]` (where `kind` is one of `(user|system)`, defaulting to `user`):
+ * When specified, enable some extra behavior in `tpp_cli_loader_setinputs()` (as enabled by
+ * `TPP_HAVE_CLI_SETINPUTS`) when the specified file cannot be found (as a file realtive to the
+ * preprocessor's current working directory). If that happens, perform an additional search for
+ * the specified filename using `#include`-paths (s.a. `TPP_HAVE_INCLUDE_PATH`):
+ *
+ * - When `-fsearch-include-path=system` is used and input file `my/file.c` isn't
+ *   found as a file relative to the preprocessor's current working directory,
+ *   search for it like `#include <my/file.c>` would.
+ * - When `-fsearch-include-path=user` (or `-fsearch-include-path`) is used and
+ *   input file `my/file.c` isn't found as a file relative to the preprocessor's
+ *   current working directory, search for it like `#include "my/file.c"` would.
+ */
+#ifndef TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+#define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH \
+	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_PATH)
+#endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 
-/* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
- *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
- * - No special handling needed in TPP backend
- *   When kind=user, and the main input file could not be found, it must be
- *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
- *   When kind=system, and the main input file could not be found, it must be
- *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)` */
+/* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
 
 /************************************************************************/
 /************************************************************************/

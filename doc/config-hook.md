@@ -66,7 +66,7 @@ The following hooks exist and can each be overwritten individually:
 TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26949) to print warning messages.
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26959) to print warning messages.
 Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](#tpp_have_warnhandler_hook) is also overwritten
 
 <details><summary>Details</summary>
@@ -101,7 +101,7 @@ TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num
 tpp_errno TPP_HOOK_WARNHANDLER(tpp_hook_cookie cookie, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26949) to handle warning notifications. Can be
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26959) to handle warning notifications. Can be
 overwritten to implement custom behavior in regards to handling of warnings.
 
 <details><summary>Details</summary>
@@ -271,12 +271,12 @@ tpp_errno TPP_HOOK_FILE_PUSHED(tpp_hook_cookie cookie);
 ```
 
 Called whenever a file was just pushed onto the `#include`-stack. Information
-about the just-pushed file can be retrieved by examining [`tpp_lexer_getfile(LEXER)`](../src/tpp-amalgamation.h#L24602).
+about the just-pushed file can be retrieved by examining [`tpp_lexer_getfile(LEXER)`](../src/tpp-amalgamation.h#L24612).
 
 Notes:
 
 - This hook can be used by a frontend to implement stuff like GCC's `--trace-includes`.
-- This hook is *NOT* called for [`tpp_file_subtext_push()`](../src/tpp-amalgamation.h#L20447) or [`tpp_file_pushdummy()`](../src/tpp-amalgamation.h#L20841)
+- This hook is *NOT* called for [`tpp_file_subtext_push()`](../src/tpp-amalgamation.h#L20457) or [`tpp_file_pushdummy()`](../src/tpp-amalgamation.h#L20851)
 
 <details><summary>Details</summary>
 
@@ -304,15 +304,15 @@ void TPP_HOOK_FILE_POPPED(tpp_hook_cookie cookie);
 
 Called whenever a file is about to be popped off the `#include`-stack.
 Information about the file that's about-to-be popped can be retrieved
-by examining [`tpp_lexer_getfile(LEXER)`](../src/tpp-amalgamation.h#L24602).
+by examining [`tpp_lexer_getfile(LEXER)`](../src/tpp-amalgamation.h#L24612).
 
 Notes:
 
-- When files are popped by [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L25965) within a
-  [`tpp_lexer_manualpopfile_start()`](../src/tpp-amalgamation.h#L25963)-region, this hook is called during the
-  *commit* phase (i.e.: by [`tpp_lexer_manualpopfile_break_commit()`](../src/tpp-amalgamation.h#L25970)),
-  rather than [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L25965) as one might suspect at first.
-- This hook is *NOT* called by [`tpp_file_subtext_pop()`](../src/tpp-amalgamation.h#L20470) or [`tpp_file_popdummy()`](../src/tpp-amalgamation.h#L20854)
+- When files are popped by [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L25975) within a
+  [`tpp_lexer_manualpopfile_start()`](../src/tpp-amalgamation.h#L25973)-region, this hook is called during the
+  *commit* phase (i.e.: by [`tpp_lexer_manualpopfile_break_commit()`](../src/tpp-amalgamation.h#L25980)),
+  rather than [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L25975) as one might suspect at first.
+- This hook is *NOT* called by [`tpp_file_subtext_pop()`](../src/tpp-amalgamation.h#L20480) or [`tpp_file_popdummy()`](../src/tpp-amalgamation.h#L20864)
 
 <details><summary>Details</summary>
 
@@ -340,15 +340,15 @@ tpp_errno TPP_HOOK_INCLUDE_ENCOUNTERED(tpp_hook_cookie cookie, tpp_hook_include_
 
 Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
 is encountered, at the point in time when the lexer's current token has already
-been populated by [`tpp_lexer_yieldraw_at_include_string_blocking()`](../src/tpp-amalgamation.h#L26141) (and macros
-were also already expanded), and the current token is [`TPP_TOK_INCPATH_DQUOTE`](../src/tpp-amalgamation.h#L26110) or
-[`TPP_TOK_INCPATH_LANGLE`](../src/tpp-amalgamation.h#L26111).
+been populated by [`tpp_lexer_yieldraw_at_include_string_blocking()`](../src/tpp-amalgamation.h#L26151) (and macros
+were also already expanded), and the current token is [`TPP_TOK_INCPATH_DQUOTE`](../src/tpp-amalgamation.h#L26120) or
+[`TPP_TOK_INCPATH_LANGLE`](../src/tpp-amalgamation.h#L26121).
 
 This hook is primarily here for the purpose of implementing GCC's `-dI` switch, but
 it could also be used for other purposes, such as intentionally skipping certain
 `#include`-directives.
 
-To gain access to the `#include`-string, you must use [`tpp_lexer_decode_include_string_cb()`](../src/tpp-amalgamation.h#L26176)
+To gain access to the `#include`-string, you must use [`tpp_lexer_decode_include_string_cb()`](../src/tpp-amalgamation.h#L26186)
 
 
 <details><summary>Details</summary>
@@ -377,12 +377,12 @@ tpp_errno TPP_HOOK_INCLUDE_NOT_FOUND(tpp_hook_cookie cookie, tpp_hook_include_ki
 
 Called when the file specified by a `#include` (or `#include_next`, `#import` or
 `#embed`)-directive could not be found. This hook may be used to either suppress
-the error (by returning something other than [`TPP_ENOENT`](../src/tpp-amalgamation.h#L12912)), or log the error to
+the error (by returning something other than [`TPP_ENOENT`](../src/tpp-amalgamation.h#L12922)), or log the error to
 implement something like GCC's `-MG` commandline switch.
 
 This hook is called just before [`TPP_W_NO_SUCH_FILE`](../src/tpp-amalgamation.h#L4812) would be emitted, with the lexer's
 current token still being the `<stdio.h>` or `"file.h"` string, meaning if you want
-to know what that string says, you can use [`tpp_lexer_decode_include_string_cb()`](../src/tpp-amalgamation.h#L26176) to decode it.
+to know what that string says, you can use [`tpp_lexer_decode_include_string_cb()`](../src/tpp-amalgamation.h#L26186) to decode it.
 
 
 <details><summary>Details</summary>
@@ -415,7 +415,7 @@ parsed (macro was has not yet been registered with keyword).
 - This hook is *ONLY* invoked when `#define` is encountered, or
   `#pragma pop_macro("foo")` was used to restore a macro's previous
   definition.
-- Calls to [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25614) or other related functions will
+- Calls to [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25624) or other related functions will
   *NOT* invoke this hook.
 
 
@@ -447,11 +447,11 @@ Called whenever a `#undef` directive has just been fully
 parsed (macro hasn't been deleted from keyword, yet). Note
 that this hook is still called, even if the keyword doesn't
 have a macro (and might have even already been marked as having
-no predefined definition: [`_TPP_KEYWORD_MACRO_UNDEFINED`](../src/tpp-amalgamation.h#L21200)). This
+no predefined definition: [`_TPP_KEYWORD_MACRO_UNDEFINED`](../src/tpp-amalgamation.h#L21210)). This
 hook is imply called as part of the process of evaluating `#undef`
 
 This hook is *ONLY* invoked when `#undef` is encountered.
-Calls to [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L25622), [`tpp_keyword_undef()`](../src/tpp-amalgamation.h#L21648), or other
+Calls to [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L25632), [`tpp_keyword_undef()`](../src/tpp-amalgamation.h#L21658), or other
 related functions will *NOT* invoke this hook.
 
 NOTE: this hook *will* actually also be called by `#pragma push_macro(undef, "foo")`
@@ -507,7 +507,7 @@ tpp_errno _tpp_disabled_hook_ident_sccs(tpp_hook_cookie cookie, tpp_token_id mod
 tpp_errno TPP_HOOK_SYSTEM_INCLUDE_PATH(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg);
 ```
 
-Extra callback invoked by [`tpp_lexer_foreach_include_path()`](../src/tpp-amalgamation.h#L26207) at different
+Extra callback invoked by [`tpp_lexer_foreach_include_path()`](../src/tpp-amalgamation.h#L26217) at different
 points during the process of enumerating include paths. This callback is
 then allowed to enumerate some additional include paths that may exist, but
 for one reason or another (mainly: speed) aren't known to TPP via its system
@@ -537,7 +537,7 @@ tpp_errno _tpp_disabled_hook_system_include_path(tpp_hook_cookie cookie, tpp_tok
 tpp_errno TPP_HOOK_SYSTEM_EMBED_PATH(tpp_hook_cookie cookie, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg);
 ```
 
-Extra callback invoked by [`tpp_lexer_foreach_embed_path()`](../src/tpp-amalgamation.h#L26249) at different points
+Extra callback invoked by [`tpp_lexer_foreach_embed_path()`](../src/tpp-amalgamation.h#L26259) at different points
 during the process of enumerating embed paths. (s.a. [`TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`](#tpp_have_system_include_path_hook))
 
 <details><summary>Details</summary>
@@ -564,7 +564,7 @@ tpp_errno _tpp_disabled_hook_system_embed_path(tpp_hook_cookie cookie, tpp_token
 tpp_ssize TPP_HOOK_UNKNOWN_STRING_ESCAPE(tpp_hook_cookie cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, tpp_lexer_decodestring_config const *tpp_restrict config);
 ```
 
-Called by [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L26710) when an unknown `\`-escape sequence is encountered.
+Called by [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L26720) when an unknown `\`-escape sequence is encountered.
 This hook can be used to define additional, user-defined escape sequences, or any other
 arbitrary behavior to-be performed when specific escape-sequences are found.
 On entry, `*p_pos` points at the first (unrecognized) character after the leading `\`, and
@@ -595,9 +595,9 @@ tpp_ssize _tpp_disabled_hook_unknown_string_escape(tpp_hook_cookie cookie, tpp_c
 tpp_errno TPP_HOOK_RAISE_LEXERROR(tpp_hook_cookie cookie);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26949) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12960)
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L26959) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12970)
 This hook can be used to do additional state changes that may be necessary by the
-hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12960)
+hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L12970)
 
 <details><summary>Details</summary>
 
@@ -623,12 +623,12 @@ tpp_errno _tpp_disabled_hook_raise_lexerror(tpp_hook_cookie cookie) {
 tpp_errno TPP_HOOK_ISFLOATSUFFIX(tpp_hook_cookie cookie, tpp_char const *pos);
 ```
 
-Called by [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L25805) when [`TPP_HAVE_SMART_FLOAT_TOKENS`](config-conf.md#tpp_have_smart_float_tokens) is enabled and
+Called by [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L25815) when [`TPP_HAVE_SMART_FLOAT_TOKENS`](config-conf.md#tpp_have_smart_float_tokens) is enabled and
 a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
 part of the float-token (in the form of a float-suffix), or if this should actually be
 parsed as 3 tokens: `[C_INT:1][DOT:.][f:f]`. For this purpose, this hook is called
 with `pos` pointing at the `f` (additional characters thereafter may not be loaded
-yet, though can be loaded using [`tpp_lexer_readchar()`](../src/tpp-amalgamation.h#L25709) and [`tpp_lexer_readunichar()`](../src/tpp-amalgamation.h#L25718))
+yet, though can be loaded using [`tpp_lexer_readchar()`](../src/tpp-amalgamation.h#L25719) and [`tpp_lexer_readunichar()`](../src/tpp-amalgamation.h#L25728))
 
 <details><summary>Details</summary>
 

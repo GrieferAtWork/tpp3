@@ -1183,6 +1183,23 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 				return TPP_EOK;
 			} else
 #endif /* TPP_HAVE_CLI_DASH_FMAX_ERRORS */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+			if (tpp_streq(arg, "search-include-path") tpp_cli__and_not_no) { /* -fsearch-include-path... */
+				tpp_token_id new_mode = TPP_TOK_EOF;
+				arg += (sizeof("search-include-path") - sizeof(char));
+				if (*arg == '\0') {
+					new_mode = TPP_TOK_INCPATH_DQUOTE;
+				} else if (tpp_streq(arg, "=user\0")) {
+					new_mode = TPP_TOK_INCPATH_DQUOTE;
+				} else if (tpp_streq(arg, "=system\0")) {
+					new_mode = TPP_TOK_INCPATH_LANGLE;
+				}
+				if (new_mode != TPP_TOK_EOF) {
+					tpp_cli_loader_set_search_include_path_mode(self, new_mode);
+					return TPP_EOK;
+				}
+			} else
+#endif /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 			{
 #if TPP_HAVE_CLI_DASH_FEXTENSION
 				/* Fallback: configure an extension */
@@ -1512,6 +1529,29 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 
 #if TPP_HAVE_CLI_SETINPUTS
 
+typedef struct tpp_cli_loader_open_input_data {
+	tpp_lexer_openfile_result tcloid_ofr;   /* Open-file-result */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+	tpp_lexer                *tcloid_lexer; /* [1..1] Lexer */
+	char const               *tcloid_file;  /* [1..1] Filename */
+#endif /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+} tpp_cli_loader_open_input_data;
+
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+static tpp_errno TPPCALL
+tpp_cli_loader_open_input_cb(void *arg, char const *relative_to
+                             tpp_lexer_foreach_include_path_flags__PARAM) {
+	tpp_cli_loader_open_input_data *data;
+#if TPP_HAVE_FILE_SYSHDR
+	(void)flags;
+#endif /* TPP_HAVE_FILE_SYSHDR */
+	data = (tpp_cli_loader_open_input_data *)arg;
+	return tpp_lexer_openfile(data->tcloid_lexer, relative_to,
+	                          data->tcloid_file, TPP_SIZE_MAX,
+	                          &data->tcloid_ofr);
+}
+#endif /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+
 /* Open the specified `input_filename`
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOENT: No such file
@@ -1521,7 +1561,7 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
                           char const *tpp_restrict input_filename,
                           tpp_file *tpp_restrict file) {
 	tpp_errno result;
-	tpp_lexer_openfile_result ofr;
+	tpp_cli_loader_open_input_data data;
 #if TPP_HAVE_CLI_SETINPUTS_DASH
 	if (tpp_strcmp(input_filename, "-") == 0) {
 #ifdef tpp_io_getstdin
@@ -1543,14 +1583,53 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
 #endif /* TPP_HAVE_CLI_SETINPUTS_DASH */
 
 	/* Try to open the file directly */
-	result = tpp_lexer_openfile(self->tcl_lexer, NULL, input_filename, TPP_SIZE_MAX, &ofr);
+	result = tpp_lexer_openfile(self->tcl_lexer, NULL, input_filename, TPP_SIZE_MAX, &data.tcloid_ofr);
+
+	/* Try to open the file via extra #include-paths, as specified by `-fsearch-include-path=...` */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+	if (result == TPP_ENOENT &&
+	    self->tcl_search_include_path_mode != TPP_TOK_EOF &&
+	    !TPP_FS_ISABS(input_filename, tpp_strlen(input_filename))) {
+		tpp_lexer *const lexer = self->tcl_lexer;
+		tpp_assert(self->tcl_search_include_path_mode == TPP_TOK_INCPATH_LANGLE ||
+		           self->tcl_search_include_path_mode == TPP_TOK_INCPATH_DQUOTE);
+		data.tcloid_lexer = self->tcl_lexer;
+		data.tcloid_file  = input_filename;
+#if TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
+		/* Calls to `tpp_lexer_foreach_include_path` would normally also try to include
+		 * data relative to the lexer's current file (or possibly even additional files
+		 * further up the #include-stack).
+		 * 1. We don't want that to happen -- `-fsearch-include-path` should only cause
+		 *    the additional #include-paths to be searched
+		 * 2. The lexer's current file may not actually be initialized, yet!
+		 *
+		 * To prevent any issues here, override the lexer's file (and thereby also its
+		 * #include-stack) to consist entirely of an unnamed dummy/empty text-file,
+		 * thereby preventing any issues with uninitialized/unintended search-paths. */
+		{
+			tpp_file saved_file = *tpp_lexer_getfile(lexer);
+			tpp_lexer_initfile_text_utf8(lexer, NULL, NULL, NULL, 0,
+			                             TPP_LCINFO_INVALID,
+			                             TPP_FILE_FLAGS_NORMAL);
+			result = tpp_lexer_foreach_include_path(lexer, self->tcl_search_include_path_mode,
+			                                        &tpp_cli_loader_open_input_cb,
+			                                        &data);
+			*tpp_lexer_getfile(lexer) = saved_file;
+		}
+#else /* TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+		result = tpp_lexer_foreach_include_path(lexer, self->tcl_search_include_path_mode,
+		                                        &tpp_cli_loader_open_input_cb,
+		                                        &data);
+#endif /* !TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE */
+	}
+#endif /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+
+	/* If OFR could be loaded, initialize the file from it. */
 	if (result != TPP_ENOENT) {
 		if (!TPP_ISERR(result))
-			tpp_file_init_io_from_ofr(file, &ofr);
+			tpp_file_init_io_from_ofr(file, &data.tcloid_ofr);
 		return result;
 	}
-
-	/* TODO: `-fsearch-include-path` */
 
 	/* Emit a warning about the file not being found */
 #if TPP_HAVE_TPP_W_NO_SUCH_FILE
@@ -1811,6 +1890,10 @@ TPP_CLI_HELP1("-fmax-include-depth=COUNT",
 TPP_CLI_HELP1("-ftabstop=WIDTH",
               "Set WIDTH of \\t in columns")
 #endif /* TPP_HAVE_CLI_DASH_FTABSTOP */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+TPP_CLI_HELP1("-fsearch-include-path[=(user|system)]",
+              "Find missing inputs in #include \"file\" (user) or #include <file> (system)")
+#endif /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 #if TPP_HAVE_CLI_DASH_FTABSTOP
 TPP_CLI_HELP2("-C", "--comments\0-CC\0--comments-in-macros",
               "Enable emission of COMMENT/SPACE/LF tokens")

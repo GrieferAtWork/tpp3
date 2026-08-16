@@ -1139,13 +1139,13 @@ tpp_unicode_byname_enumerate_decode_ns(tpp_char const **tpp_restrict p_iter,
 
 static TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
 tpp_unicode_byname_enumerate_impl(tpp_unicode_byname_enumerate_data *tpp_restrict data,
-                                  tpp_char const *tpp_restrict db_iter,
+                                  tpp_unam_node const *tpp_restrict db_iter,
                                   tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
 	tpp_ssize temp, result = 0;
 	tpp_char feat;
 	tpp_size basesize = data->tubned_size;
 	do {
-		tpp_char const *next_node = NULL;
+		tpp_unam_node const *next_node = NULL;
 		bool has_ord;
 		char *write_dst;
 		feat = *db_iter++;

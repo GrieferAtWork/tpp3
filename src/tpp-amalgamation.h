@@ -12689,7 +12689,7 @@ TPP_DECL_END
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
 
-/* Enable support for `tpp_cli_loader_setinputss()`, which can be used
+/* Enable support for `tpp_cli_loader_setinputs()`, which can be used
  * to easily implement a high-level wrapper around the different APIs
  * that exist to load files into the lexer:
  * - `tpp_lexer_initfile_open()`
@@ -12699,7 +12699,7 @@ TPP_DECL_END
  *
  * When this API is enabled and being used, it also becomes possible
  * to enable some additional CLI options such as `-fsearch-include-path`
- * (s.a. `TODO: TPP_HAVE_CLI_* option for that switch`)  */
+ * (s.a. `TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH`)  */
 #ifndef TPP_HAVE_CLI_SETINPUTS
 #define TPP_HAVE_CLI_SETINPUTS (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
 #endif /* !TPP_HAVE_CLI_SETINPUTS */
@@ -12718,15 +12718,25 @@ TPP_DECL_END
 #define TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME "<stdin>"
 #endif /* !TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME */
 
-/* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
+/* `-fsearch-include-path[=kind]` (where `kind` is one of `(user|system)`, defaulting to `user`):
+ * When specified, enable some extra behavior in `tpp_cli_loader_setinputs()` (as enabled by
+ * `TPP_HAVE_CLI_SETINPUTS`) when the specified file cannot be found (as a file realtive to the
+ * preprocessor's current working directory). If that happens, perform an additional search for
+ * the specified filename using `#include`-paths (s.a. `TPP_HAVE_INCLUDE_PATH`):
+ *
+ * - When `-fsearch-include-path=system` is used and input file `my/file.c` isn't
+ *   found as a file relative to the preprocessor's current working directory,
+ *   search for it like `#include <my/file.c>` would.
+ * - When `-fsearch-include-path=user` (or `-fsearch-include-path`) is used and
+ *   input file `my/file.c` isn't found as a file relative to the preprocessor's
+ *   current working directory, search for it like `#include "my/file.c"` would.
+ */
+#ifndef TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+#define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH \
+	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_PATH)
+#endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 
-/* TODO: - "-fsearch-include-path[=kind]"  (kind=R"(user|system)")
- *       - "-fsearch-include-path"         (same as "-fsearch-include-path=user")
- * - No special handling needed in TPP backend
- *   When kind=user, and the main input file could not be found, it must be
- *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_DQUOTE)`
- *   When kind=system, and the main input file could not be found, it must be
- *   searched-for using `tpp_lexer_foreach_include_path(TPP_TOK_INCPATH_LANGLE)` */
+/* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
 
 /************************************************************************/
 /************************************************************************/
@@ -27064,7 +27074,7 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 
 /* Publicly exposed CLI loader states */
 #define TPP_CLI_LOADER_STATE_NORMAL 0 /* Normal state */
-#define TPP_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
+#define TPP_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered */
 
 #undef TPP_HAVE_CLI_NEEDS_FINI
 typedef struct tpp_cli_loader {
@@ -27090,6 +27100,12 @@ typedef struct tpp_cli_loader {
 #else /* TPP_HAVE_CLI_DASH_INCLUDE */
 #define _tpp_cli_loader_init_include(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+	tpp_token_id TPP_INTERNAL(tcl_search_include_path_mode);
+#define _tpp_cli_loader_init_tcl_search_include_path_mode(self) , (self)->TPP_INTERNAL(tcl_search_include_path_mode) = TPP_TOK_EOF
+#else /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+#define _tpp_cli_loader_init_tcl_search_include_path_mode(self) /* nothing */
+#endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 } tpp_cli_loader;
 
 /* Return the lexer that is being initialized by the given CLI loader. */
@@ -27104,6 +27120,28 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_hasddash(self) \
 	((self)->TPP_INTERNAL(tcl_state) == TPP_CLI_LOADER_STATE_DDASH)
 
+
+/* Get/Set/Reset the `-fsearch-include-path=...` mode of the CLI loader.
+ * For this purpose, token IDs are used as follows:
+ * - `TPP_TOK_EOF`:            Don't do anything special (default)
+ * - `TPP_TOK_INCPATH_LANGLE`: Search as in `#include <my/file.c>`
+ * - `TPP_TOK_INCPATH_DQUOTE`: Search as in `#include "my/file.c"` */
+#if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
+#define tpp_cli_loader_get_search_include_path_mode(self) \
+	(self)->TPP_INTERNAL(tcl_search_include_path_mode)
+#define tpp_cli_loader_set_search_include_path_mode(self, mode) \
+	(void)(tpp_assert((mode) == TPP_TOK_EOF ||                  \
+	                  (mode) == TPP_TOK_INCPATH_LANGLE ||       \
+	                  (mode) == TPP_TOK_INCPATH_DQUOTE),        \
+	       (self)->TPP_INTERNAL(tcl_search_include_path_mode) = (mode))
+#define tpp_cli_loader_reset_search_include_path_mode(self, mode) \
+	(void)((self)->TPP_INTERNAL(tcl_search_include_path_mode) = TPP_TOK_EOF)
+#else /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+#define tpp_cli_loader_get_search_include_path_mode(self)         TPP_TOK_EOF
+#define tpp_cli_loader_reset_search_include_path_mode(self, mode) (void)0
+#endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+
+
 #ifndef TPP_HAVE_CLI_NEEDS_FINI
 #define TPP_HAVE_CLI_NEEDS_FINI 0
 #endif /* !TPP_HAVE_CLI_NEEDS_FINI */
@@ -27117,9 +27155,10 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_init(self, lexer)                                 \
 	(void)((self)->TPP_INTERNAL(tcl_lexer) = (lexer),                    \
 	       (self)->TPP_INTERNAL(tcl_state) = TPP_CLI_LOADER_STATE_NORMAL \
-	       _tpp_cli_loader_init_include(self)                            \
 	       _tpp_cli_loader_init_prefix(self)                             \
-	       _tpp_cli_loader_init_sysroot(self))
+	       _tpp_cli_loader_init_sysroot(self)                            \
+	       _tpp_cli_loader_init_include(self)                            \
+	       _tpp_cli_loader_init_tcl_search_include_path_mode(self))
 #if TPP_HAVE_CLI_NEEDS_FINI
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_cli_loader_fini(tpp_cli_loader *tpp_restrict self);
