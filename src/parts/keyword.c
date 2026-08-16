@@ -477,7 +477,8 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 
 /* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
  * and -- if there might be a builtin/predefined macro related to `self` -- that
- * macro is re-enabled. */
+ * macro is re-enabled (iow: this restores the original macro-definition state of
+ * the given keyword `self`). */
 #if TPP_HAVE_CPP_BUILTIN_MACROS && TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
@@ -803,13 +804,13 @@ tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
 		uc        = 0;
 		cur_digit = 0;
 		for (;;) {
-			uint_least8_t nibble;
+			tpp_uint_least8 nibble;
 			if (tpp_ascii_isdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_asdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_asdigit(ch);
 			} else if (tpp_ascii_islwrxdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_aslwrxdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_aslwrxdigit(ch);
 			} else if (tpp_ascii_isuprxdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_asuprxdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_asuprxdigit(ch);
 			} else {
 				if (cur_digit == 0)
 					goto nope;

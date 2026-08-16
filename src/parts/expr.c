@@ -377,7 +377,7 @@ handle_multiply_string:
 		lhs_length = tpp_string_len(lhs_value);
 		whole_size = (tpp_size)multiplier * lhs_length;
 		if ((((tpp_size)multiplier | lhs_length) &
-		     ~(tpp_size)(TPP_SIZE_MAX >> (TPP_CHAR_BIT * (TPP_SIZEOF_tpp_size / 2)))) &&
+		     ~(tpp_size)(TPP_SIZE_MAX >> (TPP_CHAR_BIT * (sizeof(tpp_size) / 2)))) &&
 		    (whole_size / (tpp_size)multiplier != lhs_length))
 			whole_size = TPP_SIZE_MAX;
 #define TPP_MAX_STRING_LENGTH (((TPP_SIZE_MAX - tpp_offsetof(tpp_string, ts_str)) / sizeof(tpp_char)) - 1)

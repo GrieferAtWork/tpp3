@@ -82,39 +82,39 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 
 /* Keyword flags... */
 #if TPP_HAVE_KEYWORD_FLAGS
-#define tpp_keyword_flags uint_least16_t /* Set of `TPP_KEYWORD_FLAG_*` */
-#define TPP_KEYWORD_FLAG_NORMAL           UINT16_C(0x0000) /* Normal flags */
+#define tpp_keyword_flags tpp_uint_least16 /* Set of `TPP_KEYWORD_FLAG_*` */
+#define TPP_KEYWORD_FLAG_NORMAL           TPP_UINT_LEAST16_C(0x0000) /* Normal flags */
 #if TPP_HAVE_CPP_PREDEFINED_MACROS
-#define TPP_KEYWORD_FLAG_UNDEF_PREDEFINED UINT16_C(0x0001) /* Do not expand  */
+#define TPP_KEYWORD_FLAG_UNDEF_PREDEFINED TPP_UINT_LEAST16_C(0x0001) /* Do not expand  */
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 #if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated
-#define TPP_KEYWORD_FLAG_IS_DEPRECATED    UINT16_C(0x0002) /* Warn when the keyword appears as the result of lexical processing. */
+#define TPP_KEYWORD_FLAG_IS_DEPRECATED    TPP_UINT_LEAST16_C(0x0002) /* Warn when the keyword appears as the result of lexical processing. */
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated */
 #if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
-#define TPP_KEYWORD_FLAG_IS_POISONED      UINT16_C(0x0004) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
-                                                            * Don't emit a warning if the keyword is used inside of a macro.
-                                                            * -> Only warn if it is used from a text file. */
+#define TPP_KEYWORD_FLAG_IS_POISONED      TPP_UINT_LEAST16_C(0x0004) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
+                                                                      * Don't emit a warning if the keyword is used inside of a macro.
+                                                                      * -> Only warn if it is used from a text file. */
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
 #if TPP_HAVE_CPP_IMPORT
-#define TPP_KEYWORD_FLAG_HDR_IMPORTED     UINT16_C(0x0010) /* Set after this header was `#import`-ed */
+#define TPP_KEYWORD_FLAG_HDR_IMPORTED     TPP_UINT_LEAST16_C(0x0010) /* Set after this header was `#import`-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
 #if TPP_HAVE_PRAGMA_ONCE
-#define TPP_KEYWORD_FLAG_HDR_ONCE         UINT16_C(0x0020) /* Set after `#pragma once` was encountered */
+#define TPP_KEYWORD_FLAG_HDR_ONCE         TPP_UINT_LEAST16_C(0x0020) /* Set after `#pragma once` was encountered */
 #endif /* TPP_HAVE_PRAGMA_ONCE */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_KEYWORD_FLAG_HDR_GUARD_VALID  UINT16_C(0x0040) /* The configured `tkm_file_guard` is valid and should be used
-                                                            * (Set when the file is removed from the `#include`-stack with
-                                                            * its `#ifdef`-stack empty, and `tkm_file_guard != NULL`) */
+#define TPP_KEYWORD_FLAG_HDR_GUARD_VALID  TPP_UINT_LEAST16_C(0x0040) /* The configured `tkm_file_guard` is valid and should be used
+                                                                      * (Set when the file is removed from the `#include`-stack with
+                                                                      * its `#ifdef`-stack empty, and `tkm_file_guard != NULL`) */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 struct tpp_keyword;
 
 #if TPP_HAVE_KEYWORD_FEATURES
-typedef struct tpp_keyword_feature {
+typedef struct TPP_INTERNAL(tpp_keyword_feature) {
 	TPP_REF tpp_string *TPP_INTERNAL(tkf_expansion); /* [0..1] Expansion of relevant feature-test for this keyword
 	                                                  *        When `NULL`, feature-test expands to the string `0` */
-} tpp_keyword_feature;
+} TPP_INTERNAL(tpp_keyword_feature);
 
 #define _tpp_keyword_feature_init(self) \
 	(void)((self)->TPP_INTERNAL(tkf_expansion) = NULL)
@@ -126,13 +126,13 @@ typedef struct tpp_keyword_feature {
 	(_tpp_keyword_feature_fini(self),    \
 	 _tpp_keyword_feature_init(self))
 
-typedef struct tpp_keyword_features {
+typedef struct TPP_INTERNAL(tpp_keyword_features) {
 /*[[[deemon
 import KEYWORD_FEATURE_KINDS from .config;
 for (local kind: KEYWORD_FEATURE_KINDS) {
 	local KIND = kind.upper();
 	print("#if TPP_HAVE_KEYWORD_FEATURE_", KIND);
-	print("	tpp_keyword_feature TPP_INTERNAL(tkfs_", kind, "); /" "* Expansion for `__", kind, "()` *" "/");
+	print("	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_", kind, "); /" "* Expansion for `__", kind, "()` *" "/");
 	print("#define _tpp_keyword_features_with_", kind, "(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_", kind, "))");
 	print("#else /" "* TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
 	print("#define _tpp_keyword_features_with_", kind, "(self, cb) /" "* nothing *" "/");
@@ -141,55 +141,55 @@ for (local kind: KEYWORD_FEATURE_KINDS) {
 }
 ]]]*/
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
 #define _tpp_keyword_features_with_has_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
 #define _tpp_keyword_features_with_has_builtin(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_builtin))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #define _tpp_keyword_features_with_has_builtin(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_cpp_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_declspec_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
 #define _tpp_keyword_features_with_has_extension(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_extension))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #define _tpp_keyword_features_with_has_extension(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
 #define _tpp_keyword_features_with_has_feature(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_feature))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #define _tpp_keyword_features_with_has_feature(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_c_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 /*[[[end]]]*/
-} tpp_keyword_features;
+} TPP_INTERNAL(tpp_keyword_features);
 
 /*[[[deemon
 import KEYWORD_FEATURE_KINDS from .config;
@@ -281,10 +281,15 @@ tpp_assertions_assert(tpp_assertions *tpp_restrict self,
 TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
                         struct tpp_keyword const *tpp_restrict value);
-#endif /* TPP_HAVE_CPP_ASSERT */
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_assertions_getcount(self)        0
+#define tpp_assertions_containsany(self)     false
+#define tpp_assertions_unassertall(self)     (void)0
+#define tpp_assertions_contains(self, value) false
+#endif /* !TPP_HAVE_CPP_ASSERT */
 
 
-typedef struct tpp_keyword_misc {
+typedef struct TPP_INTERNAL(tpp_keyword_misc) {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*` */
 #define _tpp_keyword_misc_init_flags(self) , (self)->TPP_INTERNAL(tkm_flags) = TPP_KEYWORD_FLAG_NORMAL
@@ -293,10 +298,10 @@ typedef struct tpp_keyword_misc {
 #endif /* !TPP_HAVE_KEYWORD_FLAGS */
 
 #if TPP_HAVE_KEYWORD_FEATURES
-	tpp_keyword_features TPP_INTERNAL(tkm_features); /* Expansions of `__has_*` feature-test macros */
+	TPP_INTERNAL(tpp_keyword_features) TPP_INTERNAL(tkm_features); /* Expansions of `__has_*` feature-test macros */
 #define _tpp_keyword_misc_init_features(self) , _tpp_keyword_features_init(&(self)->TPP_INTERNAL(tkm_features))
 #define _tpp_keyword_misc_featurebykind(self, kind) \
-	((tpp_keyword_feature *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
+	((TPP_INTERNAL(tpp_keyword_feature) *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
 #else /* TPP_HAVE_KEYWORD_FEATURES */
 #define _tpp_keyword_misc_init_features(self) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURES */
@@ -343,7 +348,7 @@ typedef struct tpp_keyword_misc {
 #else /* TPP_HAVE_KEYWORD_USERDATA */
 #define _tpp_keyword_misc_init_userdata(self)   /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
-} tpp_keyword_misc;
+} TPP_INTERNAL(tpp_keyword_misc);
 
 #define _tpp_keyword_misc_init(self)                    \
 	(void)((void)0 _tpp_keyword_misc_init_flags(self)   \
@@ -354,8 +359,8 @@ typedef struct tpp_keyword_misc {
 	       _tpp_keyword_misc_init_macro_pushstack(self) \
 	       _tpp_keyword_misc_init_builtin_counter(self) \
 	       _tpp_keyword_misc_init_userdata(self))
-#define _tpp_keyword_misc_alloc()    ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
-#define _tpp_keyword_misc_tryalloc() ((tpp_keyword_misc *)tpp_trymalloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_alloc()    ((TPP_INTERNAL(tpp_keyword_misc) *)tpp_malloc(sizeof(TPP_INTERNAL(tpp_keyword_misc))))
+#define _tpp_keyword_misc_tryalloc() ((TPP_INTERNAL(tpp_keyword_misc) *)tpp_trymalloc(sizeof(TPP_INTERNAL(tpp_keyword_misc))))
 #define _tpp_keyword_misc_free(p)    tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
@@ -366,32 +371,32 @@ struct tpp_macro;
 
 #undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 typedef struct tpp_keyword {
-	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
+	tpp_token_id                    TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
 #if TPP_HAVE_CPP_MACROS
-	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
+	TPP_REF struct tpp_macro       *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
-	tpp_keyword_misc         *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
+	TPP_INTERNAL(tpp_keyword_misc) *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
-	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
+	tpp_hash                        TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
+	struct tpp_keyword             *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_KEYWORD_ASSTRING
-	tpp_refcnt_atomic         TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
+	tpp_refcnt_atomic               TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
-	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
-	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */
-/*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
+	tpp_size                        TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
+	tpp_char                        TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */
+/*	tpp_char                        TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
 #if TPP_HAVE_USER_KEYWORDS
-#define tpp_keyword_sizeof(len) \
+#define _tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
-#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
-#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(tpp_keyword_sizeof(len)))
-#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
-#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(_tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(_tpp_keyword_sizeof(len)))
+#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, _tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, _tpp_keyword_sizeof(len)))
 #define _tpp_keyword_free(p)            tpp_free(p)
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
@@ -429,7 +434,9 @@ typedef struct tpp_keyword {
 #if TPP_HAVE_CPP_MACROS
 #define tpp_keyword_getmacro(self)  ((self)->TPP_INTERNAL(tk_macro))
 #define tpp_keyword_hasmacro(self)  _TPP_KEYWORD_MACRO_ISDEFINED((self)->TPP_INTERNAL(tk_macro))
-#endif /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keyword_hasmacro(self)  0
+#endif /* !TPP_HAVE_CPP_MACROS */
 
 /* Check if `self` matches the C, constant string literal `CONSTstr` */
 #define tpp_keyword_equals_conststr(self, CONSTstr)                       \
@@ -452,6 +459,7 @@ typedef struct tpp_keyword {
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
+
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Get the user-data pointer for `self`
@@ -480,7 +488,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
                         void *ptr, void (TPPCALL *dtor)(void *ptr),
                         bool destroy_prev);
-#endif /* TPP_HAVE_KEYWORD_USERDATA */
+#else /* TPP_HAVE_KEYWORD_USERDATA */
+#define tpp_keyword_getuserdata(self)      ((void *)NULL)
+#define tpp_keyword_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
+#endif /* !TPP_HAVE_KEYWORD_USERDATA */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Push the current macro-definition of `self`
@@ -515,7 +526,8 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self);
 
 /* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
  * and -- if there might be a builtin/predefined macro related to `self` -- that
- * macro is re-enabled. */
+ * macro is re-enabled (iow: this restores the original macro-definition state of
+ * the given keyword `self`). */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 #if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -532,8 +544,10 @@ tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keyword_canundef(self)     0
-#define tpp_keyword_canundefuser(self) 0
+#define tpp_keyword_canundef(self)     false
+#define tpp_keyword_canundefuser(self) false
+#define tpp_keyword_undef(self)        (void)0
+#define tpp_keyword_undefuser(self)    (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -609,30 +623,30 @@ import KEYWORD_FEATURE_KINDS from .config;
 for (local kind: KEYWORD_FEATURE_KINDS) {
 	local KIND = kind.upper();
 	print("#if TPP_HAVE_KEYWORD_FEATURE_", KIND);
-	print("	TPP_KEYWORD_FEATURE_KIND_", KIND, " = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_", kind, ")), /" "* Expansion for `__has_", kind, "()` *" "/");
+	print("	TPP_KEYWORD_FEATURE_KIND_", KIND, " = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_", kind, ")), /" "* Expansion for `__has_", kind, "()` *" "/");
 	print("#endif /" "* TPP_HAVE_KEYWORD_FEATURE_", KIND, " *" "/");
 }
 ]]]*/
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
-	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
-	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
-	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 /*[[[end]]]*/
 } tpp_keyword_feature_kind;
@@ -721,7 +735,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 /* Initial hash value */
-#define TPP_HASH_INITIAL TPP_HASH_C(1)
+#define TPP_HASH_INITIAL 1
 
 /* >> tpp_hash tpp_hash_combine_char(tpp_hash a, tpp_char b);
  * Combine a given hash value `a` with a character `b`. */

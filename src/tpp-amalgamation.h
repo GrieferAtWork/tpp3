@@ -5500,73 +5500,209 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !tpp_expect_IS_NOOP */
 #endif /* !tpp_unlikely */
 
+#ifndef tpp_uint_least8
+#ifdef UINT_LEAST8_MAX
+#define tpp_int_least8  int_least8_t
+#define tpp_uint_least8 uint_least8_t
+#define TPP_UINT_LEAST8_MAX UINT_LEAST8_MAX
+#ifdef UINT8_C
+#define TPP_UINT_LEAST8_C UINT8_C
+#endif /* UINT8_C */
+#else /* UINT_LEAST8_MAX */
+#define tpp_int_least8  signed char
+#define tpp_uint_least8 unsigned char
+#define TPP_UINT_LEAST8_MAX 0xff
+#endif /* !UINT_LEAST8_MAX */
+#endif /* !tpp_uint_least8 */
+#ifndef TPP_UINT_LEAST8_C
+#define TPP_UINT_LEAST8_C(x) x
+#endif /* !TPP_UINT_LEAST8_C */
+
+#ifndef tpp_uint_least16
+#ifdef UINT_LEAST16_MAX
+#define tpp_int_least16  int_least16_t
+#define tpp_uint_least16 uint_least16_t
+#define TPP_UINT_LEAST16_MAX UINT_LEAST16_MAX
+#ifdef UINT16_C
+#define TPP_UINT_LEAST16_C UINT16_C
+#endif /* UINT16_C */
+#else /* UINT_LEAST16_MAX */
+#define tpp_int_least16  signed short
+#define tpp_uint_least16 unsigned short
+#define TPP_UINT_LEAST16_MAX 0xffff
+#endif /* !UINT_LEAST16_MAX */
+#endif /* !tpp_uint_least16 */
+#ifndef TPP_UINT_LEAST16_C
+#define TPP_UINT_LEAST16_C(x) x
+#endif /* !TPP_UINT_LEAST16_C */
+
+#ifndef tpp_uint_least32
+#ifdef UINT_LEAST32_MAX
+#define tpp_int_least32  int_least32_t
+#define tpp_uint_least32 uint_least32_t
+#define TPP_UINT_LEAST32_MAX UINT_LEAST32_MAX
+#ifdef UINT32_C
+#define TPP_UINT_LEAST32_C UINT32_C
+#endif /* UINT32_C */
+#else /* UINT_LEAST32_MAX */
+#define tpp_int_least32  signed int
+#define tpp_uint_least32 unsigned int
+#define TPP_UINT_LEAST32_MAX 0xffffffffu
+#define TPP_UINT_LEAST32_C(x) x##u
+#endif /* !UINT_LEAST32_MAX */
+#endif /* !tpp_uint_least32 */
+#ifndef TPP_UINT_LEAST32_C
+#define TPP_UINT_LEAST32_C(x) x
+#endif /* !TPP_UINT_LEAST32_C */
+
+#ifndef tpp_uint_least64
+#ifdef UINT_LEAST64_MAX
+#define tpp_int_least64  int_least64_t
+#define tpp_uint_least64 uint_least64_t
+#define TPP_UINT_LEAST64_MAX UINT_LEAST64_MAX
+#ifdef UINT64_C
+#define TPP_UINT_LEAST64_C UINT64_C
+#endif /* UINT64_C */
+#endif /* !UINT_LEAST64_MAX */
+#endif /* !tpp_uint_least64 */
+#ifndef TPP_UINT_LEAST64_C
+#define TPP_UINT_LEAST64_C(x) x
+#endif /* !TPP_UINT_LEAST64_C */
+
+#ifndef tpp_uint_fast8
+#ifdef UINT_FAST8_MAX
+#define tpp_int_fast8      int_fast8_t
+#define tpp_uint_fast8     uint_fast8_t
+#define TPP_UINT_FAST8_MAX UINT_FAST8_MAX
+#ifdef UINT8_C
+#define TPP_UINT_FAST8_C UINT8_C
+#endif /* UINT8_C */
+#else /* UINT_FAST8_MAX */
+#define tpp_int_fast8      tpp_int_least8
+#define tpp_uint_fast8     tpp_uint_least8
+#define TPP_UINT_FAST8_MAX TPP_UINT_LEAST8_MAX
+#define TPP_UINT_FAST8_C   TPP_UINT_LEAST8_C
+#endif /* !UINT_FAST8_MAX */
+#endif /* !tpp_uint_fast8 */
+#ifndef TPP_UINT_FAST8_C
+#define TPP_UINT_FAST8_C TPP_UINT_LEAST8_C
+#endif /* !TPP_UINT_FAST8_C */
+
+#ifndef tpp_uint_fast16
+#ifdef UINT_FAST16_MAX
+#define tpp_int_fast16      int_fast16_t
+#define tpp_uint_fast16     uint_fast16_t
+#define TPP_UINT_FAST16_MAX UINT_FAST16_MAX
+#ifdef UINT16_C
+#define TPP_UINT_FAST16_C UINT16_C
+#endif /* UINT16_C */
+#else /* UINT_FAST16_MAX */
+#define tpp_int_fast16      tpp_int_least16
+#define tpp_uint_fast16     tpp_uint_least16
+#define TPP_UINT_FAST16_MAX TPP_UINT_LEAST16_MAX
+#define TPP_UINT_FAST16_C   TPP_UINT_LEAST16_C
+#endif /* !UINT_FAST16_MAX */
+#endif /* !tpp_uint_fast16 */
+#ifndef TPP_UINT_FAST16_C
+#define TPP_UINT_FAST16_C TPP_UINT_LEAST16_C
+#endif /* !TPP_UINT_FAST16_C */
+
+#ifndef tpp_uint_fast32
+#ifdef UINT_FAST32_MAX
+#define tpp_int_fast32      int_fast32_t
+#define tpp_uint_fast32     uint_fast32_t
+#define TPP_UINT_FAST32_MAX UINT_FAST32_MAX
+#ifdef UINT32_C
+#define TPP_UINT_FAST32_C UINT32_C
+#endif /* UINT32_C */
+#else /* UINT_FAST32_MAX */
+#define tpp_int_fast32      tpp_int_least32
+#define tpp_uint_fast32     tpp_uint_least32
+#define TPP_UINT_FAST32_MAX TPP_UINT_LEAST32_MAX
+#define TPP_UINT_FAST32_C   TPP_UINT_LEAST32_C
+#endif /* !UINT_FAST32_MAX */
+#endif /* !tpp_uint_fast32 */
+#ifndef TPP_UINT_FAST32_C
+#define TPP_UINT_FAST32_C TPP_UINT_LEAST32_C
+#endif /* !TPP_UINT_FAST32_C */
 #ifndef tpp_size
-#define tpp_size     size_t
+#define tpp_size size_t
+#ifdef SIZE_MAX
 #define TPP_SIZE_MAX SIZE_MAX
+#endif /* SIZE_MAX */
 #endif /* !tpp_size */
-#ifndef TPP_SIZEOF_tpp_size
-#if TPP_SIZE_MAX == UINT32_C(0xffffffff)
-#define TPP_SIZEOF_tpp_size 4
-#elif TPP_SIZE_MAX == UINT64_C(0xffffffffffffffff)
-#define TPP_SIZEOF_tpp_size 8
-#elif TPP_SIZE_MAX == UINT16_C(0xffff)
-#define TPP_SIZEOF_tpp_size 2
-#elif TPP_SIZE_MAX == UINT8_C(0xff)
-#define TPP_SIZEOF_tpp_size 1
-#else /* ... */
-#error "Unsupported 'TPP_SIZE_MAX' - Please provide your own '#define TPP_SIZEOF_tpp_size'"
-#endif /* !... */
-#endif /* !TPP_SIZEOF_tpp_size */
+
 #ifndef tpp_ssize
 #define tpp_ssize ptrdiff_t
 #ifdef PTRDIFF_MAX
 #define TPP_SSIZE_MAX PTRDIFF_MAX
-#else /* PTRDIFF_MAX */
+#elif defined(TPP_SIZE_MAX)
 #define TPP_SSIZE_MAX ((TPP_SIZE_MAX >> 1) - 1)
-#endif /* !PTRDIFF_MAX */
+#endif /* ... */
 #endif /* !tpp_ssize */
+
 #ifndef tpp_hash
-#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
 #define TPP_SIZEOF_tpp_hash 4
-#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
 #define TPP_SIZEOF_tpp_hash 8
-#else /* UINT_FAST32_MAX == ... */
-#error "Unrecognized 'UINT_FAST32_MAX'"
-#endif /* UINT_FAST32_MAX != ... */
-#define tpp_hash uint_fast32_t
-#ifdef UINT32_C
-#define TPP_HASH_C UINT32_C
-#else /* UINT32_C */
-#define TPP_HASH_C(x) x
-#endif /* !UINT32_C */
+#else /* TPP_UINT_FAST32_MAX == ... */
+#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
+#endif /* TPP_UINT_FAST32_MAX != ... */
+#define tpp_hash   tpp_uint_fast32
+#define TPP_HASH_C TPP_UINT_FAST32_C
 #endif /* !tpp_hash */
+
 #ifndef tpp_line
-#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
 #define TPP_SIZEOF_tpp_line   4
 #define TPP_SIZEOF_tpp_column 4
-#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
 #define TPP_SIZEOF_tpp_line   8
 #define TPP_SIZEOF_tpp_column 8
-#else /* UINT_FAST32_MAX == ... */
-#error "Unrecognized 'UINT_FAST32_MAX'"
-#endif /* UINT_FAST32_MAX != ... */
-#define tpp_line   int_fast32_t
-#define tpp_column int_fast32_t
+#else /* TPP_UINT_FAST32_MAX == ... */
+#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
+#endif /* TPP_UINT_FAST32_MAX != ... */
+#define tpp_line   tpp_int_fast32
+#define tpp_column tpp_int_fast32
 #endif /* !tpp_line */
+
 #ifndef tpp_char
 #define tpp_char unsigned char
 #endif /* !tpp_char */
+
 #ifndef tpp_unichar
-#define tpp_unichar   uint_least32_t
-#define TPP_UNICHAR_C UINT32_C
+#define tpp_unichar   tpp_uint_least32
+#define TPP_UNICHAR_C TPP_UINT_LEAST32_C
 #endif /* !tpp_unichar */
 
 #ifndef tpp_intmax
+#ifdef UINTMAX_MAX
 #define tpp_intmax      intmax_t
 #define tpp_uintmax     uintmax_t
 #define TPP_UINTMAX_MAX UINTMAX_MAX
+#ifdef UINTMAX_C
 #define TPP_UINTMAX_C   UINTMAX_C
+#endif /* UINTMAX_C */
+#elif defined(tpp_uint_least64)
+#define tpp_intmax      tpp_int_least64
+#define tpp_uintmax     tpp_uint_least64
+#define TPP_UINTMAX_MAX TPP_UINT_LEAST64_MAX
+#define TPP_UINTMAX_C   TPP_UINT_LEAST64_C
+#else /* ... */
+#define tpp_intmax      tpp_int_least32
+#define tpp_uintmax     tpp_uint_least32
+#define TPP_UINTMAX_MAX TPP_UINT_LEAST32_MAX
+#define TPP_UINTMAX_C   TPP_UINT_LEAST32_C
+#endif /* !... */
 #endif /* !tpp_intmax */
+#ifndef TPP_UINTMAX_C
+#ifdef tpp_uint_least64
+#define TPP_UINTMAX_C TPP_UINT_LEAST64_C
+#else /* tpp_uint_least64 */
+#define TPP_UINTMAX_C TPP_UINT_LEAST32_C
+#endif /* !tpp_uint_least64 */
+#endif /* !TPP_UINTMAX_C */
 
 /* Counter type used to implement `__COUNTER__` and `__TPP_COUNTER` */
 #ifndef tpp_counter
@@ -5743,16 +5879,24 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 
 /* Line/Column-information API */
 #ifndef tpp_lcinfo
-#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
-#define tpp_lcinfo int_least64_t
+#if defined(TPP_UINT_LEAST64_MAX) && !TPP_HAVE_TPP2_COMPAT
+#define tpp_lcinfo tpp_int_least64
 
 #define tpp_lcinfo_equals(a, b)  ((a) == (b))
+#ifdef UINT32_MAX
 #define tpp_lcinfo_getline(self) ((tpp_line)((int32_t)(uint32_t)(self)))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)((int32_t)(uint32_t)((self) >> 32)))
 #define tpp_lcinfo_of(line, col)               \
 	(((tpp_lcinfo)(uint32_t)(int32_t)(line)) | \
 	 ((tpp_lcinfo)(uint32_t)(int32_t)(col) << 32))
-#else /* INT_LEAST64_MAX && UINT32_MAX && !TPP_HAVE_TPP2_COMPAT */
+#else /* UINT32_MAX */
+#define tpp_lcinfo_getline(self) ((tpp_line)((self) & TPP_UINT_LEAST32_C(0xffffffff)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)(((self) >> 32) & TPP_UINT_LEAST32_C(0xffffffff)))
+#define tpp_lcinfo_of(line, col)                               \
+	(((tpp_lcinfo)((line) & TPP_UINT_LEAST32_C(0xffffffff))) | \
+	 ((tpp_lcinfo)((col) & TPP_UINT_LEAST32_C(0xffffffff)) << 32))
+#endif /* !UINT32_MAX */
+#else /* TPP_UINT_LEAST64_MAX && !TPP_HAVE_TPP2_COMPAT */
 typedef struct tpp_lcinfo {
 	tpp_line   TPP_INTERNAL(lci_line); /* Line */
 	tpp_column TPP_INTERNAL(lci_col);  /* Column */
@@ -5772,7 +5916,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	result.TPP_INTERNAL(lci_col)  = col;
 	return result;
 }
-#endif /* !INT_LEAST64_MAX || !UINT32_MAX || TPP_HAVE_TPP2_COMPAT */
+#endif /* !TPP_UINT_LEAST64_MAX || TPP_HAVE_TPP2_COMPAT */
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
@@ -5815,7 +5959,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
  *       that reference counts don't need to be atomic, because all
  *       components are thread-local. */
 typedef struct {
-	uint_fast32_t trc_count; /* Reference counter */
+	tpp_uint_fast32 trc_count; /* Reference counter */
 } tpp_refcnt;
 #define tpp_refcnt             tpp_refcnt
 #define TPP_REFCNT_INIT(v)     { v }
@@ -5836,7 +5980,7 @@ typedef struct {
  *          reference counter is used in places where the linked component
  *          may be shared between multiple lexers (and thus: threads) */
 typedef struct {
-	uint_fast32_t trca_count; /* Reference counter */
+	tpp_uint_fast32 trca_count; /* Reference counter */
 } tpp_refcnt_atomic;
 #define tpp_refcnt_atomic             tpp_refcnt_atomic
 #define TPP_REFCNT_ATOMIC_INIT(v)     { v }
@@ -13067,20 +13211,20 @@ char const *TPPCALL tpp_strerror(tpp_errno error);
 
 
 #if TPP_HAVE_BUILTIN_CTYPE
-#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
-#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
-#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
-#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
-#define _TPP_CTYPE_ISDIGIT    0x10 /* 0-9 */
-#define _TPP_CTYPE_ISMBLF     0x20 /* First byte of utf8-encoded unicode linefeed character sequence (0xc2 + 0xe2 right now) */
+#define _TPP_CTYPE_ISSYMSTRT  TPP_UINT_LEAST8_C(0x01) /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  TPP_UINT_LEAST8_C(0x02) /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    TPP_UINT_LEAST8_C(0x04) /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       TPP_UINT_LEAST8_C(0x08) /* Linefeed character (\r and \n) */
+#define _TPP_CTYPE_ISDIGIT    TPP_UINT_LEAST8_C(0x10) /* 0-9 */
+#define _TPP_CTYPE_ISMBLF     TPP_UINT_LEAST8_C(0x20) /* First byte of utf8-encoded unicode linefeed character sequence (0xc2 + 0xe2 right now) */
 
-#if UINT_LEAST8_MAX == 0xff
-#define _tpp_ascii_mask(ch) ((uint_least8_t)(ch))
-#else /* UINT_LEAST8_MAX == 0xff */
+#if TPP_UINT_LEAST8_MAX == 0xff
+#define _tpp_ascii_mask(ch) ((tpp_uint_least8)(ch))
+#else /* TPP_UINT_LEAST8_MAX == 0xff */
 #define _tpp_ascii_mask(ch) ((ch) & 0xff)
-#endif /* UINT_LEAST8_MAX != 0xff */
+#endif /* TPP_UINT_LEAST8_MAX != 0xff */
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
+TPP_CONST_DECL tpp_uint_least8 const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
 #endif /* !TPP_USE_STATIC */
 #define tpp_ascii_issymstrt(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_ascii_issymcont(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
@@ -13094,9 +13238,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 /* Check if `ch` is the first byte of a multi-byte UTF-8 sequence */
 #ifndef tpp_ascii_ismb
 #if 0 /* Setting `1` here reduces the chances of unicode encoding errors being detected */
-#define tpp_ascii_ismb(ch) ((ch) >= 0xc0)
+#define tpp_ascii_ismb(ch) ((ch) >= TPP_UINT_LEAST8_C(0xc0))
 #else
-#define tpp_ascii_ismb(ch) ((ch) >= 0x80)
+#define tpp_ascii_ismb(ch) ((ch) >= TPP_UINT_LEAST8_C(0x80))
 #endif
 #endif /* !tpp_ascii_ismb */
 
@@ -13104,7 +13248,7 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 #define tpp_ascii_isspace_nolf(ch) (tpp_ascii_isspace(ch) && !tpp_ascii_islf(ch))
 #endif /* !tpp_ascii_isspace_nolf */
 #ifndef tpp_ascii_islf_or_mblf
-#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch) || (ch) == 0xc2 || (ch) == 0xe2)
+#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch) || (ch) == TPP_UINT_LEAST8_C(0xc2) || (ch) == TPP_UINT_LEAST8_C(0xe2))
 #endif /* !tpp_ascii_islf_or_mblf */
 
 
@@ -13166,13 +13310,13 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 #endif /* ... */
 
 #ifndef _TPP_CTYPE_ISSYMSTRT
-#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
-#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
-#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
-#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
+#define _TPP_CTYPE_ISSYMSTRT  TPP_UINT_LEAST8_C(0x01) /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  TPP_UINT_LEAST8_C(0x02) /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    TPP_UINT_LEAST8_C(0x04) /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       TPP_UINT_LEAST8_C(0x08) /* Linefeed character (\r and \n) */
 #endif /* !_TPP_CTYPE_ISSYMSTRT */
 
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp_unichar uch); /* Don't access directly! (considered TPP_INTERNAL) */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_uint_least8 TPPCALL _tpp_unicode_traits(tpp_unichar uch); /* Don't access directly! (considered TPP_INTERNAL) */
 #define tpp_unicode_isspace_nolf(ord) (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSPACE)
 #define tpp_unicode_issymstrt(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_unicode_issymcont(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMCONT)
@@ -13200,20 +13344,20 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #if defined(tpp_unicode_isspace) && defined(tpp_unicode_islf)
 #define tpp_unicode_isspace_nolf(ord) (tpp_unicode_isspace(ord) && !tpp_unicode_islf(ord))
 #else /* tpp_unicode_isspace && tpp_unicode_islf */
-#define tpp_unicode_isspace_nolf(ord) ((ord) <= 0xff && tpp_ascii_isspace_nolf(ord))
+#define tpp_unicode_isspace_nolf(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_isspace_nolf(ord))
 #endif /* !tpp_unicode_isspace || !tpp_unicode_islf */
 #endif /* !tpp_unicode_isspace_nolf */
 #ifndef tpp_unicode_issymstrt
-#define tpp_unicode_issymstrt(ord) ((ord) >= 0x80 || tpp_ascii_issymstrt(ord))
+#define tpp_unicode_issymstrt(ord) ((ord) >= TPP_UINT_LEAST8_C(0x80) || tpp_ascii_issymstrt(ord))
 #endif /* !tpp_unicode_issymstrt */
 #ifndef tpp_unicode_issymcont
-#define tpp_unicode_issymcont(ord) ((ord) >= 0x80 || tpp_ascii_issymcont(ord))
+#define tpp_unicode_issymcont(ord) ((ord) >= TPP_UINT_LEAST8_C(0x80) || tpp_ascii_issymcont(ord))
 #endif /* !tpp_unicode_issymcont */
 #ifndef tpp_unicode_isspace
-#define tpp_unicode_isspace(ord) ((ord) <= 0xff && tpp_ascii_isspace(ord))
+#define tpp_unicode_isspace(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_isspace(ord))
 #endif /* !tpp_unicode_isspace */
 #ifndef tpp_unicode_islf
-#define tpp_unicode_islf(ord) ((ord) <= 0xff && tpp_ascii_islf(ord))
+#define tpp_unicode_islf(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_islf(ord))
 #endif /* !tpp_unicode_islf */
 
 
@@ -13232,9 +13376,9 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #ifndef tpp_unicode_utf8seqlen_mb_getcur
 #define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
-	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - 128])
+	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - TPP_UINT_LEAST8_C(128)])
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
+TPP_CONST_DECL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_cur[128];
 #endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_cur _tpp_unicode_utf8seqlen_mb_cur
 #endif /* !tpp_unicode_utf8seqlen_mb_getcur */
@@ -13243,7 +13387,7 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
  * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
 #ifndef tpp_unicode_utf8seqlen_getcur
 #define tpp_unicode_utf8seqlen_getcur(first_utf8_byte) \
-	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte))
+	((first_utf8_byte) < TPP_UINT_LEAST8_C(0x80) ? 1 : tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte))
 #endif /* !tpp_unicode_utf8seqlen_getcur */
 
 /* Similar to `tpp_unicode_utf8seqlen_mb_getcur()`, except that this
@@ -13261,9 +13405,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
 #ifndef tpp_unicode_utf8seqlen_mb_getmax
 #define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
-	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - 128])
+	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - TPP_UINT_LEAST8_C(128)])
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
+TPP_CONST_DECL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_max[128];
 #endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_max _tpp_unicode_utf8seqlen_mb_max
 #endif /* !tpp_unicode_utf8seqlen_mb_getmax */
@@ -13272,12 +13416,12 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
  * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
 #ifndef tpp_unicode_utf8seqlen_getmax
 #define tpp_unicode_utf8seqlen_getmax(first_utf8_byte) \
-	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte))
+	((first_utf8_byte) < TPP_UINT_LEAST8_C(0x80) ? 1 : tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte))
 #endif /* !tpp_unicode_utf8seqlen_getmax */
 
 /* Check if `ch` is a utf-8 continuation byte */
 #ifndef tpp_ascii_isutf8cont
-#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
+#define tpp_ascii_isutf8cont(ch) (((ch) & TPP_UINT_LEAST8_C(0xc0)) == TPP_UINT_LEAST8_C(0x80))
 #endif /* !tpp_ascii_isutf8cont */
 
 
@@ -19849,33 +19993,33 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 #endif /* !... */
 
 #if TPP_HAVE_FILE_FLAGS
-#define tpp_file_flags uint_least8_t /* Set of `TPP_FILE_FLAGS_*` */
-#define TPP_FILE_FLAGS_NORMAL       UINT8_C(0x00) /* Normal flags */
+#define tpp_file_flags tpp_uint_least8 /* Set of `TPP_FILE_FLAGS_*` */
+#define TPP_FILE_FLAGS_NORMAL       TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_HAVE_FILE_NONBLOCK
-#define TPP_FILE_FLAGS_NONBLOCK     UINT8_C(0x01) /* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
+#define TPP_FILE_FLAGS_NONBLOCK     TPP_UINT_LEAST8_C(0x01) /* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_FILE_NOCLOSE
-#define TPP_FILE_FLAGS_NOCLOSE      UINT8_C(0x02) /* `TPP_FILE_KIND_IO`: Don't `tpp_io_close(tff_file)` on destruction */
+#define TPP_FILE_FLAGS_NOCLOSE      TPP_UINT_LEAST8_C(0x02) /* `TPP_FILE_KIND_IO`: Don't `tpp_io_close(tff_file)` on destruction */
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but rather a raw `\0`-terminated C string. */
+#define TPP_FILE_FLAGS_NOKWD        TPP_UINT_LEAST8_C(0x04) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but rather a raw `\0`-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
-#define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
+#define TPP_FILE_FLAGS_FREENAME     TPP_UINT_LEAST8_C(0x08) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_SYSHDR
-#define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x10) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Suppress all warnings produced in the context of this file */
+#define TPP_FILE_FLAGS_SYSHDR       TPP_UINT_LEAST8_C(0x10) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_EXTERN_C
-#define TPP_FILE_FLAGS_EXTERN_C     UINT8_C(0x20) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Treat everything within the file as being wrapped by an implicit `extern "C"` */
+#define TPP_FILE_FLAGS_EXTERN_C     TPP_UINT_LEAST8_C(0x20) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Treat everything within the file as being wrapped by an implicit `extern "C"` */
 #endif /* TPP_HAVE_FILE_EXTERN_C */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_FILE_FLAGS_NOGUARD      UINT8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
-                                                   * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
+#define TPP_FILE_FLAGS_NOGUARD      TPP_UINT_LEAST8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
+                                                             * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_CPP_DIRECTIVES
-#define TPP_FILE_FLAGS_NODIRECTIVES UINT8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
-                                                   * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
+#define TPP_FILE_FLAGS_NODIRECTIVES TPP_UINT_LEAST8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
+                                                             * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #endif /* TPP_HAVE_FILE_FLAGS */
 
@@ -20071,8 +20215,8 @@ typedef struct tpp_file {
 #if TPP_HAVE_UNICODE
 			union {
 				struct {
-					uint_least8_t TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
-					unsigned char TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					tpp_uint_least8 TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					unsigned char   TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
 				} TPP_INTERNAL(tffed_unicode);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 				tpp_uintmax TPP_INTERNAL(tffed_embedlimit); /* Max # of remaining bytes that may be embedded */
@@ -20900,8 +21044,8 @@ TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below *
 
 #if TPP_HAVE_CPP_MACROS
 
-#define tpp_macro_kind uint_least8_t
-#define TPP_MACRO_KIND_KEYWORD      UINT8_C(0)
+#define tpp_macro_kind tpp_uint_least8
+#define TPP_MACRO_KIND_KEYWORD      TPP_UINT_LEAST8_C(0)
 #define TPP_MACRO_KIND_FUNC_PAREN   '('
 #define TPP_MACRO_KIND_ISFUNC(kind) ((kind) != TPP_MACRO_KIND_KEYWORD)
 #define TPP_MACRO_KIND_ASTOK(kind)  TPP_TOK_OFCHAR(kind)
@@ -20916,8 +21060,8 @@ TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below *
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 #undef TPP_HAVE_MACRO_FLAGS
-#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS ||                   \
-     TPP_HAVE_VA_ARGS_IN_MACROS ||                         \
+#if (TPP_HAVE_NAMED_VARARGS_IN_MACROS ||                  \
+     TPP_HAVE_VA_ARGS_IN_MACROS ||                        \
      TPP_CONF_ISRT(TPP_HAVE_MACRO_RECURSION) ||           \
      TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) || \
      TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE))
@@ -20944,26 +21088,26 @@ TPP_DECL tpp_column _tpp_tabsize; /* Internal API -- use getters/setters below *
 
 
 #if TPP_HAVE_MACRO_FLAGS
-#define tpp_macro_flag uint_least8_t /* Set of `TPP_MACRO_FLAG_*` */
-#define TPP_MACRO_FLAG_NORMAL     UINT8_C(0x00) /* Normal flags */
+#define tpp_macro_flag tpp_uint_least8 /* Set of `TPP_MACRO_FLAG_*` */
+#define TPP_MACRO_FLAG_NORMAL     TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
-#define TPP_MACRO_FLAG_VARIADIC   UINT8_C(0x01) /* The last argument of the function is variadic. */
+#define TPP_MACRO_FLAG_VARIADIC   TPP_UINT_LEAST8_C(0x01) /* The last argument of the function is variadic. */
 #endif /* TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS */
 #if TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE)
-#define TPP_MACRO_FLAG_KEEPARGSPC UINT8_C(0x02) /* When set, keep whitespace surrounding macro arguments during invocation.
-                                                 * WARNING: Also affects recursive macro expansion. */
+#define TPP_MACRO_FLAG_KEEPARGSPC TPP_UINT_LEAST8_C(0x02) /* When set, keep whitespace surrounding macro arguments during invocation.
+                                                           * WARNING: Also affects recursive macro expansion. */
 #endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE)
-#define TPP_MACRO_FLAG_MAGIC_WHITESPACE UINT8_C(0x04) /* Add extra whitespace during argument expansion when necessary */
+#define TPP_MACRO_FLAG_MAGIC_WHITESPACE TPP_UINT_LEAST8_C(0x04) /* Add extra whitespace during argument expansion when necessary */
 #endif /* TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
 #if TPP_CONF_ISRT(TPP_HAVE_MACRO_RECURSION)
-#define TPP_MACRO_FLAG_SELFEXPAND UINT8_C(0x08) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
-                                                 * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion`) */
+#define TPP_MACRO_FLAG_SELFEXPAND TPP_UINT_LEAST8_C(0x08) /* After being expanded, this function is allowed to re-invoke itself and be expanded, when
+                                                           * the generated text is not identical to a previous iteration. (s.a.: `-fmacro-recursion`) */
 #endif /* TPP_CONF_ISRT(TPP_HAVE_MACRO_RECURSION) */
 #endif /* TPP_HAVE_MACRO_FLAGS */
 
 
-typedef struct tpp_macro_argument {
+typedef struct TPP_INTERNAL(tpp_macro_argument) {
 	tpp_token_id    TPP_INTERNAL(tma_id);      /* [const] (Keyword) token id associated with this argument name. */
 	tpp_size        TPP_INTERNAL(tma_ins_exp); /* [const] Amount of times the argument is inserted after expansion. */
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
@@ -20972,7 +21116,7 @@ typedef struct tpp_macro_argument {
 #if TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT
 	tpp_size        TPP_INTERNAL(tma_ins);     /* [const] Amount of times the argument is inserted without expansion. */
 #endif /* TPP_HAVE_DONT_EXPAND_MACRO_ARGUMENT || TPP_HAVE_GLUE_MACRO_ARGUMENT */
-} tpp_macro_argument;
+} TPP_INTERNAL(tpp_macro_argument);
 
 
 /* Opcodes for function-style macro expansion */
@@ -21002,7 +21146,7 @@ enum {
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */
 };
 
-struct tpp_macro_argbuf; /* Opaque... */
+struct TPP_INTERNAL(tpp_macro_argbuf); /* Opaque... */
 #if TPP_HAVE_MACRO_NAME
 struct tpp_keyword;
 #endif /* TPP_HAVE_MACRO_NAME */
@@ -21029,18 +21173,19 @@ typedef struct tpp_macro {
 	tpp_lcinfo          TPP_INTERNAL(tm_body_lc);    /* [const][valid_if(tm_deffile != NULL)] Macro body line/column (0-based) */
 	union {
 		struct {
-			tpp_size            TPP_INTERNAL(tmf_argc);       /* [const] Amount of arguments this macro-function takes */
-			tpp_macro_argument *TPP_INTERNAL(tmf_argv);       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
-			tpp_size            TPP_INTERNAL(tmf_expbase);    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
+			tpp_size         TPP_INTERNAL(tmf_argc);       /* [const] Amount of arguments this macro-function takes */
+			TPP_INTERNAL(tpp_macro_argument)
+			                *TPP_INTERNAL(tmf_argv);       /* [const][0..f_argc][owned] Vector of argument information (used for fast calculation of the expanded macro's size) */
+			tpp_size         TPP_INTERNAL(tmf_expbase);    /* [const] Base size of macro expansion buffer (== (tm_body_end-tm_body_start) - <TOTAL_SPACE_FROM(TPP_MACRO_OPCODE_SKIP-like)>) */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
-			tpp_size            TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekraw_rparen:OUT(*p_argc) > tmf_argc). */
+			tpp_size         TPP_INTERNAL(tmf_n_vaopt);    /* [const] Amount of extra bytes inserted when varargs are given (if: tpp_lexer_seekraw_rparen:OUT(*p_argc) > tmf_argc). */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT */
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS
-			tpp_size            TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__` is used in `tmf_expand`. */
+			tpp_size         TPP_INTERNAL(tmf_n_vanargs);  /* [const] Amount of times `__VA_NARGS__` is used in `tmf_expand`. */
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
-			struct tpp_macro_argbuf
-			                   *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
-			tpp_macro_opcode    TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*`-opcodes, together with their operands */
+			struct TPP_INTERNAL(tpp_macro_argbuf)
+			                *TPP_INTERNAL(tmf_argbuf);     /* [0..1][owned] Internal cache used during macro expansion */
+			tpp_macro_opcode TPP_INTERNAL(tmf_expand)[TPP_FLEX_ARRAY]; /* [const][1..n] Sequence of `TPP_MACRO_OPCODE_*`-opcodes, together with their operands */
 		} TPP_INTERNAL(tmd_func); /* [TPP_MACRO_KIND_ISFUNC(tm_kind)] */
 	} TPP_INTERNAL(tm_data);
 } tpp_macro;
@@ -21254,39 +21399,39 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 
 /* Keyword flags... */
 #if TPP_HAVE_KEYWORD_FLAGS
-#define tpp_keyword_flags uint_least16_t /* Set of `TPP_KEYWORD_FLAG_*` */
-#define TPP_KEYWORD_FLAG_NORMAL           UINT16_C(0x0000) /* Normal flags */
+#define tpp_keyword_flags tpp_uint_least16 /* Set of `TPP_KEYWORD_FLAG_*` */
+#define TPP_KEYWORD_FLAG_NORMAL           TPP_UINT_LEAST16_C(0x0000) /* Normal flags */
 #if TPP_HAVE_CPP_PREDEFINED_MACROS
-#define TPP_KEYWORD_FLAG_UNDEF_PREDEFINED UINT16_C(0x0001) /* Do not expand  */
+#define TPP_KEYWORD_FLAG_UNDEF_PREDEFINED TPP_UINT_LEAST16_C(0x0001) /* Do not expand  */
 #endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 #if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated
-#define TPP_KEYWORD_FLAG_IS_DEPRECATED    UINT16_C(0x0002) /* Warn when the keyword appears as the result of lexical processing. */
+#define TPP_KEYWORD_FLAG_IS_DEPRECATED    TPP_UINT_LEAST16_C(0x0002) /* Warn when the keyword appears as the result of lexical processing. */
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated */
 #if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
-#define TPP_KEYWORD_FLAG_IS_POISONED      UINT16_C(0x0004) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
-                                                            * Don't emit a warning if the keyword is used inside of a macro.
-                                                            * -> Only warn if it is used from a text file. */
+#define TPP_KEYWORD_FLAG_IS_POISONED      TPP_UINT_LEAST16_C(0x0004) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
+                                                                      * Don't emit a warning if the keyword is used inside of a macro.
+                                                                      * -> Only warn if it is used from a text file. */
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
 #if TPP_HAVE_CPP_IMPORT
-#define TPP_KEYWORD_FLAG_HDR_IMPORTED     UINT16_C(0x0010) /* Set after this header was `#import`-ed */
+#define TPP_KEYWORD_FLAG_HDR_IMPORTED     TPP_UINT_LEAST16_C(0x0010) /* Set after this header was `#import`-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
 #if TPP_HAVE_PRAGMA_ONCE
-#define TPP_KEYWORD_FLAG_HDR_ONCE         UINT16_C(0x0020) /* Set after `#pragma once` was encountered */
+#define TPP_KEYWORD_FLAG_HDR_ONCE         TPP_UINT_LEAST16_C(0x0020) /* Set after `#pragma once` was encountered */
 #endif /* TPP_HAVE_PRAGMA_ONCE */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_KEYWORD_FLAG_HDR_GUARD_VALID  UINT16_C(0x0040) /* The configured `tkm_file_guard` is valid and should be used
-                                                            * (Set when the file is removed from the `#include`-stack with
-                                                            * its `#ifdef`-stack empty, and `tkm_file_guard != NULL`) */
+#define TPP_KEYWORD_FLAG_HDR_GUARD_VALID  TPP_UINT_LEAST16_C(0x0040) /* The configured `tkm_file_guard` is valid and should be used
+                                                                      * (Set when the file is removed from the `#include`-stack with
+                                                                      * its `#ifdef`-stack empty, and `tkm_file_guard != NULL`) */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
 
 struct tpp_keyword;
 
 #if TPP_HAVE_KEYWORD_FEATURES
-typedef struct tpp_keyword_feature {
+typedef struct TPP_INTERNAL(tpp_keyword_feature) {
 	TPP_REF tpp_string *TPP_INTERNAL(tkf_expansion); /* [0..1] Expansion of relevant feature-test for this keyword
 	                                                  *        When `NULL`, feature-test expands to the string `0` */
-} tpp_keyword_feature;
+} TPP_INTERNAL(tpp_keyword_feature);
 
 #define _tpp_keyword_feature_init(self) \
 	(void)((self)->TPP_INTERNAL(tkf_expansion) = NULL)
@@ -21298,56 +21443,56 @@ typedef struct tpp_keyword_feature {
 	(_tpp_keyword_feature_fini(self),    \
 	 _tpp_keyword_feature_init(self))
 
-typedef struct tpp_keyword_features {
+typedef struct TPP_INTERNAL(tpp_keyword_features) {
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_attribute); /* Expansion for `__has_attribute()` */
 #define _tpp_keyword_features_with_has_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_builtin); /* Expansion for `__has_builtin()` */
 #define _tpp_keyword_features_with_has_builtin(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_builtin))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #define _tpp_keyword_features_with_has_builtin(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_cpp_attribute); /* Expansion for `__has_cpp_attribute()` */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_cpp_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_cpp_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_declspec_attribute); /* Expansion for `__has_declspec_attribute()` */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_declspec_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_declspec_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_extension); /* Expansion for `__has_extension()` */
 #define _tpp_keyword_features_with_has_extension(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_extension))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #define _tpp_keyword_features_with_has_extension(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_feature); /* Expansion for `__has_feature()` */
 #define _tpp_keyword_features_with_has_feature(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_feature))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #define _tpp_keyword_features_with_has_feature(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
-	tpp_keyword_feature TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
+	TPP_INTERNAL(tpp_keyword_feature) TPP_INTERNAL(tkfs_has_c_attribute); /* Expansion for `__has_c_attribute()` */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) cb(&(self)->TPP_INTERNAL(tkfs_has_c_attribute))
 #else /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 #define _tpp_keyword_features_with_has_c_attribute(self, cb) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
-} tpp_keyword_features;
+} TPP_INTERNAL(tpp_keyword_features);
 
 #define _tpp_keyword_features_witheach(self, cb)                  \
 	, _tpp_keyword_features_with_has_attribute(self, cb)          \
@@ -21428,10 +21573,15 @@ tpp_assertions_assert(tpp_assertions *tpp_restrict self,
 TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
                         struct tpp_keyword const *tpp_restrict value);
-#endif /* TPP_HAVE_CPP_ASSERT */
+#else /* TPP_HAVE_CPP_ASSERT */
+#define tpp_assertions_getcount(self)        0
+#define tpp_assertions_containsany(self)     false
+#define tpp_assertions_unassertall(self)     (void)0
+#define tpp_assertions_contains(self, value) false
+#endif /* !TPP_HAVE_CPP_ASSERT */
 
 
-typedef struct tpp_keyword_misc {
+typedef struct TPP_INTERNAL(tpp_keyword_misc) {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*` */
 #define _tpp_keyword_misc_init_flags(self) , (self)->TPP_INTERNAL(tkm_flags) = TPP_KEYWORD_FLAG_NORMAL
@@ -21440,10 +21590,10 @@ typedef struct tpp_keyword_misc {
 #endif /* !TPP_HAVE_KEYWORD_FLAGS */
 
 #if TPP_HAVE_KEYWORD_FEATURES
-	tpp_keyword_features TPP_INTERNAL(tkm_features); /* Expansions of `__has_*` feature-test macros */
+	TPP_INTERNAL(tpp_keyword_features) TPP_INTERNAL(tkm_features); /* Expansions of `__has_*` feature-test macros */
 #define _tpp_keyword_misc_init_features(self) , _tpp_keyword_features_init(&(self)->TPP_INTERNAL(tkm_features))
 #define _tpp_keyword_misc_featurebykind(self, kind) \
-	((tpp_keyword_feature *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
+	((TPP_INTERNAL(tpp_keyword_feature) *)((char *)(self) + (tpp_size)(unsigned int)(kind)))
 #else /* TPP_HAVE_KEYWORD_FEATURES */
 #define _tpp_keyword_misc_init_features(self) /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_FEATURES */
@@ -21490,7 +21640,7 @@ typedef struct tpp_keyword_misc {
 #else /* TPP_HAVE_KEYWORD_USERDATA */
 #define _tpp_keyword_misc_init_userdata(self)   /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_USERDATA */
-} tpp_keyword_misc;
+} TPP_INTERNAL(tpp_keyword_misc);
 
 #define _tpp_keyword_misc_init(self)                    \
 	(void)((void)0 _tpp_keyword_misc_init_flags(self)   \
@@ -21501,8 +21651,8 @@ typedef struct tpp_keyword_misc {
 	       _tpp_keyword_misc_init_macro_pushstack(self) \
 	       _tpp_keyword_misc_init_builtin_counter(self) \
 	       _tpp_keyword_misc_init_userdata(self))
-#define _tpp_keyword_misc_alloc()    ((tpp_keyword_misc *)tpp_malloc(sizeof(tpp_keyword_misc)))
-#define _tpp_keyword_misc_tryalloc() ((tpp_keyword_misc *)tpp_trymalloc(sizeof(tpp_keyword_misc)))
+#define _tpp_keyword_misc_alloc()    ((TPP_INTERNAL(tpp_keyword_misc) *)tpp_malloc(sizeof(TPP_INTERNAL(tpp_keyword_misc))))
+#define _tpp_keyword_misc_tryalloc() ((TPP_INTERNAL(tpp_keyword_misc) *)tpp_trymalloc(sizeof(TPP_INTERNAL(tpp_keyword_misc))))
 #define _tpp_keyword_misc_free(p)    tpp_free(p)
 #endif /* TPP_HAVE_KEYWORD_MISC */
 
@@ -21513,32 +21663,32 @@ struct tpp_macro;
 
 #undef TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 typedef struct tpp_keyword {
-	tpp_token_id              TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
+	tpp_token_id                    TPP_INTERNAL(tk_id);                  /* [const] Keyword ID */
 #if TPP_HAVE_CPP_MACROS
-	TPP_REF struct tpp_macro *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
+	TPP_REF struct tpp_macro       *TPP_INTERNAL(tk_macro);               /* [0..1][const_if(IS_BUILTIN)] Macro definition or one of `_TPP_KEYWORD_MACRO_*` */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_CPP_MACROS */
 #if TPP_HAVE_KEYWORD_MISC
-	tpp_keyword_misc         *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
+	TPP_INTERNAL(tpp_keyword_misc) *TPP_INTERNAL(tk_misc);                /* [0..1][const_if(IS_BUILTIN)][owned] Misc. keyword data (lazily allocated) */
 #define TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS 1
 #endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_hash                  TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
-	struct tpp_keyword       *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
+	tpp_hash                        TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
+	struct tpp_keyword             *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_KEYWORD_ASSTRING
-	tpp_refcnt_atomic         TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
+	tpp_refcnt_atomic               TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
-	tpp_size                  TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
-	tpp_char                  TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */
-/*	tpp_char                  TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
+	tpp_size                        TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
+	tpp_char                        TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */
+/*	tpp_char                        TPP_INTERNAL(tk_nul);                  * [const][== 0] Ensure ZERO-termination of the keyword name. */
 } tpp_keyword;
 
 #if TPP_HAVE_USER_KEYWORDS
-#define tpp_keyword_sizeof(len) \
+#define _tpp_keyword_sizeof(len) \
 	(tpp_offsetof(tpp_keyword, TPP_INTERNAL(tk_kwd)) + ((len) + 1) * sizeof(tpp_char))
-#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(tpp_keyword_sizeof(len)))
-#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(tpp_keyword_sizeof(len)))
-#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, tpp_keyword_sizeof(len)))
-#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, tpp_keyword_sizeof(len)))
+#define _tpp_keyword_alloc(len)         ((tpp_keyword *)tpp_malloc(_tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryalloc(len)      ((tpp_keyword *)tpp_trymalloc(_tpp_keyword_sizeof(len)))
+#define _tpp_keyword_realloc(p, len)    ((tpp_keyword *)tpp_realloc(p, _tpp_keyword_sizeof(len)))
+#define _tpp_keyword_tryrealloc(p, len) ((tpp_keyword *)tpp_tryrealloc(p, _tpp_keyword_sizeof(len)))
 #define _tpp_keyword_free(p)            tpp_free(p)
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
@@ -21576,7 +21726,9 @@ typedef struct tpp_keyword {
 #if TPP_HAVE_CPP_MACROS
 #define tpp_keyword_getmacro(self)  ((self)->TPP_INTERNAL(tk_macro))
 #define tpp_keyword_hasmacro(self)  _TPP_KEYWORD_MACRO_ISDEFINED((self)->TPP_INTERNAL(tk_macro))
-#endif /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_keyword_hasmacro(self)  0
+#endif /* !TPP_HAVE_CPP_MACROS */
 
 /* Check if `self` matches the C, constant string literal `CONSTstr` */
 #define tpp_keyword_equals_conststr(self, CONSTstr)                       \
@@ -21599,6 +21751,7 @@ typedef struct tpp_keyword {
 #define tpp_keyword_asstring(self) ((tpp_string *)&(self)->_TPP_KEYWORD_STRING_ABI_START)
 #define tpp_string_askeyword(self) ((tpp_keyword *)((char *)(self) - tpp_offsetof(tpp_keyword, _TPP_KEYWORD_STRING_ABI_START)))
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
+
 
 #if TPP_HAVE_KEYWORD_USERDATA
 /* Get the user-data pointer for `self`
@@ -21627,7 +21780,10 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_setuserdata(tpp_keyword *tpp_restrict self,
                         void *ptr, void (TPPCALL *dtor)(void *ptr),
                         bool destroy_prev);
-#endif /* TPP_HAVE_KEYWORD_USERDATA */
+#else /* TPP_HAVE_KEYWORD_USERDATA */
+#define tpp_keyword_getuserdata(self)      ((void *)NULL)
+#define tpp_keyword_getuserdata_dtor(self) ((void (TPPCALL *)(void *))NULL)
+#endif /* !TPP_HAVE_KEYWORD_USERDATA */
 
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 /* Push the current macro-definition of `self`
@@ -21662,7 +21818,8 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self);
 
 /* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
  * and -- if there might be a builtin/predefined macro related to `self` -- that
- * macro is re-enabled. */
+ * macro is re-enabled (iow: this restores the original macro-definition state of
+ * the given keyword `self`). */
 #if TPP_HAVE_CPP_BUILTIN_MACROS
 #if TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -21679,8 +21836,10 @@ tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 
 #else /* TPP_HAVE_CPP_MACROS */
-#define tpp_keyword_canundef(self)     0
-#define tpp_keyword_canundefuser(self) 0
+#define tpp_keyword_canundef(self)     false
+#define tpp_keyword_canundefuser(self) false
+#define tpp_keyword_undef(self)        (void)0
+#define tpp_keyword_undefuser(self)    (void)0
 #endif /* !TPP_HAVE_CPP_MACROS */
 
 
@@ -21752,25 +21911,25 @@ tpp_keyword_setflags(tpp_keyword *tpp_restrict self,
 #if TPP_HAVE_KEYWORD_FEATURES
 typedef enum tpp_keyword_feature_kind {
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_attribute)), /* Expansion for `__has_has_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
-	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_BUILTIN = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_builtin)), /* Expansion for `__has_has_builtin()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_CPP_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_cpp_attribute)), /* Expansion for `__has_has_cpp_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_DECLSPEC_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_declspec_attribute)), /* Expansion for `__has_has_declspec_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
-	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_EXTENSION = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_extension)), /* Expansion for `__has_has_extension()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
-	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_FEATURE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_feature)), /* Expansion for `__has_has_feature()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE */
 #if TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
-	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(tpp_keyword_misc, TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
+	TPP_KEYWORD_FEATURE_KIND_HAS_C_ATTRIBUTE = tpp_offsetof(TPP_INTERNAL(tpp_keyword_misc), TPP_INTERNAL(tkm_features).TPP_INTERNAL(tkfs_has_c_attribute)), /* Expansion for `__has_has_c_attribute()` */
 #endif /* TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE */
 } tpp_keyword_feature_kind;
 
@@ -21858,7 +22017,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_hash TPPCALL
 tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 
 /* Initial hash value */
-#define TPP_HASH_INITIAL TPP_HASH_C(1)
+#define TPP_HASH_INITIAL 1
 
 /* >> tpp_hash tpp_hash_combine_char(tpp_hash a, tpp_char b);
  * Combine a given hash value `a` with a character `b`. */
@@ -24414,13 +24573,13 @@ _tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_r
 
 
 #if TPP_HAVE_LEXER_STATE_FLAGS
-#define tpp_lexer_state_flags uint_least8_t
-#define TPP_LEXER_STATE_FLAG_NORMAL       UINT8_C(0x00) /* Normal state flags */
+#define tpp_lexer_state_flags tpp_uint_least8
+#define TPP_LEXER_STATE_FLAG_NORMAL     TPP_UINT_LEAST8_C(0x00) /* Normal state flags */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()` from (possibly) filtering SPACE/LF/COMMENT tokens */
+#define TPP_LEXER_STATE_FLAG_ALLTOKENS  TPP_UINT_LEAST8_C(0x01) /* Prevent `tpp_lexer_yieldpp()` from (possibly) filtering SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_WARNINGS
-#define TPP_LEXER_STATE_FLAG_NOWARNINGS   UINT8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
+#define TPP_LEXER_STATE_FLAG_NOWARNINGS TPP_UINT_LEAST8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
 #endif /* TPP_HAVE_WARNINGS */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
@@ -25342,7 +25501,7 @@ typedef struct tpp_lexer_openfile_result {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_LEXER_OPENFILE_EX
-#define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
+#define TPP_LEXER_OPENFILE_FLAG_NORMAL TPP_UINT_LEAST16_C(0) /* Normal flags */
 #ifdef tpp_keyword_flags
 #define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
 #if TPP_HAVE_CPP_IMPORT
@@ -25355,20 +25514,20 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed `#ifndef`-block of a macro that is current defined */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #else /* tpp_keyword_flags */
-#define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
+#define tpp_lexer_openfile_flags tpp_uint_least16 /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
 #endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
-#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT16_C(0x0100) /* Reject files that are already on the `#include`-stack */
+#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT TPP_UINT_LEAST16_C(0x0100) /* Reject files that are already on the `#include`-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
 #else /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
@@ -25621,6 +25780,17 @@ tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
  * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
  * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
  *
+ * @param: macro_name:        Name of the macro to define. This string may contain
+ *                            a `(`-character following the macro's name, in which
+ *                            case the remainder of this string acts as a parameter
+ *                            list for a function-like macro definition.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
+ * @param: macro_body:        Body of the macro to define.
+ * @param: macro_body_maxlen: Max length of `macro_body` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_body` is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
@@ -25629,6 +25799,10 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
                  char const *macro_body, tpp_size macro_body_maxlen);
 
 /* Delete a macro definition
+ * @param: macro_name:        Name of the macro to undefine.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
  * @return: true:  Success
  * @return: false: No such macro */
 TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
@@ -25637,8 +25811,10 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 
 #if TPP_HAVE_KEYWORDS_UNDEFALLUSER
-/* Delete all user-defined macro definitions */
-#define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
+/* Delete all user-defined macro definitions.
+ * This will invoke `tpp_keyword_undefuser()` for every keyword. */
+#define tpp_lexer_undefalluser(self) \
+	tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 

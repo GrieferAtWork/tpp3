@@ -185,7 +185,7 @@ for (local i: [:256]) {
 		oneCharTokenNames[i] = t;
 }
 
-print("static uint_least16_t const tpp_token_str_offsets[] = {");
+print("static tpp_uint_least16 const tpp_token_str_offsets[] = {");
 for (local i, value: oneCharTokenNames.enumerate()) {
 	if (value is none) {
 		// Unnamed token
@@ -1139,7 +1139,7 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_TILDE_TILDE = */ "TILDE_TILDE",
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE && TPP_HAVE_TOK_TILDE_TILDE */
 };
-static uint_least16_t const tpp_token_str_offsets[] = {
+static tpp_uint_least16 const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_EOF] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_EOF),
 	/* [0x1] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
 	/* [0x2] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),

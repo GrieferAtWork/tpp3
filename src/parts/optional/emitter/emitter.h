@@ -74,13 +74,13 @@ typedef struct tpp_emitter_state_files {
 #endif /* !... */
 
 #if TPP_EMITTER_HAVE_FLAGS
-#define tpp_emitter_flags uint_least8_t
-#define TPP_EMITTER_FLAG_NORMAL   UINT8_C(0x00)
+#define tpp_emitter_flags tpp_uint_least8
+#define TPP_EMITTER_FLAG_NORMAL   TPP_UINT_LEAST8_C(0x00)
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-#define TPP_EMITTER_FLAG_FCHANGED UINT8_C(0x01) /* Contents of the #include-stack may have changed */
+#define TPP_EMITTER_FLAG_FCHANGED TPP_UINT_LEAST8_C(0x01) /* Contents of the #include-stack may have changed */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
-#define TPP_EMITTER_FLAG_HASLINE  UINT8_C(0x02) /* At least 1 `# <linenum>`-directive was emitted */
+#define TPP_EMITTER_FLAG_HASLINE  TPP_UINT_LEAST8_C(0x02) /* At least 1 `# <linenum>`-directive was emitted */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 #endif /* TPP_EMITTER_HAVE_FLAGS */
 

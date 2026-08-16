@@ -51,7 +51,7 @@ TPP_DECL_BEGIN
 /* clang-format on */
 
 #ifdef _tpp_unicode_utf8seqlen_mb_cur
-TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128] =
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_cur[128] =
 #if TPP_UTF8_CURLEN == 2
 TPP_UTF8_SEQLEN_INIT(0, ~, 2, 0, 0, 0, 0, 0, 0);
 #elif TPP_UTF8_CURLEN == 3
@@ -69,7 +69,7 @@ TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 5, 6, 7, 0);
 #endif /* TPP_UTF8_CURLEN != ... */
 #endif /* _tpp_unicode_utf8seqlen_mb_cur */
 #ifdef _tpp_unicode_utf8seqlen_mb_max
-TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128] =
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_max[128] =
 TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 #endif /* _tpp_unicode_utf8seqlen_mb_max */
 #undef TPP_UTF8_SEQLEN_INIT
@@ -77,7 +77,7 @@ TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 
 
 #if TPP_HAVE_BUILTIN_CTYPE
-TPP_CONST_IMPL uint_least8_t const _tpp_ctype[256] = {
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_ctype[256] = {
 /*[[[deemon
 import UTF8_LF_FIRST_BYTES from ".token-encodestring-mblf";
 import getAsciiFlags from ".ctype-db.ctype-unicode";
@@ -123,8 +123,8 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
 tpp_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
 	char *result = buf + TPP_UTOA_MAXLEN;
 	do {
-		uint_least8_t digit;
-		digit = (uint_least8_t)(value % 10);
+		tpp_uint_least8 digit;
+		digit = (tpp_uint_least8)(value % 10);
 		value = value / 10;
 		*--result = (char)tpp_ascii_ofdigit(digit);
 	} while (value != 0);

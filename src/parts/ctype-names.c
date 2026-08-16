@@ -36,16 +36,16 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unam_tokenid));
-TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unichar));
+TPP_STATIC_ASSERT(sizeof(tpp_uint_least32) >= sizeof(tpp_unam_tokenid));
+TPP_STATIC_ASSERT(sizeof(tpp_uint_least32) >= sizeof(tpp_unichar));
 #define tpp_decode_uleb128_tokenid (tpp_unam_tokenid)tpp_decode_uleb128
 #define tpp_decode_uleb128_unichar (tpp_unichar)tpp_decode_uleb128
 #define tpp_decode_uleb128_size    (tpp_size)tpp_decode_uleb128
 
 /* see: https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer */
-static TPP_NONNULL((1)) uint_least32_t TPPCALL
+static TPP_NONNULL((1)) tpp_uint_least32 TPPCALL
 tpp_decode_uleb128(tpp_char const **tpp_restrict p_iter) {
-	uint_least32_t result = 0;
+	tpp_uint_least32 result = 0;
 	tpp_char const *iter = *p_iter;
 	tpp_char byte, num_bits = 0;
 	do {
@@ -95,9 +95,9 @@ tpp_unam_token_getstart(tpp_char const *tpp_restrict db_ptr) {
 
 /* Helper to decode compressed TEXT */
 typedef struct tpp_unam_text_reader {
-	tpp_char const *tuntr_ptr;  /* [1..1] Pointer to next unread byte */
-	uint_least16_t  tuntr_word; /* Unread data */
-	tpp_char        tuntr_bits; /* # of not-yet-processed, least-significant bits in `tuntr_word` */
+	tpp_char const  *tuntr_ptr;  /* [1..1] Pointer to next unread byte */
+	tpp_uint_least16 tuntr_word; /* Unread data */
+	tpp_char         tuntr_bits; /* # of not-yet-processed, least-significant bits in `tuntr_word` */
 } tpp_unam_text_reader;
 #define tpp_unam_text_reader_init(self, db_ptr)                         \
 	(void)((self)->tuntr_word = ((self)->tuntr_ptr = (db_ptr) + 1)[-1], \
@@ -116,7 +116,7 @@ tpp_unam_text_reader_readbits(tpp_unam_text_reader *tpp_restrict self, tpp_char 
 	tpp_assert(self->tuntr_bits >= num_bits);
 	remaining_bits = self->tuntr_bits - num_bits;
 	result = (tpp_char)(self->tuntr_word >> remaining_bits);
-	self->tuntr_word &= ((uint_least16_t)(1 << remaining_bits) - 1);
+	self->tuntr_word &= ((tpp_uint_least16)(1 << remaining_bits) - 1);
 	self->tuntr_bits = remaining_bits;
 	return result;
 }

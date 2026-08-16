@@ -37,10 +37,10 @@ TPP_DECL_BEGIN
 #endif /* !... */
 
 #if TPP_MAKEFILE_HAVE_FLAGS
-#define tpp_makefile_flags uint_least8_t
-#define TPP_MAKEFILE_FLAG_NORMAL UINT8_C(0x00)
+#define tpp_makefile_flags tpp_uint_least8
+#define TPP_MAKEFILE_FLAG_NORMAL         TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
-#define TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE UINT8_C(0x01) /* Don't close an output file handle */
+#define TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE TPP_UINT_LEAST8_C(0x01) /* Don't close an output file handle */
 #endif /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 #endif /* TPP_MAKEFILE_HAVE_FLAGS */
 

@@ -47,7 +47,7 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 }
 
 #if TPP_HAVE_LEXER_COPY
-static uint_fast8_t const tpp_macro_opcode_length[] = {
+static tpp_uint_fast8 const tpp_macro_opcode_length[] = {
 	/* [TPP_MACRO_OPCODE_END]      = */ 1 + 0,
 	/* [TPP_MACRO_OPCODE_SKIP]     = */ 1 + 1,
 	/* [TPP_MACRO_OPCODE_COPY]     = */ 1 + 1,

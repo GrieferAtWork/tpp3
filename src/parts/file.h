@@ -132,33 +132,33 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 #endif /* !... */
 
 #if TPP_HAVE_FILE_FLAGS
-#define tpp_file_flags uint_least8_t /* Set of `TPP_FILE_FLAGS_*` */
-#define TPP_FILE_FLAGS_NORMAL       UINT8_C(0x00) /* Normal flags */
+#define tpp_file_flags tpp_uint_least8 /* Set of `TPP_FILE_FLAGS_*` */
+#define TPP_FILE_FLAGS_NORMAL       TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_HAVE_FILE_NONBLOCK
-#define TPP_FILE_FLAGS_NONBLOCK     UINT8_C(0x01) /* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
+#define TPP_FILE_FLAGS_NONBLOCK     TPP_UINT_LEAST8_C(0x01) /* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
 #endif /* TPP_HAVE_FILE_NONBLOCK */
 #if TPP_HAVE_FILE_NOCLOSE
-#define TPP_FILE_FLAGS_NOCLOSE      UINT8_C(0x02) /* `TPP_FILE_KIND_IO`: Don't `tpp_io_close(tff_file)` on destruction */
+#define TPP_FILE_FLAGS_NOCLOSE      TPP_UINT_LEAST8_C(0x02) /* `TPP_FILE_KIND_IO`: Don't `tpp_io_close(tff_file)` on destruction */
 #endif /* TPP_HAVE_FILE_NOCLOSE */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_FLAGS_NOKWD        UINT8_C(0x04) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but rather a raw `\0`-terminated C string. */
+#define TPP_FILE_FLAGS_NOKWD        TPP_UINT_LEAST8_C(0x04) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but rather a raw `\0`-terminated C string. */
 #endif /* TPP_HAVE_FILE_NOKWD */
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
-#define TPP_FILE_FLAGS_FREENAME     UINT8_C(0x08) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
+#define TPP_FILE_FLAGS_FREENAME     TPP_UINT_LEAST8_C(0x08) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
 #endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
 #if TPP_HAVE_FILE_SYSHDR
-#define TPP_FILE_FLAGS_SYSHDR       UINT8_C(0x10) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Suppress all warnings produced in the context of this file */
+#define TPP_FILE_FLAGS_SYSHDR       TPP_UINT_LEAST8_C(0x10) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Suppress all warnings produced in the context of this file */
 #endif /* TPP_HAVE_FILE_SYSHDR */
 #if TPP_HAVE_FILE_EXTERN_C
-#define TPP_FILE_FLAGS_EXTERN_C     UINT8_C(0x20) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Treat everything within the file as being wrapped by an implicit `extern "C"` */
+#define TPP_FILE_FLAGS_EXTERN_C     TPP_UINT_LEAST8_C(0x20) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Treat everything within the file as being wrapped by an implicit `extern "C"` */
 #endif /* TPP_HAVE_FILE_EXTERN_C */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_FILE_FLAGS_NOGUARD      UINT8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
-                                                   * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
+#define TPP_FILE_FLAGS_NOGUARD      TPP_UINT_LEAST8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
+                                                             * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #if TPP_HAVE_CPP_DIRECTIVES
-#define TPP_FILE_FLAGS_NODIRECTIVES UINT8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
-                                                   * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
+#define TPP_FILE_FLAGS_NODIRECTIVES TPP_UINT_LEAST8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
+                                                             * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
 #endif /* TPP_HAVE_CPP_DIRECTIVES */
 #endif /* TPP_HAVE_FILE_FLAGS */
 
@@ -354,8 +354,8 @@ typedef struct tpp_file {
 #if TPP_HAVE_UNICODE
 			union {
 				struct {
-					uint_least8_t TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
-					unsigned char TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					tpp_uint_least8 TPP_INTERNAL(tffu_tailc);    /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
+					unsigned char   TPP_INTERNAL(tffu_tailv)[3]; /* [valid_if(tf_enc) == TPP_FILE_ENCODING_UTF[16|32]_[LE|BE]] Read, unaligned tail data */
 				} TPP_INTERNAL(tffed_unicode);
 #if TPP_HAVE_FILE_ENCODING_EMBED
 				tpp_uintmax TPP_INTERNAL(tffed_embedlimit); /* Max # of remaining bytes that may be embedded */

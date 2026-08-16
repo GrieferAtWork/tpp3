@@ -184,10 +184,10 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	BOOL bRead;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
-#if TPP_SIZEOF_tpp_size > 4
-	if (bufsize > UINT32_C(0xffffffff))
-		dwBufsize = UINT32_C(0xffffffff);
-#endif /* TPP_SIZEOF_tpp_size > 4 */
+#if TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff)
+	if (bufsize > TPP_UINT_LEAST32_C(0xffffffff))
+		dwBufsize = TPP_UINT_LEAST32_C(0xffffffff);
+#endif /* TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff) */
 
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
@@ -317,8 +317,8 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 			if (TPP_ISERR(error))
 				return error; /* Probably TPP_ENOENT */
 			/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
-			ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
-			ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+			ftLastAccessed.dwLowDateTime  = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
+			ftLastAccessed.dwHighDateTime = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
 #define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
 			TPP_SYSCALL({
 				(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
@@ -351,8 +351,8 @@ got_lhs_info:
 
 		/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
 #define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
-		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
-		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+		ftLastAccessed.dwLowDateTime  = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
+		ftLastAccessed.dwHighDateTime = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
 		TPP_SYSCALL({
 			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
 		}, tpp_close_temp_handle_and_return);

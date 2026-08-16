@@ -567,10 +567,10 @@ TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
 #endif /* !... */
 
 #if TPP_MAKEFILE_HAVE_FLAGS
-#define tpp_makefile_flags uint_least8_t
-#define TPP_MAKEFILE_FLAG_NORMAL UINT8_C(0x00)
+#define tpp_makefile_flags tpp_uint_least8
+#define TPP_MAKEFILE_FLAG_NORMAL         TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
-#define TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE UINT8_C(0x01) /* Don't close an output file handle */
+#define TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE TPP_UINT_LEAST8_C(0x01) /* Don't close an output file handle */
 #endif /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 #endif /* TPP_MAKEFILE_HAVE_FLAGS */
 
@@ -910,19 +910,19 @@ tpp_makefile_escape(tpp_formatprinter printer, void *arg,
 	 (TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD))
 
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
-#define _tpp_makefile_cli_loader_flags uint_least8_t
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL       UINT8_C(0x00) /* Normal flags */
+#define _tpp_makefile_cli_loader_flags tpp_uint_least8
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL       TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED      UINT8_C(0x01) /* Enable Makefile generation */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ENABLED      TPP_UINT_LEAST8_C(0x01) /* Enable Makefile generation */
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
 #if TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE UINT8_C(0x02) /* Consume all tokens because only a Makefile should be generated */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_ONLYMAKEFILE TPP_UINT_LEAST8_C(0x02) /* Consume all tokens because only a Makefile should be generated */
 #endif /* TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE UINT8_C(0x04) /* Escape target name using `tpp_makefile_escape()` */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_TARGETESCAPE TPP_UINT_LEAST8_C(0x04) /* Escape target name using `tpp_makefile_escape()` */
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD
-#define _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT   UINT8_C(0x08) /* Automatically determine output filename if not pre-defined */
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_AUTOOUTPUT   TPP_UINT_LEAST8_C(0x08) /* Automatically determine output filename if not pre-defined */
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD */
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 

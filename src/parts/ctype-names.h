@@ -40,7 +40,7 @@ TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == 10);
 #define TPP_UNAM_LOOKUP_NODES          0x8c20 /* # of nodes in `tpp_unam_tree` */
 #define TPP_UNAM_LOOKUP_NAME_MAXLEN    88 /* Length of longest name (in bytes, including number-suffix) */
 #define TPP_UNAM_LOOKUP_TOKEN_MAXLEN   21 /* Length of longest token (in bytes) */
-typedef uint_least16_t tpp_unam_tokenid;
+typedef tpp_uint_least16 tpp_unam_tokenid;
 /* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */
 static tpp_char const tpp_unam_tokens[0x69d2] = {
 	0,1,246,96,0,136,4,246,128,0,138,8,246,144,0,137,8,246,192,0,24,247,15,112,0,198,18,247,15,113,0,197,
@@ -894,7 +894,7 @@ static tpp_char const tpp_unam_tokens[0x69d2] = {
 
 #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
 #define tpp_unam_token_offsets tpp_unam_token_offsets
-static uint_least16_t const tpp_unam_token_offsets[0xeb6] = {
+static tpp_uint_least16 const tpp_unam_token_offsets[0xeb6] = {
 	0,0,24284,21820,13951,6841,9521,26116,21578,15130,19996,2488,3418,3015,4278,14909,
 	25030,13726,17326,9147,13845,7669,12030,23967,17,24250,11244,7696,23179,21892,22693,9576,
 	11784,9239,5733,4006,10647,18617,4519,21716,8844,8156,20949,4766,16482,8827,26036,12397,
@@ -11596,8 +11596,8 @@ static tpp_char const tpp_unam_tree[0x51a47] = {
 
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
 typedef struct tpp_unam_tree_token_entry {
-	uint_least16_t tubnte_token_id; /* Token ID */
-	uint_least32_t tubnte_offset; /* Offset into `tpp_unam_tree` */
+	tpp_uint_least16 tubnte_token_id; /* Token ID */
+	tpp_uint_least32 tubnte_offset; /* Offset into `tpp_unam_tree` */
 } tpp_unam_tree_token_entry;
 static tpp_unam_tree_token_entry const tpp_unam_tree_token_entries[0x373] = {
 	{ 0x4, 0x0 }, /* 'LIGHT' */
@@ -12487,7 +12487,7 @@ static tpp_unam_tree_token_entry const tpp_unam_tree_token_entries[0x373] = {
 #define TPP_UNAM_TREE_CHAR_ENTRY_MINCHAR '1'
 #define TPP_UNAM_TREE_CHAR_ENTRY_MAXCHAR 'Z'
 #define TPP_UNAM_TREE_CHAR_ENTRY_HASNULL 1
-typedef uint_least32_t tpp_unam_tree_char_offset;
+typedef tpp_uint_least32 tpp_unam_tree_char_offset;
 static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[0x2a] = {
 	/* [0x31] = */ 0x2db48, /* '1': '1ST PLACE MEDAL' */
 	/* [0x32] = */ 0x2db57, /* '2': '2ND PLACE MEDAL' */

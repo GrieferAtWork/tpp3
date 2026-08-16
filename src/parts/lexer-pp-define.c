@@ -1781,6 +1781,17 @@ err_nomem:
  * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
  * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
  *
+ * @param: macro_name:        Name of the macro to define. This string may contain
+ *                            a `(`-character following the macro's name, in which
+ *                            case the remainder of this string acts as a parameter
+ *                            list for a function-like macro definition.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
+ * @param: macro_body:        Body of the macro to define.
+ * @param: macro_body_maxlen: Max length of `macro_body` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_body` is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
@@ -1797,6 +1808,10 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
 }
 
 /* Delete a macro definition
+ * @param: macro_name:        Name of the macro to undefine.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
  * @return: true:  Success
  * @return: false: No such macro */
 TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL

@@ -61,20 +61,20 @@ TPP_DECL_BEGIN
 
 
 #if TPP_HAVE_BUILTIN_CTYPE
-#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
-#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
-#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
-#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
-#define _TPP_CTYPE_ISDIGIT    0x10 /* 0-9 */
-#define _TPP_CTYPE_ISMBLF     0x20 /* First byte of utf8-encoded unicode linefeed character sequence (0xc2 + 0xe2 right now) */
+#define _TPP_CTYPE_ISSYMSTRT  TPP_UINT_LEAST8_C(0x01) /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  TPP_UINT_LEAST8_C(0x02) /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    TPP_UINT_LEAST8_C(0x04) /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       TPP_UINT_LEAST8_C(0x08) /* Linefeed character (\r and \n) */
+#define _TPP_CTYPE_ISDIGIT    TPP_UINT_LEAST8_C(0x10) /* 0-9 */
+#define _TPP_CTYPE_ISMBLF     TPP_UINT_LEAST8_C(0x20) /* First byte of utf8-encoded unicode linefeed character sequence (0xc2 + 0xe2 right now) */
 
-#if UINT_LEAST8_MAX == 0xff
-#define _tpp_ascii_mask(ch) ((uint_least8_t)(ch))
-#else /* UINT_LEAST8_MAX == 0xff */
+#if TPP_UINT_LEAST8_MAX == 0xff
+#define _tpp_ascii_mask(ch) ((tpp_uint_least8)(ch))
+#else /* TPP_UINT_LEAST8_MAX == 0xff */
 #define _tpp_ascii_mask(ch) ((ch) & 0xff)
-#endif /* UINT_LEAST8_MAX != 0xff */
+#endif /* TPP_UINT_LEAST8_MAX != 0xff */
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
+TPP_CONST_DECL tpp_uint_least8 const _tpp_ctype[256]; /* Don't access directly! (considered TPP_INTERNAL) */
 #endif /* !TPP_USE_STATIC */
 #define tpp_ascii_issymstrt(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_ascii_issymcont(ch)    (_tpp_ctype[_tpp_ascii_mask(ch)] & _TPP_CTYPE_ISSYMCONT)
@@ -88,9 +88,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 /* Check if `ch` is the first byte of a multi-byte UTF-8 sequence */
 #ifndef tpp_ascii_ismb
 #if 0 /* Setting `1` here reduces the chances of unicode encoding errors being detected */
-#define tpp_ascii_ismb(ch) ((ch) >= 0xc0)
+#define tpp_ascii_ismb(ch) ((ch) >= TPP_UINT_LEAST8_C(0xc0))
 #else
-#define tpp_ascii_ismb(ch) ((ch) >= 0x80)
+#define tpp_ascii_ismb(ch) ((ch) >= TPP_UINT_LEAST8_C(0x80))
 #endif
 #endif /* !tpp_ascii_ismb */
 
@@ -101,12 +101,12 @@ TPP_CONST_DECL uint_least8_t const _tpp_ctype[256]; /* Don't access directly! (c
 import UTF8_LF_FIRST_BYTES from ".token-encodestring-mblf";
 print("#ifndef tpp_ascii_islf_or_mblf");
 print("#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch)",
-	"".join(for (local b: UTF8_LF_FIRST_BYTES) f" || (ch) == {b.hex()}"),
+	"".join(for (local b: UTF8_LF_FIRST_BYTES) f" || (ch) == TPP_UINT_LEAST8_C({b.hex()})"),
 	")");
 print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
 ]]]*/
 #ifndef tpp_ascii_islf_or_mblf
-#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch) || (ch) == 0xc2 || (ch) == 0xe2)
+#define tpp_ascii_islf_or_mblf(ch) (tpp_ascii_islf(ch) || (ch) == TPP_UINT_LEAST8_C(0xc2) || (ch) == TPP_UINT_LEAST8_C(0xe2))
 #endif /* !tpp_ascii_islf_or_mblf */
 /*[[[end]]]*/
 
@@ -169,13 +169,13 @@ print("#endif /" "* !tpp_ascii_islf_or_mblf *" "/");
 #endif /* ... */
 
 #ifndef _TPP_CTYPE_ISSYMSTRT
-#define _TPP_CTYPE_ISSYMSTRT  0x01 /* Symbol start character */
-#define _TPP_CTYPE_ISSYMCONT  0x02 /* Symbol continuation character */
-#define _TPP_CTYPE_ISSPACE    0x04 /* Space character (excluding \r and \n) */
-#define _TPP_CTYPE_ISLF       0x08 /* Linefeed character (\r and \n) */
+#define _TPP_CTYPE_ISSYMSTRT  TPP_UINT_LEAST8_C(0x01) /* Symbol start character */
+#define _TPP_CTYPE_ISSYMCONT  TPP_UINT_LEAST8_C(0x02) /* Symbol continuation character */
+#define _TPP_CTYPE_ISSPACE    TPP_UINT_LEAST8_C(0x04) /* Space character (excluding \r and \n) */
+#define _TPP_CTYPE_ISLF       TPP_UINT_LEAST8_C(0x08) /* Linefeed character (\r and \n) */
 #endif /* !_TPP_CTYPE_ISSYMSTRT */
 
-TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp_unichar uch); /* Don't access directly! (considered TPP_INTERNAL) */
+TPP_DECL TPP_CONSTCALL TPP_WUNUSED tpp_uint_least8 TPPCALL _tpp_unicode_traits(tpp_unichar uch); /* Don't access directly! (considered TPP_INTERNAL) */
 #define tpp_unicode_isspace_nolf(ord) (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSPACE)
 #define tpp_unicode_issymstrt(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMSTRT)
 #define tpp_unicode_issymcont(ord)    (_tpp_unicode_traits(ord) & _TPP_CTYPE_ISSYMCONT)
@@ -203,20 +203,20 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #if defined(tpp_unicode_isspace) && defined(tpp_unicode_islf)
 #define tpp_unicode_isspace_nolf(ord) (tpp_unicode_isspace(ord) && !tpp_unicode_islf(ord))
 #else /* tpp_unicode_isspace && tpp_unicode_islf */
-#define tpp_unicode_isspace_nolf(ord) ((ord) <= 0xff && tpp_ascii_isspace_nolf(ord))
+#define tpp_unicode_isspace_nolf(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_isspace_nolf(ord))
 #endif /* !tpp_unicode_isspace || !tpp_unicode_islf */
 #endif /* !tpp_unicode_isspace_nolf */
 #ifndef tpp_unicode_issymstrt
-#define tpp_unicode_issymstrt(ord) ((ord) >= 0x80 || tpp_ascii_issymstrt(ord))
+#define tpp_unicode_issymstrt(ord) ((ord) >= TPP_UINT_LEAST8_C(0x80) || tpp_ascii_issymstrt(ord))
 #endif /* !tpp_unicode_issymstrt */
 #ifndef tpp_unicode_issymcont
-#define tpp_unicode_issymcont(ord) ((ord) >= 0x80 || tpp_ascii_issymcont(ord))
+#define tpp_unicode_issymcont(ord) ((ord) >= TPP_UINT_LEAST8_C(0x80) || tpp_ascii_issymcont(ord))
 #endif /* !tpp_unicode_issymcont */
 #ifndef tpp_unicode_isspace
-#define tpp_unicode_isspace(ord) ((ord) <= 0xff && tpp_ascii_isspace(ord))
+#define tpp_unicode_isspace(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_isspace(ord))
 #endif /* !tpp_unicode_isspace */
 #ifndef tpp_unicode_islf
-#define tpp_unicode_islf(ord) ((ord) <= 0xff && tpp_ascii_islf(ord))
+#define tpp_unicode_islf(ord) ((ord) <= TPP_UINT_LEAST8_C(0xff) && tpp_ascii_islf(ord))
 #endif /* !tpp_unicode_islf */
 
 
@@ -235,9 +235,9 @@ TPP_DECL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL _tpp_unicode_traits(tpp
 #ifndef tpp_unicode_utf8seqlen_mb_getcur
 #define tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
-	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - 128])
+	 _tpp_unicode_utf8seqlen_mb_cur[(first_utf8_byte) - TPP_UINT_LEAST8_C(128)])
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
+TPP_CONST_DECL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_cur[128];
 #endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_cur _tpp_unicode_utf8seqlen_mb_cur
 #endif /* !tpp_unicode_utf8seqlen_mb_getcur */
@@ -246,7 +246,7 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
  * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
 #ifndef tpp_unicode_utf8seqlen_getcur
 #define tpp_unicode_utf8seqlen_getcur(first_utf8_byte) \
-	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte))
+	((first_utf8_byte) < TPP_UINT_LEAST8_C(0x80) ? 1 : tpp_unicode_utf8seqlen_mb_getcur(first_utf8_byte))
 #endif /* !tpp_unicode_utf8seqlen_getcur */
 
 /* Similar to `tpp_unicode_utf8seqlen_mb_getcur()`, except that this
@@ -264,9 +264,9 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128];
 #ifndef tpp_unicode_utf8seqlen_mb_getmax
 #define tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte) \
 	(tpp_assert(tpp_ascii_ismb(first_utf8_byte)),         \
-	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - 128])
+	 _tpp_unicode_utf8seqlen_mb_max[(first_utf8_byte) - TPP_UINT_LEAST8_C(128)])
 #if !TPP_USE_STATIC
-TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
+TPP_CONST_DECL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_max[128];
 #endif /* !TPP_USE_STATIC */
 #define _tpp_unicode_utf8seqlen_mb_max _tpp_unicode_utf8seqlen_mb_max
 #endif /* !tpp_unicode_utf8seqlen_mb_getmax */
@@ -275,12 +275,12 @@ TPP_CONST_DECL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128];
  * valid result (of `1`) when `first_utf8_byte` is in range `00h-7Fh` */
 #ifndef tpp_unicode_utf8seqlen_getmax
 #define tpp_unicode_utf8seqlen_getmax(first_utf8_byte) \
-	((first_utf8_byte) < 0x80 ? 1 : tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte))
+	((first_utf8_byte) < TPP_UINT_LEAST8_C(0x80) ? 1 : tpp_unicode_utf8seqlen_mb_getmax(first_utf8_byte))
 #endif /* !tpp_unicode_utf8seqlen_getmax */
 
 /* Check if `ch` is a utf-8 continuation byte */
 #ifndef tpp_ascii_isutf8cont
-#define tpp_ascii_isutf8cont(ch) (((ch) & 0xc0) == 0x80)
+#define tpp_ascii_isutf8cont(ch) (((ch) & TPP_UINT_LEAST8_C(0xc0)) == TPP_UINT_LEAST8_C(0x80))
 #endif /* !tpp_ascii_isutf8cont */
 
 

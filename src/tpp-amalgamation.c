@@ -707,7 +707,9 @@
 #define tmpe_count                                         TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                           TPP_INTERNAL(tmps_cnt)
 #define tmps_vec                                           TPP_INTERNAL(tmps_vec)
+#define tpp_keyword_feature                                TPP_INTERNAL(tpp_keyword_feature)
 #define tkf_expansion                                      TPP_INTERNAL(tkf_expansion)
+#define tpp_keyword_features                               TPP_INTERNAL(tpp_keyword_features)
 #define tkfs_has_attribute                                 TPP_INTERNAL(tkfs_has_attribute)
 #define tkfs_has_builtin                                   TPP_INTERNAL(tkfs_has_builtin)
 #define tkfs_has_cpp_attribute                             TPP_INTERNAL(tkfs_has_cpp_attribute)
@@ -719,6 +721,7 @@
 #define tass_assc                                          TPP_INTERNAL(tass_assc)
 #define tass_bckm                                          TPP_INTERNAL(tass_bckm)
 #define tass_bckv                                          TPP_INTERNAL(tass_bckv)
+#define tpp_keyword_misc                                   TPP_INTERNAL(tpp_keyword_misc)
 #define tkm_flags                                          TPP_INTERNAL(tkm_flags)
 #define tkm_features                                       TPP_INTERNAL(tkm_features)
 #define tkm_assertions                                     TPP_INTERNAL(tkm_assertions)
@@ -774,6 +777,7 @@
 #define tlpfi_pos                                          TPP_INTERNAL(tlpfi_pos)
 #define tlpfi_filename                                     TPP_INTERNAL(tlpfi_filename)
 #define tlpfi_lc                                           TPP_INTERNAL(tlpfi_lc)
+#define tpp_macro_argument                                 TPP_INTERNAL(tpp_macro_argument)
 #define tma_id                                             TPP_INTERNAL(tma_id)
 #define tma_ins_exp                                        TPP_INTERNAL(tma_ins_exp)
 #define tma_ins_str                                        TPP_INTERNAL(tma_ins_str)
@@ -788,6 +792,7 @@
 #define TPP_MACRO_OPCODE_VA_COMMA                          TPP_INTERNAL(TPP_MACRO_OPCODE_VA_COMMA)
 #define TPP_MACRO_OPCODE_VA_OPT                            TPP_INTERNAL(TPP_MACRO_OPCODE_VA_OPT)
 #define TPP_MACRO_OPCODE_VA_NARGS                          TPP_INTERNAL(TPP_MACRO_OPCODE_VA_NARGS)
+#define tpp_macro_argbuf                                   TPP_INTERNAL(tpp_macro_argbuf)
 #define tm_refcnt                                          TPP_INTERNAL(tm_refcnt)
 #define tm_name                                            TPP_INTERNAL(tm_name)
 #define tm_kind                                            TPP_INTERNAL(tm_kind)
@@ -958,7 +963,7 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 	}
 
 #ifdef _tpp_unicode_utf8seqlen_mb_cur
-TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_cur[128] =
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_cur[128] =
 #if TPP_UTF8_CURLEN == 2
 TPP_UTF8_SEQLEN_INIT(0, ~, 2, 0, 0, 0, 0, 0, 0);
 #elif TPP_UTF8_CURLEN == 3
@@ -976,7 +981,7 @@ TPP_UTF8_SEQLEN_INIT(0, ~, 2, 3, 4, 5, 6, 7, 0);
 #endif /* TPP_UTF8_CURLEN != ... */
 #endif /* _tpp_unicode_utf8seqlen_mb_cur */
 #ifdef _tpp_unicode_utf8seqlen_mb_max
-TPP_CONST_IMPL uint_least8_t const _tpp_unicode_utf8seqlen_mb_max[128] =
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_unicode_utf8seqlen_mb_max[128] =
 TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 #endif /* _tpp_unicode_utf8seqlen_mb_max */
 #undef TPP_UTF8_SEQLEN_INIT
@@ -984,7 +989,7 @@ TPP_UTF8_SEQLEN_INIT(1, ~, 2, 3, 4, 5, 6, 7, 8);
 
 
 #if TPP_HAVE_BUILTIN_CTYPE
-TPP_CONST_IMPL uint_least8_t const _tpp_ctype[256] = {
+TPP_CONST_IMPL tpp_uint_least8 const _tpp_ctype[256] = {
 	0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x08,0x04,0x04,0x08,0x04,0x04,
 	0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,0x04,
 	0x04,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
@@ -1010,8 +1015,8 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
 tpp_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
 	char *result = buf + TPP_UTOA_MAXLEN;
 	do {
-		uint_least8_t digit;
-		digit = (uint_least8_t)(value % 10);
+		tpp_uint_least8 digit;
+		digit = (tpp_uint_least8)(value % 10);
 		value = value / 10;
 		*--result = (char)tpp_ascii_ofdigit(digit);
 	} while (value != 0);
@@ -1213,7 +1218,7 @@ allocate_stack:
 /************************************************************************/
 
 #if TPP_HAVE_BUILTIN_CTYPE_UNICODE
-static uint_least8_t const tpp_unicode_tab1[7172] = {
+static tpp_uint_least8 const tpp_unicode_tab1[7172] = {
 	0,1,2,2,2,3,4,5,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,
 	29,30,2,2,31,32,33,34,35,2,2,2,36,37,38,39,40,41,42,43,44,45,46,47,48,49,2,50,2,2,51,52,
 	53,54,55,56,57,57,57,57,58,59,57,57,57,57,60,61,57,57,57,57,57,57,57,57,2,62,63,64,65,57,57,57,
@@ -1440,7 +1445,7 @@ static uint_least8_t const tpp_unicode_tab1[7172] = {
 	57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,
 	222,57,223,224,
 };
-static uint_least8_t const tpp_unicode_tab2[14392] = {
+static tpp_uint_least8 const tpp_unicode_tab2[14392] = {
 	68,68,68,68,68,72,132,68,68,68,68,68,68,68,68,68,4,0,3,0,0,0,0,0,34,34,34,34,34,0,0,0,
 	48,51,51,51,51,51,51,51,51,51,51,51,51,3,0,48,48,51,51,51,51,51,51,51,51,51,51,51,51,3,0,0,
 	68,68,132,68,68,68,68,68,68,68,68,68,68,68,68,68,4,51,51,0,0,3,64,0,0,34,48,32,32,3,34,2,
@@ -1893,13 +1898,13 @@ static uint_least8_t const tpp_unicode_tab2[14392] = {
 	34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,
 };
 
-TPP_IMPL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL
+TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_uint_least8 TPPCALL
 _tpp_unicode_traits(tpp_unichar uch) {
-	uint_least32_t tab2_index;
+	tpp_uint_least32 tab2_index;
 	if (uch >= 0xe01f0)
 		return 0;
-	tab2_index = tpp_unicode_tab1[(uint_least32_t)(uch) >> 7] << 7;
-	tab2_index += (uint_least8_t)(uch) & 0x7f;
+	tab2_index = tpp_unicode_tab1[(tpp_uint_least32)(uch) >> 7] << 7;
+	tab2_index += (tpp_uint_least8)(uch) & 0x7f;
 	return (tpp_unicode_tab2[tab2_index >> 1] >> (4 * (tab2_index & 1))) & 0xf;
 }
 #endif /* TPP_HAVE_BUILTIN_CTYPE_UNICODE */
@@ -4185,7 +4190,7 @@ TPP_STATIC_ASSERT(TPP_UNICODE_BYNAME_LOOKUP_MAXUC == 10);
 #define TPP_UNAM_LOOKUP_NODES          0x8c20 /* # of nodes in `tpp_unam_tree` */
 #define TPP_UNAM_LOOKUP_NAME_MAXLEN    88 /* Length of longest name (in bytes, including number-suffix) */
 #define TPP_UNAM_LOOKUP_TOKEN_MAXLEN   21 /* Length of longest token (in bytes) */
-typedef uint_least16_t tpp_unam_tokenid;
+typedef tpp_uint_least16 tpp_unam_tokenid;
 /* Token decoder table -- see `ctype-names.dee:printTokenTable()` for binary format */
 static tpp_char const tpp_unam_tokens[0x69d2] = {
 	0,1,246,96,0,136,4,246,128,0,138,8,246,144,0,137,8,246,192,0,24,247,15,112,0,198,18,247,15,113,0,197,
@@ -5039,7 +5044,7 @@ static tpp_char const tpp_unam_tokens[0x69d2] = {
 
 #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
 #define tpp_unam_token_offsets tpp_unam_token_offsets
-static uint_least16_t const tpp_unam_token_offsets[0xeb6] = {
+static tpp_uint_least16 const tpp_unam_token_offsets[0xeb6] = {
 	0,0,24284,21820,13951,6841,9521,26116,21578,15130,19996,2488,3418,3015,4278,14909,
 	25030,13726,17326,9147,13845,7669,12030,23967,17,24250,11244,7696,23179,21892,22693,9576,
 	11784,9239,5733,4006,10647,18617,4519,21716,8844,8156,20949,4766,16482,8827,26036,12397,
@@ -15741,8 +15746,8 @@ static tpp_char const tpp_unam_tree[0x51a47] = {
 
 #if TPP_HAVE_UNICODE_BYNAME_LOOKUP_ENTRY_TABLE
 typedef struct tpp_unam_tree_token_entry {
-	uint_least16_t tubnte_token_id; /* Token ID */
-	uint_least32_t tubnte_offset; /* Offset into `tpp_unam_tree` */
+	tpp_uint_least16 tubnte_token_id; /* Token ID */
+	tpp_uint_least32 tubnte_offset; /* Offset into `tpp_unam_tree` */
 } tpp_unam_tree_token_entry;
 static tpp_unam_tree_token_entry const tpp_unam_tree_token_entries[0x373] = {
 	{ 0x4, 0x0 }, /* 'LIGHT' */
@@ -16632,7 +16637,7 @@ static tpp_unam_tree_token_entry const tpp_unam_tree_token_entries[0x373] = {
 #define TPP_UNAM_TREE_CHAR_ENTRY_MINCHAR '1'
 #define TPP_UNAM_TREE_CHAR_ENTRY_MAXCHAR 'Z'
 #define TPP_UNAM_TREE_CHAR_ENTRY_HASNULL 1
-typedef uint_least32_t tpp_unam_tree_char_offset;
+typedef tpp_uint_least32 tpp_unam_tree_char_offset;
 static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[0x2a] = {
 	/* [0x31] = */ 0x2db48, /* '1': '1ST PLACE MEDAL' */
 	/* [0x32] = */ 0x2db57, /* '2': '2ND PLACE MEDAL' */
@@ -16694,16 +16699,16 @@ static tpp_unam_tree_char_offset const tpp_unam_tree_char_entries[0x2a] = {
 /* File: parts/ctype-names.c                                            */
 /************************************************************************/
 
-TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unam_tokenid));
-TPP_STATIC_ASSERT(sizeof(uint_least32_t) >= sizeof(tpp_unichar));
+TPP_STATIC_ASSERT(sizeof(tpp_uint_least32) >= sizeof(tpp_unam_tokenid));
+TPP_STATIC_ASSERT(sizeof(tpp_uint_least32) >= sizeof(tpp_unichar));
 #define tpp_decode_uleb128_tokenid (tpp_unam_tokenid)tpp_decode_uleb128
 #define tpp_decode_uleb128_unichar (tpp_unichar)tpp_decode_uleb128
 #define tpp_decode_uleb128_size    (tpp_size)tpp_decode_uleb128
 
 /* see: https://en.wikipedia.org/wiki/LEB128#Decode_unsigned_integer */
-static TPP_NONNULL((1)) uint_least32_t TPPCALL
+static TPP_NONNULL((1)) tpp_uint_least32 TPPCALL
 tpp_decode_uleb128(tpp_char const **tpp_restrict p_iter) {
-	uint_least32_t result = 0;
+	tpp_uint_least32 result = 0;
 	tpp_char const *iter = *p_iter;
 	tpp_char byte, num_bits = 0;
 	do {
@@ -16753,9 +16758,9 @@ tpp_unam_token_getstart(tpp_char const *tpp_restrict db_ptr) {
 
 /* Helper to decode compressed TEXT */
 typedef struct tpp_unam_text_reader {
-	tpp_char const *tuntr_ptr;  /* [1..1] Pointer to next unread byte */
-	uint_least16_t  tuntr_word; /* Unread data */
-	tpp_char        tuntr_bits; /* # of not-yet-processed, least-significant bits in `tuntr_word` */
+	tpp_char const  *tuntr_ptr;  /* [1..1] Pointer to next unread byte */
+	tpp_uint_least16 tuntr_word; /* Unread data */
+	tpp_char         tuntr_bits; /* # of not-yet-processed, least-significant bits in `tuntr_word` */
 } tpp_unam_text_reader;
 #define tpp_unam_text_reader_init(self, db_ptr)                         \
 	(void)((self)->tuntr_word = ((self)->tuntr_ptr = (db_ptr) + 1)[-1], \
@@ -16774,7 +16779,7 @@ tpp_unam_text_reader_readbits(tpp_unam_text_reader *tpp_restrict self, tpp_char 
 	tpp_assert(self->tuntr_bits >= num_bits);
 	remaining_bits = self->tuntr_bits - num_bits;
 	result = (tpp_char)(self->tuntr_word >> remaining_bits);
-	self->tuntr_word &= ((uint_least16_t)(1 << remaining_bits) - 1);
+	self->tuntr_word &= ((tpp_uint_least16)(1 << remaining_bits) - 1);
 	self->tuntr_bits = remaining_bits;
 	return result;
 }
@@ -19571,7 +19576,7 @@ static struct tpp_token_str_strings_struct {
 	/* .ttr_TPP_TOK_TILDE_TILDE = */ "TILDE_TILDE",
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE && TPP_HAVE_TOK_TILDE_TILDE */
 };
-static uint_least16_t const tpp_token_str_offsets[] = {
+static tpp_uint_least16 const tpp_token_str_offsets[] = {
 	/* [TPP_TOK_EOF] = */ tpp_offsetof(struct tpp_token_str_strings_struct, ttr_TPP_TOK_EOF),
 	/* [0x1] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
 	/* [0x2] = */ sizeof(struct tpp_token_str_strings_struct) - sizeof(char),
@@ -21435,7 +21440,7 @@ static struct tpp_token_repr_strings_struct {
 	/* .ttr_TPP_TOK_TILDE_TILDE = */ "~~",
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE && TPP_HAVE_TOK_TILDE_TILDE */
 };
-static uint_least16_t const tpp_token_repr_offsets[] = {
+static tpp_uint_least16 const tpp_token_repr_offsets[] = {
 	/* [0x0] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_eof),
 	/* [0x1] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_x01),
 	/* [0x2] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_x02),
@@ -22282,12 +22287,12 @@ again:
 	case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
 	case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff: {
 		tpp_char const *utf8_start = iter - 1;
-		uint_least8_t utf8_size    = tpp_unicode_utf8seqlen_mb_getcur(ch);
+		tpp_uint_least8 utf8_size  = tpp_unicode_utf8seqlen_mb_getcur(ch);
 		tpp_char const *utf8_end   = utf8_start + utf8_size;
 		if (utf8_start < utf8_end && utf8_end <= end) {
 			/* Verify that this is a valid utf-8 sequence */
 			tpp_unichar uc;
-			uint_least8_t i;
+			tpp_uint_least8 i;
 
 			/* Validate follow-up bytes. */
 			for (i = 1; i < utf8_size; ++i) {
@@ -23499,10 +23504,10 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	BOOL bRead;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
-#if TPP_SIZEOF_tpp_size > 4
-	if (bufsize > UINT32_C(0xffffffff))
-		dwBufsize = UINT32_C(0xffffffff);
-#endif /* TPP_SIZEOF_tpp_size > 4 */
+#if TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff)
+	if (bufsize > TPP_UINT_LEAST32_C(0xffffffff))
+		dwBufsize = TPP_UINT_LEAST32_C(0xffffffff);
+#endif /* TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff) */
 
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
@@ -23632,8 +23637,8 @@ tpp_io_compare_mtime(char const *lhs_filename, tpp_io_handle lhs_handle, bool lh
 			if (TPP_ISERR(error))
 				return error; /* Probably TPP_ENOENT */
 			/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
-			ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
-			ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+			ftLastAccessed.dwLowDateTime  = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
+			ftLastAccessed.dwHighDateTime = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
 #define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
 			TPP_SYSCALL({
 				(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
@@ -23666,8 +23671,8 @@ got_lhs_info:
 
 		/* (try to) prevent this open from counting towards rhs_filename's last-accessed timestamp */
 #define tpp_close_temp_handle_and_return(error) return (tpp_io_close(temp_handle), error)
-		ftLastAccessed.dwLowDateTime  = (DWORD)UINT32_C(0xffffffff);
-		ftLastAccessed.dwHighDateTime = (DWORD)UINT32_C(0xffffffff);
+		ftLastAccessed.dwLowDateTime  = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
+		ftLastAccessed.dwHighDateTime = (DWORD)TPP_UINT_LEAST32_C(0xffffffff);
 		TPP_SYSCALL({
 			(void)SetFileTime(temp_handle, NULL, &ftLastAccessed, NULL);
 		}, tpp_close_temp_handle_and_return);
@@ -24346,36 +24351,36 @@ tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 #define TPP_UTF16_SURROGATE_SHIFT    0x10000
 
 union tpp_word16 {
-	uint_least16_t w16;
-	uint_least8_t w8[2];
-#define tpp_word16_getle(self)        \
-	(((uint_least16_t)(self).w8[0]) | \
-	 ((uint_least16_t)(self).w8[1] << 8))
-#define tpp_word16_getbe(self)        \
-	(((uint_least16_t)(self).w8[1]) | \
-	 ((uint_least16_t)(self).w8[0] << 8))
+	tpp_uint_least16 w16;
+	tpp_uint_least8 w8[2];
+#define tpp_word16_getle(self)          \
+	(((tpp_uint_least16)(self).w8[0]) | \
+	 ((tpp_uint_least16)(self).w8[1] << 8))
+#define tpp_word16_getbe(self)          \
+	(((tpp_uint_least16)(self).w8[1]) | \
+	 ((tpp_uint_least16)(self).w8[0] << 8))
 };
 
 union tpp_word32 {
-	uint_least32_t w32;
-	uint_least8_t w8[4];
-#define tpp_word32_getle(self)              \
-	(((uint_least32_t)(self).w8[0]) |       \
-	 ((uint_least32_t)(self).w8[1] << 8) |  \
-	 ((uint_least32_t)(self).w8[2] << 16) | \
-	 ((uint_least32_t)(self).w8[3] << 24))
-#define tpp_word32_getbe(self)              \
-	(((uint_least32_t)(self).w8[3]) |       \
-	 ((uint_least32_t)(self).w8[2] << 8) |  \
-	 ((uint_least32_t)(self).w8[1] << 16) | \
-	 ((uint_least32_t)(self).w8[0] << 24))
+	tpp_uint_least32 w32;
+	tpp_uint_least8 w8[4];
+#define tpp_word32_getle(self)                \
+	(((tpp_uint_least32)(self).w8[0]) |       \
+	 ((tpp_uint_least32)(self).w8[1] << 8) |  \
+	 ((tpp_uint_least32)(self).w8[2] << 16) | \
+	 ((tpp_uint_least32)(self).w8[3] << 24))
+#define tpp_word32_getbe(self)                \
+	(((tpp_uint_least32)(self).w8[3]) |       \
+	 ((tpp_uint_least32)(self).w8[2] << 8) |  \
+	 ((tpp_uint_least32)(self).w8[1] << 16) | \
+	 ((tpp_uint_least32)(self).w8[0] << 24))
 };
 
 /* @param: src_count: # of utf-16 words in `src` (== # of bytes/2) */
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf16le_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least16_t ord;
+		tpp_uint_least16 ord;
 		union tpp_word16 word;
 		word.w16 = *--src;
 		ord = tpp_word16_getle(word);
@@ -24401,9 +24406,9 @@ tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf16be_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least16_t ord;
+		tpp_uint_least16 ord;
 		union tpp_word16 word;
 		word.w16 = *--src;
 		ord = tpp_word16_getbe(word);
@@ -24430,9 +24435,9 @@ tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 
 /* @param: src_count: # of utf-32 words in `src` (== # of bytes/4) */
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf32le_to_utf8(tpp_uint_least32 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least32_t ord;
+		tpp_uint_least32 ord;
 		union tpp_word32 word;
 		word.w32 = *--src;
 		ord = tpp_word32_getle(word);
@@ -24442,9 +24447,9 @@ tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf32be_to_utf8(tpp_uint_least32 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least32_t ord;
+		tpp_uint_least32 ord;
 		union tpp_word32 word;
 		word.w32 = *--src;
 		ord = tpp_word32_getbe(word);
@@ -24859,7 +24864,7 @@ convert_multiword_to_utf8:
 			tpp_char *tail_base;
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
-			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (uint_least8_t)tail_size;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (tpp_uint_least8)tail_size;
 			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
@@ -24867,10 +24872,10 @@ convert_multiword_to_utf8:
 		switch (self->tf_enc) {
 		case TPP_FILE_ENCODING_UTF16_LE:
 		case TPP_FILE_ENCODING_UTF16_BE: {
-			uint_least16_t const *dst16 = (uint_least16_t const *)io_dst;
+			tpp_uint_least16 const *dst16 = (tpp_uint_least16 const *)io_dst;
 			tpp_size words = (tpp_size)read_status / 2;
 			union tpp_word16 raw_last_word;
-			uint_least16_t last_word;
+			tpp_uint_least16 last_word;
 			if tpp_unlikely(!words) {
 				dst_base = dst_end;
 				break;
@@ -24902,12 +24907,12 @@ convert_multiword_to_utf8:
 		}	break;
 
 		case TPP_FILE_ENCODING_UTF32_LE:
-			dst_base = tpp_utf32le_to_utf8((uint_least32_t const *)io_dst,
+			dst_base = tpp_utf32le_to_utf8((tpp_uint_least32 const *)io_dst,
 			                               (tpp_size)read_status / 4,
 			                               dst_end);
 			break;
 		case TPP_FILE_ENCODING_UTF32_BE:
-			dst_base = tpp_utf32be_to_utf8((uint_least32_t const *)io_dst,
+			dst_base = tpp_utf32be_to_utf8((tpp_uint_least32 const *)io_dst,
 			                               (tpp_size)read_status / 4,
 			                               dst_end);
 			break;
@@ -26284,7 +26289,8 @@ tpp_keyword_undef(tpp_keyword *tpp_restrict self) {
 
 /* Similar to `tpp_keyword_undef()`, but only delete user-defined macro expansions,
  * and -- if there might be a builtin/predefined macro related to `self` -- that
- * macro is re-enabled. */
+ * macro is re-enabled (iow: this restores the original macro-definition state of
+ * the given keyword `self`). */
 #if TPP_HAVE_CPP_BUILTIN_MACROS && TPP_HAVE_KEYWORDS_UNDEFALLUSER
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_keyword_undefuser(tpp_keyword *tpp_restrict self) {
@@ -26610,13 +26616,13 @@ tpp_decode_bsi_(tpp_char buf[TPP_DECODE_BSI_MAXLEN],
 		uc        = 0;
 		cur_digit = 0;
 		for (;;) {
-			uint_least8_t nibble;
+			tpp_uint_least8 nibble;
 			if (tpp_ascii_isdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_asdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_asdigit(ch);
 			} else if (tpp_ascii_islwrxdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_aslwrxdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_aslwrxdigit(ch);
 			} else if (tpp_ascii_isuprxdigit(ch)) {
-				nibble = (uint_least8_t)tpp_ascii_asuprxdigit(ch);
+				nibble = (tpp_uint_least8)tpp_ascii_asuprxdigit(ch);
 			} else {
 				if (cur_digit == 0)
 					goto nope;
@@ -28511,9 +28517,9 @@ TPP_CONST_IMPL tpp_warnings_state const tpp_warnings_state_default = {
  */
 #ifdef TPP_CONFIG_BUILTINS_FILENAME
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT32_C(0x##hash_lo)
+#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) TPP_UINT_LEAST32_C(0x##hash_lo)
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT64_C(0x##hash_hi##hash_lo)
+#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) TPP_UINT_LEAST64_C(0x##hash_hi##hash_lo)
 #else /* TPP_SIZEOF_tpp_hash == ... */
 #endif /* TPP_SIZEOF_tpp_hash != ... */
 #define TPP_BUILTIN_KEYWORD(id, kwd_len, kwd, next, hash_hi, hash_lo) \
@@ -28694,9 +28700,9 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
  * calculate keyword hashes within the preprocessor! */
 #pragma extension(push,"-fmacro-recursion")
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&0xffffffff),__TPP_EVAL(str[1:]))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&0xffffffffffffffff),__TPP_EVAL(str[1:]))
 #endif /* ... */
 #define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
 #pragma extension(pop)
@@ -29722,7 +29728,7 @@ tpp_macro_destroy(tpp_macro *tpp_restrict self) {
 }
 
 #if TPP_HAVE_LEXER_COPY
-static uint_fast8_t const tpp_macro_opcode_length[] = {
+static tpp_uint_fast8 const tpp_macro_opcode_length[] = {
 	/* [TPP_MACRO_OPCODE_END]      = */ 1 + 0,
 	/* [TPP_MACRO_OPCODE_SKIP]     = */ 1 + 1,
 	/* [TPP_MACRO_OPCODE_COPY]     = */ 1 + 1,
@@ -34538,7 +34544,7 @@ handle_multiply_string:
 		lhs_length = tpp_string_len(lhs_value);
 		whole_size = (tpp_size)multiplier * lhs_length;
 		if ((((tpp_size)multiplier | lhs_length) &
-		     ~(tpp_size)(TPP_SIZE_MAX >> (TPP_CHAR_BIT * (TPP_SIZEOF_tpp_size / 2)))) &&
+		     ~(tpp_size)(TPP_SIZE_MAX >> (TPP_CHAR_BIT * (sizeof(tpp_size) / 2)))) &&
 		    (whole_size / (tpp_size)multiplier != lhs_length))
 			whole_size = TPP_SIZE_MAX;
 #define TPP_MAX_STRING_LENGTH (((TPP_SIZE_MAX - tpp_offsetof(tpp_string, ts_str)) / sizeof(tpp_char)) - 1)
@@ -35439,10 +35445,10 @@ tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end) {
 		return 0;
 	uc = (tpp_unichar)*pos++;
 	if (uc >= 0xc0) {
-		uint_least8_t len = tpp_unicode_utf8seqlen_mb_getmax(uc);
+		tpp_uint_least8 len = tpp_unicode_utf8seqlen_mb_getmax(uc);
 		tpp_size maxlen = (tpp_size)(end - pos) + 1;
 		if ((tpp_size)len > maxlen)
-			len = (uint_least8_t)maxlen;
+			len = (tpp_uint_least8)maxlen;
 		switch (len) {
 		case 0:
 		case 1:
@@ -35509,7 +35515,7 @@ TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
-	uint_least8_t seqlen = 1;
+	tpp_uint_least8 seqlen = 1;
 	if tpp_unlikely(iter <= base)
 		return 0;
 	for (;;) {
@@ -35611,7 +35617,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
 	tpp_char const *end = file->tf_end;
-	uint_least8_t len;
+	tpp_uint_least8 len;
 	tpp_unichar uc;
 	tpp_assert(tpp_file_isutf8(file));
 	tpp_assert(pos < end);
@@ -35800,7 +35806,7 @@ handle_ilseq:
 		if tpp_unlikely(end >= file->tf_end) {
 			/* EOF in incomplete UTF-8 sequence :( */
 			end = file->tf_end;
-			len = (uint_least8_t)(tpp_size)(end - pos);
+			len = (tpp_uint_least8)(tpp_size)(end - pos);
 			tpp_assert(len >= 1 && len <= 8);
 			break;
 		}
@@ -43554,6 +43560,17 @@ err_nomem:
  * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
  * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
  *
+ * @param: macro_name:        Name of the macro to define. This string may contain
+ *                            a `(`-character following the macro's name, in which
+ *                            case the remainder of this string acts as a parameter
+ *                            list for a function-like macro definition.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
+ * @param: macro_body:        Body of the macro to define.
+ * @param: macro_body_maxlen: Max length of `macro_body` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_body` is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
@@ -43570,6 +43587,10 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
 }
 
 /* Delete a macro definition
+ * @param: macro_name:        Name of the macro to undefine.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
  * @return: true:  Success
  * @return: false: No such macro */
 TPP_IMPL TPP_NONNULL((1, 2)) bool TPPCALL
@@ -44953,7 +44974,7 @@ tpp_keyword_set_legacy_feature_expansion(tpp_keyword *tpp_restrict keyword,
 #endif /* TPP_HAVE_KEYWORD_FEATURES */
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, uint_least8_t flags) {
+tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, tpp_uint_least8 flags) {
 	/* Modify keyword flags */
 	tpp_errno error = TPP_EOK;
 	tpp_keyword_flags old_kwd_flags = tpp_keyword_getflags(keyword);
@@ -45087,7 +45108,7 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 		value &= TPP_LEGACY_KEYWORD_FLAG_MASK;
 		if (data.tlpptskfd_keyword) {
 			error = tpp_keyword_set_legacy_flags(data.tlpptskfd_keyword,
-			                                     (uint_least8_t)value);
+			                                     (tpp_uint_least8)value);
 			if (TPP_ISERR(error))
 				return error;
 		}

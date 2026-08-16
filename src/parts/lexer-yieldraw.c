@@ -52,10 +52,10 @@ tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end) {
 		return 0;
 	uc = (tpp_unichar)*pos++;
 	if (uc >= 0xc0) {
-		uint_least8_t len = tpp_unicode_utf8seqlen_mb_getmax(uc);
+		tpp_uint_least8 len = tpp_unicode_utf8seqlen_mb_getmax(uc);
 		tpp_size maxlen = (tpp_size)(end - pos) + 1;
 		if ((tpp_size)len > maxlen)
-			len = (uint_least8_t)maxlen;
+			len = (tpp_uint_least8)maxlen;
 		switch (len) {
 		case 0:
 		case 1:
@@ -122,7 +122,7 @@ TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
 tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end) {
 	tpp_unichar uc;
 	tpp_char const *iter = *p_end;
-	uint_least8_t seqlen = 1;
+	tpp_uint_least8 seqlen = 1;
 	if tpp_unlikely(iter <= base)
 		return 0;
 	for (;;) {
@@ -224,7 +224,7 @@ tpp_lexer_readutf8(tpp_lexer *tpp_restrict self,
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_char const *pos = *p_pos;
 	tpp_char const *end = file->tf_end;
-	uint_least8_t len;
+	tpp_uint_least8 len;
 	tpp_unichar uc;
 	tpp_assert(tpp_file_isutf8(file));
 	tpp_assert(pos < end);
@@ -413,7 +413,7 @@ handle_ilseq:
 		if tpp_unlikely(end >= file->tf_end) {
 			/* EOF in incomplete UTF-8 sequence :( */
 			end = file->tf_end;
-			len = (uint_least8_t)(tpp_size)(end - pos);
+			len = (tpp_uint_least8)(tpp_size)(end - pos);
 			tpp_assert(len >= 1 && len <= 8);
 			break;
 		}

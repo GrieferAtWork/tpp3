@@ -182,7 +182,7 @@ for (local ts: tokenStrings.values) {
 if (currentCondition != "1")
 	print(f"#endif /" f"* {currentCondition} *" f"/");
 print("};");
-print("static uint_least16_t const tpp_token_repr_offsets[] = {");
+print("static tpp_uint_least16 const tpp_token_repr_offsets[] = {");
 for (local i, value: oneCharTokenNames.enumerate()) {
 	local ts = tokenStrings[value];
 	print(f"	/" f"* [{i.hex()}] = *" f"/ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_{ts.name}),");
@@ -1331,7 +1331,7 @@ static struct tpp_token_repr_strings_struct {
 	/* .ttr_TPP_TOK_TILDE_TILDE = */ "~~",
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_TILDE && TPP_HAVE_TOK_TILDE_TILDE */
 };
-static uint_least16_t const tpp_token_repr_offsets[] = {
+static tpp_uint_least16 const tpp_token_repr_offsets[] = {
 	/* [0x0] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_eof),
 	/* [0x1] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_x01),
 	/* [0x2] = */ tpp_offsetof(struct tpp_token_repr_strings_struct, ttr_x02),

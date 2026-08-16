@@ -538,36 +538,36 @@ tpp_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 #define TPP_UTF16_SURROGATE_SHIFT    0x10000
 
 union tpp_word16 {
-	uint_least16_t w16;
-	uint_least8_t w8[2];
-#define tpp_word16_getle(self)        \
-	(((uint_least16_t)(self).w8[0]) | \
-	 ((uint_least16_t)(self).w8[1] << 8))
-#define tpp_word16_getbe(self)        \
-	(((uint_least16_t)(self).w8[1]) | \
-	 ((uint_least16_t)(self).w8[0] << 8))
+	tpp_uint_least16 w16;
+	tpp_uint_least8 w8[2];
+#define tpp_word16_getle(self)          \
+	(((tpp_uint_least16)(self).w8[0]) | \
+	 ((tpp_uint_least16)(self).w8[1] << 8))
+#define tpp_word16_getbe(self)          \
+	(((tpp_uint_least16)(self).w8[1]) | \
+	 ((tpp_uint_least16)(self).w8[0] << 8))
 };
 
 union tpp_word32 {
-	uint_least32_t w32;
-	uint_least8_t w8[4];
-#define tpp_word32_getle(self)              \
-	(((uint_least32_t)(self).w8[0]) |       \
-	 ((uint_least32_t)(self).w8[1] << 8) |  \
-	 ((uint_least32_t)(self).w8[2] << 16) | \
-	 ((uint_least32_t)(self).w8[3] << 24))
-#define tpp_word32_getbe(self)              \
-	(((uint_least32_t)(self).w8[3]) |       \
-	 ((uint_least32_t)(self).w8[2] << 8) |  \
-	 ((uint_least32_t)(self).w8[1] << 16) | \
-	 ((uint_least32_t)(self).w8[0] << 24))
+	tpp_uint_least32 w32;
+	tpp_uint_least8 w8[4];
+#define tpp_word32_getle(self)                \
+	(((tpp_uint_least32)(self).w8[0]) |       \
+	 ((tpp_uint_least32)(self).w8[1] << 8) |  \
+	 ((tpp_uint_least32)(self).w8[2] << 16) | \
+	 ((tpp_uint_least32)(self).w8[3] << 24))
+#define tpp_word32_getbe(self)                \
+	(((tpp_uint_least32)(self).w8[3]) |       \
+	 ((tpp_uint_least32)(self).w8[2] << 8) |  \
+	 ((tpp_uint_least32)(self).w8[1] << 16) | \
+	 ((tpp_uint_least32)(self).w8[0] << 24))
 };
 
 /* @param: src_count: # of utf-16 words in `src` (== # of bytes/2) */
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf16le_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least16_t ord;
+		tpp_uint_least16 ord;
 		union tpp_word16 word;
 		word.w16 = *--src;
 		ord = tpp_word16_getle(word);
@@ -593,9 +593,9 @@ tpp_utf16le_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf16be_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least16_t ord;
+		tpp_uint_least16 ord;
 		union tpp_word16 word;
 		word.w16 = *--src;
 		ord = tpp_word16_getbe(word);
@@ -622,9 +622,9 @@ tpp_utf16be_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst
 
 /* @param: src_count: # of utf-32 words in `src` (== # of bytes/4) */
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf32le_to_utf8(tpp_uint_least32 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least32_t ord;
+		tpp_uint_least32 ord;
 		union tpp_word32 word;
 		word.w32 = *--src;
 		ord = tpp_word32_getle(word);
@@ -634,9 +634,9 @@ tpp_utf32le_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst
 }
 
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_utf32be_to_utf8(uint_least32_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_utf32be_to_utf8(tpp_uint_least32 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least32_t ord;
+		tpp_uint_least32 ord;
 		union tpp_word32 word;
 		word.w32 = *--src;
 		ord = tpp_word32_getbe(word);
@@ -1051,7 +1051,7 @@ convert_multiword_to_utf8:
 			tpp_char *tail_base;
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
-			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (uint_least8_t)tail_size;
+			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (tpp_uint_least8)tail_size;
 			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
@@ -1059,10 +1059,10 @@ convert_multiword_to_utf8:
 		switch (self->tf_enc) {
 		case TPP_FILE_ENCODING_UTF16_LE:
 		case TPP_FILE_ENCODING_UTF16_BE: {
-			uint_least16_t const *dst16 = (uint_least16_t const *)io_dst;
+			tpp_uint_least16 const *dst16 = (tpp_uint_least16 const *)io_dst;
 			tpp_size words = (tpp_size)read_status / 2;
 			union tpp_word16 raw_last_word;
-			uint_least16_t last_word;
+			tpp_uint_least16 last_word;
 			if tpp_unlikely(!words) {
 				dst_base = dst_end;
 				break;
@@ -1094,12 +1094,12 @@ convert_multiword_to_utf8:
 		}	break;
 
 		case TPP_FILE_ENCODING_UTF32_LE:
-			dst_base = tpp_utf32le_to_utf8((uint_least32_t const *)io_dst,
+			dst_base = tpp_utf32le_to_utf8((tpp_uint_least32 const *)io_dst,
 			                               (tpp_size)read_status / 4,
 			                               dst_end);
 			break;
 		case TPP_FILE_ENCODING_UTF32_BE:
-			dst_base = tpp_utf32be_to_utf8((uint_least32_t const *)io_dst,
+			dst_base = tpp_utf32be_to_utf8((tpp_uint_least32 const *)io_dst,
 			                               (tpp_size)read_status / 4,
 			                               dst_end);
 			break;

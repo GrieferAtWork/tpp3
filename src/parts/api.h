@@ -486,73 +486,234 @@
 #endif /* !tpp_expect_IS_NOOP */
 #endif /* !tpp_unlikely */
 
+#ifndef tpp_uint_least8
+#ifdef UINT_LEAST8_MAX
+#define tpp_int_least8  int_least8_t
+#define tpp_uint_least8 uint_least8_t
+#define TPP_UINT_LEAST8_MAX UINT_LEAST8_MAX
+#ifdef UINT8_C
+#define TPP_UINT_LEAST8_C UINT8_C
+#endif /* UINT8_C */
+#else /* UINT_LEAST8_MAX */
+#define tpp_int_least8  signed char
+#define tpp_uint_least8 unsigned char
+#define TPP_UINT_LEAST8_MAX 0xff
+#endif /* !UINT_LEAST8_MAX */
+#endif /* !tpp_uint_least8 */
+#ifndef TPP_UINT_LEAST8_C
+#define TPP_UINT_LEAST8_C(x) x
+#endif /* !TPP_UINT_LEAST8_C */
+
+#ifndef tpp_uint_least16
+#ifdef UINT_LEAST16_MAX
+#define tpp_int_least16  int_least16_t
+#define tpp_uint_least16 uint_least16_t
+#define TPP_UINT_LEAST16_MAX UINT_LEAST16_MAX
+#ifdef UINT16_C
+#define TPP_UINT_LEAST16_C UINT16_C
+#endif /* UINT16_C */
+#else /* UINT_LEAST16_MAX */
+#define tpp_int_least16  signed short
+#define tpp_uint_least16 unsigned short
+#define TPP_UINT_LEAST16_MAX 0xffff
+#endif /* !UINT_LEAST16_MAX */
+#endif /* !tpp_uint_least16 */
+#ifndef TPP_UINT_LEAST16_C
+#define TPP_UINT_LEAST16_C(x) x
+#endif /* !TPP_UINT_LEAST16_C */
+
+#ifndef tpp_uint_least32
+#ifdef UINT_LEAST32_MAX
+#define tpp_int_least32  int_least32_t
+#define tpp_uint_least32 uint_least32_t
+#define TPP_UINT_LEAST32_MAX UINT_LEAST32_MAX
+#ifdef UINT32_C
+#define TPP_UINT_LEAST32_C UINT32_C
+#endif /* UINT32_C */
+#else /* UINT_LEAST32_MAX */
+#define tpp_int_least32  signed int
+#define tpp_uint_least32 unsigned int
+#define TPP_UINT_LEAST32_MAX 0xffffffffu
+#define TPP_UINT_LEAST32_C(x) x##u
+#endif /* !UINT_LEAST32_MAX */
+#endif /* !tpp_uint_least32 */
+#ifndef TPP_UINT_LEAST32_C
+#define TPP_UINT_LEAST32_C(x) x
+#endif /* !TPP_UINT_LEAST32_C */
+
+#ifndef tpp_uint_least64
+#ifdef UINT_LEAST64_MAX
+#define tpp_int_least64  int_least64_t
+#define tpp_uint_least64 uint_least64_t
+#define TPP_UINT_LEAST64_MAX UINT_LEAST64_MAX
+#ifdef UINT64_C
+#define TPP_UINT_LEAST64_C UINT64_C
+#endif /* UINT64_C */
+#endif /* !UINT_LEAST64_MAX */
+#endif /* !tpp_uint_least64 */
+#ifndef TPP_UINT_LEAST64_C
+#define TPP_UINT_LEAST64_C(x) x
+#endif /* !TPP_UINT_LEAST64_C */
+
+#ifndef tpp_uint_fast8
+#ifdef UINT_FAST8_MAX
+#define tpp_int_fast8      int_fast8_t
+#define tpp_uint_fast8     uint_fast8_t
+#define TPP_UINT_FAST8_MAX UINT_FAST8_MAX
+#ifdef UINT8_C
+#define TPP_UINT_FAST8_C UINT8_C
+#endif /* UINT8_C */
+#else /* UINT_FAST8_MAX */
+#define tpp_int_fast8      tpp_int_least8
+#define tpp_uint_fast8     tpp_uint_least8
+#define TPP_UINT_FAST8_MAX TPP_UINT_LEAST8_MAX
+#define TPP_UINT_FAST8_C   TPP_UINT_LEAST8_C
+#endif /* !UINT_FAST8_MAX */
+#endif /* !tpp_uint_fast8 */
+#ifndef TPP_UINT_FAST8_C
+#define TPP_UINT_FAST8_C TPP_UINT_LEAST8_C
+#endif /* !TPP_UINT_FAST8_C */
+
+#ifndef tpp_uint_fast16
+#ifdef UINT_FAST16_MAX
+#define tpp_int_fast16      int_fast16_t
+#define tpp_uint_fast16     uint_fast16_t
+#define TPP_UINT_FAST16_MAX UINT_FAST16_MAX
+#ifdef UINT16_C
+#define TPP_UINT_FAST16_C UINT16_C
+#endif /* UINT16_C */
+#else /* UINT_FAST16_MAX */
+#define tpp_int_fast16      tpp_int_least16
+#define tpp_uint_fast16     tpp_uint_least16
+#define TPP_UINT_FAST16_MAX TPP_UINT_LEAST16_MAX
+#define TPP_UINT_FAST16_C   TPP_UINT_LEAST16_C
+#endif /* !UINT_FAST16_MAX */
+#endif /* !tpp_uint_fast16 */
+#ifndef TPP_UINT_FAST16_C
+#define TPP_UINT_FAST16_C TPP_UINT_LEAST16_C
+#endif /* !TPP_UINT_FAST16_C */
+
+#ifndef tpp_uint_fast32
+#ifdef UINT_FAST32_MAX
+#define tpp_int_fast32      int_fast32_t
+#define tpp_uint_fast32     uint_fast32_t
+#define TPP_UINT_FAST32_MAX UINT_FAST32_MAX
+#ifdef UINT32_C
+#define TPP_UINT_FAST32_C UINT32_C
+#endif /* UINT32_C */
+#else /* UINT_FAST32_MAX */
+#define tpp_int_fast32      tpp_int_least32
+#define tpp_uint_fast32     tpp_uint_least32
+#define TPP_UINT_FAST32_MAX TPP_UINT_LEAST32_MAX
+#define TPP_UINT_FAST32_C   TPP_UINT_LEAST32_C
+#endif /* !UINT_FAST32_MAX */
+#endif /* !tpp_uint_fast32 */
+#ifndef TPP_UINT_FAST32_C
+#define TPP_UINT_FAST32_C TPP_UINT_LEAST32_C
+#endif /* !TPP_UINT_FAST32_C */
+
+/*[[[tpp-end]]]*/ /* Not needed for anything (yet), so excluded amalgamation */
+#if 0
+#ifndef tpp_uint_fast64
+#ifdef UINT_FAST64_MAX
+#define tpp_int_fast64      int_fast64_t
+#define tpp_uint_fast64     uint_fast64_t
+#define TPP_UINT_FAST64_MAX UINT_FAST64_MAX
+#ifdef UINT64_C
+#define TPP_UINT_FAST64_C UINT64_C
+#endif /* UINT64_C */
+#elif defined(tpp_uint_least64)
+#define tpp_int_fast64      tpp_int_least64
+#define tpp_uint_fast64     tpp_uint_least64
+#define TPP_UINT_FAST64_MAX TPP_UINT_LEAST64_MAX
+#define TPP_UINT_FAST64_C   TPP_UINT_LEAST64_C
+#endif /* ... */
+#endif /* !tpp_uint_fast64 */
+#ifndef TPP_UINT_FAST64_C
+#define TPP_UINT_FAST64_C TPP_UINT_LEAST64_C
+#endif /* !TPP_UINT_FAST64_C */
+#endif
+/*[[[tpp-begin]]]*/
+
+
 #ifndef tpp_size
-#define tpp_size     size_t
+#define tpp_size size_t
+#ifdef SIZE_MAX
 #define TPP_SIZE_MAX SIZE_MAX
+#endif /* SIZE_MAX */
 #endif /* !tpp_size */
-#ifndef TPP_SIZEOF_tpp_size
-#if TPP_SIZE_MAX == UINT32_C(0xffffffff)
-#define TPP_SIZEOF_tpp_size 4
-#elif TPP_SIZE_MAX == UINT64_C(0xffffffffffffffff)
-#define TPP_SIZEOF_tpp_size 8
-#elif TPP_SIZE_MAX == UINT16_C(0xffff)
-#define TPP_SIZEOF_tpp_size 2
-#elif TPP_SIZE_MAX == UINT8_C(0xff)
-#define TPP_SIZEOF_tpp_size 1
-#else /* ... */
-#error "Unsupported 'TPP_SIZE_MAX' - Please provide your own '#define TPP_SIZEOF_tpp_size'"
-#endif /* !... */
-#endif /* !TPP_SIZEOF_tpp_size */
+
 #ifndef tpp_ssize
 #define tpp_ssize ptrdiff_t
 #ifdef PTRDIFF_MAX
 #define TPP_SSIZE_MAX PTRDIFF_MAX
-#else /* PTRDIFF_MAX */
+#elif defined(TPP_SIZE_MAX)
 #define TPP_SSIZE_MAX ((TPP_SIZE_MAX >> 1) - 1)
-#endif /* !PTRDIFF_MAX */
+#endif /* ... */
 #endif /* !tpp_ssize */
+
 #ifndef tpp_hash
-#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
 #define TPP_SIZEOF_tpp_hash 4
-#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
 #define TPP_SIZEOF_tpp_hash 8
-#else /* UINT_FAST32_MAX == ... */
-#error "Unrecognized 'UINT_FAST32_MAX'"
-#endif /* UINT_FAST32_MAX != ... */
-#define tpp_hash uint_fast32_t
-#ifdef UINT32_C
-#define TPP_HASH_C UINT32_C
-#else /* UINT32_C */
-#define TPP_HASH_C(x) x
-#endif /* !UINT32_C */
+#else /* TPP_UINT_FAST32_MAX == ... */
+#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
+#endif /* TPP_UINT_FAST32_MAX != ... */
+#define tpp_hash   tpp_uint_fast32
+#define TPP_HASH_C TPP_UINT_FAST32_C
 #endif /* !tpp_hash */
+
 #ifndef tpp_line
-#if UINT_FAST32_MAX == UINT32_C(0xffffffff)
+#if TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffff)
 #define TPP_SIZEOF_tpp_line   4
 #define TPP_SIZEOF_tpp_column 4
-#elif UINT_FAST32_MAX == UINT64_C(0xffffffffffffffff)
+#elif TPP_UINT_FAST32_MAX == TPP_UINT_FAST32_C(0xffffffffffffffff)
 #define TPP_SIZEOF_tpp_line   8
 #define TPP_SIZEOF_tpp_column 8
-#else /* UINT_FAST32_MAX == ... */
-#error "Unrecognized 'UINT_FAST32_MAX'"
-#endif /* UINT_FAST32_MAX != ... */
-#define tpp_line   int_fast32_t
-#define tpp_column int_fast32_t
+#else /* TPP_UINT_FAST32_MAX == ... */
+#error "Unrecognized 'TPP_UINT_FAST32_MAX'"
+#endif /* TPP_UINT_FAST32_MAX != ... */
+#define tpp_line   tpp_int_fast32
+#define tpp_column tpp_int_fast32
 #endif /* !tpp_line */
+
 #ifndef tpp_char
 #define tpp_char unsigned char
 #endif /* !tpp_char */
+
 #ifndef tpp_unichar
-#define tpp_unichar   uint_least32_t
-#define TPP_UNICHAR_C UINT32_C
+#define tpp_unichar   tpp_uint_least32
+#define TPP_UNICHAR_C TPP_UINT_LEAST32_C
 #endif /* !tpp_unichar */
 
 #ifndef tpp_intmax
+#ifdef UINTMAX_MAX
 #define tpp_intmax      intmax_t
 #define tpp_uintmax     uintmax_t
 #define TPP_UINTMAX_MAX UINTMAX_MAX
+#ifdef UINTMAX_C
 #define TPP_UINTMAX_C   UINTMAX_C
+#endif /* UINTMAX_C */
+#elif defined(tpp_uint_least64)
+#define tpp_intmax      tpp_int_least64
+#define tpp_uintmax     tpp_uint_least64
+#define TPP_UINTMAX_MAX TPP_UINT_LEAST64_MAX
+#define TPP_UINTMAX_C   TPP_UINT_LEAST64_C
+#else /* ... */
+#define tpp_intmax      tpp_int_least32
+#define tpp_uintmax     tpp_uint_least32
+#define TPP_UINTMAX_MAX TPP_UINT_LEAST32_MAX
+#define TPP_UINTMAX_C   TPP_UINT_LEAST32_C
+#endif /* !... */
 #endif /* !tpp_intmax */
+#ifndef TPP_UINTMAX_C
+#ifdef tpp_uint_least64
+#define TPP_UINTMAX_C TPP_UINT_LEAST64_C
+#else /* tpp_uint_least64 */
+#define TPP_UINTMAX_C TPP_UINT_LEAST32_C
+#endif /* !tpp_uint_least64 */
+#endif /* !TPP_UINTMAX_C */
 
 /* Counter type used to implement `__COUNTER__` and `__TPP_COUNTER` */
 #ifndef tpp_counter
@@ -729,16 +890,24 @@ typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char 
 
 /* Line/Column-information API */
 #ifndef tpp_lcinfo
-#if defined(INT_LEAST64_MAX) && defined(UINT32_MAX) && !TPP_HAVE_TPP2_COMPAT
-#define tpp_lcinfo int_least64_t
+#if defined(TPP_UINT_LEAST64_MAX) && !TPP_HAVE_TPP2_COMPAT
+#define tpp_lcinfo tpp_int_least64
 
 #define tpp_lcinfo_equals(a, b)  ((a) == (b))
+#ifdef UINT32_MAX
 #define tpp_lcinfo_getline(self) ((tpp_line)((int32_t)(uint32_t)(self)))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)((int32_t)(uint32_t)((self) >> 32)))
 #define tpp_lcinfo_of(line, col)               \
 	(((tpp_lcinfo)(uint32_t)(int32_t)(line)) | \
 	 ((tpp_lcinfo)(uint32_t)(int32_t)(col) << 32))
-#else /* INT_LEAST64_MAX && UINT32_MAX && !TPP_HAVE_TPP2_COMPAT */
+#else /* UINT32_MAX */
+#define tpp_lcinfo_getline(self) ((tpp_line)((self) & TPP_UINT_LEAST32_C(0xffffffff)))
+#define tpp_lcinfo_getcol(self)  ((tpp_column)(((self) >> 32) & TPP_UINT_LEAST32_C(0xffffffff)))
+#define tpp_lcinfo_of(line, col)                               \
+	(((tpp_lcinfo)((line) & TPP_UINT_LEAST32_C(0xffffffff))) | \
+	 ((tpp_lcinfo)((col) & TPP_UINT_LEAST32_C(0xffffffff)) << 32))
+#endif /* !UINT32_MAX */
+#else /* TPP_UINT_LEAST64_MAX && !TPP_HAVE_TPP2_COMPAT */
 typedef struct tpp_lcinfo {
 	tpp_line   TPP_INTERNAL(lci_line); /* Line */
 	tpp_column TPP_INTERNAL(lci_col);  /* Column */
@@ -758,7 +927,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 	result.TPP_INTERNAL(lci_col)  = col;
 	return result;
 }
-#endif /* !INT_LEAST64_MAX || !UINT32_MAX || TPP_HAVE_TPP2_COMPAT */
+#endif /* !TPP_UINT_LEAST64_MAX || TPP_HAVE_TPP2_COMPAT */
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
@@ -801,7 +970,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
  *       that reference counts don't need to be atomic, because all
  *       components are thread-local. */
 typedef struct {
-	uint_fast32_t trc_count; /* Reference counter */
+	tpp_uint_fast32 trc_count; /* Reference counter */
 } tpp_refcnt;
 #define tpp_refcnt             tpp_refcnt
 #define TPP_REFCNT_INIT(v)     { v }
@@ -822,7 +991,7 @@ typedef struct {
  *          reference counter is used in places where the linked component
  *          may be shared between multiple lexers (and thus: threads) */
 typedef struct {
-	uint_fast32_t trca_count; /* Reference counter */
+	tpp_uint_fast32 trca_count; /* Reference counter */
 } tpp_refcnt_atomic;
 #define tpp_refcnt_atomic             tpp_refcnt_atomic
 #define TPP_REFCNT_ATOMIC_INIT(v)     { v }

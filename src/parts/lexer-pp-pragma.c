@@ -1398,7 +1398,7 @@ tpp_keyword_set_legacy_feature_expansion(tpp_keyword *tpp_restrict keyword,
 #endif /* TPP_HAVE_KEYWORD_FEATURES */
 
 static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, uint_least8_t flags) {
+tpp_keyword_set_legacy_flags(tpp_keyword *tpp_restrict keyword, tpp_uint_least8 flags) {
 	/* Modify keyword flags */
 	tpp_errno error = TPP_EOK;
 	tpp_keyword_flags old_kwd_flags = tpp_keyword_getflags(keyword);
@@ -1547,7 +1547,7 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 		value &= TPP_LEGACY_KEYWORD_FLAG_MASK;
 		if (data.tlpptskfd_keyword) {
 			error = tpp_keyword_set_legacy_flags(data.tlpptskfd_keyword,
-			                                     (uint_least8_t)value);
+			                                     (tpp_uint_least8)value);
 			if (TPP_ISERR(error))
 				return error;
 		}

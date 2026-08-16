@@ -157,9 +157,9 @@ tpp_io_printpwd_writeutf8_rev(tpp_char *dst, tpp_unichar uc) {
 
 /* @param: src_count: # of utf-16 words in `src` (== # of bytes/2) */
 static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_char *TPPCALL
-tpp_io_printpwd_utf16_to_utf8(uint_least16_t const *src, tpp_size src_count, tpp_char *dst_end) {
+tpp_io_printpwd_utf16_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, tpp_char *dst_end) {
 	for (src += src_count; src_count; --src_count) {
-		uint_least16_t ord = *--src;
+		tpp_uint_least16 ord = *--src;
 		if (ord >= 0xdc00 /*TPP_UTF16_LOW_SURROGATE_MIN*/ &&
 		    ord <= 0xdfff /*TPP_UTF16_LOW_SURROGATE_MAX*/ && src_count) {
 			/* Second word of surrogate pair */
@@ -257,7 +257,7 @@ tpp_io_printpwd(tpp_formatprinter printer, void *arg) {
 				break;
 		}
 		utf8_end  = (tpp_char *)&buf[textlen];
-		utf8_base = tpp_io_printpwd_utf16_to_utf8((uint_least16_t const *)buf, textlen, utf8_end);
+		utf8_base = tpp_io_printpwd_utf16_to_utf8((tpp_uint_least16 const *)buf, textlen, utf8_end);
 		result = tpp_formatprinter_print_cstr(printer, arg, utf8_base,
 		                                      (tpp_size)(utf8_end - utf8_base));
 	}

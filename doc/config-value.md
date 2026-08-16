@@ -26,7 +26,7 @@ defined(_MSC_VER) ? "%Pf%?P{(%Pl, %Pc)%}: " : "%Pf:%?P{%Pl:%Pc:%} "
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L22726)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L22885)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -47,7 +47,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25627)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L25797)
 
 <details><summary>Details</summary>
 
@@ -151,7 +151,7 @@ Default:
 
 ## TPP_CONFIG_CLI_DEFAULT_SYSROOT
 
-The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L27087)
+The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L27263)
 
 <details><summary>Details</summary>
 

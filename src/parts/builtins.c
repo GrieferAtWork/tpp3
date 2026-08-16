@@ -275,9 +275,9 @@ TPP_CONST_IMPL tpp_warnings_state const tpp_warnings_state_default = {
  */
 #ifdef TPP_CONFIG_BUILTINS_FILENAME
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT32_C(0x##hash_lo)
+#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) TPP_UINT_LEAST32_C(0x##hash_lo)
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) UINT64_C(0x##hash_hi##hash_lo)
+#define TPP_BUILTIN_MAKEHASH(hash_hi, hash_lo) TPP_UINT_LEAST64_C(0x##hash_hi##hash_lo)
 #else /* TPP_SIZEOF_tpp_hash == ... */
 #endif /* TPP_SIZEOF_tpp_hash != ... */
 #define TPP_BUILTIN_KEYWORD(id, kwd_len, kwd, next, hash_hi, hash_lo) \
@@ -458,9 +458,9 @@ static void tpp_init_warning_group_name_offsets_byname(void) {
  * calculate keyword hashes within the preprocessor! */
 #pragma extension(push,"-fmacro-recursion")
 #if TPP_SIZEOF_tpp_hash == 4
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&0xffffffff),__TPP_EVAL(str[1:]))
 #elif TPP_SIZEOF_tpp_hash == 8
-#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&TPP_HASH_C(0xffffffffffffffff)),__TPP_EVAL(str[1:]))
+#define TPP_PRIVATE_HASHOF_1(result,str) TPP_PRIVATE_HASHOF2(__TPP_EVAL(tpp_hash_combine_char(result,str[0])&0xffffffffffffffff),__TPP_EVAL(str[1:]))
 #endif /* ... */
 #define TPP_PRIVATE_HASHOF2(result,str) TPP_PRIVATE_PP_CAT(TPP_PRIVATE_HASHOF_,__TPP_EVAL(!!str))(result,str)
 #pragma extension(pop)

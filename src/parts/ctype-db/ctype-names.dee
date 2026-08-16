@@ -263,21 +263,21 @@ function getUnicodeNames(warnConflicts: bool = true): {string: {int...}} {
 
 function uintLeastTypeFor(maxValue: int): string {
 	if (maxValue <= 0xff)
-		return "uint_least8_t";
+		return "tpp_uint_least8";
 	if (maxValue <= 0xffff)
-		return "uint_least16_t";
+		return "tpp_uint_least16";
 	if (maxValue <= 0xffffffff)
-		return "uint_least32_t";
-	return "uint_least64_t";
+		return "tpp_uint_least32";
+	return "tpp_uint_least64";
 }
 
 function uintLeastSizeof(T: string): int {
 	/* Presumably... (may be larger if platform doesn't have matching type) */
 	return {
-		"uint_least8_t": 1,
-		"uint_least16_t": 2,
-		"uint_least32_t": 4,
-		"uint_least64_t": 8,
+		"tpp_uint_least8": 1,
+		"tpp_uint_least16": 2,
+		"tpp_uint_least32": 4,
+		"tpp_uint_least64": 8,
 	}[T];
 }
 

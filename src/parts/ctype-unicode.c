@@ -32,7 +32,7 @@
 TPP_DECL_BEGIN
 
 #if TPP_HAVE_BUILTIN_CTYPE_UNICODE
-static uint_least8_t const tpp_unicode_tab1[7172] = {
+static tpp_uint_least8 const tpp_unicode_tab1[7172] = {
 	0,1,2,2,2,3,4,5,2,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,
 	29,30,2,2,31,32,33,34,35,2,2,2,36,37,38,39,40,41,42,43,44,45,46,47,48,49,2,50,2,2,51,52,
 	53,54,55,56,57,57,57,57,58,59,57,57,57,57,60,61,57,57,57,57,57,57,57,57,2,62,63,64,65,57,57,57,
@@ -259,7 +259,7 @@ static uint_least8_t const tpp_unicode_tab1[7172] = {
 	57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,57,
 	222,57,223,224,
 };
-static uint_least8_t const tpp_unicode_tab2[14392] = {
+static tpp_uint_least8 const tpp_unicode_tab2[14392] = {
 	68,68,68,68,68,72,132,68,68,68,68,68,68,68,68,68,4,0,3,0,0,0,0,0,34,34,34,34,34,0,0,0,
 	48,51,51,51,51,51,51,51,51,51,51,51,51,3,0,48,48,51,51,51,51,51,51,51,51,51,51,51,51,3,0,0,
 	68,68,132,68,68,68,68,68,68,68,68,68,68,68,68,68,4,51,51,0,0,3,64,0,0,34,48,32,32,3,34,2,
@@ -712,13 +712,13 @@ static uint_least8_t const tpp_unicode_tab2[14392] = {
 	34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,34,
 };
 
-TPP_IMPL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL
+TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_uint_least8 TPPCALL
 _tpp_unicode_traits(tpp_unichar uch) {
-	uint_least32_t tab2_index;
+	tpp_uint_least32 tab2_index;
 	if (uch >= 0xe01f0)
 		return 0;
-	tab2_index = tpp_unicode_tab1[(uint_least32_t)(uch) >> 7] << 7;
-	tab2_index += (uint_least8_t)(uch) & 0x7f;
+	tab2_index = tpp_unicode_tab1[(tpp_uint_least32)(uch) >> 7] << 7;
+	tab2_index += (tpp_uint_least8)(uch) & 0x7f;
 	return (tpp_unicode_tab2[tab2_index >> 1] >> (4 * (tab2_index & 1))) & 0xf;
 }
 #endif /* TPP_HAVE_BUILTIN_CTYPE_UNICODE */

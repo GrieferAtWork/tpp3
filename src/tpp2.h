@@ -4504,7 +4504,7 @@ TPP_INLINE TPP_FORMATPRINTER_DEFINE(_TPP_Escape_buffer_cb, arg, text, num_bytes)
 #define TPP_SizeofEscape(data, size) \
 	((tpp_size)tpp_token_encodestring(&_TPP_Escape_buffer_cb, NULL, data, size))
 TPP_INLINE char *TPPCALL
-TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, size_t size) {
+TPP_Escape(char *tpp_restrict buf, char const *tpp_restrict data, tpp_size size) {
 	tpp_token_encodestring(&_TPP_Escape_buffer_cb, &buf, data, size);
 	return buf;
 }
@@ -4769,12 +4769,12 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 #define TPP_KEYWORDFLAG_IMPORTED               TPP_KEYWORD_FLAG_HDR_IMPORTED
 #define TPP_KEYWORDFLAG_IS_DEPRECATED          TPP_KEYWORD_FLAG_IS_DEPRECATED
 #define TPP_KEYWORDFLAG_IS_POISONED            TPP_KEYWORD_FLAG_IS_POISONED
-#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          UINT32_C(0x00010000) /* Use `TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE()` instead! */
-#define TPP_KEYWORDFLAG_HAS_BUILTIN            UINT32_C(0x00020000) /* Use `TPP_PREDEFINED_FEATURE_HAS_BUILTIN()` instead! */
-#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      UINT32_C(0x00040000) /* Use `TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE()` instead! */
-#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE UINT32_C(0x00080000) /* Use `TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE()` instead! */
-#define TPP_KEYWORDFLAG_HAS_EXTENSION          UINT32_C(0x00100000) /* Use `TPP_PREDEFINED_FEATURE_HAS_EXTENSION()` instead! */
-#define TPP_KEYWORDFLAG_HAS_FEATURE            UINT32_C(0x00200000) /* Use `TPP_PREDEFINED_FEATURE_HAS_FEATURE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_ATTRIBUTE          TPP_UINT_LEAST32_C(0x00010000) /* Use `TPP_PREDEFINED_FEATURE_HAS_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_BUILTIN            TPP_UINT_LEAST32_C(0x00020000) /* Use `TPP_PREDEFINED_FEATURE_HAS_BUILTIN()` instead! */
+#define TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE      TPP_UINT_LEAST32_C(0x00040000) /* Use `TPP_PREDEFINED_FEATURE_HAS_CPP_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE TPP_UINT_LEAST32_C(0x00080000) /* Use `TPP_PREDEFINED_FEATURE_HAS_DECLSPEC_ATTRIBUTE()` instead! */
+#define TPP_KEYWORDFLAG_HAS_EXTENSION          TPP_UINT_LEAST32_C(0x00100000) /* Use `TPP_PREDEFINED_FEATURE_HAS_EXTENSION()` instead! */
+#define TPP_KEYWORDFLAG_HAS_FEATURE            TPP_UINT_LEAST32_C(0x00200000) /* Use `TPP_PREDEFINED_FEATURE_HAS_FEATURE()` instead! */
 #undef TPP_KEYWORDFLAG_HAS_TPP_BUILTIN /* TPP builtins (and consequently "__has_tpp_builtin") are no longer supported */
 #define TPP_KEYWORDFLAG_USERMASK TPP_KEYWORD_FLAG_USERMASK
 
@@ -5141,7 +5141,7 @@ TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, c
  * @return: NULL: File not found. */
 TPPFUN struct TPPFile *TPPCALL
 TPPLexer_OpenFile_(TPP_LEXER_PARAM_
-                   int mode, char *tpp_restrict filename, size_t filename_size,
+                   int mode, char *tpp_restrict filename, tpp_size filename_size,
                    struct TPPKeyword **pkeyword_entry);
 #define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
 	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)

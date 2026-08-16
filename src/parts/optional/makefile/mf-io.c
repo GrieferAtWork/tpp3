@@ -145,10 +145,10 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 	BOOL bWrite;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
-#if TPP_SIZEOF_tpp_size > 4
-	if (bufsize > UINT32_C(0xffffffff))
-		dwBufsize = UINT32_C(0xffffffff);
-#endif /* TPP_SIZEOF_tpp_size > 4 */
+#if TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff)
+	if (bufsize > TPP_UINT_LEAST32_C(0xffffffff))
+		dwBufsize = TPP_UINT_LEAST32_C(0xffffffff);
+#endif /* TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff) */
 
 	TPP_SYSCALL({
 		bWrite = WriteFile(file, buf, dwBufsize, &dwResult, NULL);

@@ -180,12 +180,12 @@ again:
 	case 0xf0: case 0xf1: case 0xf2: case 0xf3: case 0xf4: case 0xf5: case 0xf6: case 0xf7:
 	case 0xf8: case 0xf9: case 0xfa: case 0xfb: case 0xfc: case 0xfd: case 0xfe: case 0xff: {
 		tpp_char const *utf8_start = iter - 1;
-		uint_least8_t utf8_size    = tpp_unicode_utf8seqlen_mb_getcur(ch);
+		tpp_uint_least8 utf8_size  = tpp_unicode_utf8seqlen_mb_getcur(ch);
 		tpp_char const *utf8_end   = utf8_start + utf8_size;
 		if (utf8_start < utf8_end && utf8_end <= end) {
 			/* Verify that this is a valid utf-8 sequence */
 			tpp_unichar uc;
-			uint_least8_t i;
+			tpp_uint_least8 i;
 
 			/* Validate follow-up bytes. */
 			for (i = 1; i < utf8_size; ++i) {

@@ -43,22 +43,22 @@ function readLines(filename: string): {Bytes...} {
 
 function cTypeForSizeof(sizeof: int): string {
 	if (sizeof >= 8)
-		return "uint_least64_t";
+		return "tpp_uint_least64";
 	if (sizeof >= 4)
-		return "uint_least32_t";
+		return "tpp_uint_least32";
 	if (sizeof >= 2)
-		return "uint_least16_t";
-	return "uint_least8_t";
+		return "tpp_uint_least16";
+	return "tpp_uint_least8";
 }
 
 function cTypeForInteger(maxIntVal: int): string {
 	if (maxIntVal > 0xffffffff)
-		return "uint_least64_t";
+		return "tpp_uint_least64";
 	if (maxIntVal > 0xffff)
-		return "uint_least32_t";
+		return "tpp_uint_least32";
 	if (maxIntVal > 0xff)
-		return "uint_least16_t";
-	return "uint_least8_t";
+		return "tpp_uint_least16";
+	return "tpp_uint_least8";
 }
 
 function sizeofGreatestIntegerInBytes(values: {int...}): int {
@@ -343,7 +343,7 @@ function generateUnicodeDatabase() {
 	printTable("tpp_unicode_tab2", unicode_tab2);
 #endif /* !COMPRESS_TAB2 */
 	print;
-	print("TPP_IMPL TPP_CONSTCALL TPP_WUNUSED uint_least8_t TPPCALL");
+	print("TPP_IMPL TPP_CONSTCALL TPP_WUNUSED tpp_uint_least8 TPPCALL");
 	print("_tpp_unicode_traits(tpp_unichar uch) {");
 	print("	", cTypeForInteger(maxOrd), " tab2_index;");
 	print("	if (uch >= ", (maxOrd + 1).hex(), ")");

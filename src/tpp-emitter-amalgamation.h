@@ -1202,13 +1202,13 @@ typedef struct tpp_emitter_state_files {
 #endif /* !... */
 
 #if TPP_EMITTER_HAVE_FLAGS
-#define tpp_emitter_flags uint_least8_t
-#define TPP_EMITTER_FLAG_NORMAL   UINT8_C(0x00)
+#define tpp_emitter_flags tpp_uint_least8
+#define TPP_EMITTER_FLAG_NORMAL   TPP_UINT_LEAST8_C(0x00)
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-#define TPP_EMITTER_FLAG_FCHANGED UINT8_C(0x01) /* Contents of the #include-stack may have changed */
+#define TPP_EMITTER_FLAG_FCHANGED TPP_UINT_LEAST8_C(0x01) /* Contents of the #include-stack may have changed */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
-#define TPP_EMITTER_FLAG_HASLINE  UINT8_C(0x02) /* At least 1 `# <linenum>`-directive was emitted */
+#define TPP_EMITTER_FLAG_HASLINE  TPP_UINT_LEAST8_C(0x02) /* At least 1 `# <linenum>`-directive was emitted */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS || TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 #endif /* TPP_EMITTER_HAVE_FLAGS */
 
@@ -1582,10 +1582,10 @@ _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie);
 	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
 #if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
-#define _tpp_emitter_cli_loader_flags uint_least8_t
-#define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL UINT8_C(0x00) /* Normal flags */
+#define _tpp_emitter_cli_loader_flags tpp_uint_least8
+#define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL TPP_UINT_LEAST8_C(0x00) /* Normal flags */
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
-#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M UINT8_C(0x01) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
+#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M TPP_UINT_LEAST8_C(0x01) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
 #endif /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 

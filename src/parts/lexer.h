@@ -48,13 +48,13 @@ TPP_DECL_BEGIN
 
 
 #if TPP_HAVE_LEXER_STATE_FLAGS
-#define tpp_lexer_state_flags uint_least8_t
-#define TPP_LEXER_STATE_FLAG_NORMAL       UINT8_C(0x00) /* Normal state flags */
+#define tpp_lexer_state_flags tpp_uint_least8
+#define TPP_LEXER_STATE_FLAG_NORMAL     TPP_UINT_LEAST8_C(0x00) /* Normal state flags */
 #if TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
-#define TPP_LEXER_STATE_FLAG_ALLTOKENS    UINT8_C(0x01) /* Prevent `tpp_lexer_yieldpp()` from (possibly) filtering SPACE/LF/COMMENT tokens */
+#define TPP_LEXER_STATE_FLAG_ALLTOKENS  TPP_UINT_LEAST8_C(0x01) /* Prevent `tpp_lexer_yieldpp()` from (possibly) filtering SPACE/LF/COMMENT tokens */
 #endif /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
 #if TPP_HAVE_WARNINGS
-#define TPP_LEXER_STATE_FLAG_NOWARNINGS   UINT8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
+#define TPP_LEXER_STATE_FLAG_NOWARNINGS TPP_UINT_LEAST8_C(0x02) /* Do not emit any warnings/errors (don't even trigger them) -- should be used during seek-ahead yields. */
 #endif /* TPP_HAVE_WARNINGS */
 #endif /* TPP_HAVE_LEXER_STATE_FLAGS */
 
@@ -1024,7 +1024,7 @@ typedef struct tpp_lexer_openfile_result {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_LEXER_OPENFILE_EX
-#define TPP_LEXER_OPENFILE_FLAG_NORMAL 0 /* Normal flags */
+#define TPP_LEXER_OPENFILE_FLAG_NORMAL TPP_UINT_LEAST16_C(0) /* Normal flags */
 #ifdef tpp_keyword_flags
 #define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
 #if TPP_HAVE_CPP_IMPORT
@@ -1037,20 +1037,20 @@ typedef struct tpp_lexer_openfile_result {
 #define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed `#ifndef`-block of a macro that is current defined */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 #else /* tpp_keyword_flags */
-#define tpp_lexer_openfile_flags uint_least32_t /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
+#define tpp_lexer_openfile_flags tpp_uint_least16 /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
 #endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
-#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT UINT16_C(0x0100) /* Reject files that are already on the `#include`-stack */
+#define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT TPP_UINT_LEAST16_C(0x0100) /* Reject files that are already on the `#include`-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  UINT16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
 #else /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  UINT16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
@@ -1303,6 +1303,17 @@ tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
  * are parsed as a function-like macro. The same also goes for `{`, `[` and `<`
  * when `TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS` is enabled.
  *
+ * @param: macro_name:        Name of the macro to define. This string may contain
+ *                            a `(`-character following the macro's name, in which
+ *                            case the remainder of this string acts as a parameter
+ *                            list for a function-like macro definition.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
+ * @param: macro_body:        Body of the macro to define.
+ * @param: macro_body_maxlen: Max length of `macro_body` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_body` is NUL-terminated.
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
@@ -1311,6 +1322,10 @@ tpp_lexer_define(tpp_lexer *tpp_restrict self,
                  char const *macro_body, tpp_size macro_body_maxlen);
 
 /* Delete a macro definition
+ * @param: macro_name:        Name of the macro to undefine.
+ * @param: macro_name_maxlen: Max length of `macro_name` (in bytes). Used in a call
+ *                            too `tpp_strnlen()`, so you may also pass `TPP_SIZE_MAX`
+ *                            if you know that `macro_name` is NUL-terminated.
  * @return: true:  Success
  * @return: false: No such macro */
 TPP_DECL TPP_NONNULL((1, 2)) bool TPPCALL
@@ -1319,8 +1334,10 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_LEXER_CLI_DEFINE */
 
 #if TPP_HAVE_KEYWORDS_UNDEFALLUSER
-/* Delete all user-defined macro definitions */
-#define tpp_lexer_undefalluser(self) tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
+/* Delete all user-defined macro definitions.
+ * This will invoke `tpp_keyword_undefuser()` for every keyword. */
+#define tpp_lexer_undefalluser(self) \
+	tpp_keywords_undefalluser(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
 
