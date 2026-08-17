@@ -711,7 +711,12 @@ err_temp:
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-_tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
+_tpp_lexer_builtin_warnhandler(
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK)
+                               void *lexer_cookie,
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
+                               struct tpp_lexer *lexer_cookie,
+#endif /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {

@@ -539,8 +539,9 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
  * get notified whenever the lexer encounters a new dependency */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+_tpp_makefile_new_dependency_hook(_tpp_makefile_new_dependency_hook_cookie cookie,
+                                  tpp_keyword *filename_kwd) {
+	tpp_makefile *const self = _tpp_makefile_new_dependency_hook_ofcookie(cookie);
 	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
 }
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
@@ -573,8 +574,9 @@ tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
-_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind) {
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+_tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
+                                     tpp_hook_include_kind include_kind) {
+	tpp_makefile *const self = _tpp_makefile_include_not_found_hook_ofcookie(cookie);
 	tpp_lexer const *const lexer = tpp_makefile_getlexer(self);
 	(void)include_kind; /* Ignored -- treat all missing includes the same. */
 
@@ -1141,11 +1143,11 @@ use_full_filename:
 				tpp_keyword *wkwd = tpp_lexer_kwds_copybuiltin(lexer, kwd);
 				if tpp_unlikely(!wkwd)
 					return TPP_ENOMEM;
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 				error = _tpp_makefile_new_dependency_hook(self->tmkfcl_mf, wkwd);
-#else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				error = _tpp_makefile_new_dependency_hook(lexer, wkwd);
-#endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				if (TPP_ISERR(error))
 					return error;
 			}

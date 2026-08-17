@@ -332,8 +332,9 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
  * get notified whenever the lexer encounters a new dependency */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd) {
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+_tpp_makefile_new_dependency_hook(_tpp_makefile_new_dependency_hook_cookie cookie,
+                                  tpp_keyword *filename_kwd) {
+	tpp_makefile *const self = _tpp_makefile_new_dependency_hook_ofcookie(cookie);
 	return tpp_makefile_new_dependency_hook_impl(self, filename_kwd);
 }
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
@@ -366,8 +367,9 @@ tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
-_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind) {
-	tpp_makefile *const self = tpp_makefile_ofcookie(cookie);
+_tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
+                                     tpp_hook_include_kind include_kind) {
+	tpp_makefile *const self = _tpp_makefile_include_not_found_hook_ofcookie(cookie);
 	tpp_lexer const *const lexer = tpp_makefile_getlexer(self);
 	(void)include_kind; /* Ignored -- treat all missing includes the same. */
 

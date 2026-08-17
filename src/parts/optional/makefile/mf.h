@@ -47,12 +47,12 @@ TPP_DECL_BEGIN
 
 typedef struct tpp_makefile {
 	/* [1..1][const] The lexer whose tokens are being emitted */
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
+#ifndef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
 	tpp_lexer *TPP_MAKEFILE_INTERNAL(tmkf_lexer);
 #define _tpp_makefile_init_lexer(self, lexer) (self)->TPP_MAKEFILE_INTERNAL(tmkf_lexer) = (lexer)
-#else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#else /* !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
 #define _tpp_makefile_init_lexer(self, lexer) tpp_assert(tpp_makefile_getlexer(self) == (lexer))
-#endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#endif /* TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
 
 	/* [1..1][const] Makefile output printer (the makefile itself will be passed as argument) */
 	tpp_formatprinter TPP_MAKEFILE_INTERNAL(tmkf_output);
@@ -152,25 +152,21 @@ typedef struct tpp_makefile {
 #define tpp_makefile_fini(self)                                  \
 	(void)((void)0 _tpp_makefile_fini_depv(self)                 \
 	       _tpp_makefile_fini_output_file(self),                 \
+	       /* Disable any hooks that may have been enabled */    \
 	       tpp_makefile_disable(self),                           \
 	       tpp_makefile_disable_missing_file_dependencies(self), \
 	       tpp_dbg_memset(self, sizeof(tpp_makefile)))
 
+
 /* Retrieve components of the makefile. */
-#define tpp_makefile_getoutput(self)    (self)->TPP_MAKEFILE_INTERNAL(tmkf_output)
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
-#define tpp_makefile_getlexer(self)   ((self)->TPP_MAKEFILE_INTERNAL(tmkf_lexer))
-#define tpp_makefile_ofcookie(cookie) ((tpp_makefile *)(cookie))
-#else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
-#ifndef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
-#if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: under '-DTPP_HAVE_HOOK_COOKIES=0' you must specify a macro '#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER (tpp_offsetof(MY_CONTAINER, makefile) - tpp_offsetof(MY_CONTAINER, lexer))' to specify how to retrieve the makefile from a lexer"
-#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
-#define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER sizeof(tpp_lexer)
+#define tpp_makefile_getoutput(self) (self)->TPP_MAKEFILE_INTERNAL(tmkf_output)
+#ifdef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
+#define tpp_makefile_getlexer(self)  ((tpp_lexer *)((char *)(self) - TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
+#define _tpp_makefile_oflexer(lexer) ((tpp_makefile *)((char *)(cookie) + TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
+#else /* TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#define tpp_makefile_getlexer(self)  ((self)->TPP_MAKEFILE_INTERNAL(tmkf_lexer))
 #endif /* !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
-#define tpp_makefile_getlexer(self)   ((tpp_lexer *)((char *)(self) - TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
-#define tpp_makefile_ofcookie(cookie) ((tpp_makefile *)((char *)(cookie) + TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER))
-#endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+
 
 /* Assign a different output printer to "self" (also closes the old
  * printer's file, if one was assigned by `tpp_makefile_setoutput_io()`
@@ -293,20 +289,32 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self);
 /* The main (mandatory) `NEW_DEPENDECY` hook that's used to
  * get notified whenever the lexer encounters a new dependency */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
 #define tpp_makefile_getenabled(self) tpp_lexer_hashook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
 #define tpp_makefile_disable(self)    tpp_lexer_delhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
-#else /* TPP_HAVE_HOOK_COOKIES */
+#define _tpp_makefile_new_dependency_hook_cookie      void *
+#define _tpp_makefile_new_dependency_hook_ofcookie(x) ((tpp_makefile *)(x))
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 #define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
 #define tpp_makefile_getenabled(self) tpp_lexer_hashook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
 #define tpp_makefile_disable(self)    tpp_lexer_delhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define _tpp_makefile_new_dependency_hook_cookie tpp_lexer *
+#ifdef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
+#define _tpp_makefile_new_dependency_hook_ofcookie(x) _tpp_makefile_oflexer(x)
+#else /* TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#define _tpp_makefile_new_dependency_hook_ofcookie(x) ((tpp_emitter *)((x) + 1))
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "`TPP_HAVE_NEW_DEPENDENCY_HOOK` is configured without cookies, but `TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER` isn't defined"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#endif /* !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 #define tpp_makefile_setenabled(self, enabled) \
-	((enabled) ? (tpp_makefile_enable(self))   \
+	((enabled) ? tpp_makefile_enable(self)     \
 	           : (tpp_makefile_disable(self), TPP_EOK))
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_kwd);
+_tpp_makefile_new_dependency_hook(_tpp_makefile_new_dependency_hook_cookie cookie,
+                                  tpp_keyword *filename_kwd);
 #else /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 #define tpp_makefile_getenabled(self) false
 #define tpp_makefile_disable(self)    (void)0
@@ -316,20 +324,32 @@ _tpp_makefile_new_dependency_hook(tpp_hook_cookie cookie, tpp_keyword *filename_
 
 /* Handle missing file dependencies by (blindly) emitting them to the makefile */
 #if TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #define tpp_makefile_enable_missing_file_dependencies(self)      tpp_lexer_addhook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
 #define tpp_makefile_get_missing_file_dependencies_enabled(self) tpp_lexer_hashook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
 #define tpp_makefile_disable_missing_file_dependencies(self)     tpp_lexer_delhook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
-#else /* TPP_HAVE_HOOK_COOKIES */
+#define _tpp_makefile_include_not_found_hook_cookie      void *
+#define _tpp_makefile_include_not_found_hook_ofcookie(x) ((tpp_makefile *)(x))
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 #define tpp_makefile_enable_missing_file_dependencies(self)      tpp_lexer_addhook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
 #define tpp_makefile_get_missing_file_dependencies_enabled(self) tpp_lexer_hashook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
 #define tpp_makefile_disable_missing_file_dependencies(self)     tpp_lexer_delhook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define _tpp_makefile_include_not_found_hook_cookie tpp_lexer *
+#ifdef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
+#define _tpp_makefile_include_not_found_hook_ofcookie(x) _tpp_makefile_oflexer(x)
+#else /* TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#define _tpp_makefile_include_not_found_hook_ofcookie(x) ((tpp_emitter *)((x) + 1))
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "`TPP_HAVE_INCLUDE_NOT_FOUND_HOOK` is configured without cookies, but `TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER` isn't defined"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#endif /* !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 #define tpp_makefile_set_missing_file_dependencies_enabled(self, v) \
-	((v) ? (tpp_makefile_enable_missing_file_dependencies(self))    \
+	((v) ? tpp_makefile_enable_missing_file_dependencies(self)      \
 	     : (tpp_makefile_disable_missing_file_dependencies(self), TPP_EOK))
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
-_tpp_makefile_include_not_found_hook(tpp_hook_cookie cookie, tpp_hook_include_kind include_kind);
+_tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
+                                     tpp_hook_include_kind include_kind);
 #else /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
 #define tpp_makefile_get_missing_file_dependencies_enabled(self) 0
 #define tpp_makefile_disable_missing_file_dependencies(self)     (void)0

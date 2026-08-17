@@ -993,11 +993,11 @@ _tpp_hooks_call_unknown_pragma(struct tpp_lexer *tpp_restrict lexer) {
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_unknown_pragma const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 				if (result != TPP_ENOENT)
 					return result;
 		}
@@ -1028,11 +1028,11 @@ _tpp_hooks_call_new_dependency(struct tpp_lexer *tpp_restrict lexer, tpp_keyword
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_new_dependency const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, filename_kwd);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, filename_kwd);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1066,11 +1066,11 @@ _tpp_hooks_call_file_pushed(struct tpp_lexer *tpp_restrict lexer) {
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_file_pushed const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1103,11 +1103,11 @@ _tpp_hooks_call_file_popped(struct tpp_lexer *tpp_restrict lexer) {
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_file_popped const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK)
 				(*entry->thle_cb)(entry->thle_cookie);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK) */
 				(*entry->thle_cb)(lexer);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK) */
 		}
 	}
 #ifdef TPP_HOOK_FILE_POPPED
@@ -1150,11 +1150,11 @@ _tpp_hooks_call_include_encountered(struct tpp_lexer *tpp_restrict lexer, tpp_ho
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_include_encountered const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, include_kind);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, include_kind);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1195,11 +1195,11 @@ _tpp_hooks_call_include_not_found(struct tpp_lexer *tpp_restrict lexer, tpp_hook
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_include_not_found const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, include_kind);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, include_kind);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 				if (result != TPP_ENOENT)
 					return result;
 		}
@@ -1236,11 +1236,11 @@ _tpp_hooks_call_macro_defined(struct tpp_lexer *tpp_restrict lexer, tpp_keyword 
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_macro_defined const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, name, macro);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, name, macro);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1281,11 +1281,11 @@ _tpp_hooks_call_macro_undefined(struct tpp_lexer *tpp_restrict lexer, tpp_keywor
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_macro_undefined const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, name);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, name);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1321,11 +1321,11 @@ _tpp_hooks_call_ident_sccs(struct tpp_lexer *tpp_restrict lexer, tpp_token_id mo
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_ident_sccs const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, mode, chunk, comment_str, comment_len);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, mode, chunk, comment_str, comment_len);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK) */
 				if (TPP_ISERR(result))
 					return result;
 		}
@@ -1361,11 +1361,11 @@ _tpp_hooks_call_system_include_path(struct tpp_lexer *tpp_restrict lexer, tpp_to
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_system_include_path const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, mode, when, cb, arg);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, mode, when, cb, arg);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 				if (result != TPP_ENOENT)
 					return result;
 		}
@@ -1398,11 +1398,11 @@ _tpp_hooks_call_system_embed_path(struct tpp_lexer *tpp_restrict lexer, tpp_toke
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_system_embed_path const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, mode, when, cb, arg);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, mode, when, cb, arg);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 				if (result != TPP_ENOENT)
 					return result;
 		}
@@ -1445,11 +1445,11 @@ _tpp_hooks_call_unknown_string_escape(struct tpp_lexer *tpp_restrict lexer, tpp_
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_unknown_string_escape const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 				tpp_ssize const result = (*entry->thle_cb)(entry->thle_cookie, p_pos, end, config);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 				tpp_ssize const result = (*entry->thle_cb)(lexer, p_pos, end, config);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 				if (result != TPP_SSIZE_OFERR(TPP_ENOENT))
 					return result;
 		}
@@ -1480,11 +1480,11 @@ _tpp_hooks_call_raise_lexerror(struct tpp_lexer *tpp_restrict lexer) {
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_raise_lexerror const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 				if (result != TPP_ELEXERROR)
 					return result;
 		}
@@ -1519,11 +1519,11 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 		tpp_size count = list->thl_size;
 		while (count) {
 			tpp_hook_list_entry_isfloatsuffix const *const entry = &list->thl_elem[--count];
-#if TPP_HAVE_HOOK_COOKIES
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 				tpp_errno const result = (*entry->thle_cb)(entry->thle_cookie, pos);
-#else /* TPP_HAVE_HOOK_COOKIES */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 				tpp_errno const result = (*entry->thle_cb)(lexer, pos);
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 				if (result != TPP_ENOENT)
 					return result;
 		}
@@ -34632,7 +34632,12 @@ err_temp:
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
-_tpp_lexer_builtin_warnhandler(tpp_hook_cookie lexer_cookie,
+_tpp_lexer_builtin_warnhandler(
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK)
+                               void *lexer_cookie,
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
+                               struct tpp_lexer *lexer_cookie,
+#endif /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
                                struct tpp_lexer_printf_info *tpp_restrict info,
                                tpp_warning_invokeinfo const *tpp_restrict invokeinfo,
                                tpp_warning_id id, va_list args) {
@@ -59173,7 +59178,13 @@ tpp_px_expr(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_restrict result) {
+_tpp_lexer_builtin_parseexpr(
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK)
+                             void *lexer_cookie,
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
+                             struct tpp_lexer *lexer_cookie,
+#endif /* TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
+                             tpp_expr_value *tpp_restrict result) {
 	tpp_lexer *const self = (tpp_lexer *)lexer_cookie;
 	tpp_token_id tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 	if (TPP_TOK_ISERR(tok))

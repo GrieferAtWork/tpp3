@@ -653,6 +653,7 @@ int main(int argc, char **argv) {
 out_emitter_file:
 	tpp_lexer_finifile(&fe.tf_lexer);
 out_emitter:
+	tpp_makefile_fini(&fe.tf_makefile);
 	tpp_emitter_fini(&fe.tf_emitter);
 out_lexer:
 	tpp_lexer_fini(&fe.tf_lexer);

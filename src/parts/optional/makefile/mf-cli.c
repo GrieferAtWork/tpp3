@@ -582,11 +582,11 @@ use_full_filename:
 				tpp_keyword *wkwd = tpp_lexer_kwds_copybuiltin(lexer, kwd);
 				if tpp_unlikely(!wkwd)
 					return TPP_ENOMEM;
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER)
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 				error = _tpp_makefile_new_dependency_hook(self->tmkfcl_mf, wkwd);
-#else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				error = _tpp_makefile_new_dependency_hook(lexer, wkwd);
-#endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 				if (TPP_ISERR(error))
 					return error;
 			}

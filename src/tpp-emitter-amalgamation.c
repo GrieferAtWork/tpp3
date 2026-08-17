@@ -410,21 +410,21 @@ tpp_emitter_state_fini(tpp_emitter_state *tpp_restrict self) {
  * @param: lexer:  The lexer whose tokens are being emitted
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
+#ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_init(tpp_emitter *tpp_restrict self,
                  tpp_lexer *tpp_restrict lexer,
                  tpp_formatprinter output)
-#else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
+#else /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_emitter_init(tpp_emitter *tpp_restrict self,
                   tpp_formatprinter output)
-#endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
+#endif /* TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 {
 	tpp_errno result = TPP_EOK;
-#if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
+#ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 	self->tem_lexer = lexer;
-#endif /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
+#endif /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 	self->tem_output = output;
 	tpp_emitter_state_init(&self->tem_state);
 #if TPP_EMITTER_HAVE_FEATURES
@@ -1773,8 +1773,8 @@ err_temp:
 /* API support for (re-)emission of unknown `#pragma` directives */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_emitter_hook_unknown_pragma(tpp_hook_cookie cookie) {
-	tpp_emitter *const self = tpp_emitter_ofcookie(cookie);
+_tpp_emitter_hook_unknown_pragma(_tpp_emitter_hook_unknown_pragma_cookie cookie) {
+	tpp_emitter *const self = _tpp_emitter_hook_unknown_pragma_ofcookie(cookie);
 	tpp_lexer *const lexer = tpp_emitter_getlexer(self);
 	tpp_ssize temp;
 	tpp_token_id prev_token;
@@ -1920,10 +1920,10 @@ err_temp:
 
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_emitter_hook_macro_defined(tpp_hook_cookie cookie,
+_tpp_emitter_hook_macro_defined(_tpp_emitter_hook_macro_defined_cookie cookie,
                                 tpp_keyword *tpp_restrict name,
                                 tpp_macro *tpp_restrict macro) {
-	tpp_emitter *self = tpp_emitter_ofcookie(cookie);
+	tpp_emitter *self = _tpp_emitter_hook_macro_defined_ofcookie(cookie);
 #if TPP_EMITTER_HAVE_CURPOS
 	if (tpp_lcstate_getcol(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos) != 0) {
 		tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
@@ -1935,9 +1935,9 @@ _tpp_emitter_hook_macro_defined(tpp_hook_cookie cookie,
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_emitter_hook_macro_undefined(tpp_hook_cookie cookie,
+_tpp_emitter_hook_macro_undefined(_tpp_emitter_hook_macro_undefined_cookie cookie,
                                   tpp_keyword *tpp_restrict name) {
-	tpp_emitter *self = tpp_emitter_ofcookie(cookie);
+	tpp_emitter *self = _tpp_emitter_hook_macro_undefined_ofcookie(cookie);
 #if TPP_EMITTER_HAVE_CURPOS
 	if (tpp_lcstate_getcol(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos) != 0) {
 		tpp_ssize temp = tpp_emitter_print_conststr(self, "\n");
@@ -1950,21 +1950,12 @@ _tpp_emitter_hook_macro_undefined(tpp_hook_cookie cookie,
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_enable_reemit_macro_definitions(tpp_emitter *tpp_restrict self) {
-#if TPP_HAVE_HOOK_COOKIES
-	tpp_errno result = tpp_lexer_addhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self);
+	tpp_errno result = _tpp_emitter_enable_macro_defined_hook(self);
 	if (!TPP_ISERR(result)) {
-		result = tpp_lexer_addhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self);
+		result = _tpp_emitter_enable_macro_undefined_hook(self);
 		if (TPP_ISERR(result))
-			tpp_lexer_delhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self);
+			_tpp_emitter_disable_macro_defined_hook(self);
 	}
-#else /* TPP_HAVE_HOOK_COOKIES */
-	tpp_errno result = tpp_lexer_addhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined);
-	if (!TPP_ISERR(result)) {
-		result = tpp_lexer_addhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined);
-		if (TPP_ISERR(result))
-			tpp_lexer_delhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined);
-	}
-#endif /* !TPP_HAVE_HOOK_COOKIES */
 	return result;
 }
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
@@ -1974,9 +1965,9 @@ tpp_emitter_enable_reemit_macro_definitions(tpp_emitter *tpp_restrict self) {
 /* API support for (re-)emission of `#include` (and friends) directives */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_emitter_hook_include_encountered(tpp_hook_cookie cookie,
+_tpp_emitter_hook_include_encountered(_tpp_emitter_hook_include_encountered_cookie cookie,
                                       tpp_hook_include_kind include_kind) {
-	tpp_emitter *const self = tpp_emitter_ofcookie(cookie);
+	tpp_emitter *const self = _tpp_emitter_hook_include_encountered_ofcookie(cookie);
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_ssize temp;
 #if TPP_EMITTER_HAVE_CURPOS
@@ -2139,8 +2130,8 @@ tpp_emitter_reemit_macro_used(tpp_emitter *tpp_restrict self,
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie) {
-	tpp_emitter *const self = tpp_emitter_ofcookie(cookie);
+_tpp_emitter_hook_file_pushed(_tpp_emitter_hook_file_pushed_cookie cookie) {
+	tpp_emitter *const self = _tpp_emitter_hook_file_pushed_ofcookie(cookie);
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_file const *const file = tpp_lexer_getfile(lexer);
 
@@ -2176,8 +2167,8 @@ _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie) {
 /* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
-_tpp_emitter_hook_file_popped(tpp_hook_cookie cookie) {
-	tpp_emitter *const self = tpp_emitter_ofcookie(cookie);
+_tpp_emitter_hook_file_popped(_tpp_emitter_hook_file_popped_cookie cookie) {
+	tpp_emitter *const self = _tpp_emitter_hook_file_popped_ofcookie(cookie);
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_emitter_maybe_set_files_changes(self, tpp_lexer_getfile(lexer));
 }

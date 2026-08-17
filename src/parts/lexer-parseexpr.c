@@ -1431,7 +1431,13 @@ tpp_px_expr(tpp_lexer *tpp_restrict self, tpp_expr_value *result) {
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-_tpp_lexer_builtin_parseexpr(tpp_hook_cookie lexer_cookie, tpp_expr_value *tpp_restrict result) {
+_tpp_lexer_builtin_parseexpr(
+#if TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK)
+                             void *lexer_cookie,
+#else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
+                             struct tpp_lexer *lexer_cookie,
+#endif /* TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
+                             tpp_expr_value *tpp_restrict result) {
 	tpp_lexer *const self = (tpp_lexer *)lexer_cookie;
 	tpp_token_id tok = tpp_lexer_yield_blocking(self); /* Doesn't have to be "tpp_lexer_yield_forexpr" */
 	if (TPP_TOK_ISERR(tok))
