@@ -141,7 +141,7 @@ for (local doc, name,
      prototypeArgs,
      disabled_RETURN_VALUE: HOOKS) {
 	if (!builtin_FOO_HOOK) {
-		print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+		print("#if TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK)");
 		print("typedef struct TPP_INTERNAL(tpp_hook_list_entry_", name.lower(), ") {");
 		if ("cookie" in prototypeArgs) {
 			print("#if TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK)");
@@ -158,7 +158,7 @@ for (local doc, name,
 		print("	tpp_size TPP_INTERNAL(thl_size); /" "* List size (in elements) *" "/");
 		print("	TPP_INTERNAL(tpp_hook_list_entry_", name.lower(), ") TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /" "* [thl_size] List elements *" "/");
 		print("} TPP_INTERNAL(tpp_hook_list_", name.lower(), ");");
-		print("#endif /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY *" "/");
+		print("#endif /" "* TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK) *" "/");
 		print;
 	}
 }
@@ -178,7 +178,7 @@ for (local doc, name,
 	print("	/" "* >> ", fixProto(prototypePrefix), "th_", name.lower(), fixProto(prototypeSuffix), ";");
 	print("	 * ", doc.strip().replace("\n", "\n\t * ").rstriplines(), " *" "/");
 	if (!builtin_FOO_HOOK) {
-		print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+		print("#if TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK)");
 		print("	TPP_INTERNAL(tpp_hook_list_", name.lower(), ") *TPP_INTERNAL(th_", name.lower(), "); /" "* [0..n][owned] *" "/");
 		print("#elif TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK)");
 	} else {
@@ -187,24 +187,24 @@ for (local doc, name,
 	if ("cookie" in prototypeArgs) {
 		print("#if TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK)");
 		if (builtin_FOO_HOOK) {
-			print("#if TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP");
+			print("#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK)");
 			print("	", fixProto(applyCookieEnabled(prototypePrefix, true)), "TPP_INTERNAL(th_", name.lower(), ")", fixProto(applyCookieEnabled(prototypeSuffix, true)), "; /" "* [1..1] *" "/");
-			print("#else /" "* TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP *" "/");
+			print("#else /" "* !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 		}
 		print("	", fixProto(applyCookieEnabled(prototypePrefix, true)), "TPP_INTERNAL(th_", name.lower(), ")", fixProto(applyCookieEnabled(prototypeSuffix, true)), "; /" "* [0..1] *" "/");
 		if (builtin_FOO_HOOK)
-			print("#endif /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_NOOP *" "/");
+			print("#endif /" "* TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 		print("	void *TPP_INTERNAL(th_", name.lower(), "_cookie); /" "* [?..?] Cookie argument for `th_", name.lower(), "` *" "/");
 		print("#else /" "* TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK) *" "/");
 	}
 	if (builtin_FOO_HOOK) {
-		print("#if TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP");
+		print("#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK)");
 		print("	", fixProto(applyCookieEnabled(prototypePrefix, false)), "TPP_INTERNAL(th_", name.lower(), ")", fixProto(applyCookieEnabled(prototypeSuffix, false)), "; /" "* [1..1] *" "/");
-		print("#else /" "* TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP *" "/");
+		print("#else /" "* !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 	}
 	print("	", fixProto(applyCookieEnabled(prototypePrefix, false)), "TPP_INTERNAL(th_", name.lower(), ")", fixProto(applyCookieEnabled(prototypeSuffix, false)), "; /" "* [0..1] *" "/");
 	if (builtin_FOO_HOOK)
-		print("#endif /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_NOOP *" "/");
+		print("#endif /" "* TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 	if ("cookie" in prototypeArgs)
 		print("#endif /" "* !TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK) *" "/");
 	if (!builtin_FOO_HOOK) {
@@ -238,7 +238,7 @@ for (local doc, name,
 		arg != "cookie" ? arg : f"tpp_hooks_getcookie_{name.lower()}(self, lexer)");
 	if (!builtin_FOO_HOOK) {
 		local returnType = prototypePrefix.rstrip("*").rstrip().rsstrip("TPPCALL").rstrip().rstrip("(").rstrip();
-		print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+		print("#if TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK)");
 		print("#define _tpp_hooks_init_", name.lower(), "(self, lexer) , (self)->TPP_INTERNAL(th_", name.lower(), ") = NULL");
 		print("#define _tpp_hooks_fini_", name.lower(), "(self)        , tpp_free((self)->TPP_INTERNAL(th_", name.lower(), "))");
 		print("#define tpp_hooks_reset_", name.lower(), "(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_", name.lower(), "), (self)->TPP_INTERNAL(th_", name.lower(), ") = NULL)");
@@ -339,14 +339,14 @@ for (local doc, name,
 		print("#if TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK)");
 	}
 	if (builtin_FOO_HOOK) {
-		print("#if TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP");
+		print("#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK)");
 		print("#define tpp_hooks_call_", name.lower(), "(", formattedParams, ") \\");
 		if (isFormatPrinter) {
 			print("	tpp_formatprinter_print((self)->TPP_INTERNAL(th_", name.lower(), "), ", formattedArgs, ")");
 		} else {
 			print("	(*(self)->TPP_INTERNAL(th_", name.lower(), "))(", formattedArgs, ")");
 		}
-		print("#else /" "* TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_NOOP *" "/");
+		print("#else /" "* !TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 	}
 	print("#define tpp_hooks_call_", name.lower(), "(", formattedParams, ") \\");
 	print("	((self)->TPP_INTERNAL(th_", name.lower(), ") "),;
@@ -357,11 +357,11 @@ for (local doc, name,
 	}
 	print(": ", disabled_RETURN_VALUE, ")");
 	if (builtin_FOO_HOOK)
-		print("#endif /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_NOOP *" "/");
-	print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_", name, ")");
+		print("#endif /" "* TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
+	print("#if TPP_HOOK_ISRTUSER(TPP_HAVE_", name, "_HOOK) && defined(TPP_HOOK_", name, ")");
 	print("#define _TPP_HOOKS_DEFAULT_", name, " (&TPP_HOOK_", name, ")");
 	if (builtin_FOO_HOOK) {
-		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_BUILTIN");
+		print("#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_", name, "_HOOK)");
 		print("#define _TPP_HOOKS_DEFAULT_", name, " (&", builtin_FOO_HOOK, ")");
 	}
 	print("#else /" "* ... *" "/");
@@ -382,13 +382,13 @@ for (local doc, name,
 			print("#define tpp_hooks_reset_", name.lower(), "(self, lexer)       (void)((self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name, ", (self)->TPP_INTERNAL(th_", name.lower(), "_cookie) = (lexer))");
 			print("#define _tpp_hooks_init_", name.lower(), "(self, lexer)       , (self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name, ", (self)->TPP_INTERNAL(th_", name.lower(), "_cookie) = (lexer)");
 		} else {
-			print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_", name, ")");
+			print("#if TPP_HOOK_ISRTUSER(TPP_HAVE_", name, "_HOOK) && defined(TPP_HOOK_", name, ")");
 			print("#define tpp_hooks_reset_", name.lower(), "(self, lexer) (void)((self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name, ", (self)->TPP_INTERNAL(th_", name.lower(), "_cookie) = (lexer))");
 			print("#define _tpp_hooks_init_", name.lower(), "(self, lexer) , (self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name, ", (self)->TPP_INTERNAL(th_", name.lower(), "_cookie) = (lexer)");
-			print("#else /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_", name, " *" "/");
+			print("#else /" "* TPP_HOOK_ISRTUSER(TPP_HAVE_", name, "_HOOK) && TPP_HOOK_", name, " *" "/");
 			print("#define tpp_hooks_reset_", name.lower(), "(self, lexer) (void)((self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name, ")");
 			print("#define _tpp_hooks_init_", name.lower(), "(self, lexer) , (self)->TPP_INTERNAL(th_", name.lower(), ") = _TPP_HOOKS_DEFAULT_", name);
-			print("#endif /" "* TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_", name, " *" "/");
+			print("#endif /" "* !TPP_HOOK_ISRTUSER(TPP_HAVE_", name, "_HOOK) || !TPP_HOOK_", name, " *" "/");
 		}
 		print("#else /" "* TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK) *" "/");
 		print("#define tpp_hooks_getcookie_", name.lower(), "(self, lexer) (lexer)");
@@ -506,7 +506,7 @@ struct tpp_lexer_decodestring_config;
 struct tpp_lexer_printf_info;
 #endif /* TPP_HAVE_WARNINGS */
 
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_unknown_pragma) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie); /* [1..1] */
@@ -519,9 +519,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_unknown_pragma) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_unknown_pragma) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_unknown_pragma);
-#endif /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_new_dependency) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_keyword *filename_kwd); /* [1..1] */
@@ -534,9 +534,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_new_dependency) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_new_dependency) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_new_dependency);
-#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_file_pushed) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie); /* [1..1] */
@@ -549,9 +549,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_file_pushed) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_file_pushed) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_file_pushed);
-#endif /* TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK) */
 
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_file_popped) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK)
 	void (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie); /* [1..1] */
@@ -564,9 +564,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_file_popped) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_file_popped) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_file_popped);
-#endif /* TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK) */
 
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_include_encountered) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_hook_include_kind include_kind); /* [1..1] */
@@ -579,9 +579,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_include_encountered) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_include_encountered) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_include_encountered);
-#endif /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_include_not_found) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_hook_include_kind include_kind); /* [1..1] */
@@ -594,9 +594,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_include_not_found) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_include_not_found) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_include_not_found);
-#endif /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_macro_defined) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_keyword *tpp_restrict name, tpp_macro *tpp_restrict macro); /* [1..1] */
@@ -609,9 +609,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_macro_defined) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_macro_defined) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_macro_defined);
-#endif /* TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK) */
 
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_macro_undefined) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_keyword *tpp_restrict name); /* [1..1] */
@@ -624,9 +624,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_macro_undefined) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_macro_undefined) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_macro_undefined);
-#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_ident_sccs) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_token_id mode, tpp_string *chunk, tpp_char const *comment_str, tpp_size comment_len); /* [1..1] */
@@ -639,9 +639,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_ident_sccs) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_ident_sccs) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_ident_sccs);
-#endif /* TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK) */
 
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_system_include_path) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_token_id mode, tpp_hook_system_include_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to tpp_lexer_foreach_include_path_flags__PARAM), void *arg); /* [1..1] */
@@ -654,9 +654,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_system_include_path) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_system_include_path) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_system_include_path);
-#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_system_embed_path) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_token_id mode, tpp_hook_system_embed_path_when when, tpp_errno (TPPCALL *cb)(void *arg, char const *relative_to), void *arg); /* [1..1] */
@@ -669,9 +669,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_system_embed_path) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_system_embed_path) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_system_embed_path);
-#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_unknown_string_escape) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 	tpp_ssize (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_char const **tpp_restrict p_pos, tpp_char const *end, struct tpp_lexer_decodestring_config const *tpp_restrict config); /* [1..1] */
@@ -684,9 +684,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_unknown_string_escape) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_unknown_string_escape) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_unknown_string_escape);
-#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_raise_lexerror) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie); /* [1..1] */
@@ -699,9 +699,9 @@ typedef struct TPP_INTERNAL(tpp_hook_list_raise_lexerror) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_raise_lexerror) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_raise_lexerror);
-#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 typedef struct TPP_INTERNAL(tpp_hook_list_entry_isfloatsuffix) {
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(thle_cb))(void *cookie, tpp_char const *pos); /* [1..1] */
@@ -714,7 +714,7 @@ typedef struct TPP_INTERNAL(tpp_hook_list_isfloatsuffix) {
 	tpp_size TPP_INTERNAL(thl_size); /* List size (in elements) */
 	TPP_INTERNAL(tpp_hook_list_entry_isfloatsuffix) TPP_INTERNAL(thl_elem)[TPP_FLEX_ARRAY]; /* [thl_size] List elements */
 } TPP_INTERNAL(tpp_hook_list_isfloatsuffix);
-#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 
 typedef struct tpp_hooks {
 	/* >> tpp_formatprinter th_warnprinter;
@@ -727,18 +727,18 @@ typedef struct tpp_hooks {
 	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNPRINTER_HOOK)
-#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK)
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
-#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
-#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 	void *TPP_INTERNAL(th_warnprinter_cookie); /* [?..?] Cookie argument for `th_warnprinter` */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNPRINTER_HOOK) */
-#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK)
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [1..1] */
-#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 	tpp_formatprinter TPP_INTERNAL(th_warnprinter); /* [0..1] */
-#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 #endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNPRINTER_HOOK) */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 
@@ -756,18 +756,18 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK)
-#if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(void *cookie, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
-#else /* TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(void *cookie, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [0..1] */
-#endif /* TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
 	void *TPP_INTERNAL(th_warnhandler_cookie); /* [?..?] Cookie argument for `th_warnhandler` */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
-#if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *cookie, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [1..1] */
-#else /* TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_warnhandler))(struct tpp_lexer *cookie, struct tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args); /* [0..1] */
-#endif /* TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
 #endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNHANDLER_HOOK) */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
@@ -780,18 +780,18 @@ typedef struct tpp_hooks {
 	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MESGPRINTER_HOOK)
-#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK)
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
-#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [0..1] */
-#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 	void *TPP_INTERNAL(th_mesgprinter_cookie); /* [?..?] Cookie argument for `th_mesgprinter` */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MESGPRINTER_HOOK) */
-#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK)
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [1..1] */
-#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 	tpp_formatprinter TPP_INTERNAL(th_mesgprinter); /* [0..1] */
-#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 #endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_MESGPRINTER_HOOK) */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
@@ -818,18 +818,18 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EUSER(*):    User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK)
-#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(void *cookie, tpp_expr_value *tpp_restrict result); /* [1..1] */
-#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(void *cookie, tpp_expr_value *tpp_restrict result); /* [0..1] */
-#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
 	void *TPP_INTERNAL(th_parseexpr_cookie); /* [?..?] Cookie argument for `th_parseexpr` */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
-#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK)
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *cookie, tpp_expr_value *tpp_restrict result); /* [1..1] */
-#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
 	tpp_errno (TPPCALL *TPP_INTERNAL(th_parseexpr))(struct tpp_lexer *cookie, tpp_expr_value *tpp_restrict result); /* [0..1] */
-#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
 #endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_PARSEEXPR_HOOK) */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
 
@@ -841,7 +841,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:      I/O error
 	 * @return: TPP_ENOMEM:   Out of memory
 	 * @return: TPP_EUSER(*): User-defined error */
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 	TPP_INTERNAL(tpp_hook_list_unknown_pragma) *TPP_INTERNAL(th_unknown_pragma); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
@@ -861,7 +861,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 	TPP_INTERNAL(tpp_hook_list_new_dependency) *TPP_INTERNAL(th_new_dependency); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
@@ -884,7 +884,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK)
 	TPP_INTERNAL(tpp_hook_list_file_pushed) *TPP_INTERNAL(th_file_pushed); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK)
@@ -906,7 +906,7 @@ typedef struct tpp_hooks {
 	 *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
 	 *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
 	 * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK)
 	TPP_INTERNAL(tpp_hook_list_file_popped) *TPP_INTERNAL(th_file_popped); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK)
@@ -940,7 +940,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 	TPP_INTERNAL(tpp_hook_list_include_encountered) *TPP_INTERNAL(th_include_encountered); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
@@ -970,7 +970,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 	TPP_INTERNAL(tpp_hook_list_include_not_found) *TPP_INTERNAL(th_include_not_found); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
@@ -996,7 +996,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK)
 	TPP_INTERNAL(tpp_hook_list_macro_defined) *TPP_INTERNAL(th_macro_defined); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK)
@@ -1026,7 +1026,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 	TPP_INTERNAL(tpp_hook_list_macro_undefined) *TPP_INTERNAL(th_macro_undefined); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK)
@@ -1051,7 +1051,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK)
 	TPP_INTERNAL(tpp_hook_list_ident_sccs) *TPP_INTERNAL(th_ident_sccs); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK)
@@ -1076,7 +1076,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 	TPP_INTERNAL(tpp_hook_list_system_include_path) *TPP_INTERNAL(th_system_include_path); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
@@ -1098,7 +1098,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 	TPP_INTERNAL(tpp_hook_list_system_embed_path) *TPP_INTERNAL(th_system_embed_path); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
@@ -1130,7 +1130,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_SSIZE_OFERR(TPP_EIO):       Filesystem I/O operation failed
 	 * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
 	 * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 	TPP_INTERNAL(tpp_hook_list_unknown_string_escape) *TPP_INTERNAL(th_unknown_string_escape); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
@@ -1150,7 +1150,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_ENOMEM:    Out of memory
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK)
 	TPP_INTERNAL(tpp_hook_list_raise_lexerror) *TPP_INTERNAL(th_raise_lexerror); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK)
@@ -1174,7 +1174,7 @@ typedef struct tpp_hooks {
 	 * @return: TPP_EIO:       Filesystem I/O operation failed
 	 * @return: TPP_ELEXERROR: A lexer error happened
 	 * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 	TPP_INTERNAL(tpp_hook_list_isfloatsuffix) *TPP_INTERNAL(th_isfloatsuffix); /* [0..n][owned] */
 #elif TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK)
@@ -1198,16 +1198,16 @@ typedef struct tpp_hooks {
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
  * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
-#if TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK)
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
 	tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), tpp_hooks_getcookie_warnprinter(self, lexer), text, num_bytes)
-#else /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 #define tpp_hooks_call_warnprinter(self, lexer, text, num_bytes) \
 	((self)->TPP_INTERNAL(th_warnprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), tpp_hooks_getcookie_warnprinter(self, lexer), text, num_bytes) : 0)
-#endif /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_NOOP */
-#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) && defined(TPP_HOOK_WARNPRINTER)
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
-#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
+#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_WARNPRINTER_HOOK)
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
@@ -1222,13 +1222,13 @@ typedef struct tpp_hooks {
 #define tpp_hooks_add_warnprinter_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_warnprinter) != _TPP_HOOKS_DEFAULT_WARNPRINTER ? TPP_ENOENT : (tpp_hooks_set_warnprinter_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_warnprinter_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_warnprinter) == (cb) && (self)->TPP_INTERNAL(th_warnprinter_cookie) == (cookie))
 #define tpp_hooks_del_warnprinter_ex(self, lexer, cb, cookie) (tpp_hooks_has_warnprinter_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_warnprinter(self, lexer), true))
-#if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNPRINTER)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) && defined(TPP_HOOK_WARNPRINTER)
 #define tpp_hooks_reset_warnprinter(self, lexer) (void)((self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER, (self)->TPP_INTERNAL(th_warnprinter_cookie) = (lexer))
 #define _tpp_hooks_init_warnprinter(self, lexer) , (self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER, (self)->TPP_INTERNAL(th_warnprinter_cookie) = (lexer)
-#else /* TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_WARNPRINTER */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) && TPP_HOOK_WARNPRINTER */
 #define tpp_hooks_reset_warnprinter(self, lexer) (void)((self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER)
 #define _tpp_hooks_init_warnprinter(self, lexer) , (self)->TPP_INTERNAL(th_warnprinter) = _TPP_HOOKS_DEFAULT_WARNPRINTER
-#endif /* TPP_HAVE_WARNPRINTER_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_WARNPRINTER */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) || !TPP_HOOK_WARNPRINTER */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_WARNPRINTER_HOOK) */
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_set_warnprinter(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_warnprinter) = (cb))
@@ -1270,16 +1270,16 @@ typedef struct tpp_hooks {
  * @return: TPP_ELEXERROR: Hard lexer error
  * @return: TPP_EUSER(*):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
-#if TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK)
 #define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
 	(*(self)->TPP_INTERNAL(th_warnhandler))(tpp_hooks_getcookie_warnhandler(self, lexer), info, invokeinfo, id, args)
-#else /* TPP_HAVE_WARNHANDLER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
 #define tpp_hooks_call_warnhandler(self, lexer, info, invokeinfo, id, args) \
 	((self)->TPP_INTERNAL(th_warnhandler) ? (*(self)->TPP_INTERNAL(th_warnhandler))(tpp_hooks_getcookie_warnhandler(self, lexer), info, invokeinfo, id, args) : TPP_EOK)
-#endif /* TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_NOOP */
-#if TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_WARNHANDLER)
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNHANDLER_HOOK) */
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_WARNHANDLER_HOOK) && defined(TPP_HOOK_WARNHANDLER)
 #define _TPP_HOOKS_DEFAULT_WARNHANDLER (&TPP_HOOK_WARNHANDLER)
-#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_BUILTIN
+#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_WARNHANDLER_HOOK)
 #define _TPP_HOOKS_DEFAULT_WARNHANDLER (&_tpp_lexer_builtin_warnhandler)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNHANDLER NULL
@@ -1328,16 +1328,16 @@ typedef struct tpp_hooks {
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): Hard lexer error
  * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
-#if TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK)
 #define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
 	tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), tpp_hooks_getcookie_mesgprinter(self, lexer), text, num_bytes)
-#else /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 #define tpp_hooks_call_mesgprinter(self, lexer, text, num_bytes) \
 	((self)->TPP_INTERNAL(th_mesgprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), tpp_hooks_getcookie_mesgprinter(self, lexer), text, num_bytes) : 0)
-#endif /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_NOOP */
-#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MESGPRINTER)
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) && defined(TPP_HOOK_MESGPRINTER)
 #define _TPP_HOOKS_DEFAULT_MESGPRINTER (&TPP_HOOK_MESGPRINTER)
-#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_BUILTIN
+#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_MESGPRINTER_HOOK)
 #define _TPP_HOOKS_DEFAULT_MESGPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_MESGPRINTER NULL
@@ -1352,13 +1352,13 @@ typedef struct tpp_hooks {
 #define tpp_hooks_add_mesgprinter_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_mesgprinter) != _TPP_HOOKS_DEFAULT_MESGPRINTER ? TPP_ENOENT : (tpp_hooks_set_mesgprinter_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_mesgprinter_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_mesgprinter) == (cb) && (self)->TPP_INTERNAL(th_mesgprinter_cookie) == (cookie))
 #define tpp_hooks_del_mesgprinter_ex(self, lexer, cb, cookie) (tpp_hooks_has_mesgprinter_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_mesgprinter(self, lexer), true))
-#if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MESGPRINTER)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) && defined(TPP_HOOK_MESGPRINTER)
 #define tpp_hooks_reset_mesgprinter(self, lexer) (void)((self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER, (self)->TPP_INTERNAL(th_mesgprinter_cookie) = (lexer))
 #define _tpp_hooks_init_mesgprinter(self, lexer) , (self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER, (self)->TPP_INTERNAL(th_mesgprinter_cookie) = (lexer)
-#else /* TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_MESGPRINTER */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) && TPP_HOOK_MESGPRINTER */
 #define tpp_hooks_reset_mesgprinter(self, lexer) (void)((self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER)
 #define _tpp_hooks_init_mesgprinter(self, lexer) , (self)->TPP_INTERNAL(th_mesgprinter) = _TPP_HOOKS_DEFAULT_MESGPRINTER
-#endif /* TPP_HAVE_MESGPRINTER_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_MESGPRINTER */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) || !TPP_HOOK_MESGPRINTER */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MESGPRINTER_HOOK) */
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_set_mesgprinter(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_mesgprinter) = (cb))
@@ -1409,16 +1409,16 @@ typedef struct tpp_hooks {
  * @return: TPP_ELEXERROR:   A lexer error happened
  * @return: TPP_EUSER(*):    User-defined error */
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
-#if TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP
+#if !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK)
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
 	(*(self)->TPP_INTERNAL(th_parseexpr))(tpp_hooks_getcookie_parseexpr(self, lexer), result)
-#else /* TPP_HAVE_PARSEEXPR_HOOK != TPP_HOOK_RT_NOOP */
+#else /* !TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
 #define tpp_hooks_call_parseexpr(self, lexer, result) \
 	((self)->TPP_INTERNAL(th_parseexpr) ? (*(self)->TPP_INTERNAL(th_parseexpr))(tpp_hooks_getcookie_parseexpr(self, lexer), result) : tpp_expr_value_init_zero(result))
-#endif /* TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_NOOP */
-#if TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_PARSEEXPR)
+#endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_PARSEEXPR_HOOK) */
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_PARSEEXPR_HOOK) && defined(TPP_HOOK_PARSEEXPR)
 #define _TPP_HOOKS_DEFAULT_PARSEEXPR (&TPP_HOOK_PARSEEXPR)
-#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_BUILTIN
+#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_PARSEEXPR_HOOK)
 #define _TPP_HOOKS_DEFAULT_PARSEEXPR (&_tpp_lexer_builtin_parseexpr)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_PARSEEXPR NULL
@@ -1467,7 +1467,7 @@ typedef struct tpp_hooks {
  * @return: TPP_EIO:      I/O error
  * @return: TPP_ENOMEM:   Out of memory
  * @return: TPP_EUSER(*): User-defined error */
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 #define _tpp_hooks_init_unknown_pragma(self, lexer) , (self)->TPP_INTERNAL(th_unknown_pragma) = NULL
 #define _tpp_hooks_fini_unknown_pragma(self)        , tpp_free((self)->TPP_INTERNAL(th_unknown_pragma))
 #define tpp_hooks_reset_unknown_pragma(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_unknown_pragma), (self)->TPP_INTERNAL(th_unknown_pragma) = NULL)
@@ -1491,7 +1491,7 @@ _tpp_hooks_call_unknown_pragma(struct tpp_lexer *tpp_restrict lexer);
 #elif TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 #define tpp_hooks_call_unknown_pragma(self, lexer) \
 	((self)->TPP_INTERNAL(th_unknown_pragma) ? (*(self)->TPP_INTERNAL(th_unknown_pragma))(tpp_hooks_getcookie_unknown_pragma(self, lexer)) : TPP_ENOENT)
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) && defined(TPP_HOOK_UNKNOWN_PRAGMA)
 #define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA (&TPP_HOOK_UNKNOWN_PRAGMA)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA NULL
@@ -1506,13 +1506,13 @@ _tpp_hooks_call_unknown_pragma(struct tpp_lexer *tpp_restrict lexer);
 #define tpp_hooks_add_unknown_pragma_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_unknown_pragma) != _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA ? TPP_ENOENT : (tpp_hooks_set_unknown_pragma_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_unknown_pragma_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_unknown_pragma) == (cb) && (self)->TPP_INTERNAL(th_unknown_pragma_cookie) == (cookie))
 #define tpp_hooks_del_unknown_pragma_ex(self, lexer, cb, cookie) (tpp_hooks_has_unknown_pragma_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_unknown_pragma(self, lexer), true))
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_PRAGMA)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) && defined(TPP_HOOK_UNKNOWN_PRAGMA)
 #define tpp_hooks_reset_unknown_pragma(self, lexer) (void)((self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA, (self)->TPP_INTERNAL(th_unknown_pragma_cookie) = (lexer))
 #define _tpp_hooks_init_unknown_pragma(self, lexer) , (self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA, (self)->TPP_INTERNAL(th_unknown_pragma_cookie) = (lexer)
-#else /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_UNKNOWN_PRAGMA */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) && TPP_HOOK_UNKNOWN_PRAGMA */
 #define tpp_hooks_reset_unknown_pragma(self, lexer) (void)((self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA)
 #define _tpp_hooks_init_unknown_pragma(self, lexer) , (self)->TPP_INTERNAL(th_unknown_pragma) = _TPP_HOOKS_DEFAULT_UNKNOWN_PRAGMA
-#endif /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_UNKNOWN_PRAGMA */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) || !TPP_HOOK_UNKNOWN_PRAGMA */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 #define tpp_hooks_getcookie_unknown_pragma(self, lexer) (lexer)
 #define tpp_hooks_set_unknown_pragma(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_unknown_pragma) = (cb))
@@ -1543,7 +1543,7 @@ _tpp_hooks_call_unknown_pragma(struct tpp_lexer *tpp_restrict lexer);
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define _tpp_hooks_init_new_dependency(self, lexer) , (self)->TPP_INTERNAL(th_new_dependency) = NULL
 #define _tpp_hooks_fini_new_dependency(self)        , tpp_free((self)->TPP_INTERNAL(th_new_dependency))
 #define tpp_hooks_reset_new_dependency(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_new_dependency), (self)->TPP_INTERNAL(th_new_dependency) = NULL)
@@ -1567,7 +1567,7 @@ _tpp_hooks_call_new_dependency(struct tpp_lexer *tpp_restrict lexer, tpp_keyword
 #elif TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define tpp_hooks_call_new_dependency(self, lexer, filename_kwd) \
 	((self)->TPP_INTERNAL(th_new_dependency) ? (*(self)->TPP_INTERNAL(th_new_dependency))(tpp_hooks_getcookie_new_dependency(self, lexer), filename_kwd) : TPP_EOK)
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_NEW_DEPENDENCY)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) && defined(TPP_HOOK_NEW_DEPENDENCY)
 #define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY (&TPP_HOOK_NEW_DEPENDENCY)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY NULL
@@ -1582,13 +1582,13 @@ _tpp_hooks_call_new_dependency(struct tpp_lexer *tpp_restrict lexer, tpp_keyword
 #define tpp_hooks_add_new_dependency_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_new_dependency) != _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY ? TPP_ENOENT : (tpp_hooks_set_new_dependency_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_new_dependency_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_new_dependency) == (cb) && (self)->TPP_INTERNAL(th_new_dependency_cookie) == (cookie))
 #define tpp_hooks_del_new_dependency_ex(self, lexer, cb, cookie) (tpp_hooks_has_new_dependency_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_new_dependency(self, lexer), true))
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_NEW_DEPENDENCY)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) && defined(TPP_HOOK_NEW_DEPENDENCY)
 #define tpp_hooks_reset_new_dependency(self, lexer) (void)((self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY, (self)->TPP_INTERNAL(th_new_dependency_cookie) = (lexer))
 #define _tpp_hooks_init_new_dependency(self, lexer) , (self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY, (self)->TPP_INTERNAL(th_new_dependency_cookie) = (lexer)
-#else /* TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_NEW_DEPENDENCY */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) && TPP_HOOK_NEW_DEPENDENCY */
 #define tpp_hooks_reset_new_dependency(self, lexer) (void)((self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY)
 #define _tpp_hooks_init_new_dependency(self, lexer) , (self)->TPP_INTERNAL(th_new_dependency) = _TPP_HOOKS_DEFAULT_NEW_DEPENDENCY
-#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_NEW_DEPENDENCY */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_NEW_DEPENDENCY_HOOK) || !TPP_HOOK_NEW_DEPENDENCY */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 #define tpp_hooks_getcookie_new_dependency(self, lexer) (lexer)
 #define tpp_hooks_set_new_dependency(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_new_dependency) = (cb))
@@ -1622,7 +1622,7 @@ _tpp_hooks_call_new_dependency(struct tpp_lexer *tpp_restrict lexer, tpp_keyword
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK)
 #define _tpp_hooks_init_file_pushed(self, lexer) , (self)->TPP_INTERNAL(th_file_pushed) = NULL
 #define _tpp_hooks_fini_file_pushed(self)        , tpp_free((self)->TPP_INTERNAL(th_file_pushed))
 #define tpp_hooks_reset_file_pushed(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_file_pushed), (self)->TPP_INTERNAL(th_file_pushed) = NULL)
@@ -1646,7 +1646,7 @@ _tpp_hooks_call_file_pushed(struct tpp_lexer *tpp_restrict lexer);
 #elif TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
 #define tpp_hooks_call_file_pushed(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_pushed) ? (*(self)->TPP_INTERNAL(th_file_pushed))(tpp_hooks_getcookie_file_pushed(self, lexer)) : TPP_EOK)
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_PUSHED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_PUSHED_HOOK) && defined(TPP_HOOK_FILE_PUSHED)
 #define _TPP_HOOKS_DEFAULT_FILE_PUSHED (&TPP_HOOK_FILE_PUSHED)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_FILE_PUSHED NULL
@@ -1661,13 +1661,13 @@ _tpp_hooks_call_file_pushed(struct tpp_lexer *tpp_restrict lexer);
 #define tpp_hooks_add_file_pushed_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_file_pushed) != _TPP_HOOKS_DEFAULT_FILE_PUSHED ? TPP_ENOENT : (tpp_hooks_set_file_pushed_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_file_pushed_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_file_pushed) == (cb) && (self)->TPP_INTERNAL(th_file_pushed_cookie) == (cookie))
 #define tpp_hooks_del_file_pushed_ex(self, lexer, cb, cookie) (tpp_hooks_has_file_pushed_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_file_pushed(self, lexer), true))
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_PUSHED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_PUSHED_HOOK) && defined(TPP_HOOK_FILE_PUSHED)
 #define tpp_hooks_reset_file_pushed(self, lexer) (void)((self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED, (self)->TPP_INTERNAL(th_file_pushed_cookie) = (lexer))
 #define _tpp_hooks_init_file_pushed(self, lexer) , (self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED, (self)->TPP_INTERNAL(th_file_pushed_cookie) = (lexer)
-#else /* TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_FILE_PUSHED */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_PUSHED_HOOK) && TPP_HOOK_FILE_PUSHED */
 #define tpp_hooks_reset_file_pushed(self, lexer) (void)((self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED)
 #define _tpp_hooks_init_file_pushed(self, lexer) , (self)->TPP_INTERNAL(th_file_pushed) = _TPP_HOOKS_DEFAULT_FILE_PUSHED
-#endif /* TPP_HAVE_FILE_PUSHED_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_FILE_PUSHED */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_PUSHED_HOOK) || !TPP_HOOK_FILE_PUSHED */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK) */
 #define tpp_hooks_getcookie_file_pushed(self, lexer) (lexer)
 #define tpp_hooks_set_file_pushed(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_file_pushed) = (cb))
@@ -1700,7 +1700,7 @@ _tpp_hooks_call_file_pushed(struct tpp_lexer *tpp_restrict lexer);
  *   *commit* phase (i.e.: by `tpp_lexer_manualpopfile_break_commit()`),
  *   rather than `tpp_lexer_manualpopfile_popfile()` as one might suspect at first.
  * - This hook is *NOT* called by `tpp_file_subtext_pop()` or `tpp_file_popdummy()` */
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK)
 #define _tpp_hooks_init_file_popped(self, lexer) , (self)->TPP_INTERNAL(th_file_popped) = NULL
 #define _tpp_hooks_fini_file_popped(self)        , tpp_free((self)->TPP_INTERNAL(th_file_popped))
 #define tpp_hooks_reset_file_popped(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_file_popped), (self)->TPP_INTERNAL(th_file_popped) = NULL)
@@ -1724,7 +1724,7 @@ _tpp_hooks_call_file_popped(struct tpp_lexer *tpp_restrict lexer);
 #elif TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
 #define tpp_hooks_call_file_popped(self, lexer) \
 	((self)->TPP_INTERNAL(th_file_popped) ? (*(self)->TPP_INTERNAL(th_file_popped))(tpp_hooks_getcookie_file_popped(self, lexer)) : (void)0)
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_POPPED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_POPPED_HOOK) && defined(TPP_HOOK_FILE_POPPED)
 #define _TPP_HOOKS_DEFAULT_FILE_POPPED (&TPP_HOOK_FILE_POPPED)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_FILE_POPPED NULL
@@ -1739,13 +1739,13 @@ _tpp_hooks_call_file_popped(struct tpp_lexer *tpp_restrict lexer);
 #define tpp_hooks_add_file_popped_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_file_popped) != _TPP_HOOKS_DEFAULT_FILE_POPPED ? TPP_ENOENT : (tpp_hooks_set_file_popped_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_file_popped_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_file_popped) == (cb) && (self)->TPP_INTERNAL(th_file_popped_cookie) == (cookie))
 #define tpp_hooks_del_file_popped_ex(self, lexer, cb, cookie) (tpp_hooks_has_file_popped_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_file_popped(self, lexer), true))
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_FILE_POPPED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_POPPED_HOOK) && defined(TPP_HOOK_FILE_POPPED)
 #define tpp_hooks_reset_file_popped(self, lexer) (void)((self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED, (self)->TPP_INTERNAL(th_file_popped_cookie) = (lexer))
 #define _tpp_hooks_init_file_popped(self, lexer) , (self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED, (self)->TPP_INTERNAL(th_file_popped_cookie) = (lexer)
-#else /* TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_FILE_POPPED */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_POPPED_HOOK) && TPP_HOOK_FILE_POPPED */
 #define tpp_hooks_reset_file_popped(self, lexer) (void)((self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED)
 #define _tpp_hooks_init_file_popped(self, lexer) , (self)->TPP_INTERNAL(th_file_popped) = _TPP_HOOKS_DEFAULT_FILE_POPPED
-#endif /* TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_FILE_POPPED */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_FILE_POPPED_HOOK) || !TPP_HOOK_FILE_POPPED */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK) */
 #define tpp_hooks_getcookie_file_popped(self, lexer) (lexer)
 #define tpp_hooks_set_file_popped(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_file_popped) = (cb))
@@ -1790,7 +1790,7 @@ _tpp_hooks_call_file_popped(struct tpp_lexer *tpp_restrict lexer);
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 #define _tpp_hooks_init_include_encountered(self, lexer) , (self)->TPP_INTERNAL(th_include_encountered) = NULL
 #define _tpp_hooks_fini_include_encountered(self)        , tpp_free((self)->TPP_INTERNAL(th_include_encountered))
 #define tpp_hooks_reset_include_encountered(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_include_encountered), (self)->TPP_INTERNAL(th_include_encountered) = NULL)
@@ -1814,7 +1814,7 @@ _tpp_hooks_call_include_encountered(struct tpp_lexer *tpp_restrict lexer, tpp_ho
 #elif TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 #define tpp_hooks_call_include_encountered(self, lexer, include_kind) \
 	((self)->TPP_INTERNAL(th_include_encountered) ? (*(self)->TPP_INTERNAL(th_include_encountered))(tpp_hooks_getcookie_include_encountered(self, lexer), include_kind) : TPP_EOK)
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) && defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
 #define _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED (&TPP_HOOK_INCLUDE_ENCOUNTERED)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED NULL
@@ -1829,13 +1829,13 @@ _tpp_hooks_call_include_encountered(struct tpp_lexer *tpp_restrict lexer, tpp_ho
 #define tpp_hooks_add_include_encountered_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_include_encountered) != _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED ? TPP_ENOENT : (tpp_hooks_set_include_encountered_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_include_encountered_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_include_encountered) == (cb) && (self)->TPP_INTERNAL(th_include_encountered_cookie) == (cookie))
 #define tpp_hooks_del_include_encountered_ex(self, lexer, cb, cookie) (tpp_hooks_has_include_encountered_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_include_encountered(self, lexer), true))
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) && defined(TPP_HOOK_INCLUDE_ENCOUNTERED)
 #define tpp_hooks_reset_include_encountered(self, lexer) (void)((self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED, (self)->TPP_INTERNAL(th_include_encountered_cookie) = (lexer))
 #define _tpp_hooks_init_include_encountered(self, lexer) , (self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED, (self)->TPP_INTERNAL(th_include_encountered_cookie) = (lexer)
-#else /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_INCLUDE_ENCOUNTERED */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) && TPP_HOOK_INCLUDE_ENCOUNTERED */
 #define tpp_hooks_reset_include_encountered(self, lexer) (void)((self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED)
 #define _tpp_hooks_init_include_encountered(self, lexer) , (self)->TPP_INTERNAL(th_include_encountered) = _TPP_HOOKS_DEFAULT_INCLUDE_ENCOUNTERED
-#endif /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_INCLUDE_ENCOUNTERED */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) || !TPP_HOOK_INCLUDE_ENCOUNTERED */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 #define tpp_hooks_getcookie_include_encountered(self, lexer) (lexer)
 #define tpp_hooks_set_include_encountered(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_include_encountered) = (cb))
@@ -1876,7 +1876,7 @@ _tpp_hooks_call_include_encountered(struct tpp_lexer *tpp_restrict lexer, tpp_ho
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #define _tpp_hooks_init_include_not_found(self, lexer) , (self)->TPP_INTERNAL(th_include_not_found) = NULL
 #define _tpp_hooks_fini_include_not_found(self)        , tpp_free((self)->TPP_INTERNAL(th_include_not_found))
 #define tpp_hooks_reset_include_not_found(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_include_not_found), (self)->TPP_INTERNAL(th_include_not_found) = NULL)
@@ -1900,7 +1900,7 @@ _tpp_hooks_call_include_not_found(struct tpp_lexer *tpp_restrict lexer, tpp_hook
 #elif TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #define tpp_hooks_call_include_not_found(self, lexer, include_kind) \
 	((self)->TPP_INTERNAL(th_include_not_found) ? (*(self)->TPP_INTERNAL(th_include_not_found))(tpp_hooks_getcookie_include_not_found(self, lexer), include_kind) : TPP_ENOENT)
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_INCLUDE_NOT_FOUND)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) && defined(TPP_HOOK_INCLUDE_NOT_FOUND)
 #define _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND (&TPP_HOOK_INCLUDE_NOT_FOUND)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND NULL
@@ -1915,13 +1915,13 @@ _tpp_hooks_call_include_not_found(struct tpp_lexer *tpp_restrict lexer, tpp_hook
 #define tpp_hooks_add_include_not_found_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_include_not_found) != _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND ? TPP_ENOENT : (tpp_hooks_set_include_not_found_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_include_not_found_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_include_not_found) == (cb) && (self)->TPP_INTERNAL(th_include_not_found_cookie) == (cookie))
 #define tpp_hooks_del_include_not_found_ex(self, lexer, cb, cookie) (tpp_hooks_has_include_not_found_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_include_not_found(self, lexer), true))
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_INCLUDE_NOT_FOUND)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) && defined(TPP_HOOK_INCLUDE_NOT_FOUND)
 #define tpp_hooks_reset_include_not_found(self, lexer) (void)((self)->TPP_INTERNAL(th_include_not_found) = _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND, (self)->TPP_INTERNAL(th_include_not_found_cookie) = (lexer))
 #define _tpp_hooks_init_include_not_found(self, lexer) , (self)->TPP_INTERNAL(th_include_not_found) = _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND, (self)->TPP_INTERNAL(th_include_not_found_cookie) = (lexer)
-#else /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_INCLUDE_NOT_FOUND */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) && TPP_HOOK_INCLUDE_NOT_FOUND */
 #define tpp_hooks_reset_include_not_found(self, lexer) (void)((self)->TPP_INTERNAL(th_include_not_found) = _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND)
 #define _tpp_hooks_init_include_not_found(self, lexer) , (self)->TPP_INTERNAL(th_include_not_found) = _TPP_HOOKS_DEFAULT_INCLUDE_NOT_FOUND
-#endif /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_INCLUDE_NOT_FOUND */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) || !TPP_HOOK_INCLUDE_NOT_FOUND */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 #define tpp_hooks_getcookie_include_not_found(self, lexer) (lexer)
 #define tpp_hooks_set_include_not_found(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_include_not_found) = (cb))
@@ -1958,7 +1958,7 @@ _tpp_hooks_call_include_not_found(struct tpp_lexer *tpp_restrict lexer, tpp_hook
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK)
 #define _tpp_hooks_init_macro_defined(self, lexer) , (self)->TPP_INTERNAL(th_macro_defined) = NULL
 #define _tpp_hooks_fini_macro_defined(self)        , tpp_free((self)->TPP_INTERNAL(th_macro_defined))
 #define tpp_hooks_reset_macro_defined(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_macro_defined), (self)->TPP_INTERNAL(th_macro_defined) = NULL)
@@ -1982,7 +1982,7 @@ _tpp_hooks_call_macro_defined(struct tpp_lexer *tpp_restrict lexer, tpp_keyword 
 #elif TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
 #define tpp_hooks_call_macro_defined(self, lexer, name, macro) \
 	((self)->TPP_INTERNAL(th_macro_defined) ? (*(self)->TPP_INTERNAL(th_macro_defined))(tpp_hooks_getcookie_macro_defined(self, lexer), name, macro) : TPP_EOK)
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_DEFINED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_DEFINED_HOOK) && defined(TPP_HOOK_MACRO_DEFINED)
 #define _TPP_HOOKS_DEFAULT_MACRO_DEFINED (&TPP_HOOK_MACRO_DEFINED)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_MACRO_DEFINED NULL
@@ -1997,13 +1997,13 @@ _tpp_hooks_call_macro_defined(struct tpp_lexer *tpp_restrict lexer, tpp_keyword 
 #define tpp_hooks_add_macro_defined_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_macro_defined) != _TPP_HOOKS_DEFAULT_MACRO_DEFINED ? TPP_ENOENT : (tpp_hooks_set_macro_defined_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_macro_defined_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_macro_defined) == (cb) && (self)->TPP_INTERNAL(th_macro_defined_cookie) == (cookie))
 #define tpp_hooks_del_macro_defined_ex(self, lexer, cb, cookie) (tpp_hooks_has_macro_defined_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_macro_defined(self, lexer), true))
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_DEFINED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_DEFINED_HOOK) && defined(TPP_HOOK_MACRO_DEFINED)
 #define tpp_hooks_reset_macro_defined(self, lexer) (void)((self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED, (self)->TPP_INTERNAL(th_macro_defined_cookie) = (lexer))
 #define _tpp_hooks_init_macro_defined(self, lexer) , (self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED, (self)->TPP_INTERNAL(th_macro_defined_cookie) = (lexer)
-#else /* TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_MACRO_DEFINED */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_DEFINED_HOOK) && TPP_HOOK_MACRO_DEFINED */
 #define tpp_hooks_reset_macro_defined(self, lexer) (void)((self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED)
 #define _tpp_hooks_init_macro_defined(self, lexer) , (self)->TPP_INTERNAL(th_macro_defined) = _TPP_HOOKS_DEFAULT_MACRO_DEFINED
-#endif /* TPP_HAVE_MACRO_DEFINED_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_MACRO_DEFINED */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_DEFINED_HOOK) || !TPP_HOOK_MACRO_DEFINED */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK) */
 #define tpp_hooks_getcookie_macro_defined(self, lexer) (lexer)
 #define tpp_hooks_set_macro_defined(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_macro_defined) = (cb))
@@ -2044,7 +2044,7 @@ _tpp_hooks_call_macro_defined(struct tpp_lexer *tpp_restrict lexer, tpp_keyword 
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 #define _tpp_hooks_init_macro_undefined(self, lexer) , (self)->TPP_INTERNAL(th_macro_undefined) = NULL
 #define _tpp_hooks_fini_macro_undefined(self)        , tpp_free((self)->TPP_INTERNAL(th_macro_undefined))
 #define tpp_hooks_reset_macro_undefined(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_macro_undefined), (self)->TPP_INTERNAL(th_macro_undefined) = NULL)
@@ -2068,7 +2068,7 @@ _tpp_hooks_call_macro_undefined(struct tpp_lexer *tpp_restrict lexer, tpp_keywor
 #elif TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 #define tpp_hooks_call_macro_undefined(self, lexer, name) \
 	((self)->TPP_INTERNAL(th_macro_undefined) ? (*(self)->TPP_INTERNAL(th_macro_undefined))(tpp_hooks_getcookie_macro_undefined(self, lexer), name) : TPP_EOK)
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_UNDEFINED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) && defined(TPP_HOOK_MACRO_UNDEFINED)
 #define _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED (&TPP_HOOK_MACRO_UNDEFINED)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED NULL
@@ -2083,13 +2083,13 @@ _tpp_hooks_call_macro_undefined(struct tpp_lexer *tpp_restrict lexer, tpp_keywor
 #define tpp_hooks_add_macro_undefined_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_macro_undefined) != _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED ? TPP_ENOENT : (tpp_hooks_set_macro_undefined_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_macro_undefined_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_macro_undefined) == (cb) && (self)->TPP_INTERNAL(th_macro_undefined_cookie) == (cookie))
 #define tpp_hooks_del_macro_undefined_ex(self, lexer, cb, cookie) (tpp_hooks_has_macro_undefined_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_macro_undefined(self, lexer), true))
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_MACRO_UNDEFINED)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) && defined(TPP_HOOK_MACRO_UNDEFINED)
 #define tpp_hooks_reset_macro_undefined(self, lexer) (void)((self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED, (self)->TPP_INTERNAL(th_macro_undefined_cookie) = (lexer))
 #define _tpp_hooks_init_macro_undefined(self, lexer) , (self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED, (self)->TPP_INTERNAL(th_macro_undefined_cookie) = (lexer)
-#else /* TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_MACRO_UNDEFINED */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) && TPP_HOOK_MACRO_UNDEFINED */
 #define tpp_hooks_reset_macro_undefined(self, lexer) (void)((self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED)
 #define _tpp_hooks_init_macro_undefined(self, lexer) , (self)->TPP_INTERNAL(th_macro_undefined) = _TPP_HOOKS_DEFAULT_MACRO_UNDEFINED
-#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_MACRO_UNDEFINED */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_MACRO_UNDEFINED_HOOK) || !TPP_HOOK_MACRO_UNDEFINED */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 #define tpp_hooks_getcookie_macro_undefined(self, lexer) (lexer)
 #define tpp_hooks_set_macro_undefined(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_macro_undefined) = (cb))
@@ -2125,7 +2125,7 @@ _tpp_hooks_call_macro_undefined(struct tpp_lexer *tpp_restrict lexer, tpp_keywor
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK)
 #define _tpp_hooks_init_ident_sccs(self, lexer) , (self)->TPP_INTERNAL(th_ident_sccs) = NULL
 #define _tpp_hooks_fini_ident_sccs(self)        , tpp_free((self)->TPP_INTERNAL(th_ident_sccs))
 #define tpp_hooks_reset_ident_sccs(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_ident_sccs), (self)->TPP_INTERNAL(th_ident_sccs) = NULL)
@@ -2149,7 +2149,7 @@ _tpp_hooks_call_ident_sccs(struct tpp_lexer *tpp_restrict lexer, tpp_token_id mo
 #elif TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
 #define tpp_hooks_call_ident_sccs(self, lexer, mode, chunk, comment_str, comment_len) \
 	((self)->TPP_INTERNAL(th_ident_sccs) ? (*(self)->TPP_INTERNAL(th_ident_sccs))(tpp_hooks_getcookie_ident_sccs(self, lexer), mode, chunk, comment_str, comment_len) : TPP_EOK)
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_IDENT_SCCS)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_IDENT_SCCS_HOOK) && defined(TPP_HOOK_IDENT_SCCS)
 #define _TPP_HOOKS_DEFAULT_IDENT_SCCS (&TPP_HOOK_IDENT_SCCS)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_IDENT_SCCS NULL
@@ -2164,13 +2164,13 @@ _tpp_hooks_call_ident_sccs(struct tpp_lexer *tpp_restrict lexer, tpp_token_id mo
 #define tpp_hooks_add_ident_sccs_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_ident_sccs) != _TPP_HOOKS_DEFAULT_IDENT_SCCS ? TPP_ENOENT : (tpp_hooks_set_ident_sccs_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_ident_sccs_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_ident_sccs) == (cb) && (self)->TPP_INTERNAL(th_ident_sccs_cookie) == (cookie))
 #define tpp_hooks_del_ident_sccs_ex(self, lexer, cb, cookie) (tpp_hooks_has_ident_sccs_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_ident_sccs(self, lexer), true))
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_IDENT_SCCS)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_IDENT_SCCS_HOOK) && defined(TPP_HOOK_IDENT_SCCS)
 #define tpp_hooks_reset_ident_sccs(self, lexer) (void)((self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS, (self)->TPP_INTERNAL(th_ident_sccs_cookie) = (lexer))
 #define _tpp_hooks_init_ident_sccs(self, lexer) , (self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS, (self)->TPP_INTERNAL(th_ident_sccs_cookie) = (lexer)
-#else /* TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_IDENT_SCCS */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_IDENT_SCCS_HOOK) && TPP_HOOK_IDENT_SCCS */
 #define tpp_hooks_reset_ident_sccs(self, lexer) (void)((self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS)
 #define _tpp_hooks_init_ident_sccs(self, lexer) , (self)->TPP_INTERNAL(th_ident_sccs) = _TPP_HOOKS_DEFAULT_IDENT_SCCS
-#endif /* TPP_HAVE_IDENT_SCCS_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_IDENT_SCCS */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_IDENT_SCCS_HOOK) || !TPP_HOOK_IDENT_SCCS */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_IDENT_SCCS_HOOK) */
 #define tpp_hooks_getcookie_ident_sccs(self, lexer) (lexer)
 #define tpp_hooks_set_ident_sccs(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_ident_sccs) = (cb))
@@ -2206,7 +2206,7 @@ _tpp_hooks_call_ident_sccs(struct tpp_lexer *tpp_restrict lexer, tpp_token_id mo
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #define _tpp_hooks_init_system_include_path(self, lexer) , (self)->TPP_INTERNAL(th_system_include_path) = NULL
 #define _tpp_hooks_fini_system_include_path(self)        , tpp_free((self)->TPP_INTERNAL(th_system_include_path))
 #define tpp_hooks_reset_system_include_path(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_system_include_path), (self)->TPP_INTERNAL(th_system_include_path) = NULL)
@@ -2230,7 +2230,7 @@ _tpp_hooks_call_system_include_path(struct tpp_lexer *tpp_restrict lexer, tpp_to
 #elif TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 #define tpp_hooks_call_system_include_path(self, lexer, mode, when, cb, arg) \
 	((self)->TPP_INTERNAL(th_system_include_path) ? (*(self)->TPP_INTERNAL(th_system_include_path))(tpp_hooks_getcookie_system_include_path(self, lexer), mode, when, cb, arg) : TPP_ENOENT)
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
 #define _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH (&TPP_HOOK_SYSTEM_INCLUDE_PATH)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH NULL
@@ -2245,13 +2245,13 @@ _tpp_hooks_call_system_include_path(struct tpp_lexer *tpp_restrict lexer, tpp_to
 #define tpp_hooks_add_system_include_path_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_system_include_path) != _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH ? TPP_ENOENT : (tpp_hooks_set_system_include_path_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_system_include_path_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_system_include_path) == (cb) && (self)->TPP_INTERNAL(th_system_include_path_cookie) == (cookie))
 #define tpp_hooks_del_system_include_path_ex(self, lexer, cb, cookie) (tpp_hooks_has_system_include_path_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_system_include_path(self, lexer), true))
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) && defined(TPP_HOOK_SYSTEM_INCLUDE_PATH)
 #define tpp_hooks_reset_system_include_path(self, lexer) (void)((self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH, (self)->TPP_INTERNAL(th_system_include_path_cookie) = (lexer))
 #define _tpp_hooks_init_system_include_path(self, lexer) , (self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH, (self)->TPP_INTERNAL(th_system_include_path_cookie) = (lexer)
-#else /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) && TPP_HOOK_SYSTEM_INCLUDE_PATH */
 #define tpp_hooks_reset_system_include_path(self, lexer) (void)((self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH)
 #define _tpp_hooks_init_system_include_path(self, lexer) , (self)->TPP_INTERNAL(th_system_include_path) = _TPP_HOOKS_DEFAULT_SYSTEM_INCLUDE_PATH
-#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_SYSTEM_INCLUDE_PATH */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) || !TPP_HOOK_SYSTEM_INCLUDE_PATH */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 #define tpp_hooks_getcookie_system_include_path(self, lexer) (lexer)
 #define tpp_hooks_set_system_include_path(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_system_include_path) = (cb))
@@ -2284,7 +2284,7 @@ _tpp_hooks_call_system_include_path(struct tpp_lexer *tpp_restrict lexer, tpp_to
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 #define _tpp_hooks_init_system_embed_path(self, lexer) , (self)->TPP_INTERNAL(th_system_embed_path) = NULL
 #define _tpp_hooks_fini_system_embed_path(self)        , tpp_free((self)->TPP_INTERNAL(th_system_embed_path))
 #define tpp_hooks_reset_system_embed_path(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_system_embed_path), (self)->TPP_INTERNAL(th_system_embed_path) = NULL)
@@ -2308,7 +2308,7 @@ _tpp_hooks_call_system_embed_path(struct tpp_lexer *tpp_restrict lexer, tpp_toke
 #elif TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 #define tpp_hooks_call_system_embed_path(self, lexer, mode, when, cb, arg) \
 	((self)->TPP_INTERNAL(th_system_embed_path) ? (*(self)->TPP_INTERNAL(th_system_embed_path))(tpp_hooks_getcookie_system_embed_path(self, lexer), mode, when, cb, arg) : TPP_ENOENT)
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
 #define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH (&TPP_HOOK_SYSTEM_EMBED_PATH)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH NULL
@@ -2323,13 +2323,13 @@ _tpp_hooks_call_system_embed_path(struct tpp_lexer *tpp_restrict lexer, tpp_toke
 #define tpp_hooks_add_system_embed_path_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_system_embed_path) != _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH ? TPP_ENOENT : (tpp_hooks_set_system_embed_path_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_system_embed_path_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_system_embed_path) == (cb) && (self)->TPP_INTERNAL(th_system_embed_path_cookie) == (cookie))
 #define tpp_hooks_del_system_embed_path_ex(self, lexer, cb, cookie) (tpp_hooks_has_system_embed_path_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_system_embed_path(self, lexer), true))
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) && defined(TPP_HOOK_SYSTEM_EMBED_PATH)
 #define tpp_hooks_reset_system_embed_path(self, lexer) (void)((self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH, (self)->TPP_INTERNAL(th_system_embed_path_cookie) = (lexer))
 #define _tpp_hooks_init_system_embed_path(self, lexer) , (self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH, (self)->TPP_INTERNAL(th_system_embed_path_cookie) = (lexer)
-#else /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_SYSTEM_EMBED_PATH */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) && TPP_HOOK_SYSTEM_EMBED_PATH */
 #define tpp_hooks_reset_system_embed_path(self, lexer) (void)((self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH)
 #define _tpp_hooks_init_system_embed_path(self, lexer) , (self)->TPP_INTERNAL(th_system_embed_path) = _TPP_HOOKS_DEFAULT_SYSTEM_EMBED_PATH
-#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_SYSTEM_EMBED_PATH */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) || !TPP_HOOK_SYSTEM_EMBED_PATH */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 #define tpp_hooks_getcookie_system_embed_path(self, lexer) (lexer)
 #define tpp_hooks_set_system_embed_path(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_system_embed_path) = (cb))
@@ -2372,7 +2372,7 @@ _tpp_hooks_call_system_embed_path(struct tpp_lexer *tpp_restrict lexer, tpp_toke
  * @return: TPP_SSIZE_OFERR(TPP_EIO):       Filesystem I/O operation failed
  * @return: TPP_SSIZE_OFERR(TPP_ELEXERROR): A lexer error happened
  * @return: TPP_SSIZE_OFERR(TPP_EUSER(*)):  User-defined error */
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #define _tpp_hooks_init_unknown_string_escape(self, lexer) , (self)->TPP_INTERNAL(th_unknown_string_escape) = NULL
 #define _tpp_hooks_fini_unknown_string_escape(self)        , tpp_free((self)->TPP_INTERNAL(th_unknown_string_escape))
 #define tpp_hooks_reset_unknown_string_escape(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_unknown_string_escape), (self)->TPP_INTERNAL(th_unknown_string_escape) = NULL)
@@ -2396,7 +2396,7 @@ _tpp_hooks_call_unknown_string_escape(struct tpp_lexer *tpp_restrict lexer, tpp_
 #elif TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 #define tpp_hooks_call_unknown_string_escape(self, lexer, p_pos, end, config) \
 	((self)->TPP_INTERNAL(th_unknown_string_escape) ? (*(self)->TPP_INTERNAL(th_unknown_string_escape))(tpp_hooks_getcookie_unknown_string_escape(self, lexer), p_pos, end, config) : TPP_SSIZE_OFERR(TPP_ENOENT))
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
 #define _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE (&TPP_HOOK_UNKNOWN_STRING_ESCAPE)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE NULL
@@ -2411,13 +2411,13 @@ _tpp_hooks_call_unknown_string_escape(struct tpp_lexer *tpp_restrict lexer, tpp_
 #define tpp_hooks_add_unknown_string_escape_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_unknown_string_escape) != _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE ? TPP_ENOENT : (tpp_hooks_set_unknown_string_escape_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_unknown_string_escape_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_unknown_string_escape) == (cb) && (self)->TPP_INTERNAL(th_unknown_string_escape_cookie) == (cookie))
 #define tpp_hooks_del_unknown_string_escape_ex(self, lexer, cb, cookie) (tpp_hooks_has_unknown_string_escape_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_unknown_string_escape(self, lexer), true))
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) && defined(TPP_HOOK_UNKNOWN_STRING_ESCAPE)
 #define tpp_hooks_reset_unknown_string_escape(self, lexer) (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE, (self)->TPP_INTERNAL(th_unknown_string_escape_cookie) = (lexer))
 #define _tpp_hooks_init_unknown_string_escape(self, lexer) , (self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE, (self)->TPP_INTERNAL(th_unknown_string_escape_cookie) = (lexer)
-#else /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) && TPP_HOOK_UNKNOWN_STRING_ESCAPE */
 #define tpp_hooks_reset_unknown_string_escape(self, lexer) (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE)
 #define _tpp_hooks_init_unknown_string_escape(self, lexer) , (self)->TPP_INTERNAL(th_unknown_string_escape) = _TPP_HOOKS_DEFAULT_UNKNOWN_STRING_ESCAPE
-#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) || !TPP_HOOK_UNKNOWN_STRING_ESCAPE */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 #define tpp_hooks_getcookie_unknown_string_escape(self, lexer) (lexer)
 #define tpp_hooks_set_unknown_string_escape(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_unknown_string_escape) = (cb))
@@ -2448,7 +2448,7 @@ _tpp_hooks_call_unknown_string_escape(struct tpp_lexer *tpp_restrict lexer, tpp_
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK)
 #define _tpp_hooks_init_raise_lexerror(self, lexer) , (self)->TPP_INTERNAL(th_raise_lexerror) = NULL
 #define _tpp_hooks_fini_raise_lexerror(self)        , tpp_free((self)->TPP_INTERNAL(th_raise_lexerror))
 #define tpp_hooks_reset_raise_lexerror(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_raise_lexerror), (self)->TPP_INTERNAL(th_raise_lexerror) = NULL)
@@ -2472,7 +2472,7 @@ _tpp_hooks_call_raise_lexerror(struct tpp_lexer *tpp_restrict lexer);
 #elif TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
 #define tpp_hooks_call_raise_lexerror(self, lexer) \
 	((self)->TPP_INTERNAL(th_raise_lexerror) ? (*(self)->TPP_INTERNAL(th_raise_lexerror))(tpp_hooks_getcookie_raise_lexerror(self, lexer)) : TPP_ELEXERROR)
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_RAISE_LEXERROR)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) && defined(TPP_HOOK_RAISE_LEXERROR)
 #define _TPP_HOOKS_DEFAULT_RAISE_LEXERROR (&TPP_HOOK_RAISE_LEXERROR)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_RAISE_LEXERROR NULL
@@ -2487,13 +2487,13 @@ _tpp_hooks_call_raise_lexerror(struct tpp_lexer *tpp_restrict lexer);
 #define tpp_hooks_add_raise_lexerror_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_raise_lexerror) != _TPP_HOOKS_DEFAULT_RAISE_LEXERROR ? TPP_ENOENT : (tpp_hooks_set_raise_lexerror_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_raise_lexerror_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_raise_lexerror) == (cb) && (self)->TPP_INTERNAL(th_raise_lexerror_cookie) == (cookie))
 #define tpp_hooks_del_raise_lexerror_ex(self, lexer, cb, cookie) (tpp_hooks_has_raise_lexerror_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_raise_lexerror(self, lexer), true))
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_RAISE_LEXERROR)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) && defined(TPP_HOOK_RAISE_LEXERROR)
 #define tpp_hooks_reset_raise_lexerror(self, lexer) (void)((self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR, (self)->TPP_INTERNAL(th_raise_lexerror_cookie) = (lexer))
 #define _tpp_hooks_init_raise_lexerror(self, lexer) , (self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR, (self)->TPP_INTERNAL(th_raise_lexerror_cookie) = (lexer)
-#else /* TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_RAISE_LEXERROR */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) && TPP_HOOK_RAISE_LEXERROR */
 #define tpp_hooks_reset_raise_lexerror(self, lexer) (void)((self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR)
 #define _tpp_hooks_init_raise_lexerror(self, lexer) , (self)->TPP_INTERNAL(th_raise_lexerror) = _TPP_HOOKS_DEFAULT_RAISE_LEXERROR
-#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_RAISE_LEXERROR */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_RAISE_LEXERROR_HOOK) || !TPP_HOOK_RAISE_LEXERROR */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 #define tpp_hooks_getcookie_raise_lexerror(self, lexer) (lexer)
 #define tpp_hooks_set_raise_lexerror(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_raise_lexerror) = (cb))
@@ -2528,7 +2528,7 @@ _tpp_hooks_call_raise_lexerror(struct tpp_lexer *tpp_restrict lexer);
  * @return: TPP_EIO:       Filesystem I/O operation failed
  * @return: TPP_ELEXERROR: A lexer error happened
  * @return: TPP_EUSER(*):  User-defined error */
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 #define _tpp_hooks_init_isfloatsuffix(self, lexer) , (self)->TPP_INTERNAL(th_isfloatsuffix) = NULL
 #define _tpp_hooks_fini_isfloatsuffix(self)        , tpp_free((self)->TPP_INTERNAL(th_isfloatsuffix))
 #define tpp_hooks_reset_isfloatsuffix(self, lexer) (void)(tpp_free((self)->TPP_INTERNAL(th_isfloatsuffix), (self)->TPP_INTERNAL(th_isfloatsuffix) = NULL)
@@ -2552,7 +2552,7 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 #elif TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 #define tpp_hooks_call_isfloatsuffix(self, lexer, pos) \
 	((self)->TPP_INTERNAL(th_isfloatsuffix) ? (*(self)->TPP_INTERNAL(th_isfloatsuffix))(tpp_hooks_getcookie_isfloatsuffix(self, lexer), pos) : TPP_ENOENT)
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_ISFLOATSUFFIX)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) && defined(TPP_HOOK_ISFLOATSUFFIX)
 #define _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX (&TPP_HOOK_ISFLOATSUFFIX)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX NULL
@@ -2567,13 +2567,13 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 #define tpp_hooks_add_isfloatsuffix_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_isfloatsuffix) != _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX ? TPP_ENOENT : (tpp_hooks_set_isfloatsuffix_ex(self, cb, cookie), TPP_EOK))
 #define tpp_hooks_has_isfloatsuffix_ex(self, lexer, cb, cookie) ((self)->TPP_INTERNAL(th_isfloatsuffix) == (cb) && (self)->TPP_INTERNAL(th_isfloatsuffix_cookie) == (cookie))
 #define tpp_hooks_del_isfloatsuffix_ex(self, lexer, cb, cookie) (tpp_hooks_has_isfloatsuffix_ex(self, lexer, cb, cookie) && (tpp_hooks_reset_isfloatsuffix(self, lexer), true))
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && defined(TPP_HOOK_ISFLOATSUFFIX)
+#if TPP_HOOK_ISRTUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) && defined(TPP_HOOK_ISFLOATSUFFIX)
 #define tpp_hooks_reset_isfloatsuffix(self, lexer) (void)((self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX, (self)->TPP_INTERNAL(th_isfloatsuffix_cookie) = (lexer))
 #define _tpp_hooks_init_isfloatsuffix(self, lexer) , (self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX, (self)->TPP_INTERNAL(th_isfloatsuffix_cookie) = (lexer)
-#else /* TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_USER && TPP_HOOK_ISFLOATSUFFIX */
+#else /* TPP_HOOK_ISRTUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) && TPP_HOOK_ISFLOATSUFFIX */
 #define tpp_hooks_reset_isfloatsuffix(self, lexer) (void)((self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX)
 #define _tpp_hooks_init_isfloatsuffix(self, lexer) , (self)->TPP_INTERNAL(th_isfloatsuffix) = _TPP_HOOKS_DEFAULT_ISFLOATSUFFIX
-#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_RT_USER || !TPP_HOOK_ISFLOATSUFFIX */
+#endif /* !TPP_HOOK_ISRTUSER(TPP_HAVE_ISFLOATSUFFIX_HOOK) || !TPP_HOOK_ISFLOATSUFFIX */
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 #define tpp_hooks_getcookie_isfloatsuffix(self, lexer) (lexer)
 #define tpp_hooks_set_isfloatsuffix(self, lexer, cb) (void)((self)->TPP_INTERNAL(th_isfloatsuffix) = (cb))

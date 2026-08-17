@@ -3142,14 +3142,14 @@ print("#endif /" "* !... *" "/");
  * extended hook setter (that doesn't take a cookie argument) is used), then
  * the lexer *itself* will be passed as cookie.
  *
- * Only applies to hooks configured as one of `TPP_HOOK_RT_*` */
-#ifndef TPP_HAVE_HOOK_COOKIES
-#if TPP_HAVE_PROFILE_NOT_MINIMAL
-#define TPP_HAVE_HOOK_COOKIES 1
-#else /* ... */
-#define TPP_HAVE_HOOK_COOKIES 0
-#endif /* !... */
-#endif /* !TPP_HAVE_HOOK_COOKIES */
+ * Only applies to hooks configured as one of `TPP_HOOK_RT_*`
+ *
+ * This is merely the **default**-configuration of otherwise unconfigured
+ * hooks. The availability of cookies can always be configured on a per-
+ * hook basis by configuring it as one of `TPP_HOOK_RT_*_C`. */
+#ifndef TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_COMMON_HAVE_HOOK_COOKIES TPP_HAVE_PROFILE_NOT_MINIMAL
+#endif /* !TPP_COMMON_HAVE_HOOK_COOKIES */
 
 /************************************************************************/
 /************************************************************************/
@@ -3172,24 +3172,40 @@ print("#endif /" "* !... *" "/");
 #define TPP_HOOK_RT_BUILTIN    (-2) /* Hook is per-lexer configurable; defaults to builtin implementation (or no-op if there is no builtin) */
 #define TPP_HOOK_RT_NOOP       (-3) /* Hook is per-lexer configurable; defaults to no-op implementation */
 #define TPP_HOOK_RT_MANY       (-4) /* Hook allows for many callbacks to be registered (only works for hooks w/o builtin impls) if `TPP_HOOK_FOO` is also defined, that one's hard-coded */
+#define TPP_HOOK_RT_USER_C     (-5) /* Same as `TPP_HOOK_RT_USER`, but an custom `cookie`-argument can be registered alongside the hook */
+#define TPP_HOOK_RT_BUILTIN_C  (-6) /* Same as `TPP_HOOK_RT_BUILTIN`, but an custom `cookie`-argument can be registered alongside the hook */
+#define TPP_HOOK_RT_NOOP_C     (-7) /* Same as `TPP_HOOK_RT_NOOP`, but an custom `cookie`-argument can be registered alongside the hook */
+#define TPP_HOOK_RT_MANY_C     (-8) /* Same as `TPP_HOOK_RT_MANY`, but an custom `cookie`-argument can be registered alongside the hook */
 
-#define TPP_HOOK_USESBUILTIN(x) ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN)
-#define TPP_HOOK_USESUSER(x)    ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER)
-#define TPP_HOOK_ISCONST(x)     ((x) > 0)
-#define TPP_HOOK_ISRT(x)        ((x) < 0)
-#define TPP_HOOK_HASCOOKIE(x)   TPP_HAVE_HOOK_COOKIES
+#define TPP_HOOK_WITHCOOKIE(x)    ((x) & ~4) /* Convert `TPP_HOOK_RT_*` into `TPP_HOOK_RT_*_C` */
+#define TPP_HOOK_WITHOUTCOOKIE(x) ((x) | 4)  /* Convert `TPP_HOOK_RT_*_C` into `TPP_HOOK_RT_*` */
+#define TPP_HOOK_USESBUILTIN(x)   ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN_C) /* Check if config "x" uses a *builtin* hook impl */
+#define TPP_HOOK_USESUSER(x)      ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER || (x) == TPP_HOOK_RT_USER_C || (x) == TPP_HOOK_RT_MANY || (x) == TPP_HOOK_RT_MANY_C) /* Check if config "x" can make use of `TPP_HOOK_FOO` */
+#define TPP_HOOK_ISMANY(x)        ((x) == TPP_HOOK_RT_MANY || (x) == TPP_HOOK_RT_MANY_C) /* Check if config "x" allows many hooks */
+#define TPP_HOOK_ISCONST(x)       ((x) >= 0) /* Check if config "x" is hardcoded at compile-time */
+#define TPP_HOOK_ISRT(x)          ((x) < 0)  /* Check if config "x" can be overwritten at run-time */
+#define TPP_HOOK_ISRTUSER(x)      ((x) == TPP_HOOK_RT_USER || (x) == TPP_HOOK_RT_USER_C)
+#define TPP_HOOK_ISRTBULITIN(x)   ((x) == TPP_HOOK_RT_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN_C)
+#define TPP_HOOK_ISRTNOOP(x)      ((x) == TPP_HOOK_RT_NOOP || (x) == TPP_HOOK_RT_NOOP_C)
+#define TPP_HOOK_HASCOOKIE(x)     ((x) < -4) /* Check if config "x" has a `void *cookie` argument */
 
 /* Default configuration specifying how required hooks should be linked. */
 #ifndef TPP_HOOK_DEFAULT_BUILTIN
-#if TPP_HAVE_PROFILE_ALL
+#if TPP_HAVE_PROFILE_ALL && TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_RT_BUILTIN_C
+#elif TPP_HAVE_PROFILE_ALL
 #define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_RT_BUILTIN
 #else /* ... */
 #define TPP_HOOK_DEFAULT_BUILTIN TPP_HOOK_CONST_BUILTIN
 #endif /* !... */
 #endif /* !TPP_HOOK_DEFAULT_BUILTIN */
 #ifndef TPP_HOOK_DEFAULT_USER
-#if TPP_HAVE_PROFILE_ALL
+#if TPP_HAVE_PROFILE_ALL && TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_MANY_C
+#elif TPP_HAVE_PROFILE_ALL
 #define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_MANY
+#elif TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_USER_C
 #elif TPP_HAVE_PROFILE_NOT_MINIMAL
 #define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_USER
 #else /* ... */
@@ -3197,8 +3213,12 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HOOK_DEFAULT_USER */
 #ifndef TPP_HOOK_DEFAULT_NOOP
-#if TPP_HAVE_PROFILE_ALL
+#if TPP_HAVE_PROFILE_ALL && TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_MANY_C
+#elif TPP_HAVE_PROFILE_ALL
 #define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_MANY
+#elif TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_COMMON_HAVE_HOOK_COOKIES
+#define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_NOOP_C
 #elif TPP_HAVE_PROFILE_NOT_MINIMAL
 #define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_NOOP
 #else /* ... */
@@ -3626,9 +3646,9 @@ for (local doc, name,
 	print("#undef TPP_HAVE_", name, "_HOOK");
 	print("#define TPP_HAVE_", name, "_HOOK TPP_HOOK_RT_NOOP");
 	if (builtin_FOO_HOOK) {
-		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+		print("#elif TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK)");
 		print("#if !TPP_IGNORE_INVALID_CONFIGURATION");
-		print("#error \"Invalid configuration: `TPP_HAVE_", name, "_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration\"");
+		print("#error \"Invalid configuration: `TPP_HAVE_", name, "_HOOK` is configured as `TPP_HOOK_RT_MANY` or `TPP_HOOK_RT_MANY_C`, but this type of hook doesn't support that configuration\"");
 		print("#endif /" "* !TPP_IGNORE_INVALID_CONFIGURATION *" "/");
 		print("#undef TPP_HAVE_", name, "_HOOK /" "* Cannot use multiple hooks for this one *" "/");
 		print("#ifdef TPP_HOOK_", name);
@@ -3648,6 +3668,11 @@ for (local doc, name,
 	print("#if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_", name, ") && !TPP_HOOK_USESUSER(TPP_HAVE_", name, "_HOOK)");
 	print("#error \"Invalid configuration: `TPP_HOOK_", name, "` is defined, but `TPP_HAVE_", name, "_HOOK` isn't using it\"");
 	print("#endif /" "* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_", name, " && !TPP_HOOK_USESUSER(TPP_HAVE_", name, "_HOOK) *" "/");
+	if ("cookie" !in prototypeArgs) {
+		print("#if !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK)");
+		print("#error \"Invalid configuration: `TPP_HAVE_", name, "_HOOK` requests a `cookie` argument, but this hook doesn't support cookies\"");
+		print("#endif /" "* !TPP_IGNORE_INVALID_CONFIGURATION && TPP_HOOK_HASCOOKIE(TPP_HAVE_", name, "_HOOK) *" "/");
+	}
 	if (builtin_FOO_HOOK) {
 		print("#ifndef TPP_HAVE_BUILTIN_", name, "_HOOK");
 		print("#define TPP_HAVE_BUILTIN_", name, "_HOOK TPP_HOOK_USESBUILTIN(TPP_HAVE_", name, "_HOOK)");
@@ -3683,9 +3708,9 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNPRINTER_HOOK
 #define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_MANY
+#elif TPP_HOOK_ISMANY(TPP_HAVE_WARNPRINTER_HOOK)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: `TPP_HAVE_WARNPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#error "Invalid configuration: `TPP_HAVE_WARNPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY` or `TPP_HOOK_RT_MANY_C`, but this type of hook doesn't support that configuration"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNPRINTER_HOOK /* Cannot use multiple hooks for this one */
 #ifdef TPP_HOOK_WARNPRINTER
@@ -3732,9 +3757,9 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNHANDLER_HOOK
 #define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_MANY
+#elif TPP_HOOK_ISMANY(TPP_HAVE_WARNHANDLER_HOOK)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: `TPP_HAVE_WARNHANDLER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#error "Invalid configuration: `TPP_HAVE_WARNHANDLER_HOOK` is configured as `TPP_HOOK_RT_MANY` or `TPP_HOOK_RT_MANY_C`, but this type of hook doesn't support that configuration"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNHANDLER_HOOK /* Cannot use multiple hooks for this one */
 #ifdef TPP_HOOK_WARNHANDLER
@@ -3776,9 +3801,9 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MESGPRINTER_HOOK
 #define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_MANY
+#elif TPP_HOOK_ISMANY(TPP_HAVE_MESGPRINTER_HOOK)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: `TPP_HAVE_MESGPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#error "Invalid configuration: `TPP_HAVE_MESGPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY` or `TPP_HOOK_RT_MANY_C`, but this type of hook doesn't support that configuration"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MESGPRINTER_HOOK /* Cannot use multiple hooks for this one */
 #ifdef TPP_HOOK_MESGPRINTER
@@ -3834,9 +3859,9 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_PARSEEXPR_HOOK
 #define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
-#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_MANY
+#elif TPP_HOOK_ISMANY(TPP_HAVE_PARSEEXPR_HOOK)
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: `TPP_HAVE_PARSEEXPR_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#error "Invalid configuration: `TPP_HAVE_PARSEEXPR_HOOK` is configured as `TPP_HOOK_RT_MANY` or `TPP_HOOK_RT_MANY_C`, but this type of hook doesn't support that configuration"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_PARSEEXPR_HOOK /* Cannot use multiple hooks for this one */
 #ifdef TPP_HOOK_PARSEEXPR

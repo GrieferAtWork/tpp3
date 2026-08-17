@@ -747,11 +747,11 @@ tpp_lexer_manualpopfile_callhook(tpp_lexer *tpp_restrict self,
 	saved_tprev = lexer_file->tf_tprev;
 	lexer_file->tf_prev  = file_to_pop;
 	lexer_file->tf_tprev = file_to_pop;
-#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && !TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK)
 	(*self->tl_hooks.th_file_popped)(self);
-#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && !TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK) */
 	tpp_lexer_callhook_file_popped(self);
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) || TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) || TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK) */
 	lexer_file->tf_prev  = saved_prev;
 	lexer_file->tf_tprev = saved_tprev;
 	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));

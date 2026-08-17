@@ -32,6 +32,125 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+/* Ensure that `TPP_HOOK_*` helper macros work */
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_USER) == TPP_HOOK_RT_USER_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_BUILTIN) == TPP_HOOK_RT_BUILTIN_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_NOOP) == TPP_HOOK_RT_NOOP_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_MANY) == TPP_HOOK_RT_MANY_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_USER_C) == TPP_HOOK_RT_USER_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_BUILTIN_C) == TPP_HOOK_RT_BUILTIN_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_NOOP_C) == TPP_HOOK_RT_NOOP_C);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_MANY_C) == TPP_HOOK_RT_MANY_C);
+
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_USER) == TPP_HOOK_RT_USER);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_BUILTIN) == TPP_HOOK_RT_BUILTIN);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_NOOP) == TPP_HOOK_RT_NOOP);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_MANY) == TPP_HOOK_RT_MANY);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_USER_C) == TPP_HOOK_RT_USER);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_BUILTIN_C) == TPP_HOOK_RT_BUILTIN);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_NOOP_C) == TPP_HOOK_RT_NOOP);
+TPP_STATIC_ASSERT(TPP_HOOK_WITHOUTCOOKIE(TPP_HOOK_RT_MANY_C) == TPP_HOOK_RT_MANY);
+
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(TPP_HOOK_USESBUILTIN(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESBUILTIN(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(TPP_HOOK_USESUSER(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(TPP_HOOK_USESUSER(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(TPP_HOOK_USESUSER(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(TPP_HOOK_USESUSER(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_USESUSER(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(TPP_HOOK_USESUSER(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(TPP_HOOK_ISMANY(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISMANY(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISMANY(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(TPP_HOOK_ISCONST(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(TPP_HOOK_ISCONST(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(TPP_HOOK_ISCONST(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISCONST(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRT(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRT(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRT(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRT(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTUSER(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTUSER(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTUSER(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTBULITIN(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(!TPP_HOOK_ISRTNOOP(TPP_HOOK_RT_MANY_C));
+
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_DISABLED));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_CONST_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_CONST_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_USER));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_BUILTIN));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_NOOP));
+TPP_STATIC_ASSERT(!TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_MANY));
+TPP_STATIC_ASSERT(TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_USER_C));
+TPP_STATIC_ASSERT(TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_BUILTIN_C));
+TPP_STATIC_ASSERT(TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_NOOP_C));
+TPP_STATIC_ASSERT(TPP_HOOK_HASCOOKIE(TPP_HOOK_RT_MANY_C));
+
+
 /*[[[deemon
 import HOOKS from .config;
 
@@ -45,7 +164,7 @@ for (local doc, name,
 	if (builtin_FOO_HOOK)
 		continue;
 	local returnType = prototypePrefix.rstrip("*").rstrip().rsstrip("TPPCALL").rstrip().rstrip("(").rstrip();
-	print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+	print("#if TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK)");
 	print("/" "* ", doc.strip().replace("\n", "\n * ").rstriplines(), " *" "/");
 	print("TPP_IMPL "),;
 	if (returnType != "void")
@@ -106,12 +225,12 @@ for (local doc, name,
 	print("	return ", disabled_RETURN_VALUE, ";");
 	print("#endif /" "* !TPP_HOOK_", name, "*" "/");
 	print("}");
-	print("#endif /" "* TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY *" "/");
+	print("#endif /" "* TPP_HOOK_ISMANY(TPP_HAVE_", name, "_HOOK) *" "/");
 	print;
 	print;
 }
 ]]]*/
-#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
 /* Called whenever a `#pragma` is encountered that is not recognized.
  * When called, the lexer is set-up to point at the first token after the `#pragma`.
  * @return: TPP_EOK:      Pragma has been handled
@@ -142,10 +261,10 @@ _tpp_hooks_call_unknown_pragma(struct tpp_lexer *tpp_restrict lexer) {
 	return TPP_ENOENT;
 #endif /* !TPP_HOOK_UNKNOWN_PRAGMA*/
 }
-#endif /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
 
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 /* Called whenever some file is `#include`-ed for the first time
  * @param: filename_kwd: Then `tpp_keyword` used to describe the file's name. The actual
  *                       filename can be queried as `tpp_keyword_getcstr(filename_kwd)`
@@ -177,10 +296,10 @@ _tpp_hooks_call_new_dependency(struct tpp_lexer *tpp_restrict lexer, tpp_keyword
 	return TPP_EOK;
 #endif /* !TPP_HOOK_NEW_DEPENDENCY*/
 }
-#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
 
-#if TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK)
 /* Called whenever a file was just pushed onto the `#include`-stack. Information
  * about the just-pushed file can be retrieved by examining `tpp_lexer_getfile(LEXER)`.
  *
@@ -215,10 +334,10 @@ _tpp_hooks_call_file_pushed(struct tpp_lexer *tpp_restrict lexer) {
 	return TPP_EOK;
 #endif /* !TPP_HOOK_FILE_PUSHED*/
 }
-#endif /* TPP_HAVE_FILE_PUSHED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_FILE_PUSHED_HOOK) */
 
 
-#if TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK)
 /* Called whenever a file is about to be popped off the `#include`-stack.
  * Information about the file that's about-to-be popped can be retrieved
  * by examining `tpp_lexer_getfile(LEXER)`.
@@ -250,10 +369,10 @@ _tpp_hooks_call_file_popped(struct tpp_lexer *tpp_restrict lexer) {
 	return (void)0;
 #endif /* !TPP_HOOK_FILE_POPPED*/
 }
-#endif /* TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_FILE_POPPED_HOOK) */
 
 
-#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
 /* Called when a `#include` (or `#include_next`, `#import` or `#embed`)-directive
  * is encountered, at the point in time when the lexer's current token has already
  * been populated by `tpp_lexer_yieldraw_at_include_string_blocking()` (and macros
@@ -299,10 +418,10 @@ _tpp_hooks_call_include_encountered(struct tpp_lexer *tpp_restrict lexer, tpp_ho
 	return TPP_EOK;
 #endif /* !TPP_HOOK_INCLUDE_ENCOUNTERED*/
 }
-#endif /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
 
-#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 /* Called when the file specified by a `#include` (or `#include_next`, `#import` or
  * `#embed`)-directive could not be found. This hook may be used to either suppress
  * the error (by returning something other than `TPP_ENOENT`), or log the error to
@@ -344,10 +463,10 @@ _tpp_hooks_call_include_not_found(struct tpp_lexer *tpp_restrict lexer, tpp_hook
 	return TPP_ENOENT;
 #endif /* !TPP_HOOK_INCLUDE_NOT_FOUND*/
 }
-#endif /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
 
-#if TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK)
 /* Called whenever a `#define` directive has just been fully
  * parsed (macro was has not yet been registered with keyword).
  *
@@ -385,10 +504,10 @@ _tpp_hooks_call_macro_defined(struct tpp_lexer *tpp_restrict lexer, tpp_keyword 
 	return TPP_EOK;
 #endif /* !TPP_HOOK_MACRO_DEFINED*/
 }
-#endif /* TPP_HAVE_MACRO_DEFINED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_MACRO_DEFINED_HOOK) */
 
 
-#if TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 /* Called whenever a `#undef` directive has just been fully
  * parsed (macro hasn't been deleted from keyword, yet). Note
  * that this hook is still called, even if the keyword doesn't
@@ -430,10 +549,10 @@ _tpp_hooks_call_macro_undefined(struct tpp_lexer *tpp_restrict lexer, tpp_keywor
 	return TPP_EOK;
 #endif /* !TPP_HOOK_MACRO_UNDEFINED*/
 }
-#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
 
-#if TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK)
 /* Called to handle `#ident` and `#sccs` directives
  * @param: mode:        Either `TPP_KWD_ident` or `TPP_KWD_sccs`
  * @param: chunk:       If non-NULL a string that must be `tpp_string_incref()`d
@@ -470,10 +589,10 @@ _tpp_hooks_call_ident_sccs(struct tpp_lexer *tpp_restrict lexer, tpp_token_id mo
 	return TPP_EOK;
 #endif /* !TPP_HOOK_IDENT_SCCS*/
 }
-#endif /* TPP_HAVE_IDENT_SCCS_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_IDENT_SCCS_HOOK) */
 
 
-#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
 /* Extra callback invoked by `tpp_lexer_foreach_include_path()` at different
  * points during the process of enumerating include paths. This callback is
  * then allowed to enumerate some additional include paths that may exist, but
@@ -510,10 +629,10 @@ _tpp_hooks_call_system_include_path(struct tpp_lexer *tpp_restrict lexer, tpp_to
 	return TPP_ENOENT;
 #endif /* !TPP_HOOK_SYSTEM_INCLUDE_PATH*/
 }
-#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
 
-#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
 /* Extra callback invoked by `tpp_lexer_foreach_embed_path()` at different points
  * during the process of enumerating embed paths. (s.a. `TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK`)
  * @param: when: One of `TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_*`, describing the
@@ -547,10 +666,10 @@ _tpp_hooks_call_system_embed_path(struct tpp_lexer *tpp_restrict lexer, tpp_toke
 	return TPP_ENOENT;
 #endif /* !TPP_HOOK_SYSTEM_EMBED_PATH*/
 }
-#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
 
-#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
 /* Called by `tpp_lexer_decodestring()` when an unknown `\`-escape sequence is encountered.
  * This hook can be used to define additional, user-defined escape sequences, or any other
  * arbitrary behavior to-be performed when specific escape-sequences are found.
@@ -594,10 +713,10 @@ _tpp_hooks_call_unknown_string_escape(struct tpp_lexer *tpp_restrict lexer, tpp_
 	return TPP_SSIZE_OFERR(TPP_ENOENT);
 #endif /* !TPP_HOOK_UNKNOWN_STRING_ESCAPE*/
 }
-#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
 
-#if TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK)
 /* Called by `tpp_lexer_warnf()` just before it's about to return `TPP_ELEXERROR`
  * This hook can be used to do additional state changes that may be necessary by the
  * hosting application in order to handle the resulting `TPP_ELEXERROR`
@@ -629,10 +748,10 @@ _tpp_hooks_call_raise_lexerror(struct tpp_lexer *tpp_restrict lexer) {
 	return TPP_ELEXERROR;
 #endif /* !TPP_HOOK_RAISE_LEXERROR*/
 }
-#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
 
-#if TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY
+#if TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK)
 /* Called by `tpp_lexer_yieldraw()` when `TPP_HAVE_SMART_FLOAT_TOKENS` is enabled and
  * a sequence like `1.f` is encountered where the lexer is unsure if the `f` should be
  * part of the float-token (in the form of a float-suffix), or if this should actually be
@@ -668,7 +787,7 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 	return TPP_ENOENT;
 #endif /* !TPP_HOOK_ISFLOATSUFFIX*/
 }
-#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK == TPP_HOOK_RT_MANY */
+#endif /* TPP_HOOK_ISMANY(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 /*[[[end]]]*/
 
 

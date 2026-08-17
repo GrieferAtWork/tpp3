@@ -56,7 +56,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27312)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27332)
 
 <details><summary>Details</summary>
 
@@ -197,7 +197,29 @@ at runtime.
 
 The ability to override these expansions is a prerequisite for
 [`TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`](config-core.md#tpp_have_pragma_tpp_keyword_features), as well as the associated
-APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L21989) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L21999).
+APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L22009) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L22019).
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_PROFILE != TPP_PROFILE_MINIMAL
+```
+</details>
+
+## TPP_COMMON_HAVE_HOOK_COOKIES
+
+API hooks have user-configurable cookies. When not otherwise configured,
+(such as when a default user-defined hook is defined, or when the non-
+extended hook setter (that doesn't take a cookie argument) is used), then
+the lexer *itself* will be passed as cookie.
+
+Only applies to hooks configured as one of `TPP_HOOK_RT_*`
+
+This is merely the **default**-configuration of otherwise unconfigured
+hooks. The availability of cookies can always be configured on a per-
+hook basis by configuring it as one of `TPP_HOOK_RT_*_C`.
 
 <details><summary>Details</summary>
 

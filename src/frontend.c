@@ -41,7 +41,7 @@
 #if 1 /* Since we're building everything statically, we don't need hook cookies,
        * but can instead instruct TPP to determine emitter/makefile via offsets
        * from the current lexer. */
-#define TPP_HAVE_HOOK_COOKIES 0
+#define TPP_COMMON_HAVE_HOOK_COOKIES 0
 #define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER \
 	(tpp_offsetof(tpp_frontend, tf_emitter) - tpp_offsetof(tpp_frontend, tf_lexer))
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
