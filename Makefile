@@ -74,5 +74,5 @@ bin/tpp$(EXE): src/tpp-amalgamation.c src/tpp-amalgamation.h src/tpp-emitter-ama
 test: bin/tpp$(EXE)
 	deemon -F test/_all.h
 	@echo bin/tpp$(EXE) --mode=dispose test/_all.h
-	@bin/tpp$(EXE) --mode=dispose test/_all.h && echo "Tests passed" || echo "TESTS FAILED"
+	@bin/tpp$(EXE) --mode=dispose test/_all.h && echo "[92m✅[m Tests passed" || echo "[91m❌[m TESTS FAILED (exit code: $$?)"
 .PHONY: test
