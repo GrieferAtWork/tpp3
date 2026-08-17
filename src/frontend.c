@@ -43,9 +43,9 @@
        * from the current lexer. */
 #define TPP_HAVE_HOOK_COOKIES 0
 #define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER \
-	(offsetof(tpp_frontend, tf_emitter) - offsetof(tpp_frontend, tf_lexer))
+	(tpp_offsetof(tpp_frontend, tf_emitter) - tpp_offsetof(tpp_frontend, tf_lexer))
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER \
-	(offsetof(tpp_frontend, tf_makefile) - offsetof(tpp_frontend, tf_lexer))
+	(tpp_offsetof(tpp_frontend, tf_makefile) - tpp_offsetof(tpp_frontend, tf_lexer))
 #endif
 
 /* Pull in TPP headers */
@@ -390,8 +390,7 @@ static tpp_errno tpp_frontend_parsearg(tpp_frontend *tpp_restrict self, char con
 					}
 					return error;
 				} else if (tpp_streq(arg, "unify-pragma\0")) {
-					tpp_emitter_set_reemit_unknown_pragma(&self->tf_emitter, !no);
-					return TPP_EOK;
+					return tpp_emitter_set_reemit_unknown_pragma(&self->tf_emitter, !no);
 				} else if (tpp_streq(arg, "line\0")) {
 					if (no) {
 						tpp_emitter_enablefeature(&self->tf_emitter, TPP_EMITTER_FEAT_NOLINE);
@@ -538,7 +537,11 @@ int main(int argc, char **argv) {
 
 	/* Initialize frontend */
 	tpp_lexer_init(&fe.tf_lexer);
-	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_emitter_output_printer);
+	error = tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_emitter_output_printer);
+	if (TPP_ISERR(error)) {
+		fprintf(stderr, "failed to initialize emitter: %s\n", tpp_strerror(error));
+		goto out_lexer;
+	}
 	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, &tpp_frontend_makefile_output_printer);
 	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
@@ -651,6 +654,7 @@ out_emitter_file:
 	tpp_lexer_finifile(&fe.tf_lexer);
 out_emitter:
 	tpp_emitter_fini(&fe.tf_emitter);
+out_lexer:
 	tpp_lexer_fini(&fe.tf_lexer);
 #if defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC)
 	_CrtDumpMemoryLeaks();

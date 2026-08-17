@@ -36,6 +36,7 @@
 #endif /* !TPP_BUILDING */
 
 #include "parts/error.c"
+#include "parts/hooks.c"
 #include "parts/ctype.c"
 #include "parts/ctype-unicode.c"
 #include "parts/ctype-xml.c"

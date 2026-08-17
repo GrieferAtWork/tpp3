@@ -430,6 +430,34 @@ typedef struct tpp_lexer {
 
 
 /* Invocation of hooks */
+
+/* Common documentation:
+ * >> tpp_errno tpp_lexer_addhook_*_ex(tpp_lexer *self, HOOK cb, void *cookie);
+ * >> tpp_errno tpp_lexer_addhook_*(tpp_lexer *self, HOOK cb);
+ *    Add an entry to this hook-list (emulated as a max-length=1-list when not `TPP_HOOK_RT_MANY`)
+ *    @return: TPP_EOK:    Success (given `cb`[+`cookie`] was added to the back
+ *                         of the list, meaning it will be invoked *first*)
+ *    @return: TPP_EOK:    No-op (given `cb`[+`cookie`] was already registered)
+ *                         [CONFIG == TPP_HOOK_RT_MANY] The entry is always moved to the back,
+ *                                                      meaning it will be invoked *first*.
+ *    @return: TPP_ENOENT: [CONFIG != TPP_HOOK_RT_MANY] Another (non-default) was already registered
+ *    @return: TPP_ENOMEM: [CONFIG == TPP_HOOK_RT_MANY] Insufficient memory to register hook
+ * 
+ * >> bool tpp_lexer_hashook_*_ex(tpp_lexer const *self, HOOK cb, void const *cookie);
+ * >> bool tpp_lexer_hashook_*(tpp_lexer const *self, HOOK cb);
+ *    Check if the specified `cb`[+`cookie`] is currently registered:
+ *    - When configured as `TPP_HOOK_RT_MANY`, check if the hook-list contains `cb`[+`cookie`]
+ *    - When not configured as `TPP_HOOK_RT_MANY`, check if the current hook is `cb`[+`cookie`]
+ *
+ * >> bool tpp_lexer_delhook_*_ex(tpp_lexer *self, HOOK cb, void const *cookie);
+ * >> bool tpp_lexer_delhook_*(tpp_lexer *self, HOOK cb);
+ *    Remove the specified `cb`[+`cookie`] from the list of registered hooks.
+ *    @return: true:  Hook was removed (when `CONFIG != TPP_HOOK_RT_MANY`, the default
+ *                    hook (`TPP_HOOK_FOO` or its builtin impl) is restored; otherwise,
+ *                    the hook is simply removed from the internal hook-list)
+ *    @return: false: Hook wasn't actually registered (nothing was changed)
+ */
+
 /*[[[deemon
 import HOOKS, unPointerizeHook from .config;
 
@@ -461,16 +489,30 @@ for (local doc, name,
 		print("#endif /" "* tpp_hooks_get_", name.lower(), " *" "/");
 	}
 	print("#if TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK)");
+	if (!builtin_FOO_HOOK)
+		print("#if TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_MANY");
 	if (!hookMustBeFunctionPointer) {
 		if ("cookie" in prototypeArgs)
 			print("#define tpp_lexer_gethookcookie_", name.lower(), "(self) tpp_hooks_getcookie_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self)");
 		print("#define tpp_lexer_gethook_", name.lower(), "(self)    tpp_hooks_get_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks))");
 	}
-	print("#define tpp_lexer_resethook_", name.lower(), "(self)  tpp_hooks_reset_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self)");
-	print("#define tpp_lexer_sethook_", name.lower(), "(self, v) tpp_hooks_set_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self, v)");
+	print("#define tpp_lexer_sethook_", name.lower(), "(self, cb) tpp_hooks_set_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self, cb)");
 	if ("cookie" in prototypeArgs) {
 		print("#if TPP_HAVE_HOOK_COOKIES");
-		print("#define tpp_lexer_sethook_", name.lower(), "_ex(self, v, cookie) tpp_hooks_set_", name.lower(), "_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)");
+		print("#define tpp_lexer_sethook_", name.lower(), "_ex(self, cb, cookie) tpp_hooks_set_", name.lower(), "_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)");
+		print("#endif /" "* TPP_HAVE_HOOK_COOKIES *" "/");
+	}
+	if (!builtin_FOO_HOOK)
+		print("#endif /" "* TPP_HAVE_", name, "_HOOK != TPP_HOOK_RT_MANY *" "/");
+	print("#define tpp_lexer_resethook_", name.lower(), "(self)  tpp_hooks_reset_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self)");
+	print("#define tpp_lexer_addhook_", name.lower(), "(self, cb) tpp_hooks_add_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /" "* See `tpp_lexer_addhook_*()` above *" "/");
+	print("#define tpp_lexer_hashook_", name.lower(), "(self, cb) tpp_hooks_has_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /" "* See `tpp_lexer_hashook_*()` above *" "/");
+	print("#define tpp_lexer_delhook_", name.lower(), "(self, cb) tpp_hooks_del_", name.lower(), "(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /" "* See `tpp_lexer_delhook_*()` above *" "/");
+	if ("cookie" in prototypeArgs) {
+		print("#if TPP_HAVE_HOOK_COOKIES");
+		print("#define tpp_lexer_addhook_", name.lower(), "_ex(self, cb, cookie) tpp_hooks_add_", name.lower(), "_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /" "* See `tpp_lexer_addhook_*_ex()` above *" "/");
+		print("#define tpp_lexer_hashook_", name.lower(), "_ex(self, cb, cookie) tpp_hooks_has_", name.lower(), "_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /" "* See `tpp_lexer_hashook_*_ex()` above *" "/");
+		print("#define tpp_lexer_delhook_", name.lower(), "_ex(self, cb, cookie) tpp_hooks_del_", name.lower(), "_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /" "* See `tpp_lexer_delhook_*_ex()` above *" "/");
 		print("#endif /" "* TPP_HAVE_HOOK_COOKIES *" "/");
 	}
 	print("#endif /" "* TPP_HOOK_ISRT(TPP_HAVE_", name, "_HOOK) *" "/");
@@ -492,10 +534,18 @@ for (local doc, name,
 #define tpp_lexer_gethook_warnprinter(self)       tpp_hooks_get_warnprinter(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_get_warnprinter */
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK)
-#define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_warnprinter(self, v) tpp_hooks_set_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_warnprinter(self, cb) tpp_hooks_set_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_warnprinter_ex(self, v, cookie) tpp_hooks_set_warnprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_warnprinter_ex(self, cb, cookie) tpp_hooks_set_warnprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_lexer_resethook_warnprinter(self)  tpp_hooks_reset_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_warnprinter(self, cb) tpp_hooks_add_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_warnprinter(self, cb) tpp_hooks_has_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_warnprinter(self, cb) tpp_hooks_del_warnprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_warnprinter_ex(self, cb, cookie) tpp_hooks_add_warnprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_warnprinter_ex(self, cb, cookie) tpp_hooks_has_warnprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_warnprinter_ex(self, cb, cookie) tpp_hooks_del_warnprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 
@@ -516,10 +566,18 @@ for (local doc, name,
 #if TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK)
 #define tpp_lexer_gethookcookie_warnhandler(self) tpp_hooks_getcookie_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_warnhandler(self)    tpp_hooks_get_warnhandler(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_warnhandler(self)  tpp_hooks_reset_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_warnhandler(self, v) tpp_hooks_set_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_warnhandler(self, cb) tpp_hooks_set_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_warnhandler_ex(self, v, cookie) tpp_hooks_set_warnhandler_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_warnhandler_ex(self, cb, cookie) tpp_hooks_set_warnhandler_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_lexer_resethook_warnhandler(self)  tpp_hooks_reset_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_warnhandler(self, cb) tpp_hooks_add_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_warnhandler(self, cb) tpp_hooks_has_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_warnhandler(self, cb) tpp_hooks_del_warnhandler(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_warnhandler_ex(self, cb, cookie) tpp_hooks_add_warnhandler_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_warnhandler_ex(self, cb, cookie) tpp_hooks_has_warnhandler_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_warnhandler_ex(self, cb, cookie) tpp_hooks_del_warnhandler_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_WARNHANDLER_HOOK) */
 
@@ -537,10 +595,18 @@ for (local doc, name,
 #define tpp_lexer_gethook_mesgprinter(self)       tpp_hooks_get_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks))
 #endif /* tpp_hooks_get_mesgprinter */
 #if TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK)
-#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_mesgprinter(self, v) tpp_hooks_set_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_mesgprinter(self, cb) tpp_hooks_set_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_mesgprinter_ex(self, v, cookie) tpp_hooks_set_mesgprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_mesgprinter_ex(self, cb, cookie) tpp_hooks_set_mesgprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_lexer_resethook_mesgprinter(self)  tpp_hooks_reset_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_mesgprinter(self, cb) tpp_hooks_add_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_mesgprinter(self, cb) tpp_hooks_has_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_mesgprinter(self, cb) tpp_hooks_del_mesgprinter(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_mesgprinter_ex(self, cb, cookie) tpp_hooks_add_mesgprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_mesgprinter_ex(self, cb, cookie) tpp_hooks_has_mesgprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_mesgprinter_ex(self, cb, cookie) tpp_hooks_del_mesgprinter_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 
@@ -570,10 +636,18 @@ for (local doc, name,
 #if TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK)
 #define tpp_lexer_gethookcookie_parseexpr(self) tpp_hooks_getcookie_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_parseexpr(self)    tpp_hooks_get_parseexpr(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_parseexpr(self, v) tpp_hooks_set_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_parseexpr(self, cb) tpp_hooks_set_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_parseexpr_ex(self, v, cookie) tpp_hooks_set_parseexpr_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_parseexpr_ex(self, cb, cookie) tpp_hooks_set_parseexpr_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_lexer_resethook_parseexpr(self)  tpp_hooks_reset_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_parseexpr(self, cb) tpp_hooks_add_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_parseexpr(self, cb) tpp_hooks_has_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_parseexpr(self, cb) tpp_hooks_del_parseexpr(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_parseexpr_ex(self, cb, cookie) tpp_hooks_add_parseexpr_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_parseexpr_ex(self, cb, cookie) tpp_hooks_has_parseexpr_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_parseexpr_ex(self, cb, cookie) tpp_hooks_del_parseexpr_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_PARSEEXPR_HOOK) */
 
@@ -588,12 +662,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_unknown_pragma(self) \
 	tpp_hooks_call_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self)
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#if TPP_HAVE_UNKNOWN_PRAGMA_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_unknown_pragma(self) tpp_hooks_getcookie_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_unknown_pragma(self)    tpp_hooks_get_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_unknown_pragma(self, v) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_unknown_pragma(self, cb) tpp_hooks_set_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_unknown_pragma_ex(self, v, cookie) tpp_hooks_set_unknown_pragma_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_unknown_pragma_ex(self, cb, cookie) tpp_hooks_set_unknown_pragma_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_UNKNOWN_PRAGMA_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_unknown_pragma(self)  tpp_hooks_reset_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_unknown_pragma(self, cb) tpp_hooks_add_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_unknown_pragma(self, cb) tpp_hooks_has_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_unknown_pragma(self, cb) tpp_hooks_del_unknown_pragma(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_unknown_pragma_ex(self, cb, cookie) tpp_hooks_add_unknown_pragma_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_unknown_pragma_ex(self, cb, cookie) tpp_hooks_has_unknown_pragma_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_unknown_pragma_ex(self, cb, cookie) tpp_hooks_del_unknown_pragma_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
 
@@ -609,12 +693,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_new_dependency(self, filename_kwd) \
 	tpp_hooks_call_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, filename_kwd)
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_new_dependency(self) tpp_hooks_getcookie_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_new_dependency(self)    tpp_hooks_get_new_dependency(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_new_dependency(self, v) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_new_dependency(self, cb) tpp_hooks_set_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_new_dependency_ex(self, v, cookie) tpp_hooks_set_new_dependency_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_new_dependency_ex(self, cb, cookie) tpp_hooks_set_new_dependency_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_new_dependency(self)  tpp_hooks_reset_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_new_dependency(self, cb) tpp_hooks_add_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_new_dependency(self, cb) tpp_hooks_has_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_new_dependency(self, cb) tpp_hooks_del_new_dependency(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_new_dependency_ex(self, cb, cookie) tpp_hooks_add_new_dependency_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_new_dependency_ex(self, cb, cookie) tpp_hooks_has_new_dependency_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_new_dependency_ex(self, cb, cookie) tpp_hooks_del_new_dependency_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
@@ -633,12 +727,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_file_pushed(self) \
 	tpp_hooks_call_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK)
+#if TPP_HAVE_FILE_PUSHED_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_file_pushed(self) tpp_hooks_getcookie_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_file_pushed(self)    tpp_hooks_get_file_pushed(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_file_pushed(self)  tpp_hooks_reset_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_file_pushed(self, v) tpp_hooks_set_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_file_pushed(self, cb) tpp_hooks_set_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_file_pushed_ex(self, v, cookie) tpp_hooks_set_file_pushed_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_file_pushed_ex(self, cb, cookie) tpp_hooks_set_file_pushed_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_FILE_PUSHED_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_file_pushed(self)  tpp_hooks_reset_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_file_pushed(self, cb) tpp_hooks_add_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_file_pushed(self, cb) tpp_hooks_has_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_file_pushed(self, cb) tpp_hooks_del_file_pushed(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_file_pushed_ex(self, cb, cookie) tpp_hooks_add_file_pushed_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_file_pushed_ex(self, cb, cookie) tpp_hooks_has_file_pushed_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_file_pushed_ex(self, cb, cookie) tpp_hooks_del_file_pushed_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_PUSHED_HOOK) */
 
@@ -656,12 +760,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_file_popped(self) \
 	tpp_hooks_call_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
 #if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+#if TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_file_popped(self) tpp_hooks_getcookie_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_file_popped(self)    tpp_hooks_get_file_popped(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_file_popped(self, v) tpp_hooks_set_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_file_popped(self, cb) tpp_hooks_set_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_file_popped_ex(self, v, cookie) tpp_hooks_set_file_popped_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_file_popped_ex(self, cb, cookie) tpp_hooks_set_file_popped_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_file_popped(self)  tpp_hooks_reset_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_file_popped(self, cb) tpp_hooks_add_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_file_popped(self, cb) tpp_hooks_has_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_file_popped(self, cb) tpp_hooks_del_file_popped(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_file_popped_ex(self, cb, cookie) tpp_hooks_add_file_popped_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_file_popped_ex(self, cb, cookie) tpp_hooks_has_file_popped_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_file_popped_ex(self, cb, cookie) tpp_hooks_del_file_popped_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
 
@@ -691,12 +805,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_include_encountered(self, include_kind) \
 	tpp_hooks_call_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, include_kind)
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
+#if TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_include_encountered(self) tpp_hooks_getcookie_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_include_encountered(self)    tpp_hooks_get_include_encountered(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_include_encountered(self)  tpp_hooks_reset_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_include_encountered(self, v) tpp_hooks_set_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_include_encountered(self, cb) tpp_hooks_set_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_include_encountered_ex(self, v, cookie) tpp_hooks_set_include_encountered_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_include_encountered_ex(self, cb, cookie) tpp_hooks_set_include_encountered_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_include_encountered(self)  tpp_hooks_reset_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_include_encountered(self, cb) tpp_hooks_add_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_include_encountered(self, cb) tpp_hooks_has_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_include_encountered(self, cb) tpp_hooks_del_include_encountered(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_include_encountered_ex(self, cb, cookie) tpp_hooks_add_include_encountered_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_include_encountered_ex(self, cb, cookie) tpp_hooks_has_include_encountered_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_include_encountered_ex(self, cb, cookie) tpp_hooks_del_include_encountered_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
 
@@ -722,12 +846,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_include_not_found(self, include_kind) \
 	tpp_hooks_call_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, include_kind)
 #if TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
+#if TPP_HAVE_INCLUDE_NOT_FOUND_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_include_not_found(self) tpp_hooks_getcookie_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_include_not_found(self)    tpp_hooks_get_include_not_found(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_include_not_found(self, v) tpp_hooks_set_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_include_not_found(self, cb) tpp_hooks_set_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_include_not_found_ex(self, v, cookie) tpp_hooks_set_include_not_found_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_include_not_found_ex(self, cb, cookie) tpp_hooks_set_include_not_found_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_INCLUDE_NOT_FOUND_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_include_not_found(self)  tpp_hooks_reset_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_include_not_found(self, cb) tpp_hooks_add_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_include_not_found(self, cb) tpp_hooks_has_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_include_not_found(self, cb) tpp_hooks_del_include_not_found(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_include_not_found_ex(self, cb, cookie) tpp_hooks_add_include_not_found_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_include_not_found_ex(self, cb, cookie) tpp_hooks_has_include_not_found_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_include_not_found_ex(self, cb, cookie) tpp_hooks_del_include_not_found_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 
@@ -749,12 +883,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_macro_defined(self, name, macro) \
 	tpp_hooks_call_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, name, macro)
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK)
+#if TPP_HAVE_MACRO_DEFINED_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_macro_defined(self) tpp_hooks_getcookie_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_macro_defined(self)    tpp_hooks_get_macro_defined(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_macro_defined(self)  tpp_hooks_reset_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_macro_defined(self, v) tpp_hooks_set_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_macro_defined(self, cb) tpp_hooks_set_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_macro_defined_ex(self, v, cookie) tpp_hooks_set_macro_defined_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_macro_defined_ex(self, cb, cookie) tpp_hooks_set_macro_defined_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_MACRO_DEFINED_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_macro_defined(self)  tpp_hooks_reset_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_macro_defined(self, cb) tpp_hooks_add_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_macro_defined(self, cb) tpp_hooks_has_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_macro_defined(self, cb) tpp_hooks_del_macro_defined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_macro_defined_ex(self, cb, cookie) tpp_hooks_add_macro_defined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_macro_defined_ex(self, cb, cookie) tpp_hooks_has_macro_defined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_macro_defined_ex(self, cb, cookie) tpp_hooks_del_macro_defined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) */
 
@@ -780,12 +924,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_macro_undefined(self, name) \
 	tpp_hooks_call_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, name)
 #if TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)
+#if TPP_HAVE_MACRO_UNDEFINED_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_macro_undefined(self) tpp_hooks_getcookie_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_macro_undefined(self)    tpp_hooks_get_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_macro_undefined(self)  tpp_hooks_reset_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_macro_undefined(self, v) tpp_hooks_set_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_macro_undefined(self, cb) tpp_hooks_set_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_macro_undefined_ex(self, v, cookie) tpp_hooks_set_macro_undefined_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_macro_undefined_ex(self, cb, cookie) tpp_hooks_set_macro_undefined_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_MACRO_UNDEFINED_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_macro_undefined(self)  tpp_hooks_reset_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_macro_undefined(self, cb) tpp_hooks_add_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_macro_undefined(self, cb) tpp_hooks_has_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_macro_undefined(self, cb) tpp_hooks_del_macro_undefined(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_macro_undefined_ex(self, cb, cookie) tpp_hooks_add_macro_undefined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_macro_undefined_ex(self, cb, cookie) tpp_hooks_has_macro_undefined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_macro_undefined_ex(self, cb, cookie) tpp_hooks_del_macro_undefined_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 
@@ -806,12 +960,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_ident_sccs(self, mode, chunk, comment_str, comment_len) \
 	tpp_hooks_call_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, mode, chunk, comment_str, comment_len)
 #if TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK)
+#if TPP_HAVE_IDENT_SCCS_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_ident_sccs(self) tpp_hooks_getcookie_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_ident_sccs(self)    tpp_hooks_get_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_ident_sccs(self, v) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_ident_sccs(self, cb) tpp_hooks_set_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_ident_sccs_ex(self, v, cookie) tpp_hooks_set_ident_sccs_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_ident_sccs_ex(self, cb, cookie) tpp_hooks_set_ident_sccs_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_IDENT_SCCS_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_ident_sccs(self)  tpp_hooks_reset_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_ident_sccs(self, cb) tpp_hooks_add_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_ident_sccs(self, cb) tpp_hooks_has_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_ident_sccs(self, cb) tpp_hooks_del_ident_sccs(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_ident_sccs_ex(self, cb, cookie) tpp_hooks_add_ident_sccs_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_ident_sccs_ex(self, cb, cookie) tpp_hooks_has_ident_sccs_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_ident_sccs_ex(self, cb, cookie) tpp_hooks_del_ident_sccs_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_IDENT_SCCS_HOOK) */
 
@@ -832,12 +996,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_system_include_path(self, mode, when, cb, arg) \
 	tpp_hooks_call_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK)
+#if TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_system_include_path(self) tpp_hooks_getcookie_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_system_include_path(self)    tpp_hooks_get_system_include_path(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_system_include_path(self, v) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_system_include_path(self, cb) tpp_hooks_set_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_system_include_path_ex(self, v, cookie) tpp_hooks_set_system_include_path_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_system_include_path_ex(self, cb, cookie) tpp_hooks_set_system_include_path_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_system_include_path(self)  tpp_hooks_reset_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_system_include_path(self, cb) tpp_hooks_add_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_system_include_path(self, cb) tpp_hooks_has_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_system_include_path(self, cb) tpp_hooks_del_system_include_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_system_include_path_ex(self, cb, cookie) tpp_hooks_add_system_include_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_system_include_path_ex(self, cb, cookie) tpp_hooks_has_system_include_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_system_include_path_ex(self, cb, cookie) tpp_hooks_del_system_include_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_INCLUDE_PATH_HOOK) */
 
@@ -855,12 +1029,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_system_embed_path(self, mode, when, cb, arg) \
 	tpp_hooks_call_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, mode, when, cb, arg)
 #if TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK)
+#if TPP_HAVE_SYSTEM_EMBED_PATH_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_system_embed_path(self) tpp_hooks_getcookie_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_system_embed_path(self)    tpp_hooks_get_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_system_embed_path(self, v) tpp_hooks_set_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_system_embed_path(self, cb) tpp_hooks_set_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_system_embed_path_ex(self, v, cookie) tpp_hooks_set_system_embed_path_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_system_embed_path_ex(self, cb, cookie) tpp_hooks_set_system_embed_path_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_SYSTEM_EMBED_PATH_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_system_embed_path(self)  tpp_hooks_reset_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_system_embed_path(self, cb) tpp_hooks_add_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_system_embed_path(self, cb) tpp_hooks_has_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_system_embed_path(self, cb) tpp_hooks_del_system_embed_path(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_system_embed_path_ex(self, cb, cookie) tpp_hooks_add_system_embed_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_system_embed_path_ex(self, cb, cookie) tpp_hooks_has_system_embed_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_system_embed_path_ex(self, cb, cookie) tpp_hooks_del_system_embed_path_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_SYSTEM_EMBED_PATH_HOOK) */
 
@@ -888,12 +1072,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_unknown_string_escape(self, p_pos, end, config) \
 	tpp_hooks_call_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, p_pos, end, config)
 #if TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK)
+#if TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_unknown_string_escape(self) tpp_hooks_getcookie_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_unknown_string_escape(self)    tpp_hooks_get_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_unknown_string_escape(self, v) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_unknown_string_escape(self, cb) tpp_hooks_set_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_unknown_string_escape_ex(self, v, cookie) tpp_hooks_set_unknown_string_escape_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_unknown_string_escape_ex(self, cb, cookie) tpp_hooks_set_unknown_string_escape_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_unknown_string_escape(self)  tpp_hooks_reset_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_unknown_string_escape(self, cb) tpp_hooks_add_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_unknown_string_escape(self, cb) tpp_hooks_has_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_unknown_string_escape(self, cb) tpp_hooks_del_unknown_string_escape(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_unknown_string_escape_ex(self, cb, cookie) tpp_hooks_add_unknown_string_escape_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_unknown_string_escape_ex(self, cb, cookie) tpp_hooks_has_unknown_string_escape_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_unknown_string_escape_ex(self, cb, cookie) tpp_hooks_del_unknown_string_escape_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_UNKNOWN_STRING_ESCAPE_HOOK) */
 
@@ -909,12 +1103,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_raise_lexerror(self) \
 	tpp_hooks_call_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
 #if TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK)
+#if TPP_HAVE_RAISE_LEXERROR_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_raise_lexerror(self) tpp_hooks_getcookie_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_raise_lexerror(self)    tpp_hooks_get_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_raise_lexerror(self, v) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_raise_lexerror(self, cb) tpp_hooks_set_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_raise_lexerror_ex(self, v, cookie) tpp_hooks_set_raise_lexerror_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_raise_lexerror_ex(self, cb, cookie) tpp_hooks_set_raise_lexerror_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_raise_lexerror(self)  tpp_hooks_reset_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_raise_lexerror(self, cb) tpp_hooks_add_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_raise_lexerror(self, cb) tpp_hooks_has_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_raise_lexerror(self, cb) tpp_hooks_del_raise_lexerror(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_raise_lexerror_ex(self, cb, cookie) tpp_hooks_add_raise_lexerror_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_raise_lexerror_ex(self, cb, cookie) tpp_hooks_has_raise_lexerror_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_raise_lexerror_ex(self, cb, cookie) tpp_hooks_del_raise_lexerror_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_RAISE_LEXERROR_HOOK) */
 
@@ -934,12 +1138,22 @@ for (local doc, name,
 #define tpp_lexer_callhook_isfloatsuffix(self, pos) \
 	tpp_hooks_call_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, pos)
 #if TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK)
+#if TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_RT_MANY
 #define tpp_lexer_gethookcookie_isfloatsuffix(self) tpp_hooks_getcookie_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self)
 #define tpp_lexer_gethook_isfloatsuffix(self)    tpp_hooks_get_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks))
-#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self)
-#define tpp_lexer_sethook_isfloatsuffix(self, v) tpp_hooks_set_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, v)
+#define tpp_lexer_sethook_isfloatsuffix(self, cb) tpp_hooks_set_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, cb)
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_lexer_sethook_isfloatsuffix_ex(self, v, cookie) tpp_hooks_set_isfloatsuffix_ex(&(self)->TPP_INTERNAL(tl_hooks), v, cookie)
+#define tpp_lexer_sethook_isfloatsuffix_ex(self, cb, cookie) tpp_hooks_set_isfloatsuffix_ex(&(self)->TPP_INTERNAL(tl_hooks), cb, cookie)
+#endif /* TPP_HAVE_HOOK_COOKIES */
+#endif /* TPP_HAVE_ISFLOATSUFFIX_HOOK != TPP_HOOK_RT_MANY */
+#define tpp_lexer_resethook_isfloatsuffix(self)  tpp_hooks_reset_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self)
+#define tpp_lexer_addhook_isfloatsuffix(self, cb) tpp_hooks_add_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_addhook_*()` above */
+#define tpp_lexer_hashook_isfloatsuffix(self, cb) tpp_hooks_has_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_hashook_*()` above */
+#define tpp_lexer_delhook_isfloatsuffix(self, cb) tpp_hooks_del_isfloatsuffix(&(self)->TPP_INTERNAL(tl_hooks), self, cb) /* See `tpp_lexer_delhook_*()` above */
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_lexer_addhook_isfloatsuffix_ex(self, cb, cookie) tpp_hooks_add_isfloatsuffix_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_addhook_*_ex()` above */
+#define tpp_lexer_hashook_isfloatsuffix_ex(self, cb, cookie) tpp_hooks_has_isfloatsuffix_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_hashook_*_ex()` above */
+#define tpp_lexer_delhook_isfloatsuffix_ex(self, cb, cookie) tpp_hooks_del_isfloatsuffix_ex(&(self)->TPP_INTERNAL(tl_hooks), self, cb, cookie) /* See `tpp_lexer_delhook_*_ex()` above */
 #endif /* TPP_HAVE_HOOK_COOKIES */
 #endif /* TPP_HOOK_ISRT(TPP_HAVE_ISFLOATSUFFIX_HOOK) */
 /*[[[end]]]*/

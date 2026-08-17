@@ -216,9 +216,11 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_CONF_ISRT(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 #if TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE)
 #define tpp_lexer_seekpp_rparen_magic_whitespace() (flags & TPP_LEXER_SEEK_RPAREN_FLAG_MAGIC_WHITESPACE)
-#else /* TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
-#define tpp_lexer_seekpp_rparen_magic_whitespace() (TPP_HAVE_MAGIC_WHITESPACE != 0)
-#endif /* !TPP_CONF_ISRT(TPP_HAVE_MAGIC_WHITESPACE) */
+#elif TPP_HAVE_MAGIC_WHITESPACE
+#define tpp_lexer_seekpp_rparen_magic_whitespace() 1
+#else /* ... */
+#define tpp_lexer_seekpp_rparen_magic_whitespace() 0
+#endif /* !... */
 	tpp_size const argv_bufsize = *p_argc;
 	tpp_size argc = 0;
 	tpp_file *const file = tpp_lexer_getfile(self);

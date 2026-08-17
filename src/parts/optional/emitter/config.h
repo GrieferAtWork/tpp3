@@ -332,6 +332,15 @@
 #define TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY (TPP_EMITTER_HAVE_USE_CPP_DIGIT ? TPP_CONF_FEAT0 : 0)
 #endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
 
+#if !TPP_EMITTER_HAVE_USE_CPP_DIGIT && !TPP_IGNORE_INVALID_CONFIGURATION
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#error "Config 'TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS' being enabled doesn't make sense when '-DTPP_EMITTER_HAVE_USE_CPP_DIGIT=0'"
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
+#error "Config 'TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY' being enabled doesn't make sense when '-DTPP_EMITTER_HAVE_USE_CPP_DIGIT=0'"
+#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY */
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT && !TPP_IGNORE_INVALID_CONFIGURATION */
+
 /* Enable support for re-emission of unknown pragmas. Requires that the TPP core
  * is configured to allow runtime override of its `TPP_HAVE_UNKNOWN_PRAGMA_HOOK`
  * hook (since the emitter needs to be able to override that hook during its

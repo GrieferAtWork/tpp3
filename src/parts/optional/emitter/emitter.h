@@ -191,14 +191,16 @@ typedef struct tpp_emitter {
  * (before `tpp_lexer_fini()` is called) a given emitter.
  *
  * @param: output: Output printer. On error, must return one of `TPP_SSIZE_OFERR(*)`
- * @param: lexer:  The lexer whose tokens are being emitted */
+ * @param: lexer:  The lexer whose tokens are being emitted
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
-TPP_DECL TPP_NONNULL((1, 2, 3)) void TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_init(tpp_emitter *tpp_restrict self,
                  tpp_lexer *tpp_restrict lexer,
                  tpp_formatprinter output);
 #else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_emitter_init(tpp_emitter *tpp_restrict self,
                   tpp_formatprinter output);
 #define tpp_emitter_init(self, lexer, output)           \
@@ -216,7 +218,7 @@ tpp_emitter_fini(tpp_emitter *tpp_restrict self);
 #else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 #ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #if !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Invalid configuration: under '-DTPP_HAVE_HOOK_COOKIES=0' you must specify a macro '#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER (offsetof(MY_CONTAINER, emitter) - offsetof(MY_CONTAINER, lexer))' to specify how to retrieve the emitter from a lexer"
+#error "Invalid configuration: under '-DTPP_HAVE_HOOK_COOKIES=0' you must specify a macro '#define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER (tpp_offsetof(MY_CONTAINER, emitter) - tpp_offsetof(MY_CONTAINER, lexer))' to specify how to retrieve the emitter from a lexer"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER sizeof(tpp_lexer)
 #endif /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
@@ -263,44 +265,28 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self);
 /* API support for (re-)emission of unknown `#pragma` directives */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_emitter_enable_reemit_unknown_pragma(self) \
-	tpp_lexer_sethook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
+#define tpp_emitter_enable_reemit_unknown_pragma(self)  tpp_lexer_addhook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
+#define tpp_emitter_disable_reemit_unknown_pragma(self) (void)tpp_lexer_delhook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
+#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
 #else /* TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_enable_reemit_unknown_pragma(self) \
-	tpp_lexer_sethook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
+#define tpp_emitter_enable_reemit_unknown_pragma(self)  tpp_lexer_addhook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
+#define tpp_emitter_disable_reemit_unknown_pragma(self) (void)tpp_lexer_delhook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
+#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
 #endif /* !TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_disable_reemit_unknown_pragma(self) \
-	tpp_lexer_resethook_unknown_pragma(tpp_emitter_getlexer(self))
-#define tpp_emitter_get_reemit_unknown_pragma(self) \
-	(tpp_lexer_gethook_unknown_pragma(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_unknown_pragma)
 #define tpp_emitter_set_reemit_unknown_pragma(self, v)    \
 	((v) ? tpp_emitter_enable_reemit_unknown_pragma(self) \
-	     : tpp_emitter_disable_reemit_unknown_pragma(self))
+	     : (tpp_emitter_disable_reemit_unknown_pragma(self), TPP_EOK))
 
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_unknown_pragma(tpp_hook_cookie cookie);
-#endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+#else /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+#define tpp_emitter_disable_reemit_unknown_pragma(self) (void)0
+#define tpp_emitter_get_reemit_unknown_pragma(self)     false
+#endif /* !TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA */
+
 
 /* API support for (re-)emission of `#define` and `#undef` directives */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-#if TPP_HAVE_HOOK_COOKIES
-#define tpp_emitter_enable_reemit_macro_definitions(self)                                                    \
-	(tpp_lexer_sethook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self), \
-	 tpp_lexer_sethook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self))
-#else /* TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_enable_reemit_macro_definitions(self)                                           \
-	(tpp_lexer_sethook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined), \
-	 tpp_lexer_sethook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined))
-#endif /* !TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_disable_reemit_macro_definitions(self)          \
-	(tpp_lexer_resethook_macro_defined(tpp_emitter_getlexer(self)), \
-	 tpp_lexer_resethook_macro_undefined(tpp_emitter_getlexer(self)))
-#define tpp_emitter_get_reemit_macro_definitions(self) \
-	(tpp_lexer_gethook_macro_defined(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_macro_defined)
-#define tpp_emitter_set_reemit_macro_definitions(self, v)    \
-	((v) ? tpp_emitter_enable_reemit_macro_definitions(self) \
-	     : tpp_emitter_disable_reemit_macro_definitions(self))
-
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_emitter_hook_macro_defined(tpp_hook_cookie cookie,
                                 tpp_keyword *tpp_restrict name,
@@ -308,29 +294,53 @@ _tpp_emitter_hook_macro_defined(tpp_hook_cookie cookie,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_emitter_hook_macro_undefined(tpp_hook_cookie cookie,
                                   tpp_keyword *tpp_restrict name);
-#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_reemit_macro_definitions(tpp_emitter *tpp_restrict self);
+#if TPP_HAVE_HOOK_COOKIES
+#define tpp_emitter_disable_reemit_macro_definitions(self)                                                         \
+	(void)(tpp_lexer_delhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self), \
+	       tpp_lexer_delhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self))
+#define tpp_emitter_get_reemit_macro_definitions(self) \
+	tpp_lexer_hashook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self)
+#else /* TPP_HAVE_HOOK_COOKIES */
+#define tpp_emitter_disable_reemit_macro_definitions(self)                                                \
+	(void)(tpp_lexer_delhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined), \
+	       tpp_lexer_delhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined))
+#define tpp_emitter_get_reemit_macro_definitions(self) \
+	tpp_lexer_hashook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined)
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+#define tpp_emitter_set_reemit_macro_definitions(self, v)    \
+	((v) ? tpp_emitter_enable_reemit_macro_definitions(self) \
+	     : (tpp_emitter_disable_reemit_macro_definitions(self), TPP_EOK))
+#else /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+#define tpp_emitter_disable_reemit_macro_definitions(self) (void)0
+#define tpp_emitter_get_reemit_macro_definitions(self)     false
+#endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
 
 /* API support for (re-)emission of `#include` (and friends) directives */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
 #if TPP_HAVE_HOOK_COOKIES
-#define tpp_emitter_enable_reemit_include_directives(self) \
-	tpp_lexer_sethook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
+#define tpp_emitter_enable_reemit_include_directives(self)  tpp_lexer_addhook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
+#define tpp_emitter_disable_reemit_include_directives(self) (void)tpp_lexer_delhook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
+#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
 #else /* TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_enable_reemit_include_directives(self) \
-	tpp_lexer_sethook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
+#define tpp_emitter_enable_reemit_include_directives(self)  tpp_lexer_addhook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
+#define tpp_emitter_disable_reemit_include_directives(self) (void)tpp_lexer_delhook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
+#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
 #endif /* !TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_disable_reemit_include_directives(self) \
-	tpp_lexer_resethook_include_encountered(tpp_emitter_getlexer(self))
-#define tpp_emitter_get_reemit_include_directives(self) \
-	(tpp_lexer_gethook_include_encountered(tpp_emitter_getlexer(self)) == &_tpp_emitter_hook_include_encountered)
 #define tpp_emitter_set_reemit_include_directives(self, v)    \
 	((v) ? tpp_emitter_enable_reemit_include_directives(self) \
-	     : tpp_emitter_disable_reemit_include_directives(self))
+	     : (tpp_emitter_disable_reemit_include_directives(self), TPP_EOK))
 
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_include_encountered(tpp_hook_cookie cookie,
                                       tpp_hook_include_kind include_kind);
-#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
+#else /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
+#define tpp_emitter_disable_reemit_include_directives(self) (void)0
+#define tpp_emitter_get_reemit_include_directives(self)     false
+#endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
+
 
 #undef TPP_EMITTER_HAVE_HOOK_FILE_PUSHED
 #if (TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || \
@@ -344,11 +354,11 @@ _tpp_emitter_hook_include_encountered(tpp_hook_cookie cookie,
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie);
 #if TPP_HAVE_HOOK_COOKIES
-#define _tpp_emitter_enable_file_pushed_hook(self) \
-	tpp_lexer_sethook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
+#define _tpp_emitter_enable_file_pushed_hook(self)  tpp_lexer_addhook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
+#define _tpp_emitter_disable_file_pushed_hook(self) tpp_lexer_delhook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
 #else /* TPP_HAVE_HOOK_COOKIES */
-#define _tpp_emitter_enable_file_pushed_hook(self) \
-	tpp_lexer_sethook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
+#define _tpp_emitter_enable_file_pushed_hook(self)  tpp_lexer_addhook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
+#define _tpp_emitter_disable_file_pushed_hook(self) tpp_lexer_delhook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
 #endif /* !TPP_HAVE_HOOK_COOKIES */
 #if ((!TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY || TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)) && \
      (!TPP_EMITTER_HAVE_TRACE_INCLUDES || TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)) && \
@@ -363,81 +373,90 @@ _tpp_emitter_hook_file_pushed(tpp_hook_cookie cookie);
 #else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 #define _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self) /* nothing */
 #endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
-#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) && TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+#define _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self) && (!tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT) || !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS))
+#elif TPP_EMITTER_HAVE_USE_CPP_DIGIT
 #define _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self) && !tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS)
-#else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#else /* ... */
 #define _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self) /* nothing */
-#endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
-#define _tpp_emitter_candisable_file_pushed_hook(self)                              \
-	(1 _tpp_emitter_candisable_file_pushed_hook_REEMIT_MACRO_DEFINITIONS_LAZY(self) \
-	   _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self)                \
-	   _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self))
-#define _tpp_emitter_disable_file_pushed_hook(self)                \
-	(_tpp_emitter_candisable_file_pushed_hook(self)                \
-	 ? tpp_lexer_resethook_file_pushed(tpp_emitter_getlexer(self)) \
+#endif /* !... */
+#define _tpp_emitter_candisable_file_pushed_hook(self)                                 \
+	(true _tpp_emitter_candisable_file_pushed_hook_REEMIT_MACRO_DEFINITIONS_LAZY(self) \
+	      _tpp_emitter_candisable_file_pushed_hook_TRACE_INCLUDES(self)                \
+	      _tpp_emitter_candisable_file_pushed_hook_USE_CPP_DIGIT_FLAGS(self))
+#define _tpp_emitter_maybe_disable_file_pushed_hook(self) \
+	(_tpp_emitter_candisable_file_pushed_hook(self)       \
+	 ? _tpp_emitter_disable_file_pushed_hook(self)        \
 	 : (void)0)
 #else /* ... */
-#define _tpp_emitter_disable_file_pushed_hook(self) (void)0
+#define _tpp_emitter_maybe_disable_file_pushed_hook(self) (void)0
 #endif /* !... */
-#endif /* TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+#else /* TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+#define _tpp_emitter_disable_file_pushed_hook(self)       (void)0
+#define _tpp_emitter_maybe_disable_file_pushed_hook(self) (void)0
+#define _tpp_emitter_candisable_file_pushed_hook(self)    true
+#endif /* !TPP_EMITTER_HAVE_HOOK_FILE_PUSHED */
+
 
 /* Extension to `TPP_EMITTER_HAVE_USE_CPP_DIGIT`: also use 1/2/3/4 flags */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
+#if TPP_HAVE_HOOK_COOKIES
+#define _tpp_emitter_enable_file_popped_hook(self)  tpp_lexer_addhook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
+#define _tpp_emitter_disable_file_popped_hook(self) tpp_lexer_delhook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
+#else /* TPP_HAVE_HOOK_COOKIES */
+#define _tpp_emitter_enable_file_popped_hook(self)  tpp_lexer_addhook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
+#define _tpp_emitter_disable_file_popped_hook(self) tpp_lexer_delhook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
+#endif /* !TPP_HAVE_HOOK_COOKIES */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie);
-#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-#if TPP_HAVE_HOOK_COOKIES
-#define _tpp_emitter_enable_file_popped_hook(self) \
-	tpp_lexer_sethook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
-#else /* TPP_HAVE_HOOK_COOKIES */
-#define _tpp_emitter_enable_file_popped_hook(self) \
-	 tpp_lexer_sethook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
-#endif /* !TPP_HAVE_HOOK_COOKIES */
-#define tpp_emitter_enable_use_cpp_digit_flags(self)                        \
-	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
-	 _tpp_emitter_enable_file_pushed_hook(self),                            \
-	 _tpp_emitter_enable_file_popped_hook(self))
-#define tpp_emitter_disable_use_cpp_digit_flags(self)                        \
-	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
-	 _tpp_emitter_disable_file_pushed_hook(self),                            \
-	 tpp_lexer_resethook_file_popped(tpp_emitter_getlexer(self)))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_use_cpp_digit_flags(tpp_emitter *tpp_restrict self);
+#define tpp_emitter_disable_use_cpp_digit_flags(self)                              \
+	(void)(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS), \
+	       _tpp_emitter_maybe_disable_file_pushed_hook(self),                      \
+	       _tpp_emitter_disable_file_popped_hook(self))
 #define tpp_emitter_get_use_cpp_digit_flags(self) \
 	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS)
 #define tpp_emitter_set_use_cpp_digit_flags(self, v)    \
 	((v) ? tpp_emitter_enable_use_cpp_digit_flags(self) \
-	     : tpp_emitter_disable_use_cpp_digit_flags(self))
+	     : (tpp_emitter_disable_use_cpp_digit_flags(self), TPP_EOK))
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#define _tpp_emitter_disable_file_popped_hook(self) (void)0
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
 
 /* API support for *lazy* (re-)emission of `#define` and `#undef` directives */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
-#define tpp_emitter_enable_reemit_macro_definitions_lazy(self)                        \
-	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
-	 _tpp_emitter_enable_file_pushed_hook(self))
-#define tpp_emitter_disable_reemit_macro_definitions_lazy(self)                        \
-	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
-	 _tpp_emitter_disable_file_pushed_hook(self))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_reemit_macro_definitions_lazy(tpp_emitter *tpp_restrict self);
+#define tpp_emitter_disable_reemit_macro_definitions_lazy(self)                              \
+	(void)(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY), \
+	       _tpp_emitter_maybe_disable_file_pushed_hook(self))
 #define tpp_emitter_get_reemit_macro_definitions_lazy(self) \
 	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY)
 #define tpp_emitter_set_reemit_macro_definitions_lazy(self, v)    \
 	((v) ? tpp_emitter_enable_reemit_macro_definitions_lazy(self) \
-	     : tpp_emitter_disable_reemit_macro_definitions_lazy(self))
+	     : (tpp_emitter_disable_reemit_macro_definitions_lazy(self), TPP_EOK))
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+
 
 /* API support for tracing of #incude-depth and files */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
-#define tpp_emitter_enable_trace_includes(self)                        \
-	(tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
-	 _tpp_emitter_enable_file_pushed_hook(self))
-#define tpp_emitter_disable_trace_includes(self)                        \
-	(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
-	 _tpp_emitter_disable_file_pushed_hook(self))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_trace_includes(tpp_emitter *tpp_restrict self);
+#define tpp_emitter_disable_trace_includes(self)                              \
+	(void)(tpp_emitter_disablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES), \
+	       _tpp_emitter_maybe_disable_file_pushed_hook(self))
 #define tpp_emitter_get_trace_includes(self) \
 	tpp_emitter_getfeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES)
 #define tpp_emitter_set_trace_includes(self, v)    \
 	((v) ? tpp_emitter_enable_trace_includes(self) \
-	     : tpp_emitter_disable_trace_includes(self))
+	     : (tpp_emitter_disable_trace_includes(self), TPP_EOK))
 #endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

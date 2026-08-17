@@ -65,14 +65,14 @@ Used to implement `-MG` (aka. `--print-missing-file-dependencies`).
 
 When enabled, the following APIs become available:
 
-- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L862)
-- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L873)
-- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L856)
+- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L850)
+- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L852)
+- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L851)
 - [`tpp_makefile_set_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L858)
 
 Note that even when this is enabled, printing of missing file
 dependencies is disabled by default (enable it by making a
-call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L862)).
+call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L850)).
 
 Configure as one of:
 
@@ -217,7 +217,7 @@ Default:
 
 ## TPP_MAKEFILE_HAVE_CLI
 
-Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L930)
+Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L916)
 
 Configure as one of:
 
@@ -408,7 +408,7 @@ TPP_MAKEFILE_HAVE_CLI
 
 `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
 output filename (unless specified by `-MF FILE`) based on the `output_filename`
-argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1135) or `__FILE__`:
+argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1121) or `__FILE__`:
 
 - If `output_filename` is given, then the makefile output is
   `output_filename.rpartition(".").first + ".d"` (unless that
@@ -473,12 +473,12 @@ TPP_MAKEFILE_HAVE_CLI && TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_PHONY)
 Controls whether [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m)
 and [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) will cause the
 lexer's entire input to be consumed during a call
-to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1135).
+to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1121).
 
 s.a.:
 
-- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1037)
-- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1039)
+- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1023)
+- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1025)
 
 Configure as one of:
 

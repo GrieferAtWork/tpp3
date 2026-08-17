@@ -254,6 +254,11 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	tpp_features_fini(&self->tl_feat);
 #endif /* TPP_HAVE_FEATURES */
 
+	/* Finalize hooks */
+#if TPP_HAVE_HOOKS
+	tpp_hooks_fini(&self->tl_hooks);
+#endif /* TPP_HAVE_HOOKS */
+
 	/* Finalize warning states */
 #if TPP_HAVE_WARNINGS
 	tpp_warnings_fini(&self->tl_warn);
@@ -742,11 +747,11 @@ tpp_lexer_manualpopfile_callhook(tpp_lexer *tpp_restrict self,
 	saved_tprev = lexer_file->tf_tprev;
 	lexer_file->tf_prev  = file_to_pop;
 	lexer_file->tf_tprev = file_to_pop;
-#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK)
+#if TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY
 	(*self->tl_hooks.th_file_popped)(self);
-#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+#else /* TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) && TPP_HAVE_FILE_POPPED_HOOK != TPP_HOOK_RT_MANY */
 	tpp_lexer_callhook_file_popped(self);
-#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) */
+#endif /* !TPP_HOOK_ISRT(TPP_HAVE_FILE_POPPED_HOOK) || TPP_HAVE_FILE_POPPED_HOOK == TPP_HOOK_RT_MANY */
 	lexer_file->tf_prev  = saved_prev;
 	lexer_file->tf_tprev = saved_tprev;
 	tpp_swapmem(lexer_file, file_to_pop, sizeof(tpp_file));

@@ -33,6 +33,7 @@
     <ClCompile Include="..\src\parts\features.c" />
     <ClCompile Include="..\src\parts\file-io.c" />
     <ClCompile Include="..\src\parts\file.c" />
+    <ClCompile Include="..\src\parts\hooks.c" />
     <ClCompile Include="..\src\parts\keyword.c" />
     <ClCompile Include="..\src\parts\lexer-decodeint.c" />
     <ClCompile Include="..\src\parts\lexer-decodestring.c" />

@@ -203,14 +203,12 @@ tpp_emitter_cli_enable_no_line_commands(tpp_emitter_cli_loader *tpp_restrict sel
 
 
 #if TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_emitter_cli_enable_trace_includes(tpp_emitter_cli_loader *tpp_restrict self) {
-	(void)self;
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
-	tpp_emitter_enable_trace_includes(self->temcl_emitter);
-#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_NOLINE) */
-	return TPP_EOK;
-}
+#define tpp_emitter_cli_enable_trace_includes(self) \
+	tpp_emitter_enable_trace_includes((self)->temcl_emitter)
+#else /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#define tpp_emitter_cli_enable_trace_includes(self) TPP_EOK
+#endif /* !TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES */
 
 
@@ -219,13 +217,17 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_M(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
-	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
-
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+	{
+		tpp_errno error = tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+	/* Set flag to dump definitions of builtin/predefined macros later. */
+	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	/* Set emitter mode to "TPP_EMITTER_MODE_DISPOSE" */
 #if TPP_EMITTER_HAVE_MODE_DISPOSE
@@ -242,13 +244,17 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_D(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
-	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
-
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+	{
+		tpp_errno error = tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+	/* Set flag to dump definitions of builtin/predefined macros later. */
+	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	return TPP_EOK;
 }
@@ -260,13 +266,17 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_N(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
-	/* Set flag to dump definitions of builtin/predefined macros later. */
-	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
-
 	/* Turn on re-emission of additional macros */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS
-	tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+	{
+		tpp_errno error = tpp_emitter_enable_reemit_macro_definitions(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
+
+	/* Set flag to dump definitions of builtin/predefined macros later. */
+	self->temcl_flags |= _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M;
 
 	/* *only* print the name of macros in `#define` directives */
 #if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
@@ -285,7 +295,11 @@ tpp_emitter_cli_enable_dump_I(tpp_emitter_cli_loader *tpp_restrict self) {
 
 	/* Turn on re-emission of #include-directives */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
-	tpp_emitter_enable_reemit_include_directives(self->temcl_emitter);
+	{
+		tpp_errno error = tpp_emitter_enable_reemit_include_directives(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 	return TPP_EOK;
@@ -298,9 +312,13 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_enable_dump_U(tpp_emitter_cli_loader *tpp_restrict self) {
 	(void)self;
 
-	/* Turn on re-emission of #include-directives */
+	/* Turn on lazy re-emission of #define-directives */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY
-	tpp_emitter_enable_reemit_macro_definitions_lazy(self->temcl_emitter);
+	{
+		tpp_errno error = tpp_emitter_enable_reemit_macro_definitions_lazy(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY */
 
 	return TPP_EOK;
@@ -573,8 +591,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN */
 #if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
 			if (tpp_streq(arg, "reemit-unknown-pragma\0")) {
-				tpp_emitter_set_reemit_unknown_pragma(self->temcl_emitter, !no);
-				return TPP_EOK;
+				return tpp_emitter_set_reemit_unknown_pragma(self->temcl_emitter, !no);
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 #if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
@@ -591,8 +608,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT */
 #if TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS
 			if (tpp_streq(arg, "use-cpp-digit-flags\0")) {
-				tpp_emitter_setfeature(self->temcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS, !no);
-				return TPP_EOK;
+				return tpp_emitter_set_use_cpp_digit_flags(self->temcl_emitter, !no);
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS */
 #if TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD

@@ -3169,12 +3169,7 @@ print("#endif /" "* !... *" "/");
 #define TPP_HOOK_RT_USER       (-1) /* Hook is per-lexer configurable; defaults to user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
 #define TPP_HOOK_RT_BUILTIN    (-2) /* Hook is per-lexer configurable; defaults to builtin implementation (or no-op if there is no builtin) */
 #define TPP_HOOK_RT_NOOP       (-3) /* Hook is per-lexer configurable; defaults to no-op implementation */
-/* TODO: `TPP_HOOK_RT_MANY` -- Instead of having a sethook-function, have `addhook` and `delhook` functions
- *       Additionally, if a macro `TPP_HOOK_FOO` is defined, that hook will *always* be called before the
- *       set of dynamically registered hooks (the `TPP_HOOK_FOO` is hard-coded and not part of the list of
- *       dynamic hooks) */
-/* TODO: When `TPP_HAVE_PROFILE_ALL` is enabled, `TPP_HOOK_RT_MANY` should be used by default -- the
- *       other `TPP_HOOK_RT_*` modes should be used by default if `TPP_HAVE_PROFILE_NOT_MINIMAL`. */
+#define TPP_HOOK_RT_MANY       (-4) /* Hook allows for many callbacks to be registered (only works for hooks w/o builtin impls) if `TPP_HOOK_FOO` is also defined, that one's hard-coded */
 
 #define TPP_HOOK_USESBUILTIN(x) ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN)
 #define TPP_HOOK_USESUSER(x)    ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER)
@@ -3191,6 +3186,8 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HOOK_DEFAULT_BUILTIN */
 #ifndef TPP_HOOK_DEFAULT_USER
 #if TPP_HAVE_PROFILE_ALL
+#define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_MANY
+#elif TPP_HAVE_PROFILE_NOT_MINIMAL
 #define TPP_HOOK_DEFAULT_USER TPP_HOOK_RT_USER
 #else /* ... */
 #define TPP_HOOK_DEFAULT_USER TPP_HOOK_CONST_USER
@@ -3198,6 +3195,8 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HOOK_DEFAULT_USER */
 #ifndef TPP_HOOK_DEFAULT_NOOP
 #if TPP_HAVE_PROFILE_ALL
+#define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_MANY
+#elif TPP_HAVE_PROFILE_NOT_MINIMAL
 #define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_RT_NOOP
 #else /* ... */
 #define TPP_HOOK_DEFAULT_NOOP TPP_HOOK_DISABLED
@@ -3623,7 +3622,18 @@ for (local doc, name,
 	print("#endif /" "* !TPP_IGNORE_INVALID_CONFIGURATION *" "/");
 	print("#undef TPP_HAVE_", name, "_HOOK");
 	print("#define TPP_HAVE_", name, "_HOOK TPP_HOOK_RT_NOOP");
-	if (!builtin_FOO_HOOK) {
+	if (builtin_FOO_HOOK) {
+		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_RT_MANY");
+		print("#if !TPP_IGNORE_INVALID_CONFIGURATION");
+		print("#error \"Invalid configuration: `TPP_HAVE_", name, "_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration\"");
+		print("#endif /" "* !TPP_IGNORE_INVALID_CONFIGURATION *" "/");
+		print("#undef TPP_HAVE_", name, "_HOOK /" "* Cannot use multiple hooks for this one *" "/");
+		print("#ifdef TPP_HOOK_", name);
+		print("#define TPP_HAVE_", name, "_HOOK TPP_HOOK_RT_USER");
+		print("#else /" "* TPP_HOOK_", name, " *" "/");
+		print("#define TPP_HAVE_", name, "_HOOK TPP_HOOK_RT_NOOP");
+		print("#endif /" "* !TPP_HOOK_", name, " *" "/");
+	} else {
 		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_CONST_BUILTIN");
 		print("#undef TPP_HAVE_", name, "_HOOK /" "* There is no builtin version *" "/");
 		print("#define TPP_HAVE_", name, "_HOOK TPP_HOOK_DISABLED");
@@ -3670,6 +3680,16 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNPRINTER_HOOK
 #define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_RT_MANY
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: `TPP_HAVE_WARNPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNPRINTER_HOOK /* Cannot use multiple hooks for this one */
+#ifdef TPP_HOOK_WARNPRINTER
+#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_USER
+#else /* TPP_HOOK_WARNPRINTER */
+#define TPP_HAVE_WARNPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* !TPP_HOOK_WARNPRINTER */
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNPRINTER_HOOK)
 #error "Invalid configuration: `TPP_HOOK_WARNPRINTER` is defined, but `TPP_HAVE_WARNPRINTER_HOOK` isn't using it"
@@ -3709,6 +3729,16 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_WARNHANDLER_HOOK
 #define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_WARNHANDLER_HOOK == TPP_HOOK_RT_MANY
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: `TPP_HAVE_WARNHANDLER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_WARNHANDLER_HOOK /* Cannot use multiple hooks for this one */
+#ifdef TPP_HOOK_WARNHANDLER
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_USER
+#else /* TPP_HOOK_WARNHANDLER */
+#define TPP_HAVE_WARNHANDLER_HOOK TPP_HOOK_RT_NOOP
+#endif /* !TPP_HOOK_WARNHANDLER */
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_WARNHANDLER) && !TPP_HOOK_USESUSER(TPP_HAVE_WARNHANDLER_HOOK)
 #error "Invalid configuration: `TPP_HOOK_WARNHANDLER` is defined, but `TPP_HAVE_WARNHANDLER_HOOK` isn't using it"
@@ -3743,6 +3773,16 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_MESGPRINTER_HOOK
 #define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_RT_MANY
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: `TPP_HAVE_MESGPRINTER_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_MESGPRINTER_HOOK /* Cannot use multiple hooks for this one */
+#ifdef TPP_HOOK_MESGPRINTER
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_USER
+#else /* TPP_HOOK_MESGPRINTER */
+#define TPP_HAVE_MESGPRINTER_HOOK TPP_HOOK_RT_NOOP
+#endif /* !TPP_HOOK_MESGPRINTER */
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_MESGPRINTER) && !TPP_HOOK_USESUSER(TPP_HAVE_MESGPRINTER_HOOK)
 #error "Invalid configuration: `TPP_HOOK_MESGPRINTER` is defined, but `TPP_HAVE_MESGPRINTER_HOOK` isn't using it"
@@ -3791,6 +3831,16 @@ for (local doc, name,
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
 #undef TPP_HAVE_PARSEEXPR_HOOK
 #define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
+#elif TPP_HAVE_PARSEEXPR_HOOK == TPP_HOOK_RT_MANY
+#if !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Invalid configuration: `TPP_HAVE_PARSEEXPR_HOOK` is configured as `TPP_HOOK_RT_MANY`, but this type of hook doesn't support that configuration"
+#endif /* !TPP_IGNORE_INVALID_CONFIGURATION */
+#undef TPP_HAVE_PARSEEXPR_HOOK /* Cannot use multiple hooks for this one */
+#ifdef TPP_HOOK_PARSEEXPR
+#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_USER
+#else /* TPP_HOOK_PARSEEXPR */
+#define TPP_HAVE_PARSEEXPR_HOOK TPP_HOOK_RT_NOOP
+#endif /* !TPP_HOOK_PARSEEXPR */
 #endif /* ... */
 #if !TPP_IGNORE_INVALID_CONFIGURATION && defined(TPP_HOOK_PARSEEXPR) && !TPP_HOOK_USESUSER(TPP_HAVE_PARSEEXPR_HOOK)
 #error "Invalid configuration: `TPP_HOOK_PARSEEXPR` is defined, but `TPP_HAVE_PARSEEXPR_HOOK` isn't using it"

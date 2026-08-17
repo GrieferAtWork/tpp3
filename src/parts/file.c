@@ -1594,7 +1594,7 @@ again:
 		filename = self->tf_data.td_io.tff_name;
 		if (filename == NULL)
 			return NULL;
-		return (struct tpp_keyword *)(filename - offsetof(struct tpp_keyword, tk_kwd));
+		return (struct tpp_keyword *)(filename - tpp_offsetof(struct tpp_keyword, tk_kwd));
 	}	break;
 
 #if TPP_HAVE_FILE_SUBTEXT

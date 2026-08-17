@@ -98,18 +98,21 @@ tpp_emitter_state_fini(tpp_emitter_state *tpp_restrict self) {
  * (before `tpp_lexer_fini()` is called) a given emitter.
  *
  * @param: output: Output printer. On error, must return one of `TPP_SSIZE_OFERR(*)`
- * @param: lexer:  The lexer whose tokens are being emitted */
+ * @param: lexer:  The lexer whose tokens are being emitted
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
-TPP_IMPL TPP_NONNULL((1, 2, 3)) void TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_init(tpp_emitter *tpp_restrict self,
                  tpp_lexer *tpp_restrict lexer,
                  tpp_formatprinter output)
 #else /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_emitter_init(tpp_emitter *tpp_restrict self,
                   tpp_formatprinter output)
 #endif /* !TPP_HAVE_HOOK_COOKIES || TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
 {
+	tpp_errno result = TPP_EOK;
 #if TPP_HAVE_HOOK_COOKIES && !defined(TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER)
 	self->tem_lexer = lexer;
 #endif /* TPP_HAVE_HOOK_COOKIES && !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
@@ -124,28 +127,58 @@ _tpp_emitter_init(tpp_emitter *tpp_restrict self,
 #if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
 	self->tem_linethreshold = -TPP_EMITTER_CONFIG_LINE_THRESHOLD;
 #endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0 */
+
+	/* Register default hooks */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0
-	tpp_emitter_enable_reemit_unknown_pragma(self);
+	result = tpp_emitter_enable_reemit_unknown_pragma(self);
+	if (TPP_ISERR(result))
+		goto handle_error;
+#define HAVE_handle_error
 #endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0 */
 #if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0
-	tpp_emitter_enable_reemit_macro_definitions(self);
+	result = tpp_emitter_enable_reemit_macro_definitions(self);
+	if (TPP_ISERR(result))
+		goto handle_error;
+#define HAVE_handle_error
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0 */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0
-	tpp_emitter_enable_reemit_include_directives(self);
+	result = tpp_emitter_enable_reemit_include_directives(self);
+	if (TPP_ISERR(result))
+		goto handle_error;
+#define HAVE_handle_error
 #endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0 */
 #if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
      TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
      TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
-	_tpp_emitter_enable_file_pushed_hook(self); /* Must be turned on by default */
+	result = _tpp_emitter_enable_file_pushed_hook(self); /* Must be turned on by default */
+	if (TPP_ISERR(result))
+		goto handle_error;
+#define HAVE_handle_error
 #endif /* ... */
 #if TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-	_tpp_emitter_enable_file_popped_hook(self);
+	result = _tpp_emitter_enable_file_popped_hook(self);
+	if (TPP_ISERR(result))
+		goto handle_error;
+#define HAVE_handle_error
 #endif /* TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+	return result;
+#ifdef HAVE_handle_error
+handle_error:
+	tpp_emitter_fini(self);
+	return result;
+#endif /* HAVE_handle_error */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_fini(tpp_emitter *tpp_restrict self) {
-	/* TODO: Clear all lexer hooks */
+	/* Clear lexer hooks */
+	tpp_emitter_disable_reemit_unknown_pragma(self);
+	tpp_emitter_disable_reemit_macro_definitions(self);
+	tpp_emitter_disable_reemit_include_directives(self);
+	_tpp_emitter_disable_file_pushed_hook(self);
+	_tpp_emitter_disable_file_popped_hook(self);
+
+	/* Finalize remainder of emitter state */
 	tpp_emitter_state_fini(&self->tem_state);
 #if TPP_EMITTER_HAVE_FEATURES
 	tpp_emitter_features_fini(&self->tem_feat);
@@ -1605,6 +1638,26 @@ _tpp_emitter_hook_macro_undefined(tpp_hook_cookie cookie,
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 	return tpp_emitter_dump_undef(self, name);
 }
+
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_reemit_macro_definitions(tpp_emitter *tpp_restrict self) {
+#if TPP_HAVE_HOOK_COOKIES
+	tpp_errno result = tpp_lexer_addhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self);
+	if (!TPP_ISERR(result)) {
+		result = tpp_lexer_addhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self);
+		if (TPP_ISERR(result))
+			tpp_lexer_delhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self);
+	}
+#else /* TPP_HAVE_HOOK_COOKIES */
+	tpp_errno result = tpp_lexer_addhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined);
+	if (!TPP_ISERR(result)) {
+		result = tpp_lexer_addhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined);
+		if (TPP_ISERR(result))
+			tpp_lexer_delhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined);
+	}
+#endif /* !TPP_HAVE_HOOK_COOKIES */
+	return result;
+}
 #endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
 
@@ -1819,7 +1872,47 @@ _tpp_emitter_hook_file_popped(tpp_hook_cookie cookie) {
 	tpp_lexer const *const lexer = tpp_emitter_getlexer(self);
 	tpp_emitter_maybe_set_files_changes(self, tpp_lexer_getfile(lexer));
 }
+
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_use_cpp_digit_flags(tpp_emitter *tpp_restrict self) {
+	tpp_errno result = _tpp_emitter_enable_file_pushed_hook(self);
+	if (!TPP_ISERR(result)) {
+		result = _tpp_emitter_enable_file_popped_hook(self);
+		if (TPP_ISERR(result)) {
+			_tpp_emitter_maybe_disable_file_pushed_hook(self);
+		} else {
+			tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_USE_CPP_DIGIT_FLAGS);
+		}
+	}
+	return result;
+}
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+
+
+/* API support for *lazy* (re-)emission of `#define` and `#undef` directives */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_reemit_macro_definitions_lazy(tpp_emitter *tpp_restrict self) {
+	tpp_errno const result = _tpp_emitter_enable_file_pushed_hook(self);
+	if (!TPP_ISERR(result))
+		tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_REEMIT_MACRO_DEFINITIONS_LAZY);
+	return result;
+}
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+
+
+/* API support for tracing of #incude-depth and files */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_enable_trace_includes(tpp_emitter *tpp_restrict self) {
+	tpp_errno const result = _tpp_emitter_enable_file_pushed_hook(self);
+	if (!TPP_ISERR(result))
+		tpp_emitter_enablefeature(self, TPP_EMITTER_FEAT_TRACE_INCLUDES);
+	return result;
+}
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
 
 
 #if TPP_EMITTER_HAVE_MODE_BRACKET
