@@ -6825,8 +6825,8 @@ TPP_DECL_END
 
 /* TODO: Add an API to `tpp_lexer` to expose a custom "working directory", which can
  *       be assigned by user-code via a `# 1 "/path/to/current/directory//"` directive
- *       is received (i.e.: when `TPP_HAVE_CPP_DIGIT_LINE` is used to assign a filename
- *       that ends with 2 trailing `//`) */
+ *       (i.e.: when `TPP_HAVE_CPP_DIGIT_LINE` is used to assign a filename that ends
+ *       with 2 trailing `//`) */
 
 /* Support for `#line 42 "foo.h"`-directives */
 #ifndef TPP_HAVE_CPP_LINE
@@ -26782,7 +26782,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 
 /* Initialize a lexer such that it starts reading
  * from `tpp_lexer_openfile_result *ofr` (never fails) */
-#define tpp_lexer_initfile_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ofr) \
+#define tpp_lexer_initfile_ofr(self, /*inherit(always)*/ /*tpp_lexer_openfile_result **/ofr) \
 	tpp_file_init_io_from_ofr(tpp_lexer_getfile(file), ofr)
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 

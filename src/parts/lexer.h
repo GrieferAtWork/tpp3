@@ -1373,7 +1373,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 
 /* Initialize a lexer such that it starts reading
  * from `tpp_lexer_openfile_result *ofr` (never fails) */
-#define tpp_lexer_initfile_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ofr) \
+#define tpp_lexer_initfile_ofr(self, /*inherit(always)*/ /*tpp_lexer_openfile_result **/ofr) \
 	tpp_file_init_io_from_ofr(tpp_lexer_getfile(file), ofr)
 #endif /* TPP_HAVE_LEXER_INIT_OPEN */
 

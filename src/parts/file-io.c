@@ -68,7 +68,7 @@ TPP_DECL_BEGIN
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 _tpp_nt_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
                      LPWSTR *tpp_restrict plpwFixedFilename) {
-	/* TODO */
+	/* TODO: Fix UNC path (s.a. deemon's `DeeNTSystem_FixUncPath()` function) */
 	(void)sFilename;
 	(void)plpwFixedFilename;
 	return TPP_ENOENT;

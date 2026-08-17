@@ -1713,6 +1713,10 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * - As such, when migrating from TPP2, an unknown-file hook that was used
  *   to search a custom set of paths for an otherwise unknown filename
  *   should be replaced with a "TPP_HOOK_SYSTEM_INCLUDE_PATH" hook.
+ * - A ~somewhat~ similar mechanism exists in TPP3 though:
+ *   - The `TPP_HOOK_INCLUDE_NOT_FOUND` hook can be overwritten in TPP3 to
+ *     implement some last-chance handling in case a `#include`-directive
+ *     failed to locate its named file.
  */
 
 /* TPP_CONFIG_NO_CALLBACK_PARSE_PRAGMA_GCC, TPP_CONFIG_CALLBACK_PARSE_PRAGMA_GCC,
@@ -1753,6 +1757,184 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  * TPP_CONFIG_EXTENSION_MSVC_FIXED_INT: "-ffixed-length-integrals"
  * - Suffix parsing in TPP3 is up to the caller, but in this emulated
  *   header, it is assumed that this extension is always enabled. */
+
+/* >> struct TPPFile TPPFile_Empty;
+ * >> void TPPFile_Incref(struct TPPFile *self);
+ * >> void TPPFile_Decref(struct TPPFile *self);
+ * >> void TPPFile_DecrefNoKill(struct TPPFile *self);
+ * >> void TPPFile_Destroy(struct TPPFile *self);
+ * - Files are no longer reference-counted in TPP3. Instead, files
+ *   only exist as part of a lexer's `#include`-stack, and as such
+ *   don't need reference counters (they are destroyed'd when they
+ *   get popped off the `#include`-stack)
+ * - Files are no longer (always) heap-allocated in TPP3. Instead,
+ *   the "current" file always exists as a structure that is inlined
+ *   into the current lexer. This gives the benefit of improving
+ *   performance (since the current file can always be accessed
+ *   without any pointer indirections).
+ *   Whenever a new file is pushed onto the `#include`-stack in TPP3,
+ *   the previous file is instead copied into a heap-allocated file
+ *   object, before the "current" file is re-initialized as the file
+ *   that was just pushed.
+ * - As such, there are no equivalents to these functions, other than:
+ *   - `TPPFile_Destroy()`: related function `tpp_file_fini()`
+ *   - `TPPFile_Empty`: you can initialize a file as empty like:
+ *     >> tpp_file_init_text_ascii(&file, NULL, NULL, NULL, 0, TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+ */
+
+/* >> TPP_REF struct TPPFile *TPPFile_NewExplicitInherited(TPP_REF struct TPPString *tpp_restrict inherited_text);
+ * - Files in TPP3 are no longer heap-allocated (see `TPPFile_Destroy()` above)
+ * - To create/push a file containing custom text, you may use these TPP3 APIs:
+ *   Stand-alone file (finalize using `tpp_file_fini()`)
+ *   - `tpp_file_init_text()`
+ *   - `tpp_file_init_text_ascii()`
+ *   - `tpp_file_init_text_utf8()`
+ *   - `tpp_file_init_text_ex()`
+ *   Initial lexer file:
+ *   - `tpp_lexer_initfile_text()`
+ *   - `tpp_lexer_initfile_text_ascii()`
+ *   - `tpp_lexer_initfile_text_utf8()`
+ *   - `tpp_lexer_initfile_text_ex()`
+ *   Additional `#include`-stack files:
+ *   - `tpp_lexer_pushfile_text()`
+ *   - `tpp_lexer_pushfile_text_ascii()`
+ *   - `tpp_lexer_pushfile_text_utf8()`
+ *   - `tpp_lexer_pushfile_text_ex()`
+ */
+
+/* >> TPP_REF struct TPPFile *TPPCALL TPPFile_Open(char const *tpp_restrict filename);
+ * - Files in TPP3 are no longer heap-allocated (see `TPPFile_Destroy()` above)
+ * - To open a file and push/initialize a lexer with it, use the following APIs:
+ *   Initial lexer file:
+ *   - `tpp_lexer_initfile_open()`
+ *   - `tpp_lexer_openfile()`    + `tpp_lexer_initfile_ofr()`
+ *   - `tpp_lexer_openfile_ex()` + `tpp_lexer_initfile_ofr()`
+ *   Additional `#include`-stack files:
+ *   - `tpp_lexer_pushfile_open()`
+ *   - `tpp_lexer_openfile()`    + `tpp_lexer_pushfile_ofr()`
+ *   - `tpp_lexer_openfile_ex()` + `tpp_lexer_pushfile_ofr()`
+ */
+
+/* >> TPP_REF struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *tpp_restrict name);
+ * - Files in TPP3 are no longer heap-allocated (see `TPPFile_Destroy()` above)
+ * - To push/initialize a file for a custom "stream", use the following APIs:
+ *   Initial lexer file:
+ *   - `tpp_lexer_initfile_io()`
+ *   - `tpp_lexer_initfile_io_ex()`
+ *   Additional `#include`-stack files:
+ *   - `tpp_lexer_pushfile_io()`
+ *   - `tpp_lexer_pushfile_io_ex()`
+ */
+
+/* >> struct TPPFile *TPPCALL
+ * >> TPPLexer_OpenFile_(struct TPPLexer *lexer, int mode, char *tpp_restrict filename,
+ * >>                    tpp_size filename_size, struct TPPKeyword **pkeyword_entry);
+ * >> struct TPPFile *TPPCALL
+ * >> TPPLexer_OpenFile(int mode, char *tpp_restrict filename,
+ * >>                   tpp_size filename_size, struct TPPKeyword **pkeyword_entry);
+ * - Files in TPP3 are no longer heap-allocated (see `TPPFile_Destroy()` above)
+ * - In TPP2, this function used to encapsulate a large number of functions, all of
+ *   which must be performed in a number of different ways in TPP3. See the following:
+ * - `tpp_lexer_openfile()`, `tpp_lexer_openfile_ex()`:
+ *   These functions allow you to open a file (possibly relative to a given path),
+ *   and retrieve information about the file's keyword descriptions. As such, these
+ *   functions are probably the closest match to TPP2's `TPPLexer_OpenFile()`.
+ *   BUT: `tpp_lexer_openfile()` and `tpp_lexer_openfile_ex()` DON'T include facilities
+ *        to enumerate `#include`-paths. If such functionality is required, see notes
+ *        on `TPPLEXER_OPENFILE_MODE_RELATIVE` and `TPPLEXER_OPENFILE_MODE_SYSTEM` below
+ *   Behavior mapping:
+ *   - TPP2:`TPPLexer_OpenFile:filename`       <=> TPP3:`tpp_lexer_openfile:filename`
+ *     NOTE: TPP3 never modifies `filename` (behavior is always as though TPP2's
+ *           `TPPLEXER_OPENFILE_FLAG_CONSTNAME` flag were given, though I doubt this
+ *           detail will be an issue)
+ *   - TPP2:`TPPLexer_OpenFile:filename_size`  <=> TPP3:`tpp_lexer_openfile:filename_maxlen`
+ *     NOTE: TPP3's `filename_maxlen` is the **max** length of the `filename` string
+ *           (meaning the actual length is `strnlen(filename, filename_maxlen)`), whereas
+ *           TPP2's `filename_size` is the **actual** length. However, this shouldn't
+ *           really be a problem: filenames can't contain NUL-characters.
+ *   - TPP2:`TPPLexer_OpenFile:pkeyword_entry` <=> TPP3:`tpp_lexer_openfile:result->tlofr_filename_kwd`
+ *           The "keyword entry" (aka. "filename keyword") still exists in TPP3. As a matter
+ *           of fact: in TPP3, that keyword takes on a number of tasks that used to be done
+ *           by TPP2's `TPPFile` objects.
+ *   - TPP2:`return`                           <=> TPP3:`tpp_lexer_openfile:result`
+ *           Though not nearly identical, TPP3's `tpp_lexer_openfile()` function can be
+ *           used to initialize a `tpp_lexer_openfile_result` object passed via its `result`
+ *           parameter. Following a successful call, this object can then be passed-to
+ *           (and inherited-by) a number of other functions which in turn allow you to
+ *           push/initialize the lexer's file using a just-opened file:
+ *           - `tpp_lexer_initfile_ofr()`          Initialize the lexer's file  (TPP2: `TPPLexer_PushFileInherited()`)
+ *           - `tpp_lexer_pushfile_ofr()`          Push onto `#include`-stack   (TPP2: `TPPLexer_PushFileInherited()`)
+ *           - `tpp_lexer_openfile_result_fini()`  Discard newly opened file    (TPP2: `TPPFile_Decref()`)
+ *
+ * The different flags accepted by TPP2's `TPPLexer_OpenFile()` function map to TPP3
+ * functionality as follows:
+ * - `TPPLEXER_OPENFILE_MODE_NORMAL`:     No special behavior (but see details for `tpp_lexer_openfile()` above)
+ * - `TPPLEXER_OPENFILE_MODE_RELATIVE`:   To emulate `#include "foo.h"`-style path resolution, you must wrap a call
+ *                                        to `tpp_lexer_openfile()` using `tpp_lexer_foreach_include_path()` whilst
+ *                                        passing `mode=TPP_TOK_INCPATH_DQUOTE`.
+ *                                        For an example of this, you may inspect the implementation of the internal
+ *                                        function (look at `tpp-amalgamation.c`) `tpp_lexer_open_include_string_cb()`
+ * - `TPPLEXER_OPENFILE_MODE_SYSTEM`:     TPP3 handles this the same as `TPPLEXER_OPENFILE_MODE_RELATIVE`, except
+ *                                        that instead of passing `mode=TPP_TOK_INCPATH_DQUOTE`, you must pass
+ *                                        `mode=TPP_TOK_INCPATH_LANGLE`.
+ * - `TPPLEXER_OPENFILE_FLAG_NEXT`:       In order to implement various kinds of masking optimizations (including
+ *                                        stuff like `#pragma once`), TPP3's `tpp_lexer_openfile_ex()` exists to
+ *                                        take an additional `tpp_lexer_openfile_flags mask_flags` parameter. This
+ *                                        parameter should include `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` to emulate
+ *                                        the behavior of TPP2's `TPPLEXER_OPENFILE_FLAG_NEXT` flag.
+ * - `TPPLEXER_OPENFILE_FLAG_NOCASEWARN`: TPP3 implements this flag similar to how it does `TPPLEXER_OPENFILE_FLAG_NEXT`,
+ *                                        namely as a flag taken by `tpp_lexer_openfile_ex()` (though in TPP3, that
+ *                                        flag has the opposite effect of turning on the bad-filename-casing warning):
+ *                                        `TPP_LEXER_OPENFILE_FLAG_WARN_CASING`
+ * - `TPPLEXER_OPENFILE_FLAG_NOCALLBACK`: This flag has no equivalent in TPP3, because TPP3 doesn't have an
+ *                                        `TPP_CONFIG_CALLBACK_UNKNOWN_FILE` hook anymore. However, `tpp_lexer_openfile()`
+ *                                        may invoke the `TPP_HAVE_NEW_DEPENDENCY_HOOK` hook if this is the first
+ *                                        time that the named file is being opened.
+ * - `TPPLEXER_OPENFILE_FLAG_CONSTNAME`:  This flag has no equivalent in TPP3, because TPP3 never modifies
+ *                                        the passed `filename` argument (meaning TPP3 always behaves as if
+ *                                        this flag was set)
+ */
+
+/* >> void TPPLexer_PushFileInherited(struct TPPFile *f);
+ * >> void TPPLexer_PushFileInherited_(struct TPPLexer *lexer, struct TPPFile *f);
+ * >> void TPPLexer_PushFile(struct TPPFile *f);
+ * >> void TPPLexer_PushFile_(struct TPPLexer *lexer, struct TPPFile *f);
+ * - Files in TPP3 are no longer heap-allocated (see `TPPFile_Destroy()` above)
+ * - To push a file onto the `#include`-stack, that file must be initialized
+ *   in-place. For this purpose, the following APIs are provided by TPP3:
+ *   - `tpp_lexer_pushfile_io()`
+ *   - `tpp_lexer_pushfile_io_ex()`
+ *   - `tpp_lexer_pushfile_open()`
+ *   - `tpp_lexer_pushfile_ofr()`
+ *   - `tpp_lexer_pushfile_text()`
+ *   - `tpp_lexer_pushfile_text_ascii()`
+ *   - `tpp_lexer_pushfile_text_utf8()`
+ *   - `tpp_lexer_pushfile_text_ex()`
+ */
+
+/* >> ptrdiff_t TPPCALL TPP_PrintToken(TPP(printer_t) printer, void *closure);
+ * >> ptrdiff_t TPPCALL TPP_PrintToken_(struct TPPLexer *lexer, TPP(printer_t) printer, void *closure);
+ * - Re-emission of tokens (as well as configuration what/how should be normalized during said
+ *   re-emission) has been delegated to a *source extension* **EMITTER** in TPP3. When using
+ *   an emitter, this function can be re-implemented:
+ *   ```diff
+ *   - result = TPP_PrintToken_(lexer, &printer, arg);
+ *   + tpp_emitter emitter;
+ *   + tpp_emitter_init(&emitter, lexer, &printer); // WARNING: "&emitter" will be passed to "printer" instead of "arg"
+ *   + status = tpp_emitter_emitcurrent(&emitter);
+ *   + tpp_emitter_fini(&emitter);
+ *   ```
+ *   But be careful: `tpp_emitter` is actually **much** more than a simple "print-a-token" function.
+ *   It is actually a fully blows implementation of a preprocessor re-emitter, meaning it can also
+ *   be used to produce output as would be produced by `gcc -E`.
+ */
+
+/* >> ptrdiff_t TPPCALL TPP_PrintComment(TPP(printer_t) printer, void *closure);
+ * >> ptrdiff_t TPPCALL TPP_PrintComment_(struct TPPLexer *lexer, TPP(printer_t) printer, void *closure);
+ * - These TPP2 functions were never implemented in the first place.
+ *   As such, while they are provided below, TPP3 also doesn't (yet)
+ *   provide equivalent functionality.
+ */
 
 /************************************************************************/
 
@@ -5106,69 +5288,6 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 }
 
 
-#if 0 /* TODO */
-TPPFUN struct TPPFile TPPFile_Empty;
-#define TPPFile_Incref(self)       (void)(++(self)->f_refcnt)
-#define TPPFile_Decref(self)       (void)(TPP_assert((self)->f_refcnt), --(self)->f_refcnt || (TPPFile_Destroy(self), 0))
-#define TPPFile_DecrefNoKill(self) (void)(TPP_assert((self)->f_refcnt >= 2), --(self)->f_refcnt)
-TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *tpp_restrict self);
-
-/* Create a new explicit text file by inherited the given `inherited_text`.
- * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-TPPFUN /*ref*/struct TPPFile *TPPCALL
-TPPFile_NewExplicitInherited(/*ref*/struct TPPString *tpp_restrict inherited_text);
-
-/* Opens a file.
- * NOTE: The given filename is what will appear as text when expanding __FILE__
- * @return: NULL: Failed to open the given file (`errno` was set to ENOENT)
- * @return: NULL: Not enough available memory (TPP_CONFIG_SET_API_ERROR) */
-TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_Open(char const *tpp_restrict filename);
-
-/* Similar to `TPPFile_Open`, but allows the caller to specify a stream,
- * allowing them to use this function for opening things like STD handles.
- * @return: NULL: Not enough available memory. (TPP_CONFIG_SET_API_ERROR) */
-TPPFUN /*ref*/struct TPPFile *TPPCALL TPPFile_OpenStream(TPP(stream_t) stream, char const *tpp_restrict name);
-
-
-/* Searches the cache and opens a new file if not found.
- * WARNING: If the caller intends to push the file onto the `#include`-stack,
- *          additional steps must be taken when the file was already
- *          located on the stack (in which case another stream must be opened,
- *          and a file that is not cached must be pushed onto the `#include`-stack).
- * WARNING: This function may modify the given `filename..filename_size+1` area of memory.
- * @param: pkeyword_entry: When non-NULL, the keyword entry associated with the filename is stored here.
- * @return: * :   A pointer to the already-chached file (WARNING: This is not a reference)
- * @return: NULL: File not found. */
-TPPFUN struct TPPFile *TPPCALL
-TPPLexer_OpenFile_(TPP_LEXER_PARAM_
-                   int mode, char *tpp_restrict filename, tpp_size filename_size,
-                   struct TPPKeyword **pkeyword_entry);
-#define TPPLexer_OpenFile(mode, filename, filename_size, pkeyword_entry) \
-	TPPLexer_OpenFile_(TPP_LEXER_ARG_ mode, filename, filename_size, pkeyword_entry)
-#define TPPLEXER_OPENFILE_MODE_NORMAL     0x00 /* Normal open (simply pass the given filename to TPPFile_Open, but still sanitize and cache the filename) */
-#define TPPLEXER_OPENFILE_MODE_RELATIVE   0x01 /* #include "foo.h" (Search for the file relative to the path of every text file on the `#include`-stack in reverse. - If this fails, search in system folders). */
-#define TPPLEXER_OPENFILE_MODE_SYSTEM     0x02 /* #include <stdlib.h> (Search through system folders usually specified with `-I` on the commandline). */
-#define TPPLEXER_OPENFILE_FLAG_NEXT       0x04 /* FLAG: Only open a file not already part of the `#include`-stack
-                                                * WARNING: May not be used for `TPPLEXER_OPENFILE_MODE_NORMAL`! */
-#define TPPLEXER_OPENFILE_FLAG_NOCASEWARN 0x08 /* FLAG: Don't warn about filename casing on windows. */
-#ifndef TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE
-#define TPPLEXER_OPENFILE_FLAG_NOCALLBACK 0x10 /* FLAG: Don't invoke the unknown-file callback when set. */
-#endif /* !TPP_CONFIG_NO_CALLBACK_UNKNOWN_FILE */
-#define TPPLEXER_OPENFILE_FLAG_CONSTNAME  0x20 /* FLAG: The given `filename` may not be modified, but is guarantied to be '\0'-terminated. */
-
-/* Push a given file into the `#include`-stack of the current lexer.
- * NOTE: These functions never fail and return void.
- * HINT: Call `TPPLexer_PushFileInherited` if you want the lexer to inherit the file.
- * WARNING: The file argument may be evaluated more than once! */
-#define TPPLexer_PushFileInherited(f) TPPLexer_PushFileInherited_(TPPLexer_Current, f)
-#define TPPLexer_PushFile(f)          TPPLexer_PushFile_(TPPLexer_Current, f)
-#define TPPLexer_PushFileInherited_(_current, f)   \
-	(void)((f)->f_prev = _current->l_token.t_file, \
-	       _current->l_token.t_file = (f))
-#define TPPLexer_PushFile_(_current, f) \
-	(TPPFile_Incref(f), TPPLexer_PushFileInherited_(_current, f))
-#endif
-
 /* Returns the currently active `#include`-file.
  * WARNING: The file returned here will *always* be the "current" file!
  *          This is because in TPP3, the file currently being read from
@@ -5696,20 +5815,15 @@ handle_invalid:
 	return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
 }
 
-#if 0 /* TODO */
-/* Prints the text contained within the current token, automatically
- * skipping escaped linefeeds and converting di/trigraphs.
- * NOTE: `TPP_PrintComment` behaves similar, but will
- *        instead handle any kind of comment token,
- *        printing the comment text within.
- * @return: >= 0: Sum of all return values from `printer`.
- * @return: <  0: The first negative value returned by `printer` */
-TPPFUN ptrdiff_t TPPCALL TPP_PrintToken_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
-TPPFUN ptrdiff_t TPPCALL TPP_PrintComment_(TPP_LEXER_PARAM_ TPP(printer_t) printer, void *closure);
-#define TPP_PrintToken(printer, closure)   TPP_PrintToken_(TPP_LEXER_ARG_ printer, closure)
-#define TPP_PrintComment(printer, closure) TPP_PrintComment_(TPP_LEXER_ARG_ printer, closure)
-#endif
-
+#define TPP_PrintComment_(lexer, printer, closure) \
+	TPP_PrintComment(printer, closure)
+TPP_INLINE tpp_ssize TPPCALL
+TPP_PrintComment(tpp_formatprinter printer, void *closure) {
+	/* Was never implemented in TPP2, so this is actually an accurate re-implementation :P */
+	(void)printer;
+	(void)closure;
+	return 0;
+}
 
 /* Helper macros to initialize/finalize the global TPP context.
  * NOTE: These macros can (obviously) be called when

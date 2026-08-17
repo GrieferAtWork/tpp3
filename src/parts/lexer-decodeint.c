@@ -287,7 +287,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
                          tpp_float *tpp_restrict result,
                          tpp_char const **p_suffix_start) {
-	/* TODO */
+	/* TODO: Decode string-to-float */
 	*result = 0.0;
 	if (p_suffix_start)
 		*p_suffix_start = tpp_lexer_gettokenend(self);
