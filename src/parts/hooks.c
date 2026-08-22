@@ -828,6 +828,7 @@ _tpp_hooklist2_add(tpp_hooklist2 **tpp_restrict p_self,
 	new_list->thl_size = new_size;
 	new_list->thl_elem[old_size].thle_cb     = cb;
 	new_list->thl_elem[old_size].thle_cookie = arg;
+	*p_self = new_list;
 	return TPP_EOK;
 }
 
@@ -907,6 +908,7 @@ _tpp_hooklist1_add(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 		return TPP_ENOMEM;
 	new_list->thl_size = new_size;
 	new_list->thl_elem[old_size].thle_cb = cb;
+	*p_self = new_list;
 	return TPP_EOK;
 }
 

@@ -563,13 +563,6 @@ int main(int argc, char **argv) {
 		goto out_emitter_cli;
 	}
 
-	/* TODO: Support for environment variables, as described here: https://gcc.gnu.org/onlinedocs/cpp/Environment-Variables.html
-	 *       Where possible, these variables should *NOT* be checked-for and parsed *here*,
-	 *       but should instead only be checked-for and parsed when they become relevant:
-	 * - e.g. `SOURCE_DATE_EPOCH` should only be checked just before `tpp_time_now()`
-	 * - e.g. the different include-path variables should be loaded in `tpp_lexer_foreach_include_path()`
-	 */
-
 	/* Parse remainder of argument list using our own CLI handler, as well */
 	if (argc && tpp_strcmp(*argv, "--") == 0) {
 		--argc;

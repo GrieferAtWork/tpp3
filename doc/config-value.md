@@ -22,11 +22,33 @@ defined(_MSC_VER) ? "%Pf%?P{(%Pl, %Pc)%}: " : "%Pf:%?P{%Pl:%Pc:%} "
 ```
 </details>
 
+## TPP_CONFIG_TIME_ENVIRON
+
+Name(s) of environment variables scanned for an override of the current time,
+to use in place of the ~actual~ current time when expanding `__TIME__` and
+related macros.
+
+The first non-empty environment variable with a name listed here will be used
+as an override of the current time. The variable's value must be a decimal
+integer describing the *unix epoch second* (that is: the number of seconds
+since `1970-01-01 00:00:00`). If that is not the case, no warning will be
+emitted, and the effective value used by the lexer as the current time will
+be weak undefined.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+1("SOURCE_DATE_EPOCH")
+```
+</details>
+
 ## TPP_CONFIG_SYSTEM_INCLUDE_PATH
 
 A preprocessor tuple describing the built-in, hard-coded, system-include path.
 - The paths specified here are searched in order of specification.
-- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L22937)
+- For information on the full `#include`-path resolution order, see [`tpp_include_paths`](../src/tpp-amalgamation.h#L23083)
 - Try not to include trailing slashes in paths hard-coded using this (if TPP3 needs
   trailing slashes in these strings, it will add those itself)
 
@@ -47,7 +69,7 @@ Default:
 
 ## TPP_CONFIG_CLI_FILENAME
 
-Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L26938)
+Filename of definitions file used by [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L27142)
 
 <details><summary>Details</summary>
 
@@ -151,7 +173,7 @@ Default:
 
 ## TPP_CONFIG_CLI_DEFAULT_SYSROOT
 
-The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L28404)
+The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L28608)
 
 <details><summary>Details</summary>
 

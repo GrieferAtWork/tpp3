@@ -3,12 +3,30 @@
 Similar to `TPP_PROFILE`, common configuration groups don't configure individual features, but rather specify the defaults of many features at once
 
 <!--BEGIN:common-->
+## TPP_COMMON_HAVE_ENVIRON
+
+Common configuration that can be used to enable/disable use of environment
+variables in various places throughout TPP to allow users of the hosting
+compiler to do some additional configuration:
+
+- [`TPP_HAVE_INCLUDE_PATH_ENVIRON`](config-core.md#tpp_have_include_path_environ)
+- `TPP_HAVE_TIME_FROMENV`
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_PROFILE != TPP_PROFILE_MINIMAL
+```
+</details>
+
 ## TPP_COMMON_HAVE_EXTENSIONS
 
 Common configuration describing if extensions configuration should be used in defaults.
 When disabled, default configurations use...
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6540) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6538)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6539) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6537)
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6555) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6553)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6554) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6552)
 
 s.a.: [`TPP_COMMON_HAVE_FEATURES`](#tpp_common_have_features)
 
@@ -25,8 +43,8 @@ TPP_HAVE_EXTENSIONS
 
 Common configuration describing if feature configuration should be used in defaults.
 When disabled, default configurations use...
-- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6538) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6540)
-- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6537) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6539)
+- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6553) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6555)
+- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6552) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6554)
 
 s.a.: [`TPP_COMMON_HAVE_EXTENSIONS`](#tpp_common_have_extensions)
 
@@ -56,7 +74,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27332)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27536)
 
 <details><summary>Details</summary>
 
@@ -197,7 +215,7 @@ at runtime.
 
 The ability to override these expansions is a prerequisite for
 [`TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`](config-core.md#tpp_have_pragma_tpp_keyword_features), as well as the associated
-APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L22009) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L22019).
+APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L22154) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L22164).
 
 <details><summary>Details</summary>
 

@@ -21,7 +21,9 @@
 #define GUARD_TPP_FILE_IO_H 1
 
 #include "api.h"
+
 #include "config.h"
+#include "error.h"
 
 /*[[[tpp-begin]]]*/
 #ifndef TPP_FS_HAVE_DRIVES
@@ -36,6 +38,14 @@
 #define TPP_FS_SEP   '/'
 #define TPP_FS_SEP_S "/"
 #endif /* !TPP_FS_SEP */
+
+#ifndef TPP_FS_DELIM
+#if TPP_OS_WINDOWS
+#define TPP_FS_DELIM ';'
+#else /* TPP_OS_WINDOWS */
+#define TPP_FS_DELIM ':'
+#endif /* !TPP_OS_WINDOWS */
+#endif /* !TPP_FS_DELIM */
 
 #ifndef TPP_FS_ALTSEP
 #if TPP_OS_WINDOWS || defined(__CYGWIN__)
@@ -223,6 +233,23 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
                           tpp_size after_last_sep_bufsize);
 #endif /* !tpp_io_normalize_filename */
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
+
+
+#if TPP_HAVE_IO_WITHENV
+#ifndef tpp_io_withenv
+/* Invoke `cb` with the current value of the environment variable `varname`
+ * @return: * :         Return value of `cb`.
+ * @return: TPP_ENOENT: No environment variable `varname` defined (or defined
+ *                      as an empty string), or `cb` was called and ended up
+ *                      returning `TPP_ENOENT`.
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    Failed to query environment variable */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_withenv(char const *varname,
+               tpp_errno (TPPCALL *cb)(void *arg, char const *envvalue),
+               void *arg);
+#endif /* !tpp_io_withenv */
+#endif /* TPP_HAVE_IO_WITHENV */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

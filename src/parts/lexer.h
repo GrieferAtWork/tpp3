@@ -103,6 +103,12 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
 
+	/* Include paths defined by environment variables. */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	tpp_envinclude_paths TPP_INTERNAL(tl_envinclude_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
+
 	/* User-overwritable function pointer hooks */
 #if TPP_HAVE_HOOKS
 	tpp_hooks TPP_INTERNAL(tl_hooks);
@@ -378,6 +384,14 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #define tpp_lexer_resetincludes(self)  tpp_include_paths_reset(&(self)->TPP_INTERNAL(tl_include_paths))
 #endif /* TPP_HAVE_INCLUDE_PATH */
+
+
+
+/* Environment include path... */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+#define tpp_lexer_envincludes_getpaths(self, p_result) \
+	tpp_envinclude_paths_getpaths(&(self)->TPP_INTERNAL(tl_envinclude_paths), p_result)
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
 
 
 

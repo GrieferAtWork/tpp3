@@ -864,14 +864,23 @@ tpp_lexer_yield_handle_time_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok
 
 	/* Initialize time if this is the first *time* (pun intended) we get here */
 	if (tpp_time_isempty(tpp_lexer_gettimeptr(self))) {
-		error = tpp_time_now(tpp_lexer_gettimeptr(self));
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+#if TPP_HAVE_TIME_ENVIRON
+		error = tpp_time_fromenviron(tpp_lexer_gettimeptr(self));
+		if (error != TPP_ENOENT) {
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		} else
+#endif /* TPP_HAVE_TIME_ENVIRON */
+		{
+			error = tpp_time_now(tpp_lexer_gettimeptr(self));
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
 #if TPP_HAVE_TPP_W_DATE_TIME
-		error = tpp_lexer_warnf(self, TPP_W_DATE_TIME);
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+			error = tpp_lexer_warnf(self, TPP_W_DATE_TIME);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_DATE_TIME */
+		}
 	}
 
 	/* Load tm from time */

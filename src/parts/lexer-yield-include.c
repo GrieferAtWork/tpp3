@@ -508,14 +508,32 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 	if (error != TPP_ENOENT)
 		return error;
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#endif /* TPP_HAVE_INCLUDE_PATH */
+
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_ENVIRON);
+	{
+		/* Search `$CPATH` */
+		char const *envpath;
+		error = tpp_lexer_envincludes_getpaths(self, &envpath);
+		if (TPP_ISERR(error))
+			return error;
+		while (*envpath) {
+			error = (*cb)(arg, envpath tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+			if (error != TPP_ENOENT)
+				return error;
+			envpath += tpp_strlen(envpath) + 1;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
+#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR
 	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR);
 	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_syshdr_list, cb, arg
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 	if (error != TPP_ENOENT)
 		return error;
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-#endif /* TPP_HAVE_INCLUDE_PATH */
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH

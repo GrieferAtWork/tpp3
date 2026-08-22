@@ -54,10 +54,13 @@ typedef enum tpp_hook_system_include_path_when {
 	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_QUOTE,  /* Called for `"`-paths after trying to import relative to current file, but before `tip_quote_list` is checked */
 #endif /* TPP_HAVE_INCLUDE_PATH_QUOTE */
 	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSTEM, /* Called before `tip_system_list` is checked */
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
-	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before `tip_syshdr_list` is checked */
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_ENVIRON, /* Called before environment variables are checked */
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR
+	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR, /* Called before `tip_syshdr_list` is checked */
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH
 	TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_CONFIG, /* Called before `TPP_CONFIG_SYSTEM_INCLUDE_PATH` is checked */
 #endif /* TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH */

@@ -525,6 +525,181 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
+
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+/* Marker for `tpp_envinclude_paths` to indicate
+ * loaded-but-empty. This points to a \0-character */
+TPP_CONST_IMPL char const _tpp_envinclude_cpath_empty[1] = { '\0' };
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_copy(tpp_envinclude_paths *tpp_restrict self,
+                          tpp_envinclude_paths const *tpp_restrict from) {
+	self->teip_cpath = from->teip_cpath;
+	if (self->teip_cpath != NULL &&
+	    self->teip_cpath != (char *)_tpp_envinclude_cpath_empty) {
+		tpp_size whole_len = 1;
+		char *copy, *iter = self->teip_cpath;
+		while (*iter) {
+			tpp_size part = tpp_strlen(iter) + 1;
+			iter += part;
+			whole_len += part;
+		}
+		copy = (char *)tpp_malloc(whole_len * sizeof(char));
+		if tpp_unlikely(!copy)
+			return TPP_ENOMEM;
+		copy = (char *)tpp_memcpy(copy, self->teip_cpath, whole_len * sizeof(char));
+		self->teip_cpath = copy;
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+typedef struct tpp_envinclude_paths_builder {
+	char    *teipb_buf; /* [0..teipb_len][owned] Path buffer */
+	tpp_size teipb_len; /* Used buffer size */
+	tpp_size teipb_alc; /* Allocated buffer size (excluding 1 always-allocated trailing character) */
+} tpp_envinclude_paths_builder;
+
+#define tpp_envinclude_paths_builder_init(self) \
+	(void)((self)->teipb_buf = NULL,            \
+	       (self)->teipb_len = 0,               \
+	       (self)->teipb_alc = 0)
+#define tpp_envinclude_paths_builder_fini(self) \
+	tpp_free((self)->teipb_buf)
+static TPP_WUNUSED TPP_RETNONNULL TPP_NONNULL((1)) char *TPPCALL
+tpp_envinclude_paths_builder_pack(tpp_envinclude_paths_builder *tpp_restrict self) {
+	char *result;
+	if (self->teipb_len == 0) {
+		/* No paths defined... */
+		tpp_free(self->teipb_buf);
+		return (char *)_tpp_envinclude_cpath_empty;
+	}
+	/* Release unused memory... */
+	result = (char *)tpp_tryrealloc(self->teipb_buf,
+	                                (self->teipb_len + 1) *
+	                                sizeof(char));
+	if (result == NULL)
+		result = self->teipb_buf;
+	tpp_assert(result);
+	result[self->teipb_len] = '\0'; /* Add final (secondary) trailing NUL */
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
+tpp_envinclude_paths_alloc(tpp_envinclude_paths_builder *tpp_restrict self,
+                           tpp_size num_chars) {
+	char *result;
+	tpp_size avail = self->teipb_alc - self->teipb_len;
+	tpp_assert(self->teipb_alc >= self->teipb_len);
+	if (num_chars > avail) {
+		tpp_size new_alloc = self->teipb_alc * 2;
+		tpp_size min_alloc = self->teipb_len + num_chars;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc * 2;
+		result = (char *)tpp_tryrealloc(self->teipb_buf, (new_alloc + 1) * sizeof(char));
+		if tpp_unlikely(!result) {
+			new_alloc = min_alloc;
+			result = (char *)tpp_realloc(self->teipb_buf, (new_alloc + 1) * sizeof(char));
+			if tpp_unlikely(!result)
+				return NULL;
+		}
+		self->teipb_buf = result;
+		self->teipb_alc = new_alloc;
+	}
+	result = self->teipb_buf;
+	result += self->teipb_len;
+	self->teipb_len += num_chars;
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_builder_addpath(tpp_envinclude_paths_builder *tpp_restrict self,
+                                     char const *tpp_restrict path, tpp_size pathlen) {
+	char *buf;
+	if (pathlen == 0) {
+		/* Special case: an entirely empty path must be treated as `.` (i.e.: $PWD) */
+		path = ".";
+		pathlen = 1;
+	}
+	while (pathlen && TPP_FS_ISSEP(path[pathlen - 1]))
+		--pathlen;
+	/* +2 == +1 (trailing TPP_FS_SEP) +1 (trailing \0) */
+	buf = tpp_envinclude_paths_alloc(self, pathlen + 2);
+	if tpp_unlikely(!buf)
+		return TPP_ENOMEM;
+	buf = (char *)tpp_mempcpy(buf, path, pathlen * sizeof(char));
+	*buf++ = TPP_FS_SEP;
+	*buf++ = '\0';
+	return TPP_EOK;
+}
+
+static tpp_errno TPPCALL
+tpp_envinclude_paths_parse(void *arg, char const *envvalue) {
+	tpp_errno error;
+	tpp_envinclude_paths_builder *const self = (tpp_envinclude_paths_builder *)arg;
+	for (;;) {
+		char const *delim = tpp_strchr(envvalue, TPP_FS_DELIM);
+		if (!delim)
+			return tpp_envinclude_paths_builder_addpath(self, envvalue, tpp_strlen(envvalue));
+		error = tpp_envinclude_paths_builder_addpath(self, envvalue, (tpp_size)(delim - envvalue));
+		if (TPP_ISERR(error))
+			break;
+		envvalue = delim + 1;
+	}
+	return error;
+}
+
+/* Allocate a new set of paths */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_envinclude_paths_newpaths(char **tpp_restrict p_result) {
+	tpp_errno error;
+	tpp_envinclude_paths_builder builder;
+	tpp_envinclude_paths_builder_init(&builder);
+
+	/* Parse environment variables */
+#define tpp_envinclude_paths_tuple_item(_, index, value)                  \
+	error = tpp_io_withenv(value, &tpp_envinclude_paths_parse, &builder); \
+	if (TPP_ISERR(error))                                                 \
+		goto err;
+	TPP_TUPLE_FOREACH(TPP_CONFIG_INCLUDE_PATH_ENVIRON,
+	                  TPP_TUPLE_FOREACH_DUMMY_SEP,
+	                  tpp_envinclude_paths_tuple_item,
+	                  ~)
+#undef tpp_envinclude_paths_tuple_sep
+#undef tpp_envinclude_paths_tuple_item
+	*p_result = tpp_envinclude_paths_builder_pack(&builder);
+	tpp_assert(*p_result);
+	return TPP_EOK;
+err:
+	tpp_envinclude_paths_builder_fini(&builder);
+	return error;
+}
+
+/* Lazily initialize (if not already initialized) `self` and (on success) store
+ * a pointer to the cached \0\0-terminated string array of paths that should be
+ * searched. If no paths are defined, return `TPP_EOK` with `**p_result == '\0'`
+ *
+ * @return: TPP_EOK:    Success (including the case where `*p_result` directly points
+ *                      at the trailing array-element, in which case no environment
+ *                      variables of interest were defined)
+ * @return: TPP_ENOMEM: HARD_ERROR: Out of memory
+ * @return: * :         HARD_ERROR: Some other hard error */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_getpaths(tpp_envinclude_paths *tpp_restrict self,
+                              char const **tpp_restrict p_result) {
+	if (self->teip_cpath == NULL) {
+		/* Allocate paths... */
+		tpp_errno error = tpp_envinclude_paths_newpaths(&self->teip_cpath);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	tpp_assert(self->teip_cpath);
+	*p_result = self->teip_cpath;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

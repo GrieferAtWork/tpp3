@@ -37,12 +37,15 @@ TPP_DECL_BEGIN
 
 /* Time API */
 #define tpp_time                      time_t
+#define tpp_time_fini(p_time)         (void)0
 #define tpp_time_now(p_time)          (time(p_time), TPP_EOK)
-#define tpp_time_empty(p_time)        (*(p_time) = 0)
+#define tpp_time_empty(p_time)        (void)(*(p_time) = 0)
 #define tpp_time_isempty(p_time)      (*(p_time) == 0)
 #if TPP_HAVE_LEXER_COPY
 #define tpp_time_copy(p_self, p_from) (*(p_self) = *(p_from), TPP_EOK)
 #endif /* TPP_HAVE_LEXER_COPY */
+#define tpp_time_ofepoch(p_time, epoch_seconds) \
+	(*(p_time) = (tpp_time)(epoch_seconds), TPP_EOK)
 
 /* Time -> tm conversion (splitting time into its individual components) */
 typedef struct tm tpp_tm;
@@ -79,6 +82,20 @@ tpp_tm_fromtime(tpp_tm *tpp_restrict self,
 #define tpp_tm_getyday(self) ((self)->tm_yday)        /* [0, 365] */
 
 #endif /* !tpp_time */
+
+#if TPP_HAVE_TIME_ENVIRON
+/* Initialize `*p_time` from environment variables, as configured
+ * by `TPP_CONFIG_TIME_ENVIRON`. If none of those variables are
+ * defined or non-empty, return `TPP_ENOENT`.
+ *
+ * @return: TPP_EOK:    Success (`*p_time` has been initialized)
+ * @return: TPP_ENOENT: SOFT_ERROR (none of the `TPP_CONFIG_TIME_ENVIRON`-variables are defined)
+ * @return: * :         HARD_ERROR (`*p_time` is undefined) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_time_fromenviron(tpp_time *tpp_restrict p_time);
+#else /* TPP_HAVE_TIME_ENVIRON */
+#define tpp_time_fromenviron(p_time) TPP_ENOENT
+#endif /* !TPP_HAVE_TIME_ENVIRON */
 #endif /* TPP_HAVE_TIME_API */
 
 TPP_DECL_END

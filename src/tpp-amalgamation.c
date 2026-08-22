@@ -788,6 +788,7 @@
 #define tl_state                                           TPP_INTERNAL(tl_state)
 #define tl_kwds                                            TPP_INTERNAL(tl_kwds)
 #define tl_include_paths                                   TPP_INTERNAL(tl_include_paths)
+#define tl_envinclude_paths                                TPP_INTERNAL(tl_envinclude_paths)
 #define tl_hooks                                           TPP_INTERNAL(tl_hooks)
 #define tl_warn                                            TPP_INTERNAL(tl_warn)
 #define tl_error_count                                     TPP_INTERNAL(tl_error_count)
@@ -867,6 +868,7 @@
 #define tip_embed_list                                     TPP_INTERNAL(tip_embed_list)
 #define tip_pushcnt                                        TPP_INTERNAL(tip_pushcnt)
 #define tip_prev                                           TPP_INTERNAL(tip_prev)
+#define teip_cpath                                         TPP_INTERNAL(teip_cpath)
 #define TPP_TOK_MULTICHAR_BEGIN                            TPP_INTERNAL(TPP_TOK_MULTICHAR_BEGIN)
 #define _TPP_TOK_INTLIKE_MIN                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MIN)
 #define _TPP_TOK_INTLIKE_MAX                               TPP_INTERNAL(_TPP_TOK_INTLIKE_MAX)
@@ -1694,6 +1696,7 @@ _tpp_hooklist2_add(tpp_hooklist2 **tpp_restrict p_self,
 	new_list->thl_size = new_size;
 	new_list->thl_elem[old_size].thle_cb     = cb;
 	new_list->thl_elem[old_size].thle_cookie = arg;
+	*p_self = new_list;
 	return TPP_EOK;
 }
 
@@ -1773,6 +1776,7 @@ _tpp_hooklist1_add(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 		return TPP_ENOMEM;
 	new_list->thl_size = new_size;
 	new_list->thl_elem[old_size].thle_cb = cb;
+	*p_self = new_list;
 	return TPP_EOK;
 }
 
@@ -24267,6 +24271,14 @@ TPP_DECL_END
 #include <Windows.h>
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !tpp_io_normalize_filename */
 
+#if TPP_HAVE_IO_WITHENV && !defined(tpp_io_normalize_filename)
+#if TPP_OS_WINDOWS
+#include <Windows.h>
+#else /* TPP_OS_WINDOWS */
+#include <stdlib.h> /* getenv() */
+#endif /* !TPP_OS_WINDOWS */
+#endif /* TPP_HAVE_IO_WITHENV && !tpp_io_normalize_filename */
+
 TPP_DECL_BEGIN
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
@@ -24734,6 +24746,106 @@ tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
 #endif /* !tpp_io_skip_blocking */
 #endif /* TPP_HAVE_IO_SKIP_BLOCKING */
 
+
+#if TPP_HAVE_IO_WITHENV
+#ifndef tpp_io_withenv
+/* Invoke `cb` with the current value of the environment variable `varname`
+ * @return: * :         Return value of `cb`.
+ * @return: TPP_ENOENT: No environment variable `varname` defined (or defined
+ *                      as an empty string), or `cb` was called and ended up
+ *                      returning `TPP_ENOENT`.
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    Failed to query environment variable */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_withenv(char const *varname,
+               tpp_errno (TPPCALL *cb)(void *arg, char const *envvalue),
+               void *arg) {
+#if TPP_OS_WINDOWS && 0 /* TODO */
+	/* TODO */
+	GetEnvironmentVariableA(varname, );
+#else /* TPP_OS_WINDOWS */
+	tpp_errno result;
+	char const *value;
+#ifdef tpp_environ_lock
+	result = tpp_environ_lock();
+	if (TPP_ISERR(result))
+		return result;
+#define tpp_io_withenv_return_error(error) \
+	return (tpp_environ_unlock(), error)
+#else /* tpp_environ_lock */
+#define tpp_io_withenv_return_error return
+#endif /* !tpp_environ_lock */
+	TPP_SYSCALL({
+		value = getenv(varname);
+	}, tpp_io_withenv_return_error);
+#undef tpp_io_withenv_return_error
+	result = TPP_ENOENT;
+	if (value && *value)
+		result = (*cb)(arg, value);
+#ifdef tpp_environ_lock
+	tpp_environ_unlock();
+#endif /* tpp_environ_lock */
+	return result;
+#endif /* !TPP_OS_WINDOWS */
+}
+#endif /* !tpp_io_withenv */
+#endif /* TPP_HAVE_IO_WITHENV */
+
+/************************************************************************/
+/* File: parts/time.c                                                   */
+/************************************************************************/
+
+#if TPP_HAVE_TIME_API
+#if TPP_HAVE_TIME_ENVIRON
+
+#if TPP_TUPLE_SIZE(TPP_CONFIG_TIME_ENVIRON)
+static TPP_WUNUSED tpp_errno TPPCALL
+tpp_time_fromenv_parse(void *arg, char const *envvalue) {
+	tpp_time *const me = (tpp_time *)arg;
+	tpp_uintmax value = 0;
+	for (;; ++envvalue) {
+		char ch = *envvalue;
+		if (!tpp_ascii_isdigit(ch))
+			break;
+		value *= 10;
+		value += tpp_ascii_asdigit(ch);
+	}
+	return tpp_time_ofepoch(me, value);
+}
+#elif !TPP_IGNORE_INVALID_CONFIGURATION
+#error "`TPP_HAVE_TIME_ENVIRON` is enabled, but `TPP_CONFIG_TIME_ENVIRON` doesn't define any variables"
+#endif /* ... */
+
+/* Initialize `*p_time` from environment variables, as configured
+ * by `TPP_CONFIG_TIME_ENVIRON`. If none of those variables are
+ * defined or non-empty, return `TPP_ENOENT`.
+ *
+ * @return: TPP_EOK:    Success (`*p_time` has been initialized)
+ * @return: TPP_ENOENT: SOFT_ERROR (none of the `TPP_CONFIG_TIME_ENVIRON`-variables are defined)
+ * @return: * :         HARD_ERROR (`*p_time` is undefined) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_time_fromenviron(tpp_time *tpp_restrict p_time) {
+#if TPP_TUPLE_SIZE(TPP_CONFIG_TIME_ENVIRON)
+	tpp_errno result;
+#define tpp_time_fromenv_tuple_item(_, index, value) \
+	result = tpp_io_withenv(value, &tpp_time_fromenv_parse, p_time);
+#define tpp_time_fromenv_tuple_sep(_, prev_index, prev_value, next_index, next_value) \
+	if (result != TPP_ENOENT)                                                         \
+		return result;
+	TPP_TUPLE_FOREACH(TPP_CONFIG_TIME_ENVIRON,
+	                  tpp_time_fromenv_tuple_sep,
+	                  tpp_time_fromenv_tuple_item,
+	                  ~)
+#undef tpp_time_fromenv_tuple_sep
+#undef tpp_time_fromenv_tuple_item
+	return result;
+#else /* TPP_TUPLE_SIZE(TPP_CONFIG_TIME_ENVIRON) */
+	(void)p_time;
+	return TPP_ENOENT;
+#endif /* !TPP_TUPLE_SIZE(TPP_CONFIG_TIME_ENVIRON) */
+}
+#endif /* TPP_HAVE_TIME_ENVIRON */
+#endif /* TPP_HAVE_TIME_API */
 
 /************************************************************************/
 /* File: parts/file.c                                                   */
@@ -33320,6 +33432,181 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 #endif /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
+
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+/* Marker for `tpp_envinclude_paths` to indicate
+ * loaded-but-empty. This points to a \0-character */
+TPP_CONST_IMPL char const _tpp_envinclude_cpath_empty[1] = { '\0' };
+
+#if TPP_HAVE_LEXER_COPY
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_copy(tpp_envinclude_paths *tpp_restrict self,
+                          tpp_envinclude_paths const *tpp_restrict from) {
+	self->teip_cpath = from->teip_cpath;
+	if (self->teip_cpath != NULL &&
+	    self->teip_cpath != (char *)_tpp_envinclude_cpath_empty) {
+		tpp_size whole_len = 1;
+		char *copy, *iter = self->teip_cpath;
+		while (*iter) {
+			tpp_size part = tpp_strlen(iter) + 1;
+			iter += part;
+			whole_len += part;
+		}
+		copy = (char *)tpp_malloc(whole_len * sizeof(char));
+		if tpp_unlikely(!copy)
+			return TPP_ENOMEM;
+		copy = (char *)tpp_memcpy(copy, self->teip_cpath, whole_len * sizeof(char));
+		self->teip_cpath = copy;
+	}
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+typedef struct tpp_envinclude_paths_builder {
+	char    *teipb_buf; /* [0..teipb_len][owned] Path buffer */
+	tpp_size teipb_len; /* Used buffer size */
+	tpp_size teipb_alc; /* Allocated buffer size (excluding 1 always-allocated trailing character) */
+} tpp_envinclude_paths_builder;
+
+#define tpp_envinclude_paths_builder_init(self) \
+	(void)((self)->teipb_buf = NULL,            \
+	       (self)->teipb_len = 0,               \
+	       (self)->teipb_alc = 0)
+#define tpp_envinclude_paths_builder_fini(self) \
+	tpp_free((self)->teipb_buf)
+static TPP_WUNUSED TPP_RETNONNULL TPP_NONNULL((1)) char *TPPCALL
+tpp_envinclude_paths_builder_pack(tpp_envinclude_paths_builder *tpp_restrict self) {
+	char *result;
+	if (self->teipb_len == 0) {
+		/* No paths defined... */
+		tpp_free(self->teipb_buf);
+		return (char *)_tpp_envinclude_cpath_empty;
+	}
+	/* Release unused memory... */
+	result = (char *)tpp_tryrealloc(self->teipb_buf,
+	                                (self->teipb_len + 1) *
+	                                sizeof(char));
+	if (result == NULL)
+		result = self->teipb_buf;
+	tpp_assert(result);
+	result[self->teipb_len] = '\0'; /* Add final (secondary) trailing NUL */
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
+tpp_envinclude_paths_alloc(tpp_envinclude_paths_builder *tpp_restrict self,
+                           tpp_size num_chars) {
+	char *result;
+	tpp_size avail = self->teipb_alc - self->teipb_len;
+	tpp_assert(self->teipb_alc >= self->teipb_len);
+	if (num_chars > avail) {
+		tpp_size new_alloc = self->teipb_alc * 2;
+		tpp_size min_alloc = self->teipb_len + num_chars;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc * 2;
+		result = (char *)tpp_tryrealloc(self->teipb_buf, (new_alloc + 1) * sizeof(char));
+		if tpp_unlikely(!result) {
+			new_alloc = min_alloc;
+			result = (char *)tpp_realloc(self->teipb_buf, (new_alloc + 1) * sizeof(char));
+			if tpp_unlikely(!result)
+				return NULL;
+		}
+		self->teipb_buf = result;
+		self->teipb_alc = new_alloc;
+	}
+	result = self->teipb_buf;
+	result += self->teipb_len;
+	self->teipb_len += num_chars;
+	return result;
+}
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_builder_addpath(tpp_envinclude_paths_builder *tpp_restrict self,
+                                     char const *tpp_restrict path, tpp_size pathlen) {
+	char *buf;
+	if (pathlen == 0) {
+		/* Special case: an entirely empty path must be treated as `.` (i.e.: $PWD) */
+		path = ".";
+		pathlen = 1;
+	}
+	while (pathlen && TPP_FS_ISSEP(path[pathlen - 1]))
+		--pathlen;
+	/* +2 == +1 (trailing TPP_FS_SEP) +1 (trailing \0) */
+	buf = tpp_envinclude_paths_alloc(self, pathlen + 2);
+	if tpp_unlikely(!buf)
+		return TPP_ENOMEM;
+	buf = (char *)tpp_mempcpy(buf, path, pathlen * sizeof(char));
+	*buf++ = TPP_FS_SEP;
+	*buf++ = '\0';
+	return TPP_EOK;
+}
+
+static tpp_errno TPPCALL
+tpp_envinclude_paths_parse(void *arg, char const *envvalue) {
+	tpp_errno error;
+	tpp_envinclude_paths_builder *const self = (tpp_envinclude_paths_builder *)arg;
+	for (;;) {
+		char const *delim = tpp_strchr(envvalue, TPP_FS_DELIM);
+		if (!delim)
+			return tpp_envinclude_paths_builder_addpath(self, envvalue, tpp_strlen(envvalue));
+		error = tpp_envinclude_paths_builder_addpath(self, envvalue, (tpp_size)(delim - envvalue));
+		if (TPP_ISERR(error))
+			break;
+		envvalue = delim + 1;
+	}
+	return error;
+}
+
+/* Allocate a new set of paths */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_envinclude_paths_newpaths(char **tpp_restrict p_result) {
+	tpp_errno error;
+	tpp_envinclude_paths_builder builder;
+	tpp_envinclude_paths_builder_init(&builder);
+
+	/* Parse environment variables */
+#define tpp_envinclude_paths_tuple_item(_, index, value)                  \
+	error = tpp_io_withenv(value, &tpp_envinclude_paths_parse, &builder); \
+	if (TPP_ISERR(error))                                                 \
+		goto err;
+	TPP_TUPLE_FOREACH(TPP_CONFIG_INCLUDE_PATH_ENVIRON,
+	                  TPP_TUPLE_FOREACH_DUMMY_SEP,
+	                  tpp_envinclude_paths_tuple_item,
+	                  ~)
+#undef tpp_envinclude_paths_tuple_sep
+#undef tpp_envinclude_paths_tuple_item
+	*p_result = tpp_envinclude_paths_builder_pack(&builder);
+	tpp_assert(*p_result);
+	return TPP_EOK;
+err:
+	tpp_envinclude_paths_builder_fini(&builder);
+	return error;
+}
+
+/* Lazily initialize (if not already initialized) `self` and (on success) store
+ * a pointer to the cached \0\0-terminated string array of paths that should be
+ * searched. If no paths are defined, return `TPP_EOK` with `**p_result == '\0'`
+ *
+ * @return: TPP_EOK:    Success (including the case where `*p_result` directly points
+ *                      at the trailing array-element, in which case no environment
+ *                      variables of interest were defined)
+ * @return: TPP_ENOMEM: HARD_ERROR: Out of memory
+ * @return: * :         HARD_ERROR: Some other hard error */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_getpaths(tpp_envinclude_paths *tpp_restrict self,
+                              char const **tpp_restrict p_result) {
+	if (self->teip_cpath == NULL) {
+		/* Allocate paths... */
+		tpp_errno error = tpp_envinclude_paths_newpaths(&self->teip_cpath);
+		if (TPP_ISERR(error))
+			return error;
+	}
+	tpp_assert(self->teip_cpath);
+	*p_result = self->teip_cpath;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
 /************************************************************************/
 /* File: parts/lexer.c                                                  */
 /************************************************************************/
@@ -33475,6 +33762,11 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_include_paths_init(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
+	/* Include paths defined by environment variables. */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	tpp_envinclude_paths_init(&self->tl_envinclude_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
 #if TPP_HAVE_HOOKS
 	tpp_hooks_init(&self->tl_hooks, self);
 #endif /* TPP_HAVE_HOOKS */
@@ -33559,6 +33851,16 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_INCLUDE_PATH */
 
+	/* Finalize environment include paths */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	tpp_envinclude_paths_fini(&self->tl_envinclude_paths);
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
+#if TPP_HAVE_LEXER_TIME
+	if (!tpp_time_isempty(&self->tl_time))
+		tpp_time_fini(&self->tl_time);
+#endif /* TPP_HAVE_LEXER_TIME */
+
 	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
 	               sizeof(*self) - sizeof(self->tl_core));
 }
@@ -33595,15 +33897,21 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 	if (TPP_ISERR(error))
 		goto err_warn;
 #endif /* TPP_HAVE_INCLUDE_PATH */
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	error = tpp_envinclude_paths_copy(&self->tl_envinclude_paths,
+	                                  &from->tl_envinclude_paths);
+	if (TPP_ISERR(error))
+		goto err_warn_incl;
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
 #if TPP_HAVE_EXTENSIONS
 	error = tpp_extensions_copy(&self->tl_exts, &from->tl_exts);
 	if (TPP_ISERR(error))
-		goto err_warn_incl;
+		goto err_warn_incl_einc;
 #endif /* TPP_HAVE_EXTENSIONS */
 #if TPP_HAVE_USER_KEYWORDS
 	error = tpp_keywords_copy(&self->tl_kwds, &from->tl_kwds);
 	if (TPP_ISERR(error))
-		goto err_warn_incl_exts;
+		goto err_warn_incl_einc_exts;
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Copy stuff that can't cause errors... */
@@ -33652,24 +33960,30 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS
-err_warn_incl_exts:
+err_warn_incl_einc_exts:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_EXTENSIONS
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_extensions_fini(&self->tl_exts);
 #endif /* TPP_HAVE_USER_KEYWORDS */
-err_warn_incl:
+err_warn_incl_einc:
 #endif /* TPP_HAVE_EXTENSIONS */
-#if TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
 #if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS
+	tpp_envinclude_paths_fini(&self->tl_envinclude_paths);
+#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS */
+err_warn_incl:
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+#if TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS */
 err_warn:
 #endif /* TPP_HAVE_INCLUDE_PATH */
 #if TPP_HAVE_WARNINGS
-#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH
+#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH
 	tpp_warnings_fini(&self->tl_warn);
-#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH */
+#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH */
 #endif /* TPP_HAVE_WARNINGS */
 #if TPP_HAVE_LEXER_TIME
 err:
@@ -41834,9 +42148,9 @@ eof:
 		}
 #if 0
 		if ((file->tf_tprev == NULL) && tpp_file_getkind(file) == TPP_FILE_KIND_IO) {
-			/* XXX: -Wunused-macros (warn about macros define by __BASE_FILE__,
-			 *      but that were never expanded, or otherwise used in #ifdef
-			 *      or defined expressions)
+			/* TODO: -Wunused-macros (warn about macros defined by __BASE_FILE__,
+			 *       but that were never expanded, or otherwise used in #ifdef
+			 *       or defined expressions)
 			 * NOTE: If the macro is an #include-guard for __BASE_FILE__, then
 			 *       don't warn about its usage, either! */
 		}
@@ -52434,14 +52748,23 @@ tpp_lexer_yield_handle_time_macro(tpp_lexer *tpp_restrict self, tpp_token_id tok
 
 	/* Initialize time if this is the first *time* (pun intended) we get here */
 	if (tpp_time_isempty(tpp_lexer_gettimeptr(self))) {
-		error = tpp_time_now(tpp_lexer_gettimeptr(self));
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+#if TPP_HAVE_TIME_ENVIRON
+		error = tpp_time_fromenviron(tpp_lexer_gettimeptr(self));
+		if (error != TPP_ENOENT) {
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
+		} else
+#endif /* TPP_HAVE_TIME_ENVIRON */
+		{
+			error = tpp_time_now(tpp_lexer_gettimeptr(self));
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
 #if TPP_HAVE_TPP_W_DATE_TIME
-		error = tpp_lexer_warnf(self, TPP_W_DATE_TIME);
-		if (TPP_ISERR(error))
-			return TPP_TOK_OFERR(error);
+			error = tpp_lexer_warnf(self, TPP_W_DATE_TIME);
+			if (TPP_ISERR(error))
+				return TPP_TOK_OFERR(error);
 #endif /* TPP_HAVE_TPP_W_DATE_TIME */
+		}
 	}
 
 	/* Load tm from time */
@@ -55256,14 +55579,32 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
 	if (error != TPP_ENOENT)
 		return error;
-#if TPP_HAVE_INCLUDE_PATH_SYSHDR
+#endif /* TPP_HAVE_INCLUDE_PATH */
+
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_ENVIRON);
+	{
+		/* Search `$CPATH` */
+		char const *envpath;
+		error = tpp_lexer_envincludes_getpaths(self, &envpath);
+		if (TPP_ISERR(error))
+			return error;
+		while (*envpath) {
+			error = (*cb)(arg, envpath tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+			if (error != TPP_ENOENT)
+				return error;
+			envpath += tpp_strlen(envpath) + 1;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
+#if TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR
 	tpp_lexer_foreach_include_path_hook(TPP_HOOK_SYSTEM_INCLUDE_PATH_WHEN_BEFORE_SYSHDR);
 	error = tpp_lexer_foreach_include_path_in_list(&self->tl_include_paths.tip_syshdr_list, cb, arg
 	                                               tpp_lexer_foreach_include_path_flags__ARG(TPP_LEXER_FOREACH_INCLUDE_PATH_SYSHDR_FLAGS));
 	if (error != TPP_ENOENT)
 		return error;
-#endif /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
-#endif /* TPP_HAVE_INCLUDE_PATH */
+#endif /* TPP_HAVE_INCLUDE_PATH && TPP_HAVE_INCLUDE_PATH_SYSHDR */
 
 	/* Check hard-coded system include paths... */
 #if TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH

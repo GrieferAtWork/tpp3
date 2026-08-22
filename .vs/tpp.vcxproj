@@ -65,6 +65,7 @@
     <ClCompile Include="..\src\parts\preparse.c" />
     <ClCompile Include="..\src\parts\string.c" />
     <ClCompile Include="..\src\parts\sysinclude.c" />
+    <ClCompile Include="..\src\parts\time.c" />
     <ClCompile Include="..\src\parts\token-encodestring.c" />
     <ClCompile Include="..\src\parts\token-reprtokenid.c" />
     <ClCompile Include="..\src\parts\token-strtokenid.c" />

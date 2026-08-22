@@ -53,6 +53,7 @@
 #include "parts/token-encodestring.c"
 #include "parts/lexer-require-whitespace.c"
 #include "parts/file-io.c"
+#include "parts/time.c"
 #include "parts/file.c"
 #include "parts/preparse.c"
 #include "parts/keyword.c"

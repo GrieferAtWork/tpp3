@@ -60,6 +60,14 @@ TPP_DECL_END
 #include <Windows.h>
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME && TPP_OS_WINDOWS && !tpp_io_normalize_filename */
 
+#if TPP_HAVE_IO_WITHENV && !defined(tpp_io_normalize_filename)
+#if TPP_OS_WINDOWS
+#include <Windows.h>
+#else /* TPP_OS_WINDOWS */
+#include <stdlib.h> /* getenv() */
+#endif /* !TPP_OS_WINDOWS */
+#endif /* TPP_HAVE_IO_WITHENV && !tpp_io_normalize_filename */
+
 TPP_DECL_BEGIN
 #endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
 
@@ -527,6 +535,50 @@ tpp_io_skip_blocking(tpp_io_handle file, tpp_uintmax max_bytes,
 #endif /* !tpp_io_skip_blocking */
 #endif /* TPP_HAVE_IO_SKIP_BLOCKING */
 
+
+#if TPP_HAVE_IO_WITHENV
+#ifndef tpp_io_withenv
+/* Invoke `cb` with the current value of the environment variable `varname`
+ * @return: * :         Return value of `cb`.
+ * @return: TPP_ENOENT: No environment variable `varname` defined (or defined
+ *                      as an empty string), or `cb` was called and ended up
+ *                      returning `TPP_ENOENT`.
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    Failed to query environment variable */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_io_withenv(char const *varname,
+               tpp_errno (TPPCALL *cb)(void *arg, char const *envvalue),
+               void *arg) {
+#if TPP_OS_WINDOWS && 0 /* TODO */
+	/* TODO */
+	GetEnvironmentVariableA(varname, );
+#else /* TPP_OS_WINDOWS */
+	tpp_errno result;
+	char const *value;
+#ifdef tpp_environ_lock
+	result = tpp_environ_lock();
+	if (TPP_ISERR(result))
+		return result;
+#define tpp_io_withenv_return_error(error) \
+	return (tpp_environ_unlock(), error)
+#else /* tpp_environ_lock */
+#define tpp_io_withenv_return_error return
+#endif /* !tpp_environ_lock */
+	TPP_SYSCALL({
+		value = getenv(varname);
+	}, tpp_io_withenv_return_error);
+#undef tpp_io_withenv_return_error
+	result = TPP_ENOENT;
+	if (value && *value)
+		result = (*cb)(arg, value);
+#ifdef tpp_environ_lock
+	tpp_environ_unlock();
+#endif /* tpp_environ_lock */
+	return result;
+#endif /* !TPP_OS_WINDOWS */
+}
+#endif /* !tpp_io_withenv */
+#endif /* TPP_HAVE_IO_WITHENV */
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

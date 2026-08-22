@@ -376,6 +376,21 @@
 /************************************************************************/
 
 
+/* Common configuration that can be used to enable/disable use of environment
+ * variables in various places throughout TPP to allow users of the hosting
+ * compiler to do some additional configuration:
+ *
+ * - `TPP_HAVE_INCLUDE_PATH_ENVIRON`
+ * - `TPP_HAVE_TIME_FROMENV`
+ */
+#ifndef TPP_COMMON_HAVE_ENVIRON
+#if TPP_HAVE_PROFILE_NOT_MINIMAL
+#define TPP_COMMON_HAVE_ENVIRON 1
+#else /* ... */
+#define TPP_COMMON_HAVE_ENVIRON 0
+#endif /* !... */
+#endif /* !TPP_COMMON_HAVE_ENVIRON */
+
 /* Common configuration describing if extensions configuration should be used in defaults.
  * When disabled, default configurations use...
  * - `TPP_CONF_FEAT0` instead of `TPP_CONF_EXT0`
@@ -5948,6 +5963,35 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_TIME_API */
 
+/* When enabled, environment variables specified by `TPP_CONFIG_TIME_ENVIRON` are
+ * first scanned (in the order they are specified by `TPP_CONFIG_TIME_ENVIRON`,
+ * stopping once some non-empty environment variable is encountered).
+ *
+ * Only when none of the variables specified by `TPP_CONFIG_TIME_ENVIRON` are
+ * defined will the *actual* current time (~ala `tpp_time_now()`) be queried and
+ * used in the expansion of macros such as `__TIME__` or `__DATE__` */
+#ifndef TPP_HAVE_TIME_ENVIRON
+#if (TPP_HAVE_TIME_API && TPP_COMMON_HAVE_ENVIRON)
+#define TPP_HAVE_TIME_ENVIRON 1
+#else /* ... */
+#define TPP_HAVE_TIME_ENVIRON 0
+#endif /* !... */
+#endif /* !TPP_HAVE_TIME_ENVIRON */
+
+/* Name(s) of environment variables scanned for an override of the current time,
+ * to use in place of the ~actual~ current time when expanding `__TIME__` and
+ * related macros.
+ *
+ * The first non-empty environment variable with a name listed here will be used
+ * as an override of the current time. The variable's value must be a decimal
+ * integer describing the *unix epoch second* (that is: the number of seconds
+ * since `1970-01-01 00:00:00`). If that is not the case, no warning will be
+ * emitted, and the effective value used by the lexer as the current time will
+ * be weak undefined. */
+#ifndef TPP_CONFIG_TIME_ENVIRON
+#define TPP_CONFIG_TIME_ENVIRON 1("SOURCE_DATE_EPOCH")
+#endif /* !TPP_CONFIG_TIME_ENVIRON */
+
 /* Enable support for `TPP_FILE_FLAGS_SYSHDR` */
 #ifndef TPP_HAVE_FILE_SYSHDR
 #if TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || TPP_HAVE_CPP_DIGIT_LINE
@@ -5982,9 +6026,43 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH */
 
+/* Ensure support for `tpp_include_paths` containing an extra (hidden) path-list that
+ * is lazily populated the first time paths are searched, using a set of environment
+ * variables configured by `TPP_CONFIG_INCLUDE_PATH_ENVIRON`.
+ *
+ * When enabled, these paths are searched after between `-I` and `-isystem` */
+#ifndef TPP_HAVE_INCLUDE_PATH_ENVIRON
+#if (TPP_HAVE_INCLUDE_STACK && TPP_COMMON_HAVE_ENVIRON)
+#define TPP_HAVE_INCLUDE_PATH_ENVIRON 1
+#else /* ... */
+#define TPP_HAVE_INCLUDE_PATH_ENVIRON 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
+/* A preprocessor tuple describing the names of environment variables checked-for
+ * by `TPP_HAVE_INCLUDE_PATH_ENVIRON`. Variables are checked in the order described
+ * here, and paths from any non-empty variable are checked as they are encountered.
+ *
+ * All variables are checked and processed in case multiple are enabled here, and
+ * at least 2 of them end up being defined at runtime.
+ *
+ * When defined, each of these variables must be a `TPP_FS_DELIM`-separated list of
+ * paths, which will then be used and searched for `#include` files that were not
+ * already found until that point (see `TPP_HAVE_INCLUDE_PATH_ENVIRON` for more info
+ * regarding when exactly environment variables are searched) */
+#ifndef TPP_CONFIG_INCLUDE_PATH_ENVIRON
+#if TPP_PROFILE == TPP_PROFILE_C
+#define TPP_CONFIG_INCLUDE_PATH_ENVIRON 2("C_INCLUDE_PATH", "CPATH")
+#elif TPP_PROFILE == TPP_PROFILE_CXX
+#define TPP_CONFIG_INCLUDE_PATH_ENVIRON 2("CPLUS_INCLUDE_PATH", "CPATH")
+#else /* ... */
+#define TPP_CONFIG_INCLUDE_PATH_ENVIRON 1("CPATH")
+#endif /* !... */
+#endif /* !TPP_CONFIG_INCLUDE_PATH_ENVIRON */
+
 /* `tpp_include_paths` contains a 2nd path-list that is only searched during `"`-strings */
 #ifndef TPP_HAVE_INCLUDE_PATH_QUOTE
-#if (TPP_HAVE_INCLUDE_STACK && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#if (TPP_HAVE_INCLUDE_PATH && TPP_HAVE_PROFILE_NOT_MINIMAL)
 #define TPP_HAVE_INCLUDE_PATH_QUOTE 1
 #else /* ... */
 #define TPP_HAVE_INCLUDE_PATH_QUOTE 0
@@ -5993,8 +6071,8 @@ print("#endif /" "* !... *" "/");
 
 /* `tpp_include_paths` contains a 3rd path-list whose files are treated as `TPP_FILE_FLAGS_SYSHDR` */
 #ifndef TPP_HAVE_INCLUDE_PATH_SYSHDR
-#if (TPP_HAVE_INCLUDE_STACK && \
-     TPP_HAVE_FILE_SYSHDR &&   \
+#if (TPP_HAVE_INCLUDE_PATH && \
+     TPP_HAVE_FILE_SYSHDR &&  \
      TPP_HAVE_PROFILE_NOT_MINIMAL)
 #define TPP_HAVE_INCLUDE_PATH_SYSHDR 1
 #else /* ... */
@@ -6024,7 +6102,7 @@ print("#endif /" "* !... *" "/");
 
 /* `tpp_include_paths` contains a 4th path-list that is searched after all other paths */
 #ifndef TPP_HAVE_INCLUDE_PATH_AFTER
-#if (TPP_HAVE_INCLUDE_STACK &&         \
+#if (TPP_HAVE_INCLUDE_PATH &&          \
      (TPP_HAVE_PROFILE_ALL ||          \
       (TPP_HAVE_PROFILE_NOT_MINIMAL && \
        TPP_HAVE_INCLUDE_SYSTEM_INCLUDE_PATH)))
@@ -6268,6 +6346,24 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_IO_NORMALIZE_FILENAME 0
 #endif /* !... */
 #endif /* !TPP_HAVE_IO_NORMALIZE_FILENAME */
+
+/* Provide a function `tpp_io_withenv()` that can be used to
+ * perform an operation on the current value of an `environ`
+ * variable.
+ *
+ * Used as the backend for implementing a couple of features
+ * related to using environment variables for configuration:
+ * - `TPP_HAVE_INCLUDE_PATH_ENVIRON` (aka: `$CPATH`)
+ * - `TPP_HAVE_TIME_ENVIRON` (aka: `$SOURCE_DATE_EPOCH`) */
+#ifndef TPP_HAVE_IO_WITHENV
+#if (TPP_HAVE_PROFILE_ALL ||          \
+     TPP_HAVE_INCLUDE_PATH_ENVIRON || \
+     TPP_HAVE_TIME_ENVIRON)
+#define TPP_HAVE_IO_WITHENV 1
+#else /* ... */
+#define TPP_HAVE_IO_WITHENV 0
+#endif /* !... */
+#endif /* !TPP_HAVE_IO_WITHENV */
 
 /* Enable support for `tpp_joinpath()`, a wrapper around another internal function
  * used to implement `tpp_lexer_openfile()` (see `TPP_HAVE_LEXER_OPENFILE`) and is also
@@ -7036,10 +7132,17 @@ print("#endif /" "* !... *" "/");
 /* CLI PARSER CONFIGURATION                                             */
 /************************************************************************/
 
-/* XXX: Lexer functionality to automatically rename files as they are `#include`-ded,
- *      by assigning them custom `tpp_file_setfilename()` immediately after being
- *      initialized. The way names are assigned here is by replacing directory
- *      prefixes, which should be configurable via `-fmacro-prefix-map`. */
+/* TODO: Lexer functionality to automatically rename files as they are `#include`-ded,
+ *       by assigning them custom `tpp_file_setfilename()` immediately after being
+ *       initialized. The way names are assigned here is by replacing directory
+ *       prefixes, which should be configurable via `-fmacro-prefix-map`. */
+
+/* TODO: Check what GCC's `-fcanonical-system-headers` actually does and see if it
+ *       might make sense for TPP to also implement that one (but keep in mind that
+ *       the primary idea is that the TPP core should keep all paths based on the
+ *       paths specified via the API -- always making paths absolute should not be
+ *       something that should be default-enabled) */
+/* TODO: Check what GCC's `-remap` actually does */
 
 /* Provide an API surrounding `tpp_cli_loader`, which can be used to configure a lexer
  * using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.

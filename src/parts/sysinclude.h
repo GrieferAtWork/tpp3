@@ -31,9 +31,9 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_INCLUDE_PATH
 typedef struct tpp_include_path_entry {
 #if TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING
-	TPP_REF tpp_string *TPP_INTERNAL(tipe_pathstr); /* [1..1] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+	TPP_REF tpp_string *TPP_INTERNAL(tipe_pathstr); /* [1..1] The path described by this entry (with a trailing `TPP_FS_SEP`). */
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
-	char               *TPP_INTERNAL(tipe_path);    /* [1..1][owned] The path described by this entry (with a trailing TPP_FS_SEP_S). */
+	char               *TPP_INTERNAL(tipe_path);    /* [1..1][owned] The path described by this entry (with a trailing `TPP_FS_SEP`). */
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 } tpp_include_path_entry;
 
@@ -111,9 +111,10 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
  *                                enabled): every I/O-file on the `#include`-stack
  * 2.  (`#include "foo.h"` only): Paths specified in `tip_quote_list` (if available)
  * 3.  Paths specified in `tip_system_list`
- * 4.  Paths specified in `tip_syshdr_list`
- * 5.  Paths hard-coded using `TPP_CONFIG_SYSTEM_INCLUDE_PATH`
- * 6.  Paths specified in `tip_after_list` (if available)
+ * 4.  Paths specified by `$CPATH` (see `TPP_HAVE_INCLUDE_PATH_ENVIRON`)
+ * 5.  Paths specified in `tip_syshdr_list`
+ * 6.  Paths hard-coded using `TPP_CONFIG_SYSTEM_INCLUDE_PATH`
+ * 7.  Paths specified in `tip_after_list` (if available)
  */
 typedef struct tpp_include_paths {
 	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System `#include`-path list: `#pragma TPP include_path("/usr/include")` */
@@ -368,6 +369,47 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #endif /* TPP_HAVE_INCLUDE_PATH_EMBED */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 #endif /* TPP_HAVE_INCLUDE_PATH */
+
+
+#if TPP_HAVE_INCLUDE_PATH_ENVIRON
+typedef struct tpp_envinclude_paths {
+	char *TPP_INTERNAL(teip_cpath); /* [0..1] Paths specified by `$CPATH`, in the form of a \0\0-terminated string array.
+	                                 * Set to `NULL` if not yet loaded. Set to `_tpp_envinclude_cpath_empty` if loaded, but
+	                                 * none of the searched environment variables are defined+non-empty. Each path in this
+	                                 * list has a trailing `TPP_FS_SEP`. */
+} tpp_envinclude_paths;
+
+#define tpp_envinclude_paths_init(self) (void)((self)->TPP_INTERNAL(teip_cpath) = NULL)
+#define tpp_envinclude_paths_fini(self)                                        \
+	(((self)->TPP_INTERNAL(teip_cpath) != (char *)_tpp_envinclude_cpath_empty) \
+	 ? tpp_free((self)->TPP_INTERNAL(teip_cpath))                              \
+	 : (void)0)
+#if TPP_HAVE_LEXER_COPY
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_copy(tpp_envinclude_paths *tpp_restrict self,
+                          tpp_envinclude_paths const *tpp_restrict from);
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Marker for `tpp_envinclude_paths` to indicate
+ * loaded-but-empty. This points to a \0-character */
+#if !TPP_USE_STATIC
+TPP_CONST_DECL char const _tpp_envinclude_cpath_empty[1];
+#endif /* !TPP_USE_STATIC */
+
+/* Lazily initialize (if not already initialized) `self` and (on success) store
+ * a pointer to the cached \0\0-terminated string array of paths that should be
+ * searched. If no paths are defined, return `TPP_EOK` with `**p_result == '\0'`
+ *
+ * @return: TPP_EOK:    Success (including the case where `*p_result` directly points
+ *                      at the trailing array-element, in which case no environment
+ *                      variables of interest were defined)
+ * @return: TPP_ENOMEM: HARD_ERROR: Out of memory
+ * @return: * :         HARD_ERROR: Some other hard error */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_envinclude_paths_getpaths(tpp_envinclude_paths *tpp_restrict self,
+                              char const **tpp_restrict p_result);
+#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/
