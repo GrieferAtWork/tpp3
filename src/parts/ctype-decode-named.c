@@ -187,17 +187,10 @@ nope:
  *
  * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
-                        struct tpp_lexer const *tpp_restrict lexer)
-#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN])
-#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
-{
+                        struct tpp_lexer const *tpp_restrict lexer) {
 #if TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD || TPP_HAVE_ESCAPE_NAMED_XML
 	tpp_char ch;
 	tpp_char const *iter = *p_iter;
@@ -283,11 +276,7 @@ _tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *e
 	if (tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_NAMES))
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
 	{
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 		return tpp_unicode_byname_lookup(p_iter, end, result, lexer);
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-		return tpp_unicode_byname_lookup(p_iter, end, result);
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 	}
 #endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
 
@@ -300,16 +289,13 @@ nope:
 	(void)iter;
 	(void)end;
 	(void)result;
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 	(void)lexer;
-#endif /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 	return 0;
 #endif /* ... */
 }
 #endif /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 
 #if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
-#ifndef tpp_decode_named_printnearest
 /* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
  * that automatically does the right thing, including adding a leading `&` before printing
  * the name of a (potentially) closest matching XML escape sequence. */
@@ -359,11 +345,7 @@ tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
 	if (tpp_lexer_has(lexer, ESCAPE_NAMED_UNICODE_NAMES))
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
 	{
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 		return tpp_unicode_byname_printnearest(start, end, printer, arg, lexer);
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-		return tpp_unicode_byname_printnearest(start, end, printer, arg);
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 	}
 #endif /* TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES */
 
@@ -371,7 +353,6 @@ tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
 	return 0;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) */
 }
-#endif /* !tpp_decode_named_printnearest */
 #endif /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 
 

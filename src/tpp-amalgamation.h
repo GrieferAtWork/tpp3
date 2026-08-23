@@ -5866,6 +5866,7 @@ TPP_DECL_BEGIN
 /* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
+/* TODO: Remove `tpp_formatprinter` arguments from `TPP_NONNULL` -- API consumers may override `tpp_formatprinter` as a non-pointer */
 typedef tpp_ssize (TPPCALL *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
@@ -5933,9 +5934,11 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(self, line, col)          \
-	(void)((self)->TPP_INTERNAL(lci_line) = line, \
-	       (self)->TPP_INTERNAL(lci_col)  = col)
+#define tpp_lcinfo_init(p_self, line, col)            \
+	(void)((p_self)->TPP_INTERNAL(lci_line) = (line), \
+	       (p_self)->TPP_INTERNAL(lci_col)  = (col))
+#define tpp_lcinfo_setline(p_self, line) (void)((p_self)->TPP_INTERNAL(lci_line) = (line))
+#define tpp_lcinfo_setcol(p_self, col)   (void)((p_self)->TPP_INTERNAL(lci_col) = (col))
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {
@@ -13463,13 +13466,11 @@ char const *TPPCALL tpp_strerror(tpp_errno error);
  * however yours should match ASCII expectations, especially when it comes
  * to control characters. If this is not the case */
 #undef TPP_HAVE_BUILTIN_CTYPE
-#if (!defined(tpp_ascii_issymstrt) ||    \
-     !defined(tpp_ascii_issymcont) ||    \
-     !defined(tpp_ascii_isdigit) ||      \
-     !defined(tpp_ascii_isspace) ||      \
-     !defined(tpp_ascii_islf) ||         \
-     !defined(tpp_ascii_islf_or_mblf) || \
-     !defined(tpp_ascii_isspace_nolf))
+#if (!defined(tpp_ascii_issymstrt) || \
+     !defined(tpp_ascii_issymcont) || \
+     !defined(tpp_ascii_isdigit) ||   \
+     !defined(tpp_ascii_isspace) ||   \
+     !defined(tpp_ascii_islf))
 #define TPP_HAVE_BUILTIN_CTYPE 1
 #else /* ... */
 #define TPP_HAVE_BUILTIN_CTYPE 0
@@ -13562,6 +13563,7 @@ TPP_CONST_DECL tpp_uint_least8 const _tpp_ctype[256]; /* Don't access directly! 
 #define tpp_ascii_asxdigit(ch) \
 	(tpp_ascii_isdigit(ch) ? tpp_ascii_asdigit(ch) : tpp_ascii_islwrxdigit(ch) ? tpp_ascii_aslwrxdigit(ch) : tpp_ascii_asuprxdigit(ch))
 #endif /* !tpp_ascii_isxdigit */
+
 #ifndef tpp_ascii_tolwrxdigit
 #if 1
 #define tpp_ascii_tolwrxdigit(v) ("0123456789abcdef"[v])
@@ -13569,6 +13571,7 @@ TPP_CONST_DECL tpp_uint_least8 const _tpp_ctype[256]; /* Don't access directly! 
 #define tpp_ascii_tolwrxdigit(v) ((v) < 10 ? tpp_ascii_ofdigit(v) : tpp_ascii_oflwrxdigit(v))
 #endif
 #endif /* !tpp_ascii_tolwrxdigit */
+
 #ifndef tpp_ascii_touprxdigit
 #if 1
 #define tpp_ascii_touprxdigit(v) ("0123456789ABCDEF"[v])
@@ -13787,32 +13790,6 @@ tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
 
 
 
-#undef TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
-#if (TPP_HAVE_UNICODE_BYNAME_LOOKUP &&                         \
-     (TPP_CONF_ISRT(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE) ||  \
-      TPP_CONF_ISRT(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE) || \
-      TPP_CONF_ISRT(TPP_HAVE_BSE) || TPP_HAVE_UNICODE))
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM 1
-#else /* ... */
-#define TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM 0
-#endif /* !... */
-
-/* Specifies that `tpp_decode_named_escape()` requires an extra `lexer`-parameter */
-#undef TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
-#if (TPP_HAVE_DECODE_NAMED_ESCAPE &&                         \
-     ((TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES &&                \
-       TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM) ||        \
-      TPP_CONF_ISRT(TPP_HAVE_ESCAPE_NAMED_UNICODE_NAMES) || \
-      TPP_CONF_ISRT(TPP_HAVE_ESCAPE_NAMED_UNICODE_ORD) ||   \
-      TPP_CONF_ISRT(TPP_HAVE_ESCAPE_NAMED_XML) ||           \
-      TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS) ||                  \
-      TPP_CONF_ISRT(TPP_HAVE_BSE) ||                        \
-      (TPP_HAVE_BSE && TPP_HAVE_UNICODE)))
-#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 1
-#else /* ... */
-#define TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM 0
-#endif /* !... */
-
 #if TPP_HAVE_XML_ENTITY_LOOKUP
 #ifndef tpp_xml_entity_lookup
 /* Return the unicode ordinal associated with `name`
@@ -13849,17 +13826,11 @@ tpp_xml_entity_printnearest(char const *tpp_restrict name,
 /* Return the unicode ordinal associated with `*p_iter`
  * @return: 0 : Unknown (`*p_iter` was left unchanged)
  * @return: * : # of unicode ordinals written to `result` */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
                           struct tpp_lexer const *tpp_restrict lexer);
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                          tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC]);
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 
 
 #if TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST
@@ -13868,17 +13839,10 @@ tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *
  *
  * @return: * : Sum of return values of `printer`
  * @return: <0: First negative return value of `printer` */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
-struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
 tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
                                 tpp_formatprinter printer, void *arg,
                                 struct tpp_lexer const *tpp_restrict lexer);
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
-                                tpp_formatprinter printer, void *arg);
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 #endif /*  TPP_HAVE_UNICODE_BYNAME_PRINTNEAREST*/
 
 #endif /* !tpp_unicode_byname_lookup */
@@ -13903,26 +13867,17 @@ tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
  *
  * @return: 0 : Unknown named sequence (`*p_iter` is unchanged) 
  * @return: * : The # of characters written to `result` (always `<= TPP_DECODE_NAMED_ESCAPE_MAXLEN`)*/
-#if TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM
 struct tpp_lexer;
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN],
                         struct tpp_lexer const *tpp_restrict lexer);
-#else /* TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-_tpp_decode_named_escape(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                         tpp_unichar result[TPP_DECODE_NAMED_ESCAPE_MAXLEN]);
-#define tpp_decode_named_escape(p_iter, end, result, lexer) \
-	_tpp_decode_named_escape(p_iter, end, result)
-#endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM */
 #else /* TPP_HAVE_DECODE_NAMED_ESCAPE */
 #define TPP_DECODE_NAMED_ESCAPE_MAXLEN 0
 #define tpp_decode_named_escape(p_iter, end, result, lexer) TPP_SSIZE_OFERR(TPP_ENOENT)
 #endif /* !TPP_HAVE_DECODE_NAMED_ESCAPE */
 
 #if TPP_HAVE_DECODE_NAMED_PRINTNEAREST
-#ifndef tpp_decode_named_printnearest
 /* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
  * that automatically does the right thing, including adding a leading `&` before printing
  * the name of a (potentially) closest matching XML escape sequence. */
@@ -13930,7 +13885,6 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
 tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
                               tpp_formatprinter printer, void *arg,
                               struct tpp_lexer const *tpp_restrict lexer);
-#endif /* !tpp_decode_named_printnearest */
 #endif /* TPP_HAVE_DECODE_NAMED_PRINTNEAREST */
 
 
@@ -14443,8 +14397,7 @@ typedef struct tpp_expr_value {
 #endif /* !TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
-/* Move `src` into `dst`, invalidating `src` along the way and initializing `dst`
- * @return: TPP_EOK: Success */
+/* Move `src` into `dst`, invalidating `src` along the way and initializing `dst` */
 #define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
 
 /* Copy-construct `src` into `dst`
@@ -14609,8 +14562,9 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
-tpp_expr_value_printrepr(tpp_expr_value *tpp_restrict self,
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_ssize TPPCALL
+tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
+                         tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg);
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
@@ -22496,16 +22450,14 @@ tpp_hashof(tpp_char const *tpp_restrict kwd, tpp_size len);
 #define tpp_hash_combine_hash(a, b) ((a) * 263 + /*(tpp_hash)*/(b))
 
 
-#if (_TPP_HAVE_BSE_FILE_PARAM ||                                                       \
-     (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED && (TPP_HAVE_DECODE_NAMED_ESCAPE_LEXER_PARAM || \
-                                           TPP_CONF_ISRT(TPP_HAVE_TRIGRAPHS))))
+#if _TPP_HAVE_BSE_FILE_PARAM || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED
 struct tpp_lexer;
 #define _tpp_esc_lexer__PARAM  , struct tpp_lexer const *tpp_restrict lexer
 #define _tpp_esc_lexer__ARG(x) , x
-#else /* ... */
+#else /* _TPP_HAVE_BSE_FILE_PARAM || TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 #define _tpp_esc_lexer__PARAM  /* nothing */
 #define _tpp_esc_lexer__ARG(x) /* nothing */
-#endif /* !... */
+#endif /* !_TPP_HAVE_BSE_FILE_PARAM && !TPP_HAVE_IDENTIFIER_ESCAPE_NAMED */
 
 
 #if TPP_HAVE_ESCAPED_KEYWORDS
@@ -28387,6 +28339,9 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
+/* TODO: Instead of being overwritable, `tpp_expr_value` should be split into different types,
+ *       and `tpp_lexer_decodeint_ex()` should use a set of macros that would easily allow one
+ *       to implement arbitrary precision integers *WITHOUT* re-implementing integer parsing! */
 #ifndef tpp_lexer_decodeint_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,

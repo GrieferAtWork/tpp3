@@ -5534,13 +5534,13 @@ TPP_INLINE void TPPConst_ZERO(tpp_expr_value *self) {
  *    by the `__TPP_EVAL` extension.
  * NOTE: If `self` is a string, it will be escaped.
  * @return: NULL: Not enough available memory. */
-#define TPPConst_ToString_(lexer, self) TPPConst_ToString(self)
+#define TPPConst_ToString(self) TPPConst_ToString_(TPP2_LEXER, self)
 TPP_INLINE /*ref*/ tpp_string *TPPCALL
-TPPConst_ToString(tpp_expr_value const *tpp_restrict self) {
+TPPConst_ToString_(tpp_lexer *tpp_restrict lexer, tpp_expr_value const *tpp_restrict self) {
 	tpp_ssize status;
 	tpp_string_builder builder;
 	tpp_string_builder_init(&builder);
-	status = tpp_expr_value_printrepr((tpp_expr_value *)self,
+	status = tpp_expr_value_printrepr(lexer, (tpp_expr_value *)self,
 	                                  tpp_formatprinter_of(tpp_string_builder_print),
 	                                  &builder);
 	if (status < 0) {

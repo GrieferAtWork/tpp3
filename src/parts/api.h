@@ -868,6 +868,7 @@ TPP_DECL_BEGIN
 /* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
+/* TODO: Remove `tpp_formatprinter` arguments from `TPP_NONNULL` -- API consumers may override `tpp_formatprinter` as a non-pointer */
 typedef tpp_ssize (TPPCALL *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
@@ -935,9 +936,11 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
-#define tpp_lcinfo_init(self, line, col)          \
-	(void)((self)->TPP_INTERNAL(lci_line) = line, \
-	       (self)->TPP_INTERNAL(lci_col)  = col)
+#define tpp_lcinfo_init(p_self, line, col)            \
+	(void)((p_self)->TPP_INTERNAL(lci_line) = (line), \
+	       (p_self)->TPP_INTERNAL(lci_col)  = (col))
+#define tpp_lcinfo_setline(p_self, line) (void)((p_self)->TPP_INTERNAL(lci_line) = (line))
+#define tpp_lcinfo_setcol(p_self, col)   (void)((p_self)->TPP_INTERNAL(lci_col) = (col))
 
 TPP_INLINE TPP_WUNUSED tpp_lcinfo TPPCALL
 tpp_lcinfo_of(tpp_line line, tpp_column col) {

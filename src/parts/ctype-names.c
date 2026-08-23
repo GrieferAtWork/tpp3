@@ -213,23 +213,13 @@ tpp_char const *TPPCALL tpp_unam_skiptoken(tpp_char const *db_ptr) {
 
 
 
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
-#define tpp_unam_lexer__PARAM  , tpp_lexer const *tpp_restrict lexer
-#define tpp_unam_lexer__ARG(x) , x
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-#define tpp_unam_lexer__PARAM  /* nothing */
-#define tpp_unam_lexer__ARG(x) /* nothing */
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-
 typedef struct tpp_unam_token_parser {
 	tpp_char const  *tuntp_pos;   /* Pointer to next character */
 	tpp_char const  *tuntp_end;   /* Pointer to end-of-input */
 #if TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE)
 	tpp_char const  *tuntp_start; /* Start pointer */
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE) */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 	tpp_lexer const *tuntp_lexer; /* [1..1][const] Current lexer (for feature flags / BSE) */
-#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 } tpp_unam_token_parser;
 
 #define tpp_unam_token_parser_ateof(self) \
@@ -916,17 +906,10 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 /* Return the unicode ordinal associated with `*p_iter`
  * @return: 0 : Unknown (`*p_iter` was left unchanged)
  * @return: * : # of unicode ordinals written to `uc` */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_size TPPCALL
 tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
                           tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC],
-                          struct tpp_lexer const *tpp_restrict lexer)
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *end,
-                          tpp_unichar uc[TPP_UNICODE_BYNAME_LOOKUP_MAXUC])
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-{
+                          struct tpp_lexer const *tpp_restrict lexer) {
 	tpp_unam_tokenid token;
 	tpp_unam_token_parser parser;
 	tpp_char first_ch;
@@ -939,9 +922,7 @@ tpp_unicode_byname_lookup(tpp_char const **tpp_restrict p_iter, tpp_char const *
 #if TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE)
 	parser.tuntp_start = parser.tuntp_pos;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_UNICODE_BYNAME_LOOKUP_ISPACE) */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 	parser.tuntp_lexer = lexer;
-#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 	tpp_unam_token_parser_skipspace(&parser);
 	orig_start = parser.tuntp_pos;
 
@@ -1289,22 +1270,13 @@ tpp_utoa_hex(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
  *
  * @return: * : Sum of return values of `printer`
  * @return: <0: First negative return value of `printer` */
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
 tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
                                 tpp_formatprinter printer, void *arg,
-                                struct tpp_lexer const *tpp_restrict lexer)
-#else /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_size TPPCALL
-tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
-                                tpp_formatprinter printer, void *arg)
-#endif /* !TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
-{
+                                struct tpp_lexer const *tpp_restrict lexer) {
 	tpp_ssize temp, result;
 	tpp_unicode_byname_printnearest_data data;
-#if TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM
 	(void)lexer;
-#endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP_LEXER_PARAM */
 
 	/* Parse+normalize given "start...+=end" buffer to:
 	 * - Replace all space- and _-characters with U+0020 SPACE

@@ -31,6 +31,7 @@ Due to the large number of available configurations, they have been grouped onto
 - [Warning configuration](./config-warn.md)
 - [Hook configuration](./config-hook.md)
 - [Builtin CLI parser](./config-cli.md)
+- [Miscellaneous configurations](./config-misc.md)
 
 
 # Source extensions

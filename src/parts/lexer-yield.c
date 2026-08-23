@@ -1055,7 +1055,7 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 	/* Print representation of evaluation result */
 	tpp_string_builder_init(&eval_repr_builder);
-	eval_repr_print_status = tpp_expr_value_printrepr(&eval_result,
+	eval_repr_print_status = tpp_expr_value_printrepr(self, &eval_result,
 	                                                  tpp_formatprinter_of(tpp_string_builder_print),
 	                                                  &eval_repr_builder);
 	tpp_expr_value_fini(&eval_result);

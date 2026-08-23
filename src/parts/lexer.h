@@ -2515,6 +2515,9 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
+/* TODO: Instead of being overwritable, `tpp_expr_value` should be split into different types,
+ *       and `tpp_lexer_decodeint_ex()` should use a set of macros that would easily allow one
+ *       to implement arbitrary precision integers *WITHOUT* re-implementing integer parsing! */
 #ifndef tpp_lexer_decodeint_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
