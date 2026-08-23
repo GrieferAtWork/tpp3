@@ -289,6 +289,100 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 #endif /* !TPP_HAVE_CPP_ASSERT */
 
 
+
+#if TPP_HAVE_INCLUDE_REMAP
+typedef struct tpp_keyword_include_remap_entry {
+	tpp_size TPP_INTERNAL(tkirme_fromlen);              /* Length of `tkirme_from` (aka: offset-to-trailing-\0; aka: offset-to-to-filename-minus-1)
+	                                                     * NOTE: The *from*-part never contains \0-characters; iow: `tkirme_fromlen == tpp_strlen(tkirme_from)` */
+	char     TPP_INTERNAL(tkirme_from)[TPP_FLEX_ARRAY]; /* Remap-from filename, followed by \0, followed by the to-filename */
+} tpp_keyword_include_remap_entry;
+
+/* Internal remap-entry allocation API */
+#define _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen) (tpp_offsetof(tpp_keyword_include_remap_entry, TPP_INTERNAL(tkirme_from)) + (((fromlen) + (tolen) + 2) * sizeof(char)))
+#define _tpp_keyword_include_remap_entry_alloc(fromlen, tolen)  ((tpp_keyword_include_remap_entry *)tpp_malloc(_tpp_keyword_include_remap_entry_sizeof(fromlen, tolen)))
+#define _tpp_keyword_include_remap_entry_free(ptr)              tpp_free(ptr)
+#define _tpp_keyword_include_remap_entry_destroy(ptr)           _tpp_keyword_include_remap_entry_free(ptr)
+
+/* Get the mapping string described by a given include-remap entry. */
+#define tpp_keyword_include_remap_entry_getfrom(self)    ((self)->TPP_INTERNAL(tkirme_from))
+#define tpp_keyword_include_remap_entry_getfromlen(self) ((self)->TPP_INTERNAL(tkirme_fromlen))
+#define tpp_keyword_include_remap_entry_getto(self)      ((self)->TPP_INTERNAL(tkirme_from) + (self)->TPP_INTERNAL(tkirme_fromlen) + 1)
+#define tpp_keyword_include_remap_entry_gettolen(self)   tpp_strlen(tpp_keyword_include_remap_entry_getto(self))
+
+typedef struct tpp_keyword_include_remap {
+	tpp_size                         TPP_INTERNAL(tkirm_count);                /* # of remap entries (never `0`, except in `_tpp_keyword_include_remap_empty`) */
+	tpp_keyword_include_remap_entry *TPP_INTERNAL(tkirm_list)[TPP_FLEX_ARRAY]; /* [1..1][owned][tkirm_count] Remap table (sorted lexicographically by `tkirme_from`) */
+} tpp_keyword_include_remap;
+
+struct TPP_INTERNAL(tpp_keyword_include_remap_empty_struct) {
+	tpp_size TPP_INTERNAL(tkirm_count); /* 0 */
+};
+#if !TPP_USE_STATIC
+TPP_CONST_DECL struct TPP_INTERNAL(tpp_keyword_include_remap_empty_struct)
+_tpp_keyword_include_remap_empty; /* Considered part of internal API -- don't access directly */
+#endif /* !TPP_USE_STATIC */
+
+/* Internal remap-list allocation API */
+#define _tpp_keyword_include_remap_sizeof(count)          (tpp_offsetof(tpp_keyword_include_remap, TPP_INTERNAL(tkirm_list)) + ((count) * sizeof(tpp_keyword_include_remap_entry *)))
+#define _tpp_keyword_include_remap_alloc(count)           ((tpp_keyword_include_remap *)tpp_malloc(_tpp_keyword_include_remap_sizeof(count)))
+#define _tpp_keyword_include_remap_tryalloc(count)        ((tpp_keyword_include_remap *)tpp_trymalloc(_tpp_keyword_include_remap_sizeof(count)))
+#define _tpp_keyword_include_remap_realloc(ptr, count)    ((tpp_keyword_include_remap *)tpp_realloc(ptr, _tpp_keyword_include_remap_sizeof(count)))
+#define _tpp_keyword_include_remap_tryrealloc(ptr, count) ((tpp_keyword_include_remap *)tpp_tryrealloc(ptr, _tpp_keyword_include_remap_sizeof(count)))
+#define _tpp_keyword_include_remap_free(ptr)              tpp_free(ptr)
+
+/* Check if `self` is the special "empty" include remap. */
+#define tpp_keyword_include_remap_isempty(self) \
+	((self) == (tpp_keyword_include_remap *)&_tpp_keyword_include_remap_empty)
+
+/* Accessors to count/entries of a given remap-list. Note that the list is
+ * sorted lexicographically by `tpp_keyword_include_remap_entry_getfrom(ENTRY)` */
+#define tpp_keyword_include_remap_getcount(self) ((self)->TPP_INTERNAL(tkirm_count))
+#define tpp_keyword_include_remap_getentry(self, i) \
+	((tpp_keyword_include_remap_entry const *)(self)->TPP_INTERNAL(tkirm_list)[i])
+
+#if TPP_HAVE_LEXER_COPY
+/* Create+return a copy of `self`.
+ * Do *NOT* call this function when `tpp_keyword_include_remap_isempty(self)`
+ * @return: NULL: Out of memory. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_include_remap *TPPCALL
+tpp_keyword_include_remap_copy(tpp_keyword_include_remap const *tpp_restrict self);
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Parse the contents of `fp` as a `header.gcc`-style file
+ * and build a include remap table describing those contents.
+ *
+ * When `fp` does not contain any proper definitions (i.e.:
+ * the returned include remap would be empty), then `TPP_EOK`
+ * is returned, and `*p_result` is set to a value that satisfies
+ * `tpp_keyword_include_remap_isempty()`. In this case, you must
+ * *NOT* pass `*p_result` to `tpp_keyword_include_remap_destroy()`
+ *
+ * @return: TPP_EOK:    Success (`*p_result` was initialized)
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    I/O error reading from `fp` */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_include_remap_new(tpp_keyword_include_remap **tpp_restrict p_result,
+                              tpp_file *tpp_restrict fp);
+
+/* Destroy `self`.
+ * Do *NOT* call this function when `tpp_keyword_include_remap_isempty(self)` */
+TPP_DECL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_include_remap_destroy(tpp_keyword_include_remap *tpp_restrict self);
+
+/* Find an entry for `filename...+=filename_maxlen` in `self`
+ * @return: * : The remap entry for `filename` (must be opened relative to the file
+ *              from which `self` was loaded (see `tpp_keyword_include_remap_new()`))
+ * @return: NULL: No replacement defined for `filename`, or `self` is empty. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword_include_remap_entry const *TPPCALL
+tpp_keyword_include_remap_findentry(tpp_keyword_include_remap const *tpp_restrict self,
+                                    /*utf-8*/ char const *filename, tpp_size filename_maxlen);
+#else /* TPP_HAVE_INCLUDE_REMAP */
+#define tpp_keyword_include_remap_isempty(self)                           true
+#define tpp_keyword_include_remap_findentry(self, filename, filename_maxlen) ((char const *)NULL)
+#endif /* !TPP_HAVE_INCLUDE_REMAP */
+
+
+
 typedef struct TPP_INTERNAL(tpp_keyword_misc) {
 #if TPP_HAVE_KEYWORD_FLAGS
 	tpp_keyword_flags TPP_INTERNAL(tkm_flags); /* Set of `TPP_KEYWORD_FLAG_*` */
@@ -334,6 +428,15 @@ typedef struct TPP_INTERNAL(tpp_keyword_misc) {
 #define _tpp_keyword_misc_init_macro_pushstack(self) /* nothing */
 #endif /* !TPP_HAVE_PRAGMA_PUSH_MACRO */
 
+#if TPP_HAVE_INCLUDE_REMAP
+	tpp_keyword_include_remap *TPP_INTERNAL(tkm_include_remap); /* [0..1][owned_if(!= &_tpp_keyword_include_remap_empty)]
+	                                                             * Remap table for `#include` files (usually only populated
+	                                                             * in `header.gcc`-style filename keywords) */
+#define _tpp_keyword_misc_init_include_remap(self) , (self)->TPP_INTERNAL(tkm_include_remap) = NULL
+#else /* TPP_HAVE_INCLUDE_REMAP */
+#define _tpp_keyword_misc_init_include_remap(self) /* nothing */
+#endif /* !TPP_HAVE_INCLUDE_REMAP */
+
 #if TPP_HAVE_MACRO___TPP_COUNTER
 	tpp_counter TPP_INTERNAL(tkm_builtin_counter); /* Next value for `__TPP_COUNTER()` */
 #define _tpp_keyword_misc_init_builtin_counter(self) , (self)->TPP_INTERNAL(tkm_builtin_counter) = 0
@@ -357,6 +460,7 @@ typedef struct TPP_INTERNAL(tpp_keyword_misc) {
 	       _tpp_keyword_misc_init_file_guard(self)      \
 	       _tpp_keyword_misc_init_file_inclcount(self)  \
 	       _tpp_keyword_misc_init_macro_pushstack(self) \
+	       _tpp_keyword_misc_init_include_remap(self)   \
 	       _tpp_keyword_misc_init_builtin_counter(self) \
 	       _tpp_keyword_misc_init_userdata(self))
 #define _tpp_keyword_misc_alloc()    ((TPP_INTERNAL(tpp_keyword_misc) *)tpp_malloc(sizeof(TPP_INTERNAL(tpp_keyword_misc))))
@@ -570,6 +674,32 @@ tpp_keyword_undefuser(tpp_keyword *tpp_restrict self);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_INCLUDE_REMAP
+/* Find the replacement for `filename` within a `header.gcc`-style
+ * file whose filename is `tpp_keyword_getcstr(self)` (yes: `self`
+ * is the *actual* `header.gcc` filename -- not a string describing
+ * the directory *containing* that file, but the actual filename
+ * itself). That info is lazily loaded the first time this function
+ * is called.
+ *
+ * @return: TPP_EOK:    Success (`*p_replacement` points at the \0-terminated
+ *                      replacement filename, which should be opened relative
+ *                      to `tpp_keyword_getcstr(self)`)
+ * @return: TPP_ENOENT: The file described by `self` does not exist
+ * @return: TPP_ENOENT: The file described by `self` is empty
+ * @return: TPP_ENOENT: The file described by `self` does not contain
+ *                      an entry for `filename...+=filename_maxlen`
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
+                               /*utf-8*/ char const *filename,
+                               tpp_size filename_maxlen,
+                               char const **p_replacement);
+#endif /* !TPP_HAVE_INCLUDE_REMAP */
 
 
 

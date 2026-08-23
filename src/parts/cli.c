@@ -90,6 +90,7 @@ for (local option, what: {
 	{"INCLUDE_RELATIVE_TO_CURRENT_FILE", "disable"},
 	{"INCLUDE_SYSTEM_INCLUDE_PATH", "disable"},
 	{"WERROR", "set"},
+	{"INCLUDE_REMAP", "enable"},
 }) {
 	local extraArgs = what == "set" ? ", v" : "";
 	print("#if TPP_CONF_ISEXT(TPP_HAVE_", option, ")");
@@ -247,6 +248,13 @@ for (local option, what: {
 #define tpp_lexer_set_WERROR(self, v) (tpp_lexer_setfeature(self, TPP_FEAT_WERROR, v), TPP_EOK)
 #else /* ... */
 #define tpp_lexer_set_WERROR(self, v) TPP_EOK
+#endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_INCLUDE_REMAP)
+#define tpp_lexer_enable_INCLUDE_REMAP(self) tpp_lexer_enableextension(self, TPP_EXT_INCLUDE_REMAP)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_REMAP)
+#define tpp_lexer_enable_INCLUDE_REMAP(self) (tpp_lexer_enablefeature(self, TPP_FEAT_INCLUDE_REMAP), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_enable_INCLUDE_REMAP(self) TPP_EOK
 #endif /* !... */
 /*[[[end]]]*/
 
@@ -1125,6 +1133,20 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 
 /************************************************************************/
+		case 'r':
+#if TPP_HAVE_CLI_DASH_REMAP
+			if (tpp_streq(arg, "emap\0")) { /* -remap */
+				return tpp_lexer_enable_INCLUDE_REMAP(self->tcl_lexer);
+			} else
+#endif /* TPP_HAVE_CLI_DASH_REMAP */
+			{
+			}
+			break;
+/************************************************************************/
+
+
+
+/************************************************************************/
 		case 'f': {
 #undef tpp_cli__and_not_no
 #if (TPP_HAVE_CLI_DASH_FPREPROCESSED ||           \
@@ -1952,6 +1974,9 @@ TPP_CLI_HELP2("-isysroot PATH", "--sysroot PATH",
 TPP_CLI_HELP2("-nostdinc", "--no-standard-includes",
               "Don't search builtin system include paths")
 #endif /* TPP_HAVE_CLI_DASH_NOSTDINC */
+#if TPP_HAVE_CLI_DASH_REMAP
+TPP_CLI_HELP1("-remap", "Enable processing of " TPP_CONFIG_INCLUDE_REMAP_FILENAME " files")
+#endif /* TPP_HAVE_CLI_DASH_REMAP */
 #if TPP_HAVE_CLI_DASH_WERROR
 TPP_CLI_HELP1("-W[no-]error",
               "Treat all warnings as errors")

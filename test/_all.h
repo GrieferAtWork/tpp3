@@ -51,6 +51,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "push-pop-macro.h"
 #include "quotes-in-error.h"
 #include "raw-string-bse.h"
+#include "remap-header.h"
 #include "reserved-macro-name.h"
 #include "self-redef.h"
 #include "stdc-6.10.3.5_5.h"

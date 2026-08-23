@@ -194,6 +194,7 @@
 #define tef_TPP_EXT_TOK_RAW_CHAR_LITERAL                   TPP_INTERNAL(tef_TPP_EXT_TOK_RAW_CHAR_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL               TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_STRING_LITERAL)
 #define tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL                 TPP_INTERNAL(tef_TPP_EXT_TOK_BLOCK_CHAR_LITERAL)
+#define tef_TPP_EXT_INCLUDE_REMAP                          TPP_INTERNAL(tef_TPP_EXT_INCLUDE_REMAP)
 #define tef_TPP_EXT_RAW_STRING_BSE                         TPP_INTERNAL(tef_TPP_EXT_RAW_STRING_BSE)
 #define tef_TPP_EXT_STRING_ESCAPE_E                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_E)
 #define tef_TPP_EXT_STRING_ESCAPE_S                        TPP_INTERNAL(tef_TPP_EXT_STRING_ESCAPE_S)
@@ -487,6 +488,7 @@
 #define tff_TOK_RAW_CHAR_LITERAL                           TPP_INTERNAL(tff_TOK_RAW_CHAR_LITERAL)
 #define tff_TOK_BLOCK_STRING_LITERAL                       TPP_INTERNAL(tff_TOK_BLOCK_STRING_LITERAL)
 #define tff_TOK_BLOCK_CHAR_LITERAL                         TPP_INTERNAL(tff_TOK_BLOCK_CHAR_LITERAL)
+#define tff_INCLUDE_REMAP                                  TPP_INTERNAL(tff_INCLUDE_REMAP)
 #define tff_RAW_STRING_BSE                                 TPP_INTERNAL(tff_RAW_STRING_BSE)
 #define tff_STRING_ESCAPE_E                                TPP_INTERNAL(tff_STRING_ESCAPE_E)
 #define tff_STRING_ESCAPE_S                                TPP_INTERNAL(tff_STRING_ESCAPE_S)
@@ -739,6 +741,7 @@
 #define th_isfloatsuffix_cookie                            TPP_INTERNAL(th_isfloatsuffix_cookie)
 #define tpp_hooklist2_entry                                TPP_INTERNAL(tpp_hooklist2_entry)
 #define tpp_hooklist1_entry                                TPP_INTERNAL(tpp_hooklist1_entry)
+#define tpp_keyword_include_remap_empty_struct             TPP_INTERNAL(tpp_keyword_include_remap_empty_struct)
 #define tmpe_macro                                         TPP_INTERNAL(tmpe_macro)
 #define tmpe_count                                         TPP_INTERNAL(tmpe_count)
 #define tmps_cnt                                           TPP_INTERNAL(tmps_cnt)
@@ -757,6 +760,10 @@
 #define tass_assc                                          TPP_INTERNAL(tass_assc)
 #define tass_bckm                                          TPP_INTERNAL(tass_bckm)
 #define tass_bckv                                          TPP_INTERNAL(tass_bckv)
+#define tkirme_fromlen                                     TPP_INTERNAL(tkirme_fromlen)
+#define tkirme_from                                        TPP_INTERNAL(tkirme_from)
+#define tkirm_count                                        TPP_INTERNAL(tkirm_count)
+#define tkirm_list                                         TPP_INTERNAL(tkirm_list)
 #define tpp_keyword_misc                                   TPP_INTERNAL(tpp_keyword_misc)
 #define tkm_flags                                          TPP_INTERNAL(tkm_flags)
 #define tkm_features                                       TPP_INTERNAL(tkm_features)
@@ -764,6 +771,7 @@
 #define tkm_file_guard                                     TPP_INTERNAL(tkm_file_guard)
 #define tkm_file_inclcount                                 TPP_INTERNAL(tkm_file_inclcount)
 #define tkm_macro_pushstack                                TPP_INTERNAL(tkm_macro_pushstack)
+#define tkm_include_remap                                  TPP_INTERNAL(tkm_include_remap)
 #define tkm_builtin_counter                                TPP_INTERNAL(tkm_builtin_counter)
 #define tkm_userdata_ptr                                   TPP_INTERNAL(tkm_userdata_ptr)
 #define tkm_userdata_dtor                                  TPP_INTERNAL(tkm_userdata_dtor)
@@ -27135,6 +27143,482 @@ tpp_assertions_unassert(tpp_assertions *tpp_restrict self,
 #endif /* TPP_HAVE_CPP_ASSERT */
 
 
+
+#if TPP_HAVE_INCLUDE_REMAP
+TPP_CONST_IMPL struct TPP_INTERNAL(tpp_keyword_include_remap_empty_struct)
+_tpp_keyword_include_remap_empty = { 0 };
+
+#if TPP_HAVE_LEXER_COPY
+
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_include_remap_entry *TPPCALL
+tpp_keyword_include_remap_entry_copy(tpp_keyword_include_remap_entry const *tpp_restrict self) {
+	tpp_size fromlen = tpp_keyword_include_remap_entry_getfromlen(self);
+	tpp_size tolen   = tpp_keyword_include_remap_entry_getfromlen(self);
+	tpp_keyword_include_remap_entry *result;
+	result = _tpp_keyword_include_remap_entry_alloc(fromlen, tolen);
+	if tpp_likely(result)
+		tpp_memcpy(result, self, _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen));
+	return result;
+}
+
+/* Create+return a copy of `self`.
+ * Do *NOT* call this function when `tpp_keyword_include_remap_isempty(self)`
+ * @return: NULL: Out of memory. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword_include_remap *TPPCALL
+tpp_keyword_include_remap_copy(tpp_keyword_include_remap const *tpp_restrict self) {
+	tpp_size count = self->tkirm_count;
+	tpp_keyword_include_remap *result = _tpp_keyword_include_remap_alloc(count);
+	tpp_assert(!tpp_keyword_include_remap_isempty(self));
+	if tpp_likely(result) {
+		tpp_size i;
+		for (i = 0; i < count; ++i) {
+			tpp_keyword_include_remap_entry *entry = self->tkirm_list[i];
+			entry = tpp_keyword_include_remap_entry_copy(entry);
+			if tpp_unlikely(!entry) {
+				while (i) {
+					--i;
+					entry = result->tkirm_list[i];
+					_tpp_keyword_include_remap_entry_destroy(entry);
+				}
+				_tpp_keyword_include_remap_free(result);
+				return NULL;
+			}
+			result->tkirm_list[i] = entry;
+		}
+	}
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_COPY */
+
+/* Advance `*p_pos` such that it points after the next line-feed character
+ * If EOF is reached, exit with `*p_pos` set to `self->tf_end` */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_file_seekeol(tpp_file *tpp_restrict self,
+                 tpp_char const **tpp_restrict p_pos) {
+	tpp_errno result = TPP_EOK;
+	tpp_char const *pos = *p_pos;
+	for (;;) {
+		tpp_char ch;
+		if (pos >= self->tf_end) {
+			tpp_size relpos = tpp_file_ptr2rel(self, pos);
+			result = tpp_file_expandchunk(self);
+			/* Special case: when "pos" was "NULL", that means
+			 * that the file's first chunk was just loaded! */
+			pos = pos ? tpp_file_rel2ptr(self, relpos) : self->tf_pos;
+			if (TPP_ISERR(result))
+				goto done;
+			if (pos >= self->tf_end)
+				goto done;
+		}
+		ch = *pos++;
+		if (tpp_ascii_islf(ch))
+			goto done;
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(self)) {
+			tpp_uint_least8 mblen = tpp_unicode_utf8seqlen_mb_getcur(ch);
+			if tpp_unlikely(mblen == 0) {
+				/* No longer utf-8... */
+				self->tf_enc = TPP_FILE_ENCODING_ASCII;
+			} else {
+				/* Ensure that enough of the file has been loaded for this utf-8 sequence */
+				tpp_unichar uc;
+				for (;;) {
+					tpp_size relpos, relend;
+					tpp_size curlen = self->tf_end - (pos - 1);
+					if (mblen <= curlen)
+						break;
+					relpos = tpp_file_ptr2rel(self, pos);
+					relend = tpp_file_ptr2rel(self, self->tf_end);
+					result = tpp_file_expandchunk(self);
+					pos    = tpp_file_rel2ptr(self, relpos);
+					if (TPP_ISERR(result))
+						goto done;
+					tpp_assert(relend <= tpp_file_ptr2rel(self, self->tf_end));
+					if (relend >= tpp_file_ptr2rel(self, self->tf_end)) {
+						pos = self->tf_end;
+						goto done;
+					}
+				}
+				--pos;
+				uc = tpp_unicode_readutf8(&pos, self->tf_end);
+
+				/* Handle unicode line-feed characters... */
+				if (tpp_unicode_islf(uc))
+					goto done;
+			}
+		}
+#endif /* TPP_HAVE_UNICODE */
+	}
+done:
+	*p_pos = pos;
+	return result;
+}
+
+typedef struct tpp_keyword_include_remap_builder {
+	tpp_size                   tkirmb_alc; /* Allocated entry-count of `tkirmb_map` */
+	tpp_keyword_include_remap *tkirmb_map; /* [0..1] Output map (used entry-count is stored in `tkirm_count`) */
+} tpp_keyword_include_remap_builder;
+
+#define tpp_keyword_include_remap_builder_init(self) \
+	(void)((self)->tkirmb_map = NULL, (self)->tkirmb_alc = 0)
+#define tpp_keyword_include_remap_builder_fini(self) \
+	((self)->tkirmb_map ? tpp_keyword_include_remap_destroy((self)->tkirmb_map) : (void)0)
+static TPP_WUNUSED TPP_RETNONNULL TPP_NONNULL((1)) tpp_keyword_include_remap *TPPCALL
+tpp_keyword_include_remap_builder_pack(tpp_keyword_include_remap_builder *tpp_restrict self) {
+	tpp_keyword_include_remap *result;
+	if (self->tkirmb_map == NULL) {
+		/* Special case: empty map */
+		tpp_assert(self->tkirmb_alc == 0);
+		return (tpp_keyword_include_remap *)&_tpp_keyword_include_remap_empty;
+	}
+	tpp_assert(self->tkirmb_alc > 0);
+	tpp_assert(self->tkirmb_alc >= self->tkirmb_map->tkirm_count);
+	tpp_assert(self->tkirmb_map->tkirm_count > 0);
+	result = self->tkirmb_map;
+	result = _tpp_keyword_include_remap_tryrealloc(result, result->tkirm_count);
+	if (result == NULL)
+		result = self->tkirmb_map;
+	tpp_assert(result);
+	return result;
+}
+
+/* Construct a new include-remap entry for `from` -> `to`
+ * @return: * :   The newly constructed entry
+ * @return: NULL: Out-of-memory */
+static TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_keyword_include_remap_entry *TPPCALL
+tpp_keyword_include_remap_entry_new(char const *from, tpp_size fromlen,
+                                    char const *to, tpp_size tolen) {
+	tpp_keyword_include_remap_entry *result;
+	tpp_assert(!tpp_memchr(from, '\0', fromlen * sizeof(char)));
+	tpp_assert(!tpp_memchr(to, '\0', tolen * sizeof(char)));
+	result = _tpp_keyword_include_remap_entry_alloc(fromlen, tolen);
+	if tpp_likely(result) {
+		char *dst = result->tkirme_from;
+		dst = (char *)tpp_mempcpy(dst, from, fromlen * sizeof(char));
+		*dst++ = '\0';
+		dst = (char *)tpp_mempcpy(dst, to, tolen * sizeof(char));
+		*dst = '\0';
+		result->tkirme_fromlen = fromlen;
+	}
+	return result;
+}
+
+/* Append an entry for `from` -> `to` to `self`
+ * @return: TPP_EOK:    Success (or nothing was added because entry is already present)
+ * @return: TPP_ENOMEM: Out-of-memory */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_keyword_include_remap_builder_append(tpp_keyword_include_remap_builder *tpp_restrict self,
+                                         char const *from, tpp_size fromlen,
+                                         char const *to, tpp_size tolen) {
+	tpp_size lo, hi;
+	tpp_keyword_include_remap *map;
+	tpp_keyword_include_remap_entry *entry;
+
+	/* Make sure that there is sufficient space for adding an additional entry. */
+	if (self->tkirmb_map == NULL || (self->tkirmb_alc <=
+	                                 self->tkirmb_map->tkirm_count)) {
+		tpp_keyword_include_remap *newmap;
+		tpp_size newalc = self->tkirmb_alc * 2;
+		tpp_size minalc = self->tkirmb_map ? self->tkirmb_map->tkirm_count + 1 : 1;
+		if (newalc < minalc) {
+			newalc = 32;
+			if (newalc < minalc)
+				newalc = minalc;
+		}
+		newmap = _tpp_keyword_include_remap_tryrealloc(self->tkirmb_map, newalc);
+		if tpp_unlikely(!newmap) {
+			newalc = minalc;
+			newmap = _tpp_keyword_include_remap_realloc(self->tkirmb_map, newalc);
+			if tpp_unlikely(!newmap)
+				return TPP_ENOMEM;
+		}
+		/* Must initialize counter-field of map on first allocation */
+		if (self->tkirmb_map == NULL)
+			newmap->tkirm_count = 0;
+		self->tkirmb_map = newmap;
+		self->tkirmb_alc = newalc;
+	}
+	map = self->tkirmb_map;
+	tpp_assert(map);
+	tpp_assert(map->tkirm_count < self->tkirmb_alc);
+
+	/* Check if this entry is already present (and determine index for a potential new entry) */
+	lo = 0;
+	hi = map->tkirm_count;
+	while (lo < hi) {
+		int diff;
+		tpp_size mid = (lo + hi) / 2;
+		tpp_size common = fromlen;
+		entry = map->tkirm_list[mid];
+		if (common > entry->tkirme_fromlen)
+			common = entry->tkirme_fromlen;
+		diff = tpp_memcmp(entry->tkirme_from, from, common * sizeof(char));
+		if (diff == 0) {
+			if (fromlen < entry->tkirme_fromlen) {
+				diff = -1;
+			} else if (fromlen > entry->tkirme_fromlen) {
+				diff = 1;
+			}
+		}
+		if (diff < 0) {
+			hi = mid;
+		} else if (diff > 0) {
+			lo = mid + 1;
+		} else {
+			/* Entry already exists -> do nothing
+			 *
+			 * This is also what GCC does (kind-of):
+			 * - GCC doesn't actually put remap entries into some sort of O(log(N)) lookup table
+			 * - Instead, GCC puts them into a big list, and uses the first matching entry
+			 * - As such: as far as GCC is concerned, with duplicate entries, only the first one matters */
+			tpp_assert(common == fromlen);
+			tpp_assert(common == entry->tkirme_fromlen);
+			return TPP_EOK;
+		}
+	}
+	tpp_assert(lo == hi);
+	
+	/* Insert new entry */
+	entry = tpp_keyword_include_remap_entry_new(from, fromlen, to, tolen);
+	if tpp_unlikely(!entry)
+		return TPP_ENOMEM;
+	tpp_memmoveup(&map->tkirm_list[lo + 1],
+	              &map->tkirm_list[lo],
+	              (map->tkirm_count - lo) *
+	              sizeof(tpp_keyword_include_remap_entry *));
+	map->tkirm_list[lo] = entry;
+	++map->tkirm_count;
+	tpp_assert(map->tkirm_count <= self->tkirmb_alc);
+	return TPP_EOK;
+}
+
+/* Parse the contents of a given line [start,end) from a `header.gcc` file `fp`
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out-of-memory */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
+tpp_keyword_include_remap_builder_parseline(tpp_keyword_include_remap_builder *tpp_restrict self,
+                                            tpp_file const *tpp_restrict fp,
+                                            tpp_char const *start,
+                                            tpp_char const *end) {
+	char const *from_filename, *to_filename;
+	tpp_size from_filename_len, to_filename_len;
+	tpp_char const *start_of_comment;
+	tpp_char const *start_of_whitespace;
+	tpp_char const *end_of_whitespace;
+	(void)fp;
+
+	/* Check for comment-markers */
+	start_of_comment = (tpp_char const *)tpp_memchr(start, '#', (tpp_size)(end - start));
+	if (start_of_comment)
+		end = start_of_comment;
+
+	/* Strip leading whitespace. */
+	while (start < end) {
+		tpp_char ch = *start;
+		if (tpp_ascii_isspace(ch)) {
+			++start;
+			continue;
+		}
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(fp)) {
+			tpp_char const *after_uc = start;
+			tpp_unichar uc = tpp_unicode_readutf8(&after_uc, end);
+			if (tpp_unicode_isspace(uc)) {
+				start = after_uc;
+				continue;
+			}
+		}
+#endif /* TPP_HAVE_UNICODE */
+		break;
+	}
+
+	/* Strip trailing whitespace. */
+	while (end > start) {
+		tpp_char ch = end[-1];
+		if (tpp_ascii_isspace(ch)) {
+			--end;
+			continue;
+		}
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(fp)) {
+			tpp_char const *before_uc = end;
+			tpp_unichar uc = tpp_unicode_readutf8_bck(start, &before_uc);
+			if (tpp_unicode_isspace(uc)) {
+				end = before_uc;
+				continue;
+			}
+		}
+#endif /* TPP_HAVE_UNICODE */
+		break;
+	}
+
+	/* Deal with empty lines. */
+	if (start >= end)
+		return TPP_EOK;
+
+	/* Got a line with actual contents, which should look like this:
+	 * >> [FROM][WHITESPACE][TO]
+	 *
+	 * As such, we now just have to find the start/end of that `[WHITESPACE]`
+	 * in the middle.
+	 *
+	 * If there is no whitespace at all, "to" becomes an empty string!
+	 */
+	start_of_whitespace = start;
+	while (start_of_whitespace < end) {
+		tpp_char ch = *start_of_whitespace;
+		if (tpp_ascii_isspace(ch))
+			break;
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(fp)) {
+			tpp_char const *after_uc = start_of_whitespace;
+			tpp_unichar uc = tpp_unicode_readutf8(&after_uc, end);
+			if (tpp_unicode_isspace(uc))
+				break;
+			start_of_whitespace = after_uc;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+		{
+			++start_of_whitespace;
+		}
+	}
+
+	end_of_whitespace = start_of_whitespace;
+	while (end_of_whitespace < end) {
+		tpp_char ch = *end_of_whitespace;
+		if (tpp_ascii_isspace(ch)) {
+			++end_of_whitespace;
+			continue;
+		}
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(fp)) {
+			tpp_char const *after_uc = end_of_whitespace;
+			tpp_unichar uc = tpp_unicode_readutf8(&after_uc, end);
+			if (tpp_unicode_isspace(uc)) {
+				end_of_whitespace = after_uc;
+				continue;
+			}
+		}
+#endif /* TPP_HAVE_UNICODE */
+		break;
+	}
+
+	/* Calculate bounds of the relevant filename... */
+	from_filename     = (char const *)start;
+	from_filename_len = (tpp_size)(start_of_whitespace - start);
+	to_filename       = (char const *)end_of_whitespace;
+	to_filename_len   = (tpp_size)(end - end_of_whitespace);
+
+	/* Insert an entry for this mapping */
+	return tpp_keyword_include_remap_builder_append(self,
+	                                                from_filename, from_filename_len,
+	                                                to_filename, to_filename_len);
+}
+
+/* Parse the contents of `fp` as a `header.gcc`-style file
+ * and build a include remap table describing those contents.
+ *
+ * When `fp` does not contain any proper definitions (i.e.:
+ * the returned include remap would be empty), then `TPP_EOK`
+ * is returned, and `*p_result` is set to a value that satisfies
+ * `tpp_keyword_include_remap_isempty()`. In this case, you must
+ * *NOT* pass `*p_result` to `tpp_keyword_include_remap_destroy()`
+ *
+ * @return: TPP_EOK:    Success (`*p_result` was initialized)
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    I/O error reading from `fp` */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_include_remap_new(tpp_keyword_include_remap **tpp_restrict p_result,
+                              tpp_file *tpp_restrict fp) {
+	tpp_errno error;
+	tpp_keyword_include_remap_builder builder;
+	tpp_keyword_include_remap_builder_init(&builder);
+
+	/* Read contents of `fp` line-by-line */
+	for (;;) {
+		tpp_char const *sol;
+		tpp_char const *eol = fp->tf_pos;
+
+		/* Load the next line into memory... */
+		error = tpp_file_seekeol(fp, &eol);
+		if (TPP_ISERR(error))
+			goto err_builder;
+		sol = fp->tf_pos;
+		tpp_assert(sol <= eol);
+		if (sol >= eol)
+			break;
+
+		/* Parse this line... */
+		error = tpp_keyword_include_remap_builder_parseline(&builder, fp, sol, eol);
+		if (TPP_ISERR(error))
+			goto err_builder;
+
+		/* Continue parsing the next line... */
+		fp->tf_pos = eol;
+	}
+
+	*p_result = tpp_keyword_include_remap_builder_pack(&builder);
+	tpp_assert(*p_result);
+	return TPP_EOK;
+err_builder:
+	tpp_keyword_include_remap_builder_fini(&builder);
+	return error;
+}
+
+/* Destroy `self`.
+ * Do *NOT* call this function when `tpp_keyword_include_remap_isempty(self)` */
+TPP_IMPL TPP_NONNULL((1)) void TPPCALL
+tpp_keyword_include_remap_destroy(tpp_keyword_include_remap *tpp_restrict self) {
+	tpp_size i;
+	tpp_assert(!tpp_keyword_include_remap_isempty(self));
+	for (i = 0; i < self->tkirm_count; ++i) {
+		tpp_keyword_include_remap_entry *entry = self->tkirm_list[i];
+		_tpp_keyword_include_remap_entry_destroy(entry);
+	}
+	_tpp_keyword_include_remap_free(self);
+}
+
+/* Find an entry for `filename...+=filename_maxlen` in `self`
+ * @return: * : The remap entry for `filename` (must be opened relative to the file
+ *              from which `self` was loaded (see `tpp_keyword_include_remap_new()`))
+ * @return: NULL: No replacement defined for `filename`, or `self` is empty. */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_keyword_include_remap_entry const *TPPCALL
+tpp_keyword_include_remap_findentry(tpp_keyword_include_remap const *tpp_restrict self,
+                                    /*utf-8*/ char const *filename, tpp_size filename_maxlen) {
+	tpp_size lo = 0;
+	tpp_size hi = tpp_keyword_include_remap_getcount(self);
+	while (lo < hi) {
+		int diff;
+		tpp_size mid = (lo + hi) / 2;
+		tpp_keyword_include_remap_entry const *ent = tpp_keyword_include_remap_getentry(self, mid);
+		char const *from_str = tpp_keyword_include_remap_entry_getfrom(ent);
+		tpp_size from_len = tpp_keyword_include_remap_entry_getfromlen(ent);
+		if (from_len < filename_maxlen) {
+			diff = tpp_memcmp(from_str, filename, from_len * sizeof(char));
+			if (diff == 0 && filename[from_len])
+				diff = -1;
+		} else if (from_len > filename_maxlen) {
+			diff = tpp_memcmp(from_str, filename, filename_maxlen * sizeof(char));
+			if (diff == 0)
+				diff = 1;
+		} else {
+			diff = tpp_memcmp(from_str, filename, from_len * sizeof(char));
+		}
+		if (diff < 0) {
+			hi = mid;
+		} else if (diff > 0) {
+			lo = mid + 1;
+		} else {
+			/* Found it! */
+			return ent;
+		}
+	}
+	return NULL;
+}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
+
+
 #if TPP_HAVE_KEYWORD_MISC
 /* Ensure that `self->tk_misc` has been allocated and return it.
  * If it isn't already allocated, allocate+return it lazily.
@@ -27325,6 +27809,70 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard) {
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+
+
+#if TPP_HAVE_INCLUDE_REMAP
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_keyword_load_remap(tpp_keyword *tpp_restrict self,
+                       tpp_keyword_include_remap **p_remap) {
+	tpp_errno error;
+	tpp_file file;
+	tpp_io_handle handle;
+	error = tpp_io_open(tpp_keyword_getcstr(self), &handle);
+	if (TPP_ISERR(error))
+		return error;
+	tpp_file_init_io_ex(&file, tpp_keyword_getcstr(self),
+	                    handle, TPP_FILE_FLAGS_NORMAL);
+	error = tpp_keyword_include_remap_new(p_remap, &file);
+	tpp_file_fini(&file);
+	return error;
+}
+
+/* Find the replacement for `filename` within a `header.gcc`-style
+ * file whose filename is `tpp_keyword_getcstr(self)` (yes: `self`
+ * is the *actual* `header.gcc` filename -- not a string describing
+ * the directory *containing* that file, but the actual filename
+ * itself). That info is lazily loaded the first time this function
+ * is called.
+ *
+ * @return: TPP_EOK:    Success (`*p_replacement` points at the \0-terminated
+ *                      replacement filename, which should be opened relative
+ *                      to `tpp_keyword_getcstr(self)`)
+ * @return: TPP_ENOENT: The file described by `self` does not exist
+ * @return: TPP_ENOENT: The file described by `self` is empty
+ * @return: TPP_ENOENT: The file described by `self` does not contain
+ *                      an entry for `filename...+=filename_maxlen`
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
+                               /*utf-8*/ char const *filename,
+                               tpp_size filename_maxlen,
+                               char const **p_replacement) {
+	tpp_keyword_include_remap_entry const *replacement;
+	tpp_keyword_include_remap *remap;
+	tpp_keyword_misc *misc = tpp_keyword_requiremisc(self);
+	if tpp_unlikely(!misc)
+		return TPP_ENOMEM;
+	remap = misc->tkm_include_remap;
+	if (remap == NULL) {
+		/* Lazily load on first access */
+		tpp_errno error = tpp_keyword_load_remap(self, &misc->tkm_include_remap);
+		if (TPP_ISERR(error))
+			return error;
+		remap = misc->tkm_include_remap;
+		tpp_assert(remap != NULL);
+	}
+
+	/* Lookup entry in remap table. */
+	replacement = tpp_keyword_include_remap_findentry(remap, filename, filename_maxlen);
+	if (replacement == NULL)
+		return TPP_ENOENT;
+	*p_replacement = tpp_keyword_include_remap_entry_getto(replacement);
+	return TPP_EOK;
+}
+#endif /* !TPP_HAVE_INCLUDE_REMAP */
 
 
 
@@ -27790,16 +28338,25 @@ tpp_keyword_misc_destroy(tpp_keyword_misc *tpp_restrict self) {
 #if TPP_HAVE_KEYWORD_FEATURES
 	_tpp_keyword_features_fini(&self->tkm_features);
 #endif /* TPP_HAVE_KEYWORD_FEATURES */
+
 #if TPP_HAVE_CPP_ASSERT
 	tpp_assertions_fini(&self->tkm_assertions);
 #endif /* TPP_HAVE_CPP_ASSERT */
+
+#if TPP_HAVE_INCLUDE_REMAP
+	if (self->tkm_include_remap && !tpp_keyword_include_remap_isempty(self->tkm_include_remap))
+		tpp_keyword_include_remap_destroy(self->tkm_include_remap);
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
 #if TPP_HAVE_PRAGMA_PUSH_MACRO
 	tpp_macro_pushstack_fini(&self->tkm_macro_pushstack);
 #endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+
 #if TPP_HAVE_KEYWORD_USERDATA
 	if (self->tkm_userdata_dtor)
 		(*self->tkm_userdata_dtor)(self->tkm_userdata_ptr);
 #endif /* TPP_HAVE_KEYWORD_USERDATA */
+
 	_tpp_keyword_misc_free(self);
 }
 #endif /* TPP_HAVE_KEYWORD_MISC */
@@ -27883,6 +28440,23 @@ tpp_keyword_copymisc(tpp_keyword_misc const *tpp_restrict self) {
 		}
 	}
 #endif /* TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_INCLUDE_REMAP
+	result->tkm_include_remap = self->tkm_include_remap;
+	if (result->tkm_include_remap && !tpp_keyword_include_remap_isempty(result->tkm_include_remap)) {
+		result->tkm_include_remap = tpp_keyword_include_remap_copy(result->tkm_include_remap);
+		if tpp_unlikely(!result->tkm_include_remap) {
+#if TPP_HAVE_CPP_ASSERT
+			tpp_assertions_fini(&result->tkm_assertions);
+#endif /* TPP_HAVE_CPP_ASSERT */
+#if TPP_HAVE_PRAGMA_PUSH_MACRO
+			tpp_macro_pushstack_fini(&result->tkm_macro_pushstack);
+#endif /* TPP_HAVE_PRAGMA_PUSH_MACRO */
+			_tpp_keyword_misc_free(result);
+			return NULL;
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
 #if TPP_HAVE_KEYWORD_FLAGS
 	result->tkm_flags = self->tkm_flags;
 #endif /* TPP_HAVE_KEYWORD_FLAGS */
@@ -28587,62 +29161,22 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 }
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
 #endif /* TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX */
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
-
-/* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
- * included before, and its keyword has any of the bits specified by `mask_flags` set.
- *
- * NOTES:
- * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
- *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
- *   is currently considered to be `#if defined()`.
- * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
- *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
- *   somewhere on the `#include`-stack.
- * - Also: when `mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED`, and the file's keyword
- *   doesn't already have the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag set, the open will
- *   succeed, and the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag will become set (so-as to
- *   implement the include-once semantics of `#import`)
- * - This function always sets `tlofr_fileflags = TPP_FILE_FLAGS_NORMAL`.
- *   If the given `relative_to` belongs to a system header, then it is up
- *   to the caller to set that flag. `tpp_lexer_open_include_string_ex()`
- *   will do so automatically after calling this function.
- *
- * @param: mask_flags: Set of flags describing circumstances under which `TPP_EMASKED`
- *                     should be returned:
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE`
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
- *                     - `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
- *
- * @return: TPP_EOK:     Success
- * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
- *                       given, and the file is already located on the `#include`-stack.
- * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
-tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
-                      /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
-                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
-                      tpp_lexer_openfile_flags mask_flags)
+static TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
+tpp_lexer_openfile_impl_(/*1..1*/ tpp_lexer *tpp_restrict self,
+                         /*0..1*/ char const *tpp_restrict relative_to,
+                         /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_len,
+                         /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result
+#if TPP_HAVE_LEXER_OPENFILE_EX
+                         , tpp_lexer_openfile_flags mask_flags
+#define tpp_lexer_openfile_impl(self, relative_to, filename, filename_len, result, mask_flags) \
+	tpp_lexer_openfile_impl_(self, relative_to, filename, filename_len, result, mask_flags)
 #else /* TPP_HAVE_LEXER_OPENFILE_EX */
-/* Construct the filename, open the file, and initialize `result` accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
- *                      in case `filename` is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of `relative_to`
- * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
-tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
-                   /*0..1*/ char const *tpp_restrict relative_to,
-                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
-                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
+#define tpp_lexer_openfile_impl(self, relative_to, filename, filename_len, result, mask_flags) \
+	tpp_lexer_openfile_impl_(self, relative_to, filename, filename_len, result)
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
+                         ) {
 #if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
 #define tpp_lexer_openfile_keyword                    tpp_keyword
@@ -28665,7 +29199,6 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 	tpp_io_handle handle;
 	tpp_lexer_openfile_keyword *result_kwd;
-	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
 	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
 		tpp_lexer_openfile_keyword *new_result_kwd;
 		char *kwd_end;
@@ -29075,6 +29608,275 @@ err_nomem:
 #undef tpp_lexer_openfile_keyword_tryrealloc
 #undef tpp_lexer_openfile_keyword_realloc
 #undef tpp_lexer_openfile_keyword_free
+}
+
+#if TPP_HAVE_INCLUDE_REMAP
+/* Lazily create + return a keyword for the string:
+ * >> f"{headof(relative_to) ?: "."}/{dir2[:dir2_len]}/header.gcc"
+ *
+ * - When `dir2_len == 0`, `header.gcc` is appended directly to
+ *   `headof(relative_to)`: `f"{headof(relative_to) ?: "."}/header.gcc"`
+ * - Leading `./` sequences do not actually appear in the keyword.
+ *   When `headof(relative_to)` is empty, directly start with `dir2`
+ * - When both `headof(relative_to)` and `dir2` are empty, then the
+ *   returned keyword is for the *exact* string `header.gcc`
+ * - The string `header.gcc` is actually whatever has been configured
+ *   by `TPP_CONFIG_INCLUDE_REMAP_FILENAME`
+ *
+ * @param: dir2: Secondary directory (**WITHOUT** trailing slashes)
+ * @return: * :   The remap-file keyword
+ * @return: NULL: Out-of-memory
+ */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keywords_require_remap_file_kwd(/*1..1*/ tpp_keywords *tpp_restrict self,
+                                    /*0..1*/ char const *tpp_restrict relative_to,
+                                    /*0..1*/ char const *dir2, tpp_size dir2_len) {
+	static char const header_filename[] = TPP_CONFIG_INCLUDE_REMAP_FILENAME;
+	tpp_hash full_filename_hash = TPP_HASH_INITIAL;
+	tpp_size full_filename_len;
+	tpp_size i, relative_to_len = 0;
+	tpp_char *dst_iter;
+	tpp_keyword *result;
+	if (relative_to) {
+		char const *iter = relative_to;
+		for (;; ++iter) {
+			char ch = *iter;
+			if (!ch)
+				break;
+			if (TPP_FS_ISSEP(ch))
+				relative_to_len = (tpp_size)(iter - relative_to);
+		}
+	}
+
+	/* Construct the hash for the final filename. */
+	full_filename_len = relative_to_len;
+	for (i = 0; i < relative_to_len; ++i) {
+		tpp_char ch = (tpp_char)relative_to[i];
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+	}
+	if (relative_to_len) {
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
+		++full_filename_len;
+	}
+	if (dir2_len) {
+		i = 0;
+		do {
+			tpp_char ch = (tpp_char)dir2[i];
+			full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+		} while (++i < dir2_len);
+		full_filename_len += dir2_len;
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
+		++full_filename_len;
+	}
+	full_filename_len += tpp_lengthof(header_filename) - 1;
+	for (i = 0; i < tpp_lengthof(header_filename) - 1; ++i) {
+		tpp_char ch = (tpp_char)header_filename[i];
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+	}
+
+	/* Search the keyword table for an entry  */
+	result = self->tks_bckv[full_filename_hash & self->tks_bckm];
+	for (; result; result = result->tk_next) {
+		tpp_char const *src_iter;
+		if (result->tk_hash != full_filename_hash)
+			continue;
+		if (result->tk_len != full_filename_len)
+			continue;
+		src_iter = result->tk_kwd;
+		if (relative_to_len) {
+			if (tpp_memcmp(src_iter, relative_to, relative_to_len * sizeof(char)) != 0)
+				continue;
+			src_iter += relative_to_len;
+			if (*src_iter != TPP_FS_SEP)
+				continue;
+			++src_iter;
+		}
+		if (dir2_len) {
+			if (tpp_memcmp(src_iter, dir2, dir2_len * sizeof(char)) != 0)
+				continue;
+			src_iter += dir2_len;
+			if (*src_iter != TPP_FS_SEP)
+				continue;
+			++src_iter;
+		}
+		if (tpp_memcmp(src_iter, header_filename, sizeof(header_filename)) != 0)
+			continue;
+
+		/* Found an existing entry for this remap file! */
+		return result;
+	}
+
+	/* Must create a new keyword for the remap file */
+	result = _tpp_keyword_alloc(full_filename_len);
+	if tpp_unlikely(!result)
+		return NULL;
+	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	tpp_keyword_init_refcnt(result);
+	result->tk_hash = full_filename_hash;
+	result->tk_len  = full_filename_len;
+	dst_iter = result->tk_kwd;
+	if (relative_to_len) {
+		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, relative_to, relative_to_len * sizeof(char));
+		*dst_iter++ = TPP_FS_SEP;
+	}
+	if (dir2_len) {
+		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, dir2, dir2_len * sizeof(char));
+		*dst_iter++ = TPP_FS_SEP;
+	}
+	tpp_memcpy(dst_iter, header_filename, sizeof(header_filename));
+	tpp_assert((dst_iter + (sizeof(header_filename) / sizeof(char)) - 1) ==
+	           (result->tk_kwd + result->tk_len));
+
+	/* NOTE: Technically, we'd need to search for builtin keywords matching "result" at this point.
+	 *
+	 * But we're just going to assume that `TPP_CONFIG_INCLUDE_REMAP_FILENAME` is configured as
+	 * something sane like `header.gcc`, which contains a `.`, and that the user didn't define weird
+	 * builtin keywords like `TPP_KWD(KWD_header_gcc, "header.gcc")`
+	 *
+	 * If you *actually* did something *that* insane, then you'll have to define the hidden config
+	 * option seen here to prevent potential issues for doing so. */
+#ifndef TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
+#define TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC 0
+#endif /* !TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
+#if TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
+	{
+		tpp_keyword const *builtin_keyword;
+		builtin_keyword = tpp_builtin_getkeyword(result->tk_kwd,
+		                                         result->tk_len,
+		                                         result->tk_hash);
+		if tpp_unlikely(builtin_keyword) {
+			tpp_keyword_destroy(result);
+			return tpp_keywords_copybuiltin(self, builtin_keyword);
+		}
+	}
+#endif /* TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
+
+	/* Insert into the keyword map. */
+	return tpp_keywords_inskeyword(self, result);
+}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
+
+#if TPP_HAVE_LEXER_OPENFILE_EX
+/* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags` set.
+ *
+ * NOTES:
+ * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
+ *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
+ *   is currently considered to be `#if defined()`.
+ * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
+ *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
+ *   somewhere on the `#include`-stack.
+ * - Also: when `mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED`, and the file's keyword
+ *   doesn't already have the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag set, the open will
+ *   succeed, and the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag will become set (so-as to
+ *   implement the include-once semantics of `#import`)
+ * - This function always sets `tlofr_fileflags = TPP_FILE_FLAGS_NORMAL`.
+ *   If the given `relative_to` belongs to a system header, then it is up
+ *   to the caller to set that flag. `tpp_lexer_open_include_string_ex()`
+ *   will do so automatically after calling this function.
+ *
+ * @param: mask_flags: Set of flags describing circumstances under which `TPP_EMASKED`
+ *                     should be returned:
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
+ *
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
+ *                       given, and the file is already located on the `#include`-stack.
+ * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
+tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
+                      /*0..1*/ char const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
+                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                      tpp_lexer_openfile_flags mask_flags)
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
+/* Construct the filename, open the file, and initialize `result` accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
+ *                      in case `filename` is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of `relative_to`
+ * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
+tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
+                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
+                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
+#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
+{
+	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
+#if TPP_HAVE_INCLUDE_REMAP
+	if (tpp_lexer_has(self, INCLUDE_REMAP)) {
+		tpp_errno error;
+		char const *replacement;
+		tpp_keyword *remap_kwd;
+		remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds, relative_to, NULL, 0);
+		if tpp_unlikely(!remap_kwd)
+			return TPP_ENOMEM;
+		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement);
+		if (error != TPP_ENOENT) {
+use_replacement:
+			if (TPP_ISERR(error))
+				return error;
+			/* Use the replacement filename:
+			 * - Include the file relative to the `header.gcc` file('s directory)
+			 * - Include the file by the name specified within the `header.gcc` file */
+			relative_to  = tpp_keyword_getcstr(remap_kwd);
+			filename     = replacement;
+			filename_len = tpp_strlen(replacement);
+		} else if (!TPP_FS_ISABS(filename, filename_len)) {
+			/* Search for additional remap files if "filename" contains /-characters */
+			tpp_size i;
+			for (i = 0; i < filename_len;) {
+				char ch = filename[i];
+				if (TPP_FS_ISSEP(ch)) {
+					tpp_size sep_end = i + 1;
+					while (sep_end < filename_len) {
+						ch = filename[sep_end];
+						if (!TPP_FS_ISSEP(ch))
+							break;
+						++sep_end;
+					}
+					if (sep_end >= filename_len)
+						break;
+					remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds,
+					                                                relative_to,
+					                                                filename, i);
+					if tpp_unlikely(!remap_kwd)
+						return TPP_ENOMEM;
+					error = tpp_keyword_find_include_remap(remap_kwd,
+					                                       filename + sep_end,
+					                                       filename_len - sep_end,
+					                                       &replacement);
+					if (error != TPP_ENOENT)
+						goto use_replacement;
+					i = sep_end;
+				} else {
+					++i;
+				}
+			}
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
+	/* Just open the specified `filename` relative to the specified directory */
+	return tpp_lexer_openfile_impl(self, relative_to,
+	                               filename, filename_len,
+	                               result, mask_flags);
 }
 #endif /* TPP_HAVE_LEXER_OPENFILE */
 
@@ -32036,6 +32838,9 @@ TPP_CONST_IMPL tpp_features const tpp_features_default = {
 #if TPP_CONF_ISFEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
 		/* .tff_TOK_BLOCK_CHAR_LITERAL                 = */ TPP_CONF_DEFAULT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL),
 #endif /* TPP_CONF_ISFEAT(TPP_HAVE_TOK_BLOCK_CHAR_LITERAL) */
+#if TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_REMAP)
+		/* .tff_INCLUDE_REMAP                          = */ TPP_CONF_DEFAULT(TPP_HAVE_INCLUDE_REMAP),
+#endif /* TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_REMAP) */
 #if TPP_CONF_ISFEAT(TPP_HAVE_RAW_STRING_BSE)
 		/* .tff_RAW_STRING_BSE                         = */ TPP_CONF_DEFAULT(TPP_HAVE_RAW_STRING_BSE),
 #endif /* TPP_CONF_ISFEAT(TPP_HAVE_RAW_STRING_BSE) */
@@ -60629,6 +61434,13 @@ tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
 #else /* ... */
 #define tpp_lexer_set_WERROR(self, v) TPP_EOK
 #endif /* !... */
+#if TPP_CONF_ISEXT(TPP_HAVE_INCLUDE_REMAP)
+#define tpp_lexer_enable_INCLUDE_REMAP(self) tpp_lexer_enableextension(self, TPP_EXT_INCLUDE_REMAP)
+#elif TPP_CONF_ISFEAT(TPP_HAVE_INCLUDE_REMAP)
+#define tpp_lexer_enable_INCLUDE_REMAP(self) (tpp_lexer_enablefeature(self, TPP_FEAT_INCLUDE_REMAP), TPP_EOK)
+#else /* ... */
+#define tpp_lexer_enable_INCLUDE_REMAP(self) TPP_EOK
+#endif /* !... */
 
 
 enum {
@@ -61505,6 +62317,20 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg) {
 
 
 /************************************************************************/
+		case 'r':
+#if TPP_HAVE_CLI_DASH_REMAP
+			if (tpp_streq(arg, "emap\0")) { /* -remap */
+				return tpp_lexer_enable_INCLUDE_REMAP(self->tcl_lexer);
+			} else
+#endif /* TPP_HAVE_CLI_DASH_REMAP */
+			{
+			}
+			break;
+/************************************************************************/
+
+
+
+/************************************************************************/
 		case 'f': {
 #undef tpp_cli__and_not_no
 #if (TPP_HAVE_CLI_DASH_FPREPROCESSED ||           \
@@ -62332,6 +63158,9 @@ TPP_CLI_HELP2("-isysroot PATH", "--sysroot PATH",
 TPP_CLI_HELP2("-nostdinc", "--no-standard-includes",
               "Don't search builtin system include paths")
 #endif /* TPP_HAVE_CLI_DASH_NOSTDINC */
+#if TPP_HAVE_CLI_DASH_REMAP
+TPP_CLI_HELP1("-remap", "Enable processing of " TPP_CONFIG_INCLUDE_REMAP_FILENAME " files")
+#endif /* TPP_HAVE_CLI_DASH_REMAP */
 #if TPP_HAVE_CLI_DASH_WERROR
 TPP_CLI_HELP1("-W[no-]error",
               "Treat all warnings as errors")

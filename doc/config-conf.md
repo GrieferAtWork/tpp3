@@ -246,7 +246,7 @@ SCAN(FOO()BAR)    // Expands to [foo][ ][bar]  (or [foobar] when `TPP_HAVE_MAGIC
 The extra space (U+0020) character in `SCAN(FOO()BAR)` gets added
 during macro argument substitution in the call to `SCAN`, and is
 necessary because TPP is a text-based preprocessor. Trying to get
-L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L15417) will fail.
+L/C information on the associated [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L15512) will fail.
 
 NOTE: affects behavior of macros at the *TIME OF DEFINITION*
 
@@ -392,10 +392,10 @@ the filename, a number of additional "flags" can be specified:
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack. Like the
        `1` flag, this flag requires [`TPP_HAVE_FILE_DUMMY`](config-core.md#tpp_have_file_dummy) to be enabled, otherwise it is
        ignored.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20208) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20208) is instead cleared for the current text-file.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20314) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20314) is instead cleared for the current text-file.
        This flag requires [`TPP_HAVE_FILE_SYSHDR`](config-core.md#tpp_have_file_syshdr) to be enabled, otherwise it is ignored.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20211) flag. Similarly, this
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20317) flag. Similarly, this
        flag requires [`TPP_HAVE_FILE_EXTERN_C`](config-core.md#tpp_have_file_extern_c) to be enabled, otherwise it is ignored.
 
 <details><summary>Details</summary>
@@ -960,7 +960,7 @@ to check if a given keyword is a builtin identifier:
 ```
 
 A keyword is considered to be an "identifier" based on
-[`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28076) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](config-core.md#tpp_have_lexer_isidentifier))
+[`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28312) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](config-core.md#tpp_have_lexer_isidentifier))
 
 <details><summary>Details</summary>
 
@@ -2033,7 +2033,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TOK_SPACE) because direc
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L27339)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L27575)
 
 <details><summary>Details</summary>
 
@@ -3145,7 +3145,7 @@ Detect:
 
 ## TPP_HAVE_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27536)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27772)
 
 <details><summary>Details</summary>
 
@@ -3172,7 +3172,7 @@ Detect:
 
 ## TPP_HAVE_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27536)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27772)
 
 <details><summary>Details</summary>
 
@@ -3199,7 +3199,7 @@ Detect:
 
 ## TPP_HAVE_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27536)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L27772)
 
 <details><summary>Details</summary>
 
@@ -3505,9 +3505,9 @@ Same as [`TPP_HAVE_TOK_SHELL_COMMENT`](#tpp_have_tok_shell_comment), but only re
 appears as the first character of the relevant line, or is preceded by
 nothing but whitespace.
 
-Due to limitations related to when/how the contents of a [`tpp_file`](../src/tpp-amalgamation.h#L20303) can
+Due to limitations related to when/how the contents of a [`tpp_file`](../src/tpp-amalgamation.h#L20409) can
 be unloaded, said preceding whitespace will be considered part of the
-[`TPP_TOK_SOL_SHELL_COMMENT`](../src/tpp-amalgamation.h#L15600) token)
+[`TPP_TOK_SOL_SHELL_COMMENT`](../src/tpp-amalgamation.h#L15695) token)
 
 <details><summary>Details</summary>
 
@@ -3537,7 +3537,7 @@ Detect:
 Same as [`TPP_HAVE_TOK_SLASH_COMMENT`](#tpp_have_tok_slash_comment), but only recognized when the `/`
 appears as the first character of the relevant line, or is preceded by
 nothing but whitespace (any preceding whitespace will be part of the
-resulting [`TPP_TOK_SOL_SLASH_COMMENT`](../src/tpp-amalgamation.h#L15606) token; see [`TPP_HAVE_TOK_SOL_SHELL_COMMENT`](#tpp_have_tok_sol_shell_comment))
+resulting [`TPP_TOK_SOL_SLASH_COMMENT`](../src/tpp-amalgamation.h#L15701) token; see [`TPP_HAVE_TOK_SOL_SHELL_COMMENT`](#tpp_have_tok_sol_shell_comment))
 
 <details><summary>Details</summary>
 
@@ -3567,7 +3567,7 @@ Detect:
 Same as [`TPP_HAVE_TOK_SLASH_COMMENT`](#tpp_have_tok_slash_comment), but only recognized when the `@`
 appears as the first character of the relevant line, or is preceded by
 nothing but whitespace (any preceding whitespace will be part of the
-resulting [`TPP_TOK_SOL_AT_COMMENT`](../src/tpp-amalgamation.h#L15612) token; see [`TPP_HAVE_TOK_SOL_SHELL_COMMENT`](#tpp_have_tok_sol_shell_comment))
+resulting [`TPP_TOK_SOL_AT_COMMENT`](../src/tpp-amalgamation.h#L15707) token; see [`TPP_HAVE_TOK_SOL_SHELL_COMMENT`](#tpp_have_tok_sol_shell_comment))
 
 <details><summary>Details</summary>
 
@@ -4271,6 +4271,96 @@ Detect:
 ```
 </details>
 
+## TPP_HAVE_INCLUDE_REMAP
+
+Support for remapping of `#include` files via `header.gcc` files.
+
+Whenenver [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27164) is called and this feature is enabled,
+TPP will consult (and expand) a cache of known `header.gcc` files based
+on the `relative_to` argument passed. Checks for potential `header.gcc`
+files is done in a way that mirrors GCC's behavior, with the following
+directories checked (in this order) until there are no more unchecked
+files, or the queried file was found:
+
+```deemon
+// Check the folder described by `relative_to`, or the current working
+// directory, as also used by `tpp_lexer_openfile()` when opening a
+// file without an explicit `relative_to` path.
+//
+// In this case, the given `filename` is searched for as-is.
+CHECK_HEADER_GCC(f"{headof(relative_to) ?: "."}/header.gcc", filename);
+
+// For non-absolute paths, also search additional paths if the given
+// `filename` contains extra path segments.
+if (!TPP_FS_ISABS(filename)) {
+   for (local index: filename.findall("/")) { // Or `\` on windows
+       CHECK_HEADER_GCC(f"{headof(relative_to) ?: "."}/{filename[:index]}/header.gcc", filename[index+1:]);
+   }
+}
+```
+
+Example `"foo/bar/foobar.h"`:
+1. Search for entry `"foo/bar/foobar.h"` in `f"{headof(relative_to)}/header.gcc"`
+2. Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
+3. Search for entry `"foobar.h"` in `f"{headof(relative_to)}/foo/bar/header.gcc"`
+4. If none of those files contains a matching entry, no remapping happens
+   and f"{headof(relative_to)}/foo/bar/foobar.h" is opened as usual.
+
+The filename `header.gcc` can be (re-)configured by [`TPP_CONFIG_INCLUDE_REMAP_FILENAME`](config-value.md#tpp_config_include_remap_filename)
+
+`header.gcc` files are formatted as follows:
+
+- File format is line-based
+- Leading/trailing whitespace in lines is ignored
+- (not in GCC) Lines starting with `#` are treated as comments
+  - Reason for this extension is that despite not being treated as
+    such by GCC, those few examples of `header.gcc` files I could
+    find in the wild often contain `#`-comments, which GCC would
+    then (usually) treat as the filename `#` being mapped to the
+    whatever
+- All other lines are truncated to everything preceding their first
+  `#`-character, and then split at their first whitespace character:
+  - The first part is *from-filename* (this is the key of the entry)
+  - The second part is *to-filename* (this is the value of the entry)
+  NOTE: in GCC, the *to-filename* also ends on the first whitespace,
+        with GCC then silently ignoring the remainder of the line
+        thereafter. Instead of that, TPP simply allows whitespace in
+        the second *to-filename*. It will only stop prematurely if a
+        `#`-character is encountered.
+
+Example: a `header.gcc` file is then checked like this:
+
+- Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
+- `header.gcc` has a line `bar/foobar.h   real/fum.h`
+- [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27164) will open file `f"{headof(relative_to)}/foo/real/fum.h"`,
+  because *to-filename*s in `header.gcc` are always relative to the
+  directory containing the `header.gcc` file
+
+NOTES:
+
+- Whenever a `header.gcc` file is loaded for the first time, it will
+  also be emitted via [`TPP_HAVE_NEW_DEPENDENCY_HOOK`](config-hook.md#tpp_have_new_dependency_hook), meaning that when
+  makefile dependencies are emitted, `header.gcc` files (when present)
+  will be included in the output
+- `header.gcc` files are still parsed using [`tpp_file`](../src/tpp-amalgamation.h#L20409), meaning that
+  encoding of these files is also auto-detected the same way it is
+  for any regular input file loaded by TPP (s.a. [`TPP_HAVE_UNICODE`](config-core.md#tpp_have_unicode)).
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+((TPP_PROFILE == TPP_PROFILE_ALL) && TPP_HAVE_LEXER_OPENFILE) ? TPP_CONF_EXT0 : 0
+```
+
+Extension name:
+
+```c
+#define TPP_EXTNAME_INCLUDE_REMAP "remap"
+```
+</details>
+
 ## TPP_HAVE_RAW_STRING_BSE
 
 Controls if `\`-escaped line-feeds should be skipped in "raw" string literals:
@@ -4450,8 +4540,8 @@ Extension name:
 ## TPP_HAVE_STRING_ESCAPE_HEX_BIG
 
 Support for `\xABCDEF` hex sequences. Extension to [`TPP_HAVE_STRING_ESCAPE_HEX`](#tpp_have_string_escape_hex) that allows more than `2`
-hex nibbles to be specified. A warning [`TPP_W_CHARACTER_TOO_LARGE`](../src/tpp-amalgamation.h#L4961) is emitted if the hex-sequence is too
-large to fit into [`tpp_uintmax`](../src/tpp-amalgamation.h#L5631), or the output string format.
+hex nibbles to be specified. A warning [`TPP_W_CHARACTER_TOO_LARGE`](../src/tpp-amalgamation.h#L4969) is emitted if the hex-sequence is too
+large to fit into [`tpp_uintmax`](../src/tpp-amalgamation.h#L5639), or the output string format.
 
 <details><summary>Details</summary>
 
@@ -4630,7 +4720,7 @@ Feature-flag: treat line-feeds like any regular character in string tokens:
 - [`TPP_HAVE_TOK_RAW_CHAR_LITERAL`](#tpp_have_tok_raw_char_literal)
 
 When this flag is disabled, line-feeds in such string tokens will instead
-terminate the string, and cause a [`TPP_W_STRING_TERMINATED_BY_LINEFEED`](../src/tpp-amalgamation.h#L4034)
+terminate the string, and cause a [`TPP_W_STRING_TERMINATED_BY_LINEFEED`](../src/tpp-amalgamation.h#L4042)
 warning to be emitted.
 
 <details><summary>Details</summary>
@@ -4659,8 +4749,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L28283) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L28323), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L28519) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L28559), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -4706,7 +4796,7 @@ is enabled based on this config, and controls the availability of
 the internal API required for this feature.
 
 Because of the amount of data added by this feature, it isn't
-automatically enabled under [`TPP_PROFILE_DEFAULT`](../src/tpp-amalgamation.h#L6256), so if you
+automatically enabled under [`TPP_PROFILE_DEFAULT`](../src/tpp-amalgamation.h#L6264), so if you
 want it, you have to enable is manually.
 
 <details><summary>Details</summary>
@@ -4855,7 +4945,7 @@ Extension name:
 ## TPP_HAVE_DONT_EXPAND_DEFINED_IN_EXPR
 
 Enable special handling in `#define foo(x) defined(x)` such that `x` is not expanded.
-Irregardless of this feature being enabled or not, a warning [`TPP_W_EXPANSION_TO_DEFINED`](../src/tpp-amalgamation.h#L4685)
+Irregardless of this feature being enabled or not, a warning [`TPP_W_EXPANSION_TO_DEFINED`](../src/tpp-amalgamation.h#L4693)
 is emitted whenever a construct `defined(<param>)` or `defined <param>` is encountered
 within the body of a function-style macro definition, where `<param>` is the name of one
 of the macro's parameters (see [`TPP_HAVE_TPP_W_EXPANSION_TO_DEFINED`](config-warn.md#tpp_have_tpp_w_expansion_to_defined)).
@@ -5020,8 +5110,8 @@ Extension name:
 
 ## TPP_HAVE_EXTERN_C_FOR_SYSHDR
 
-When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20208) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
-then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20211) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20208).
+When [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20314) is set during `#include` (i.e. *NOT* via `#pragma GCC system_header`),
+then the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20317) flag should be set alongside [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20314).
 
 <details><summary>Details</summary>
 
@@ -5105,7 +5195,7 @@ Extension name:
 
 ## TPP_HAVE_WERROR
 
-When enabled, [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22599) is treated as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L22602) instead
+When enabled, [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22835) is treated as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L22838) instead
 
 <details><summary>Details</summary>
 
@@ -5124,7 +5214,7 @@ Extension name:
 
 ## TPP_HAVE_WSYSTEM_HEADERS
 
-When enabled, the [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20208) flag of files is ignored,
+When enabled, the [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20314) flag of files is ignored,
 meaning that warnings are emitted as normal within system headers.
 
 <details><summary>Details</summary>
@@ -5144,7 +5234,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
 
-Enable support for `0x` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28107) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15475) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0x` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28343) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15570) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 
@@ -5163,7 +5253,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
 
-Enable support for `0b` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28107) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15475) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0b` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28343) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15570) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 
@@ -5182,7 +5272,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
 
-Enable support for `0o` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28107) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15475) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0o` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28343) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L15570) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 

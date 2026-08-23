@@ -2662,6 +2662,87 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
 
+/* Support for remapping of `#include` files via `header.gcc` files.
+ *
+ * Whenenver `tpp_lexer_openfile()` is called and this feature is enabled,
+ * TPP will consult (and expand) a cache of known `header.gcc` files based
+ * on the `relative_to` argument passed. Checks for potential `header.gcc`
+ * files is done in a way that mirrors GCC's behavior, with the following
+ * directories checked (in this order) until there are no more unchecked
+ * files, or the queried file was found:
+ *
+ * ```deemon
+ * // Check the folder described by `relative_to`, or the current working
+ * // directory, as also used by `tpp_lexer_openfile()` when opening a
+ * // file without an explicit `relative_to` path.
+ * //
+ * // In this case, the given `filename` is searched for as-is.
+ * CHECK_HEADER_GCC(f"{headof(relative_to) ?: "."}/header.gcc", filename);
+ *
+ * // For non-absolute paths, also search additional paths if the given
+ * // `filename` contains extra path segments.
+ * if (!TPP_FS_ISABS(filename)) {
+ *    for (local index: filename.findall("/")) { // Or `\` on windows
+ *        CHECK_HEADER_GCC(f"{headof(relative_to) ?: "."}/{filename[:index]}/header.gcc", filename[index+1:]);
+ *    }
+ * }
+ * ```
+ *
+ * Example `"foo/bar/foobar.h"`:
+ * 1. Search for entry `"foo/bar/foobar.h"` in `f"{headof(relative_to)}/header.gcc"`
+ * 2. Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
+ * 3. Search for entry `"foobar.h"` in `f"{headof(relative_to)}/foo/bar/header.gcc"`
+ * 4. If none of those files contains a matching entry, no remapping happens
+ *    and f"{headof(relative_to)}/foo/bar/foobar.h" is opened as usual.
+ *
+ * The filename `header.gcc` can be (re-)configured by `TPP_CONFIG_INCLUDE_REMAP_FILENAME`
+ *
+ * `header.gcc` files are formatted as follows:
+ * - File format is line-based
+ * - Leading/trailing whitespace in lines is ignored
+ * - (not in GCC) Lines starting with `#` are treated as comments
+ *   - Reason for this extension is that despite not being treated as
+ *     such by GCC, those few examples of `header.gcc` files I could
+ *     find in the wild often contain `#`-comments, which GCC would
+ *     then (usually) treat as the filename `#` being mapped to the
+ *     whatever
+ * - All other lines are truncated to everything preceding their first
+ *   `#`-character, and then split at their first whitespace character:
+ *   - The first part is *from-filename* (this is the key of the entry)
+ *   - The second part is *to-filename* (this is the value of the entry)
+ *   NOTE: in GCC, the *to-filename* also ends on the first whitespace,
+ *         with GCC then silently ignoring the remainder of the line
+ *         thereafter. Instead of that, TPP simply allows whitespace in
+ *         the second *to-filename*. It will only stop prematurely if a
+ *         `#`-character is encountered.
+ *
+ * Example: a `header.gcc` file is then checked like this:
+ * - Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
+ * - `header.gcc` has a line `bar/foobar.h   real/fum.h`
+ * - `tpp_lexer_openfile()` will open file `f"{headof(relative_to)}/foo/real/fum.h"`,
+ *   because *to-filename*s in `header.gcc` are always relative to the
+ *   directory containing the `header.gcc` file
+ *
+ * NOTES:
+ * - Whenever a `header.gcc` file is loaded for the first time, it will
+ *   also be emitted via `TPP_HAVE_NEW_DEPENDENCY_HOOK`, meaning that when
+ *   makefile dependencies are emitted, `header.gcc` files (when present)
+ *   will be included in the output
+ * - `header.gcc` files are still parsed using `tpp_file`, meaning that
+ *   encoding of these files is also auto-detected the same way it is
+ *   for any regular input file loaded by TPP (s.a. `TPP_HAVE_UNICODE`). */
+#ifndef TPP_HAVE_INCLUDE_REMAP
+#define TPP_HAVE_INCLUDE_REMAP ((TPP_HAVE_PROFILE_ALL && TPP_HAVE_LEXER_OPENFILE) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fremap" */
+#endif /* !TPP_HAVE_INCLUDE_REMAP */
+
+/* Name of the magic file searched-for by `TPP_HAVE_INCLUDE_REMAP`. Unless you're
+ * doing something *really* custom, you probably shouldn't change this since this
+ * is already a rather niche function of GCC, and changing the filename probably
+ * won't earn you any browny points. */
+#ifndef TPP_CONFIG_INCLUDE_REMAP_FILENAME
+#define TPP_CONFIG_INCLUDE_REMAP_FILENAME "header.gcc"
+#endif /* !TPP_CONFIG_INCLUDE_REMAP_FILENAME */
+
 /* Enable support for TPP generating new `tpp_keyword` definitions
  * on-the-fly, as keywords are parsed (the first time any unique
  * keyword is parsed, `tpp_keywords_newkeyword()` is used to give
@@ -2690,7 +2771,8 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_KEYWORD_INCLCOUNT ||                    \
      TPP_HAVE_PRAGMA_PUSH_MACRO ||                    \
      TPP_HAVE_MACRO___TPP_COUNTER ||                  \
-     TPP_HAVE_KEYWORD_USERDATA)
+     TPP_HAVE_KEYWORD_USERDATA ||                     \
+     TPP_HAVE_INCLUDE_REMAP)
 #define TPP_HAVE_USER_KEYWORDS 1
 #else /* ... */
 #define TPP_HAVE_USER_KEYWORDS 0
@@ -7132,17 +7214,16 @@ print("#endif /" "* !... *" "/");
 /* CLI PARSER CONFIGURATION                                             */
 /************************************************************************/
 
-/* TODO: Lexer functionality to automatically rename files as they are `#include`-ded,
- *       by assigning them custom `tpp_file_setfilename()` immediately after being
- *       initialized. The way names are assigned here is by replacing directory
- *       prefixes, which should be configurable via `-fmacro-prefix-map`. */
+/* TODO: Lexer functionality to automatically give custom names to files as they are
+ *       `#include`-ded, by assigning them custom `tpp_file_setfilename()` immediately
+ *       after being initialized. The way names are assigned here is by replacing
+ *       directory prefixes, which should be configurable via `-fmacro-prefix-map`. */
 
 /* TODO: Check what GCC's `-fcanonical-system-headers` actually does and see if it
  *       might make sense for TPP to also implement that one (but keep in mind that
  *       the primary idea is that the TPP core should keep all paths based on the
  *       paths specified via the API -- always making paths absolute should not be
  *       something that should be default-enabled) */
-/* TODO: Check what GCC's `-remap` actually does */
 
 /* Provide an API surrounding `tpp_cli_loader`, which can be used to configure a lexer
  * using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
@@ -7489,6 +7570,12 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_CLI_DASH_NOSTDINC */
 
 /* XXX: `-nostdinc++` */
+
+/* `-remap`: Turn on `TPP_HAVE_INCLUDE_REMAP` (enable processing of `header.gcc` files...) */
+#ifndef TPP_HAVE_CLI_DASH_REMAP
+#define TPP_HAVE_CLI_DASH_REMAP \
+	(TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_INCLUDE_REMAP))
+#endif /* !TPP_HAVE_CLI_DASH_REMAP */
 
 /* `-Werror`, `-Wno-error`:
  * Treat all warnings as errors (s.a. `TPP_HAVE_WERROR`) */
