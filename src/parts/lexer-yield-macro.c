@@ -376,13 +376,13 @@ tpp_macro_release_argbuf(tpp_macro *tpp_restrict macro,
 
 
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
-static TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	return (tpp_ssize)num_bytes;
 }
 
-static TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 	tpp_char **p_dst = (tpp_char **)arg;
 	tpp_char *dst = *p_dst;
 	tpp_memcpy(dst, text, num_bytes);
@@ -560,7 +560,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 			if (arg->tma_ins_str) {
 				tpp_size raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-				tpp_size str_size = (tpp_size)tpp_token_encodestring(&tpp_count_printer, NULL,
+				tpp_size str_size = (tpp_size)tpp_token_encodestring(tpp_formatprinter_of(tpp_count_printer), NULL,
 				                                                     arginfo->tlai_start, raw_size);
 /*				str_size += 2; * Account for leading/trailing " or ' characters -- Already account for during compilation */
 				result_chunk_size += (arg->tma_ins_str * str_size);
@@ -629,7 +629,7 @@ next_op:
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '"';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);
+			tpp_token_encodestring(tpp_formatprinter_of(tpp_buffer_printer), &dst, arginfo->tlai_start, raw_size);
 			*dst++ = '"';
 			src += *pc++;
 			goto next_op;
@@ -646,7 +646,7 @@ next_op:
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_str != 0);
 			*dst++ = '\'';
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-			tpp_token_encodestring(&tpp_buffer_printer, &dst, arginfo->tlai_start, raw_size);
+			tpp_token_encodestring(tpp_formatprinter_of(tpp_buffer_printer), &dst, arginfo->tlai_start, raw_size);
 			*dst++ = '\'';
 			src += *pc++;
 			goto next_op;

@@ -737,7 +737,7 @@ print_ch_as_byte:
 					ch = *iter;
 					if (ch == '}')
 						break;
-#ifdef TPP_HAVE_TRIGRAPHS
+#if TPP_HAVE_TRIGRAPHS
 					if (ch == '?')
 						break; /* In case of ??> */
 #endif /* TPP_HAVE_TRIGRAPHS */
@@ -814,7 +814,7 @@ handle_unknown_hex_brace_sequence:
 				ch = *iter;
 				if (ch == '}')
 					break;
-#ifdef TPP_HAVE_TRIGRAPHS
+#if TPP_HAVE_TRIGRAPHS
 				if (ch == '?')
 					break; /* In case of ??> */
 #endif /* TPP_HAVE_TRIGRAPHS */
@@ -878,7 +878,7 @@ handle_unknown_oct_brace_sequence:
 					ch = *iter;
 					if (ch == '}')
 						break;
-#ifdef TPP_HAVE_TRIGRAPHS
+#if TPP_HAVE_TRIGRAPHS
 					if (ch == '?')
 						break; /* In case of ??> */
 #endif /* TPP_HAVE_TRIGRAPHS */
@@ -1813,7 +1813,7 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
 	tpp_string_builder builder;
 	tpp_lexer_decodestring_config config;
 	tpp_string_builder_init(&builder);
-	tpp_lexer_decodestring_config_init_simple(&config, &tpp_string_builder_print, &builder);
+	tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_string_builder_print), &builder);
 	status = tpp_lexer_parsestring_ex(self, &config, flags);
 	if (TPP_SSIZE_ISERR(status))
 		goto err_builder;
@@ -1839,7 +1839,7 @@ struct tpp_lexer_decodestring_chunk_count_data {
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, num_bytes) {
 	struct tpp_lexer_decodestring_chunk_count_data *data;
 	data = (struct tpp_lexer_decodestring_chunk_count_data *)arg;
 	(void)text;
@@ -1910,7 +1910,7 @@ tpp_lexer_decodestring_is_single_chunk(tpp_lexer *tpp_restrict self
 	data.tldsccd_flags = flags;
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 	/* Try to decode the string and count how many chunks we encounter */
-	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodestring_chunk_count, &data);
+	tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_lexer_decodestring_chunk_count), &data);
 	decode_status = tpp_lexer_decodestring(self, &config);
 	tpp_assert(decode_status == 0 ||
 	           decode_status == TPP_LEXER_PARSESTRING_CHUNK_STOP);
@@ -1944,7 +1944,7 @@ struct tpp_lexer_decodestring_as_single_chunk_data {
 	tpp_string         *tldsascd_chunk;
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, num_bytes) {
 	tpp_errno error;
 	struct tpp_lexer_decodestring_as_single_chunk_data *data;
 	if tpp_unlikely(num_bytes == 0)
@@ -1974,7 +1974,7 @@ tpp_lexer_decodestring_as_single_chunk(tpp_lexer *self,
 	data.tldsascd_cb    = cb;
 	data.tldsascd_arg   = arg;
 	data.tldsascd_chunk = tpp_lexer_getfile(self)->tf_chunk;
-	tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_decodestring_as_single_chunk_cb, &data);
+	tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_lexer_decodestring_as_single_chunk_cb), &data);
 	status = tpp_lexer_decodestring(self, &config);
 #ifndef __OPTIMIZE_SIZE__
 	if (status == TPP_LEXER_PARSESTRING_CHUNK_STOP)
@@ -2325,7 +2325,7 @@ tpp_lexer_decodecharacter_data_addword(struct tpp_lexer_decodecharacter_data *tp
 	return TPP_EOK;
 }
 
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 	tpp_size i;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
@@ -2340,7 +2340,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_byt
 }
 
 #if TPP_HAVE_UNICODE
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_utf8_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_utf8_cb, arg, text, num_bytes) {
 	tpp_char const *iter = text;
 	tpp_char const *end = text + num_bytes;
 	struct tpp_lexer_decodecharacter_data *data;
@@ -2394,12 +2394,12 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_TPP_W_MULTICHAR_LITERAL */
 	data.tldcd_value = 0;
 
-	config.tldsc_dataprinter = &tpp_lexer_decodecharacter_cb;
+	config.tldsc_dataprinter = tpp_formatprinter_of(tpp_lexer_decodecharacter_cb);
 	config.tldsc_arg         = &data;
 
 	/* Decode utf-8 multi-char sequence -- '\u1234' must equal 0x1234! */
 #if TPP_HAVE_UNICODE
-	config.tldsc_utf8printer = &tpp_lexer_decodecharacter_utf8_cb;
+	config.tldsc_utf8printer = tpp_formatprinter_of(tpp_lexer_decodecharacter_utf8_cb);
 #endif /* TPP_HAVE_UNICODE */
 
 	/* If input uses \x1234, must evaluate to 0x1234! */

@@ -362,10 +362,18 @@ for (local doc, name,
 	if (builtin_FOO_HOOK)
 		print("#endif /" "* TPP_HOOK_ISRTNOOP(TPP_HAVE_", name, "_HOOK) *" "/");
 	print("#if TPP_HOOK_ISRTUSER(TPP_HAVE_", name, "_HOOK) && defined(TPP_HOOK_", name, ")");
-	print("#define _TPP_HOOKS_DEFAULT_", name, " (&TPP_HOOK_", name, ")");
+	if (isFormatPrinter) {
+		print("#define _TPP_HOOKS_DEFAULT_", name, " tpp_formatprinter_of(TPP_HOOK_", name, ")");
+	} else {
+		print("#define _TPP_HOOKS_DEFAULT_", name, " (&TPP_HOOK_", name, ")");
+	}
 	if (builtin_FOO_HOOK) {
 		print("#elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_", name, "_HOOK)");
-		print("#define _TPP_HOOKS_DEFAULT_", name, " (&", builtin_FOO_HOOK, ")");
+		if (isFormatPrinter) {
+			print("#define _TPP_HOOKS_DEFAULT_", name, " tpp_formatprinter_of(", builtin_FOO_HOOK, ")");
+		} else {
+			print("#define _TPP_HOOKS_DEFAULT_", name, " (&", builtin_FOO_HOOK, ")");
+		}
 	}
 	print("#else /" "* ... *" "/");
 	print("#define _TPP_HOOKS_DEFAULT_", name, " NULL");
@@ -416,7 +424,11 @@ for (local doc, name,
 	}
 	print("#if TPP_HAVE_", name, "_HOOK == TPP_HOOK_CONST_USER");
 	if (hookMustBeFunctionPointer) {
-		print("#define tpp_hooks_get_", name.lower(), "(self) (&TPP_HOOK_", name, ")");
+		if (isFormatPrinter) {
+			print("#define tpp_hooks_get_", name.lower(), "(self) tpp_formatprinter_of(TPP_HOOK_", name, ")");
+		} else {
+			print("#define tpp_hooks_get_", name.lower(), "(self) (&TPP_HOOK_", name, ")");
+		}
 		if ("cookie" in prototypeArgs)
 			print("#define tpp_hooks_getcookie_", name.lower(), "(self, lexer) (lexer)");
 	}
@@ -425,7 +437,11 @@ for (local doc, name,
 	if (builtin_FOO_HOOK) {
 		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_CONST_BUILTIN");
 		if (hookMustBeFunctionPointer) {
-			print("#define tpp_hooks_get_", name.lower(), "(self) (&", builtin_FOO_HOOK, ")");
+			if (isFormatPrinter) {
+				print("#define tpp_hooks_get_", name.lower(), "(self) tpp_formatprinter_of(", builtin_FOO_HOOK, ")");
+			} else {
+				print("#define tpp_hooks_get_", name.lower(), "(self) (&", builtin_FOO_HOOK, ")");
+			}
 			if ("cookie" in prototypeArgs)
 				print("#define tpp_hooks_getcookie_", name.lower(), "(self, lexer) (lexer)");
 		}
@@ -1209,9 +1225,9 @@ typedef struct tpp_hooks {
 	((self)->TPP_INTERNAL(th_warnprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), tpp_hooks_getcookie_warnprinter(self, lexer), text, num_bytes) : 0)
 #endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 #if TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) && defined(TPP_HOOK_WARNPRINTER)
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER tpp_formatprinter_of(TPP_HOOK_WARNPRINTER)
 #elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_WARNPRINTER_HOOK)
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
 #endif /* !... */
@@ -1245,12 +1261,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_fini_warnprinter(self) /* nothing */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 #if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_get_warnprinter(self) (&TPP_HOOK_WARNPRINTER)
+#define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(TPP_HOOK_WARNPRINTER)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_call_warnprinter(self, cookie, text, num_bytes) \
 	TPP_HOOK_WARNPRINTER(cookie, text, num_bytes)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_call_warnprinter(self, cookie, text, num_bytes) \
 	_tpp_lexer_builtin_warn_or_mesg_printer(cookie, text, num_bytes)
@@ -1339,9 +1355,9 @@ typedef struct tpp_hooks {
 	((self)->TPP_INTERNAL(th_mesgprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), tpp_hooks_getcookie_mesgprinter(self, lexer), text, num_bytes) : 0)
 #endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 #if TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) && defined(TPP_HOOK_MESGPRINTER)
-#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&TPP_HOOK_MESGPRINTER)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER tpp_formatprinter_of(TPP_HOOK_MESGPRINTER)
 #elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_MESGPRINTER_HOOK)
-#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_MESGPRINTER NULL
 #endif /* !... */
@@ -1375,12 +1391,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_fini_mesgprinter(self) /* nothing */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 #if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_get_mesgprinter(self) (&TPP_HOOK_MESGPRINTER)
+#define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(TPP_HOOK_MESGPRINTER)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_call_mesgprinter(self, cookie, text, num_bytes) \
 	TPP_HOOK_MESGPRINTER(cookie, text, num_bytes)
 #elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_mesgprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_call_mesgprinter(self, cookie, text, num_bytes) \
 	_tpp_lexer_builtin_warn_or_mesg_printer(cookie, text, num_bytes)
@@ -2645,7 +2661,9 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 /* Builtin hooks...                                                     */
 /************************************************************************/
 #if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#if !TPP_USE_STATIC
+TPP_FORMATPRINTER_DECL(_tpp_lexer_builtin_warn_or_mesg_printer);
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK

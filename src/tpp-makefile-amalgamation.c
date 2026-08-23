@@ -327,7 +327,7 @@ err_temp:
 }
 
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
+TPP_FORMATPRINTER_IMPL(_tpp_makefile_builtin_file_output, arg, text, num_bytes) {
 	tpp_makefile const *const self = (tpp_makefile const *)arg;
 	tpp_makefile_io_handle const file = tpp_makefile_getoutput_io(self);
 #ifndef __OPTIMIZE_SIZE__
@@ -452,7 +452,7 @@ tpp_makefile_hasdep(tpp_makefile *tpp_restrict self,
 
 
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-static TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_makefile_strlen_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	return (tpp_ssize)num_bytes;
@@ -495,7 +495,7 @@ tpp_makefile_new_dependency_hook_impl(tpp_makefile *tpp_restrict self,
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
 		{
 			tpp_size output_len = 1; /* +1 for leading ' '-character */
-			output_len += (tpp_size)tpp_makefile_escape(&tpp_makefile_strlen_printer,
+			output_len += (tpp_size)tpp_makefile_escape(tpp_formatprinter_of(tpp_makefile_strlen_printer),
 			                                            NULL, filename, filename_len,
 			                                            NULL);
 			if ((self->tmkf_curcol + (tpp_column)output_len) >= tpp_makefile_getmaxcol(self)) {
@@ -938,7 +938,7 @@ struct tpp_makefile_cli_default_target_data {
 	tpp_size      tmfcdtd_count; /* # of printed bytes */
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num_bytes) {
 	tpp_size count;
 	tpp_ssize result;
 	struct tpp_makefile_cli_default_target_data *data;
@@ -1110,7 +1110,7 @@ use_full_filename:
 			struct tpp_makefile_cli_default_target_data data;
 			data.tmfcdtd_count = 0;
 			data.tmfcdtd_mf    = self->tmkfcl_mf;
-			output_temp = tpp_makefile_cli_print_default_target(self, &tpp_makefile_cli_default_target_printer,
+			output_temp = tpp_makefile_cli_print_default_target(self, tpp_formatprinter_of(tpp_makefile_cli_default_target_printer),
 			                                                    &data, lc_filename);
 			output_count = data.tmfcdtd_count;
 		}

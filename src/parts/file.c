@@ -56,10 +56,10 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_file, tf_data.td_io.tff_user_filename) ==
 #endif /* !TPP_IO_MINREAD */
 #else /* TPP_DEBUG */
 #ifndef TPP_IO_CHUNKSIZE
-#define TPP_IO_CHUNKSIZE (64 * 1024)
+#define TPP_IO_CHUNKSIZE 65536
 #endif /* !TPP_IO_CHUNKSIZE */
 #ifndef TPP_IO_MINREAD
-#define TPP_IO_MINREAD 1024
+#define TPP_IO_MINREAD 4096
 #endif /* !TPP_IO_MINREAD */
 #endif /* !TPP_DEBUG */
 

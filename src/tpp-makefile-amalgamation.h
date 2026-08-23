@@ -590,26 +590,26 @@ typedef struct tpp_makefile {
 	/* [1..1][const] Makefile output printer (the makefile itself will be passed as argument) */
 	tpp_formatprinter TPP_MAKEFILE_INTERNAL(tmkf_output);
 
-	/* [valid_if(tmkf_output == &_tpp_makefile_builtin_file_output)] Output-to-file information */
+	/* [valid_if(tmkf_output == tpp_formatprinter_of(_tpp_makefile_builtin_file_output))] Output-to-file information */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 	tpp_makefile_io_handle TPP_MAKEFILE_INTERNAL(tmkf_output_file);
 #define _tpp_makefile_init_output_file(self) /* nothing */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
-#define _tpp_makefile_fini_output_file_before_reassign(self)                                     \
-	, (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == &_tpp_makefile_builtin_file_output            \
-	  ? (((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)           \
-	     ? (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) &= ~TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE) \
-	     : tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file)))                \
+#define _tpp_makefile_fini_output_file_before_reassign(self)                                                \
+	, (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == tpp_formatprinter_of(_tpp_makefile_builtin_file_output) \
+	  ? (((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)                     \
+	     ? (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) &= ~TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE)           \
+	     : tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file)))                          \
 	  : (void)0
-#define _tpp_makefile_fini_output_file(self)                                              \
-	, ((self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == &_tpp_makefile_builtin_file_output && \
-	   !((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE))    \
-	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file))             \
+#define _tpp_makefile_fini_output_file(self)                                                                    \
+	, ((self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == tpp_formatprinter_of(_tpp_makefile_builtin_file_output) && \
+	   !((self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) & TPP_MAKEFILE_FLAG_OUTPUT_NOCLOSE))                         \
+	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file))                                  \
 	  : (void)0
 #else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
-#define _tpp_makefile_fini_output_file(self)                                            \
-	, ((self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == &_tpp_makefile_builtin_file_output) \
-	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file))           \
+#define _tpp_makefile_fini_output_file(self)                                                                  \
+	, ((self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == tpp_formatprinter_of(_tpp_makefile_builtin_file_output)) \
+	  ? tpp_makefile_io_close((self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file))                                \
 	  : (void)0
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 #else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
@@ -716,15 +716,17 @@ typedef struct tpp_makefile {
 #define tpp_makefile_setoutput_io(self, /*inherit(always)*/ handle)      \
 	(void)((void)0 _tpp_makefile_fini_output_file_before_reassign(self), \
 	       (self)->TPP_MAKEFILE_INTERNAL(tmkf_output_file) = (handle),    \
-	       (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) = &_tpp_makefile_builtin_file_output)
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_makefile_builtin_file_output, arg, text, num_bytes);
+	       (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) = tpp_formatprinter_of(_tpp_makefile_builtin_file_output))
+#if !TPP_USE_STATIC
+TPP_FORMATPRINTER_DECL(_tpp_makefile_builtin_file_output);
+#endif /* !TPP_USE_STATIC */
 
 /* Check if output is directed to a file, i.e. has been configured by one of:
  * - `tpp_makefile_setoutput_io()`
  * - `tpp_makefile_setoutput_io_ex()`
  * - `tpp_makefile_setoutput_file()` */
 #define tpp_makefile_isoutput_io(self) \
-	(tpp_makefile_getoutput(self) == &_tpp_makefile_builtin_file_output)
+	(tpp_makefile_getoutput(self) == tpp_formatprinter_of(_tpp_makefile_builtin_file_output))
 
 /* Return the I/O handle set by `tpp_makefile_setoutput_io()`. Behavior is weak
  * undefined (and return value is entirely undefined) if the current output wasn't

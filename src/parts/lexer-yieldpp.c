@@ -1899,7 +1899,7 @@ again:
 		if (b >= 100)
 			*--p = (char)tpp_ascii_ofdigit(b / 100);
 		*--p = ',';
-		if (tpp_string_builder_print(self, (tpp_char const *)p, (tpp_size)(repr + 4 - p)) < 0)
+		if (tpp_string_builder_doprint(self, (tpp_char const *)p, (tpp_size)(repr + 4 - p)) < 0)
 			return TPP_ENOMEM;
 	}
 	goto again;
@@ -1996,8 +1996,8 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	/* Construct the (possibly only head)-data for the embedded file itself. */
 	tpp_string_builder_init(&embed_data);
 	if (self->teb_prefix.tlai_start < self->teb_prefix.tlai_end) {
-		if (tpp_string_builder_print(&embed_data, self->teb_prefix.tlai_start,
-		                             (tpp_size)(self->teb_prefix.tlai_end - self->teb_prefix.tlai_start)) < 0)
+		if (tpp_string_builder_doprint(&embed_data, self->teb_prefix.tlai_start,
+		                               (tpp_size)(self->teb_prefix.tlai_end - self->teb_prefix.tlai_start)) < 0)
 			goto err_nomem_embed_data;
 	}
 	{
@@ -2007,7 +2007,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 			*--p = (char)tpp_ascii_ofdigit((ofr_first_byte / 10) % 10);
 		if (ofr_first_byte >= 100)
 			*--p = (char)tpp_ascii_ofdigit(ofr_first_byte / 100);
-		if (tpp_string_builder_print(&embed_data, (tpp_char const *)p, (tpp_size)(ord + 3 - p)) < 0)
+		if (tpp_string_builder_doprint(&embed_data, (tpp_char const *)p, (tpp_size)(ord + 3 - p)) < 0)
 			goto err_nomem_embed_data;
 	}
 

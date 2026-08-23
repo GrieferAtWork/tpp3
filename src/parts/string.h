@@ -157,7 +157,11 @@ tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self, tpp_size num_
 /* Print `text` into `tpp_string_builder *self`
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
-TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
+#if !TPP_USE_STATIC
+TPP_FORMATPRINTER_DECL(tpp_string_builder_print);
+#endif /* !TPP_USE_STATIC */
+#define tpp_string_builder_doprint(builder, text, num_bytes) \
+	tpp_formatprinter_print_byname(tpp_string_builder_print, builder, text, num_bytes)
 #endif /* TPP_HAVE_STRING_BUILDER */
 
 TPP_DECL_END

@@ -112,13 +112,13 @@ tpp_frontend_output_printer(tpp_frontend *tpp_restrict self,
 	return 0;
 }
 
-static TPP_FORMATPRINTER_DEFINE(tpp_frontend_emitter_output_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_frontend_emitter_output_printer, arg, text, num_bytes) {
 	tpp_emitter *emitter = (tpp_emitter *)arg;
 	tpp_frontend *fe = tpp_container_of(emitter, tpp_frontend, tf_emitter);
 	return tpp_frontend_output_printer(fe, text, num_bytes);
 }
 
-static TPP_FORMATPRINTER_DEFINE(tpp_frontend_makefile_output_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_frontend_makefile_output_printer, arg, text, num_bytes) {
 	tpp_makefile *makefile = (tpp_makefile *)arg;
 	tpp_frontend *fe = tpp_container_of(makefile, tpp_frontend, tf_makefile);
 	return tpp_frontend_output_printer(fe, text, num_bytes);
@@ -537,12 +537,14 @@ int main(int argc, char **argv) {
 
 	/* Initialize frontend */
 	tpp_lexer_init(&fe.tf_lexer);
-	error = tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, &tpp_frontend_emitter_output_printer);
+	error = tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer,
+	                         tpp_formatprinter_of(tpp_frontend_emitter_output_printer));
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to initialize emitter: %s\n", tpp_strerror(error));
 		goto out_lexer;
 	}
-	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, &tpp_frontend_makefile_output_printer);
+	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer,
+	                  tpp_formatprinter_of(tpp_frontend_makefile_output_printer));
 	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
 	tpp_makefile_cli_loader_init(&fe.tf_makefile_cli_loader, &fe.tf_makefile);

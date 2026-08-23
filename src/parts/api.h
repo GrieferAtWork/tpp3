@@ -313,6 +313,7 @@
 #define tpp_restrict /* nothing */
 #endif /* !... */
 #endif /* !tpp_restrict */
+
 #ifndef TPP_NONNULL
 #if TPP_HOST_HAS_ATTRIBUTE(__nonnull__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_NONNULL(x) __attribute__((__nonnull__ x))
@@ -320,6 +321,7 @@
 #define TPP_NONNULL(x) /* nothing */
 #endif /* !... */
 #endif /* !TPP_NONNULL */
+
 #ifndef TPP_WUNUSED
 #if TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_WUNUSED __attribute__((__warn_unused_result__))
@@ -327,6 +329,7 @@
 #define TPP_WUNUSED /* nothing */
 #endif /* !... */
 #endif /* !TPP_WUNUSED */
+
 #ifndef TPP_RETNONNULL
 #if TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__) || TPP_GCC_VERSION_NUM != 0
 #define TPP_RETNONNULL __attribute__((__returns_nonnull__))
@@ -334,6 +337,7 @@
 #define TPP_RETNONNULL /* nothing */
 #endif /* !... */
 #endif /* !TPP_RETNONNULL */
+
 #ifndef TPP_PURECALL
 #if TPP_HOST_HAS_ATTRIBUTE(__pure__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_PURECALL __attribute__((__pure__))
@@ -343,6 +347,7 @@
 #define TPP_PURECALL /* nothing */
 #endif /* !... */
 #endif /* !TPP_PURECALL */
+
 #ifndef TPP_CONSTCALL
 #if TPP_HOST_HAS_ATTRIBUTE(__const__) || TPP_GCC_VERSION_NUM >= 20400
 #define TPP_CONSTCALL __attribute__((__const__))
@@ -350,6 +355,7 @@
 #define TPP_CONSTCALL TPP_PURECALL
 #endif /* !... */
 #endif /* !TPP_CONSTCALL */
+
 #ifndef TPP_COLDCALL
 #if TPP_HOST_HAS_ATTRIBUTE(__cold__) || TPP_GCC_VERSION_NUM >= 40300
 #define TPP_COLDCALL __attribute__((__cold__))
@@ -357,6 +363,7 @@
 #define TPP_COLDCALL /* nothing */
 #endif /* !... */
 #endif /* !TPP_COLDCALL */
+
 #ifndef TPP_NOINLINE
 #if TPP_HOST_HAS_ATTRIBUTE(__noinline__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_NOINLINE __attribute__((__noinline__))
@@ -366,6 +373,7 @@
 #define TPP_NOINLINE /* nothing */
 #endif /* !... */
 #endif /* !TPP_NOINLINE */
+
 #ifndef TPP_FLEX_ARRAY
 #if defined(_MSC_VER) || (TPP_GCC_VERSION_NUM && TPP_GCC_VERSION_NUM < 20970)
 #define TPP_FLEX_ARRAY 4096
@@ -375,6 +383,7 @@
 #define TPP_FLEX_ARRAY /* nothing */
 #endif /* !... */
 #endif /* !TPP_FLEX_ARRAY */
+
 #ifndef TPP_FALLTHRU
 #if TPP_HOST_HAS_CPP_ATTRIBUTE(fallthrough)
 #define TPP_FALLTHRU [[fallthrough]];
@@ -665,9 +674,7 @@
 
 #ifndef tpp_size
 #define tpp_size size_t
-#ifdef SIZE_MAX
 #define TPP_SIZE_MAX SIZE_MAX
-#endif /* SIZE_MAX */
 #endif /* !tpp_size */
 
 #ifndef tpp_ssize
@@ -681,8 +688,8 @@
 
 #ifndef tpp_hash
 #define tpp_hash      tpp_uint_fast32
-#define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #define TPP_HASH_MAX  TPP_UINT_FAST32_MAX
+#define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #endif /* !tpp_hash */
 
 #ifndef tpp_line
@@ -739,12 +746,16 @@
 #define tpp_memset      memset
 #define tpp_memchr      memchr
 #define tpp_memmove     memmove
-#define tpp_memmoveup   memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
-#define tpp_memmovedown memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
 #if 0 /* Define if available; else, TPP will provide its own */
 #define tpp_memmem      memmem
 #endif
 #endif /* !tpp_memcpy */
+#ifndef tpp_memmoveup
+#define tpp_memmoveup tpp_memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
+#endif /* !tpp_memmoveup */
+#ifndef tpp_memmovedown
+#define tpp_memmovedown tpp_memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
+#endif /* !tpp_memmovedown */
 
 /* Use our own, custom definition of `strnlen()` to:
  * - Prevent GCC `-Wstringop-overread` warnings:
@@ -857,20 +868,42 @@ TPP_DECL_BEGIN
 /* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
-#define TPP_FORMATPRINTER_CC TPPCALL
-typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
+typedef tpp_ssize (TPPCALL *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
-#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
-	((*printer)(arg, (tpp_char const *)(CONSTstr), sizeof(CONSTstr) - sizeof(char)))
-#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
-	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	NAME(arg, text, num_bytes)
+#define tpp_formatprinter_of(NAME) (&NAME)
+#define TPP_FORMATPRINTER_DEFINE(NAME, arg, text, num_bytes) \
+	static tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#if !TPP_USE_STATIC
+#define TPP_FORMATPRINTER_IMPL(NAME, arg, text, num_bytes) \
+	TPP_IMPL tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_FORMATPRINTER_DECL(NAME) \
+	TPP_DECL tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#endif /* !TPP_USE_STATIC */
 #endif /* !tpp_formatprinter */
+
+#if TPP_USE_STATIC
+#undef TPP_FORMATPRINTER_DECL
+#undef TPP_FORMATPRINTER_IMPL
+#define TPP_FORMATPRINTER_IMPL TPP_FORMATPRINTER_DEFINE
+#endif /* TPP_USE_STATIC */
+
+#ifndef tpp_formatprinter_print_byname
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	tpp_formatprinter_print(tpp_formatprinter_of(NAME), arg, text, num_bytes)
+#endif /* !tpp_formatprinter_print_byname */
+
 #ifndef tpp_formatprinter_print_cstr
 #define tpp_formatprinter_print_cstr_IS_DEFAULT
 #define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
 	tpp_formatprinter_print(printer, arg, (tpp_char const *)(text), num_bytes)
 #endif /* !tpp_formatprinter_print_cstr */
+#ifndef tpp_formatprinter_print_conststr
+#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
+	tpp_formatprinter_print_cstr(printer, arg, CONSTstr, sizeof(CONSTstr) - sizeof(char))
+#endif /* !tpp_formatprinter_print_conststr */
 
 
 
@@ -917,14 +950,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
-#define tpp_lcinfo_init(self, line, col) \
-	(void)(*(self) = tpp_lcinfo_of(line, col))
+#define tpp_lcinfo_init(p_self, line, col) \
+	(void)(*(p_self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
 #ifndef tpp_lcinfo_setline
-#define tpp_lcinfo_setline(self, line) tpp_lcinfo_init(self, line, tpp_lcinfo_getcol(*(self)))
+#define tpp_lcinfo_setline(p_self, line) tpp_lcinfo_init(p_self, line, tpp_lcinfo_getcol(*(p_self)))
 #endif /* !tpp_lcinfo_setline */
 #ifndef tpp_lcinfo_setcol
-#define tpp_lcinfo_setcol(self, col) tpp_lcinfo_init(self, tpp_lcinfo_getline(*(self)), col)
+#define tpp_lcinfo_setcol(p_self, col) tpp_lcinfo_init(p_self, tpp_lcinfo_getline(*(p_self)), col)
 #endif /* !tpp_lcinfo_setcol */
 #ifndef tpp_lcinfo_equals
 #define tpp_lcinfo_equals(a, b)                        \
@@ -935,7 +968,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 /* Specifies an invalid LC information object */
 #ifndef TPP_LCINFO_INVALID
 #define TPP_LCINFO_INVALID              tpp_lcinfo_of(-1, -1)
-#define tpp_lcinfo_isvalid(x)           (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_isvalid(self)        (tpp_lcinfo_getcol(self) >= 0)
 #define tpp_lcinfo_init_invalid(p_self) tpp_lcinfo_init(p_self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 

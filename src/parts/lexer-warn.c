@@ -37,23 +37,6 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-#if !TPP_HOST_NO_SYSTEM_INCLUDES && (TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK)
-TPP_DECL_END
-#include <stdio.h>
-TPP_DECL_BEGIN
-#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES && (TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK) */
-
-#if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-TPP_IMPL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes) {
-	FILE *fp = stderr;
-	(void)arg;
-	fwrite(text, sizeof(tpp_char), num_bytes, fp);
-	return ferror(fp) ? TPP_SSIZE_OFERR(TPP_EIO) : 0;
-}
-#endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
-
-
-
 #if TPP_HAVE_WARNINGS
 /* Interpret + print a warning-message `format` string.
  * The following %-encoded escape sequences are recognized:
@@ -655,11 +638,11 @@ _err_printer:
 }
 
 #ifndef tpp_lexer_gethook_warnprinter
-#define tpp_lexer_gethook_warnprinter(self)       (&tpp_dummy_printer)
+#define tpp_lexer_gethook_warnprinter(self)       tpp_formatprinter_of(tpp_dummy_printer)
 #define tpp_lexer_gethookcookie_warnprinter(self) (self)
 #ifndef tpp_dummy_printer
 #define tpp_dummy_printer tpp_dummy_printer
-static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;

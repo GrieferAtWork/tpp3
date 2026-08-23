@@ -2210,7 +2210,7 @@ print("#endif /" "* !... *" "/");
 /* Number tokens                                                        */
 /************************************************************************/
 
-/* XXX: Support for intel-assembler-style hex literals to be treated as TPP_TOK_C_INT:
+/* XXX: Support for intel-assembler-style hex literals:
  * https://en.wikipedia.org/wiki/Hexadecimal#Intel
  *  - FFh  (same as 0xFF)
  *  - ffh  (same as 0xff)

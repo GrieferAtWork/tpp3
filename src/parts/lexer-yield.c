@@ -170,11 +170,12 @@ tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
 	TPP_REF tpp_string *chunk;
 	tpp_string_builder builder;
 	tpp_string_builder_init(&builder);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_builder;
-	if (tpp_token_encodestring(&tpp_string_builder_print, &builder, unescaped_text, unescaped_size) < 0)
+	if (tpp_token_encodestring(tpp_formatprinter_of(tpp_string_builder_print),
+	                           &builder, unescaped_text, unescaped_size) < 0)
 		goto err_builder;
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_builder;
 	chunk = tpp_string_builder_pack(&builder);
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
@@ -1055,7 +1056,7 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 	/* Print representation of evaluation result */
 	tpp_string_builder_init(&eval_repr_builder);
 	eval_repr_print_status = tpp_expr_value_printrepr(&eval_result,
-	                                                  &tpp_string_builder_print,
+	                                                  tpp_formatprinter_of(tpp_string_builder_print),
 	                                                  &eval_repr_builder);
 	tpp_expr_value_fini(&eval_result);
 	if tpp_unlikely(TPP_SSIZE_ISERR(eval_repr_print_status)) {
@@ -1387,8 +1388,9 @@ tpp_lexer_yield_handle___TPP_STR_DECOMPILE(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___TPP_STR_PACK
-static TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print_encoded, arg, text, num_bytes) {
-	return tpp_token_encodestring(&tpp_string_builder_print, arg, text, num_bytes);
+TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print_encoded, arg, text, num_bytes) {
+	return tpp_token_encodestring(tpp_formatprinter_of(tpp_string_builder_print),
+	                              arg, text, num_bytes);
 }
 
 static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
@@ -1408,7 +1410,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 	}
 
 	tpp_string_builder_init(&builder);
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_nomem_builder;
 	for (;;) {
 		tpp_ssize status;
@@ -1428,7 +1430,7 @@ again_handle_tok:
 
 		TPP_CASE_TPP_TOK_STRING {
 			tpp_lexer_decodestring_config config;
-			tpp_lexer_decodestring_config_init_simple(&config, &tpp_string_builder_print_encoded, &builder);
+			tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_string_builder_print_encoded), &builder);
 			status = tpp_lexer_decodestring(self, &config);
 handle_status:
 			if (TPP_SSIZE_ISERR(status)) {
@@ -1446,7 +1448,7 @@ handle_status:
 #if TPP_HAVE_LEXER_PARSEEMBED
 			tpp_ssize stream_result;
 			unsigned int stream_state;
-			stream_result = tpp_lexer_parseembed(self, &tpp_string_builder_print_encoded,
+			stream_result = tpp_lexer_parseembed(self, tpp_formatprinter_of(tpp_string_builder_print_encoded),
 			                                     &builder, &stream_state);
 			if (TPP_SSIZE_ISERR(stream_result)) {
 				tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(stream_result));
@@ -1474,7 +1476,8 @@ handle_status:
 			}
 #endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 			value_ch[0] = (tpp_char)value;
-			status = tpp_string_builder_print_encoded(&builder, value_ch, 1);
+			status = tpp_token_encodestring(tpp_formatprinter_of(tpp_string_builder_print),
+			                                &builder, value_ch, 1);
 			goto handle_status;
 		}	break;
 #endif /* TPP_HAVE_TOK_INT */
@@ -1499,7 +1502,7 @@ handle_status:
 	}
 done_inner_loop:
 	tpp_assert(!TPP_TOK_ISERR(tok));
-	if (tpp_string_builder_print(&builder, (tpp_char const *)"\"", 1) < 0)
+	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_nomem_builder;
 
 	/* Push a sub-text file describing the decoded contents of the string */
@@ -1623,7 +1626,7 @@ tpp_lexer_yield_handle___TPP_COUNT_TOKENS(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___TPP_STR_SIZE
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_handle_str_size, arg, str, length) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_handle_str_size, arg, str, length) {
 	(void)arg;
 	(void)str;
 	return (tpp_ssize)length;
@@ -1656,7 +1659,7 @@ tpp_lexer_yield_handle___TPP_STR_SIZE(tpp_lexer *tpp_restrict self) {
 	} else {
 		tpp_ssize status;
 		tpp_lexer_decodestring_config config;
-		tpp_lexer_decodestring_config_init_simple(&config, &tpp_lexer_handle_str_size, NULL);
+		tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_lexer_handle_str_size), NULL);
 		status = tpp_lexer_parsestring_ex(self, &config, TPP_LEXER_PARSESTRING_FLAG_NORMAL);
 		if (TPP_SSIZE_ISERR(status)) {
 			error = TPP_SSIZE_ASERR(status);
@@ -1725,7 +1728,7 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 #if TPP_HAVE_MAGIC_WHITESPACE
 		if (tpp_lexer_has(self, MAGIC_WHITESPACE)) {
 			if (tpp_lexer_require_whitespace(self, prev_tok, tok)) {
-				print_status = tpp_string_builder_print(&data->tlhed_builder, (tpp_char const *)" ", 1);
+				print_status = tpp_string_builder_doprint(&data->tlhed_builder, (tpp_char const *)" ", 1);
 				if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
 					tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 					break;
@@ -1734,9 +1737,9 @@ tpp_lexer_handle_exec_cb(void *arg, tpp_string *chunk,
 			prev_tok = tok;
 		}
 #endif /* TPP_HAVE_MAGIC_WHITESPACE */
-		print_status = tpp_string_builder_print(&data->tlhed_builder,
-		                                        tpp_token_getstart(token),
-		                                        tpp_token_getlen(token));
+		print_status = tpp_string_builder_doprint(&data->tlhed_builder,
+		                                          tpp_token_getstart(token),
+		                                          tpp_token_getlen(token));
 		if tpp_unlikely(TPP_SSIZE_ISERR(print_status)) {
 			tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 			break;
@@ -1987,18 +1990,18 @@ tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
 	data.tlhsdsd_str += (tpp_size)(tpp_uintmax)index;
 	data.tlhsdsd_length = (tpp_size)(tpp_uintmax)length;
 	tpp_string_builder_init(&result_builder);
-	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
+	print_status = tpp_string_builder_doprint(&result_builder, &quote_ch, 1);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 		goto err_tok_data_result_builder;
 	}
-	print_status = tpp_token_encodestring(&tpp_string_builder_print, &result_builder,
-	                                      data.tlhsdsd_str, data.tlhsdsd_length);
+	print_status = tpp_token_encodestring(tpp_formatprinter_of(tpp_string_builder_print),
+	                                      &result_builder, data.tlhsdsd_str, data.tlhsdsd_length);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 		goto err_tok_data_result_builder;
 	}
-	print_status = tpp_string_builder_print(&result_builder, &quote_ch, 1);
+	print_status = tpp_string_builder_doprint(&result_builder, &quote_ch, 1);
 	if tpp_unlikely(print_status < 0) {
 		tok = TPP_TOK_OFERR(TPP_SSIZE_ASERR(print_status));
 		goto err_tok_data_result_builder;
@@ -2047,7 +2050,7 @@ struct tpp_string_builder_inplace_escape_data {
 
 #define TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART ((tpp_ssize)(TPP_ELAST - 1))
 
-static TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_bytes) {
 	tpp_char *buf;
 	tpp_size offset, delta_size, remaining;
 	struct tpp_string_builder_inplace_escape_data *data;
@@ -2094,7 +2097,7 @@ tpp_string_builder_inplace_escape(tpp_string_builder *tpp_restrict self,
 	data.tsbied_text    = text;
 	data.tsbied_size    = num_bytes;
 	while (data.tsbied_size) {
-		tpp_ssize status = tpp_token_encodestring(&tpp_string_builder_inplace_escape_cb,
+		tpp_ssize status = tpp_token_encodestring(tpp_formatprinter_of(tpp_string_builder_inplace_escape_cb),
 		                                          &data, data.tsbied_text, data.tsbied_size);
 		if (status == TPP_STRING_BUILDER_INPLACE_ESCAPE_RESTART)
 			continue;
@@ -2215,7 +2218,7 @@ tpp_lexer_yield_handle___TPP_LOAD_FILE(tpp_lexer *tpp_restrict self) {
 	 * there'd be no valid value that could be returned by `tpp_lexer_gettokenend()` (since
 	 * the end of the token wouldn't be loaded yet at that point). */
 	tpp_string_builder_init(&result_builder);
-	if (tpp_string_builder_print(&result_builder, (tpp_char const *)"\"", 1) < 0) {
+	if (tpp_string_builder_doprint(&result_builder, (tpp_char const *)"\"", 1) < 0) {
 err_nomem_ofr_result_builder:
 		tok = TPP_TOK_ENOMEM;
 err_tok_ofr_result_builder:
@@ -2230,7 +2233,7 @@ err_tok_ofr_result_builder:
 		}
 		tpp_lexer_openfile_result_fini(&ofr);
 	}
-	if (tpp_string_builder_print(&result_builder, (tpp_char const *)"\"", 1) < 0)
+	if (tpp_string_builder_doprint(&result_builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_nomem_ofr_result_builder;
 	result_str = tpp_string_builder_pack(&result_builder);
 
@@ -2366,7 +2369,7 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
 
 
 /************************************************************************/
-#ifdef TPP_HAVE_MACRO___has_embed
+#if TPP_HAVE_MACRO___has_embed
 	case TPP_KWD___has_embed:
 		return tpp_lexer_yield_handle___has_embed(self);
 #endif /* TPP_HAVE_MACRO___has_embed */

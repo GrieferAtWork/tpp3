@@ -323,7 +323,7 @@ struct tpp_lexer_decode_include_string_cb_single_data {
 	void               *tldiscsd_arg;
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_cb_single, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_cb_single, arg, text, num_bytes) {
 	tpp_errno result;
 	struct tpp_lexer_decode_include_string_cb_single_data *data;
 	data = (struct tpp_lexer_decode_include_string_cb_single_data *)arg;
@@ -336,7 +336,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_cb_single, arg, 
 }
 
 #if (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))
-static TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_count_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_lexer_decode_include_string_count_cb, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
@@ -354,7 +354,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
                                    tpp_errno (TPPCALL *cb)(void *arg, char const *str, tpp_size length),
                                    void *arg) {
 #if (TPP_CONF_MAYBE_1(TPP_HAVE_BSE) || TPP_CONF_MAYBE_1(TPP_HAVE_TRIGRAPHS))
-	tpp_ssize count = tpp_lexer_decode_include_string(self, &tpp_lexer_decode_include_string_count_cb, NULL);
+	tpp_ssize count = tpp_lexer_decode_include_string(self, tpp_formatprinter_of(tpp_lexer_decode_include_string_count_cb), NULL);
 	tpp_assert(count >= 0);
 	if tpp_unlikely(count == 0)
 		return (*cb)(arg, "", 0);
@@ -365,7 +365,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 		tpp_string_builder builder;
 		TPP_REF tpp_string *string;
 		tpp_string_builder_init(&builder);
-		status = tpp_lexer_decode_include_string(self, &tpp_string_builder_print, &builder);
+		status = tpp_lexer_decode_include_string(self, tpp_formatprinter_of(tpp_string_builder_print), &builder);
 		if tpp_unlikely(TPP_SSIZE_ISERR(status)) {
 			tpp_string_builder_fini(&builder);
 			return TPP_SSIZE_ASERR(status);
@@ -382,7 +382,7 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 		struct tpp_lexer_decode_include_string_cb_single_data data;
 		data.tldiscsd_cb  = cb;
 		data.tldiscsd_arg = arg;
-		result = tpp_lexer_decode_include_string(self, &tpp_lexer_decode_include_string_cb_single, &data);
+		result = tpp_lexer_decode_include_string(self, tpp_formatprinter_of(tpp_lexer_decode_include_string_cb_single), &data);
 		tpp_assert(TPP_SSIZE_ISERR_OR_EOK(result));
 		return TPP_SSIZE_ASERR_OR_EOK(result);
 	}

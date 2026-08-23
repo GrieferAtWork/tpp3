@@ -37,6 +37,7 @@
 
 #include "parts/error.c"
 #include "parts/hooks.c"
+#include "parts/string.c"
 #include "parts/ctype.c"
 #include "parts/ctype-unicode.c"
 #include "parts/ctype-xml.c"
@@ -47,7 +48,6 @@
 #endif /* !tpp_unicode_byname_lookup */
 #endif /* TPP_HAVE_UNICODE_BYNAME_LOOKUP */
 #include "parts/ctype-decode-named.c"
-#include "parts/string.c"
 #include "parts/token-strtokenid.c"
 #include "parts/token-reprtokenid.c"
 #include "parts/token-encodestring.c"

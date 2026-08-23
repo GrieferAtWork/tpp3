@@ -760,11 +760,11 @@ again_handle_set_warning_state:
 /************************************************************************/
 #if TPP_HAVE_PRAGMA_MESSAGE
 #ifndef tpp_lexer_gethook_mesgprinter
-#define tpp_lexer_gethook_mesgprinter(self)       (&tpp_dummy_printer)
+#define tpp_lexer_gethook_mesgprinter(self)       tpp_formatprinter_of(tpp_dummy_printer)
 #define tpp_lexer_gethookcookie_mesgprinter(self) (self)
 #ifndef tpp_dummy_printer
 #define tpp_dummy_printer tpp_dummy_printer
-static TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
 	(void)arg;
 	(void)text;
 	(void)num_bytes;
@@ -1834,7 +1834,7 @@ skip_colon_and_andle_for_pathlist:
 	default:
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
-#ifdef TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
+#if TPP_HAVE_TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH
 		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TOKEN_IN_PRAGMA_TPP_INCLUDE_PATH);
 		if (TPP_ISERR(error))
 			return error;

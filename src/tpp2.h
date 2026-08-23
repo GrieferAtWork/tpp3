@@ -1532,8 +1532,10 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   - ...
  *   - free(buf);
  *   + tpp_string_builder builder;
+ *   + tpp_lexer_decodestring_config config;
  *   + tpp_string_builder_init(&builder);
- *   + if (tpp_lexer_decodestring(TPPLexer_Current, &tpp_string_builder_print, &tpp_string_builder_print, &builder) < 0)
+ *   + tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_string_builder_print), &builder);
+ *   + if (tpp_lexer_decodestring(TPPLexer_Current, &config) < 0)
  *   +     return NULL;
  *   + TPP_REF tpp_string *string = tpp_string_builder_pack(&builder);
  *   + char *buf = (char *)tpp_string_str(string);
@@ -3103,7 +3105,7 @@ alias("W_SLASHSTAR_INSIDE_OF_COMMENT", "TPP_W_SLASHSTAR_INSIDE_OF_COMMENT");
 alias("W_LINE_COMMENT_CONTINUED", "TPP_W_LINE_COMMENT_CONTINUED");
 alias("W_NOT_ENGOUH_MACRO_ARGUMENTS", "TPP_W_TOO_FEW_ARGUMENTS");
 alias("W_STRING_TERMINATED_BY_LINEFEED", "TPP_W_STRING_TERMINATED_BY_LINEFEED");
-alias("W_STRING_TERMINATED_BY_EOF", "TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF");
+alias("W_STRING_TERMINATED_BY_EOF", "TPP_W_STRING_TERMINATED_BY_EOF");
 alias("W_COMMENT_TERMINATED_BY_EOF", "TPP_W_COMMENT_TERMINATED_BY_EOF");
 alias("W_ENCOUNTERED_TRIGRAPH", "TPP_W_ENCOUNTERED_TRIGRAPH");
 alias("W_EXPECTED_STRING_IN_EXPRESSION", "TPP_W_EXPECTED_STRING");
@@ -3164,7 +3166,7 @@ alias("W_NONPARTABLE_FILENAME_CASING", "TPP_W_NONPORTABLE_FILENAME_CASING");
 alias("W_MACRO_RECURSION_LIMIT_EXCEEDED", "TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED");
 alias("W_CONSIDER_PAREN_AROUND_LAND", "TPP_W_PAREN_AROUND_LAND");
 alias("W_CANT_POP_INCLUDE_PATH", "TPP_W_CANNOT_POP_INCLUDE_PATHS");
-alias("W_INVALID_FLOAT_SUFFIX", "TPP_HAVE_TPP_W_INVALID_FLOAT");
+alias("W_INVALID_FLOAT_SUFFIX", "TPP_W_INVALID_FLOAT");
 alias("W_SPECIAL_ARGUMENT_NAME", "TPP_W_RESERVED_MACRO_PARAMETER_NAME");
 alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 ]]]*/
@@ -4004,12 +4006,9 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_STRING_TERMINATED_BY_LINEFEED)
 #define W_STRING_TERMINATED_BY_LINEFEED TPP_W_STRING_TERMINATED_BY_LINEFEED
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_STRING_TERMINATED_BY_LINEFEED */
-#ifdef TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#define TPP_W_STRING_TERMINATED_BY_EOF TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#if TPP2_HAVE_GLOBAL_NAMESPACE
-#define W_STRING_TERMINATED_BY_EOF TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
-#endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+#if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_STRING_TERMINATED_BY_EOF)
+#define W_STRING_TERMINATED_BY_EOF TPP_W_STRING_TERMINATED_BY_EOF
+#endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_STRING_TERMINATED_BY_EOF */
 #if TPP2_HAVE_GLOBAL_NAMESPACE && defined(TPP_W_COMMENT_TERMINATED_BY_EOF)
 #define W_COMMENT_TERMINATED_BY_EOF TPP_W_COMMENT_TERMINATED_BY_EOF
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE && TPP_W_COMMENT_TERMINATED_BY_EOF */
@@ -4334,12 +4333,12 @@ alias("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define W_CANT_POP_INCLUDE_PATH TPP_W_CANNOT_POP_INCLUDE_PATHS
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
 #endif /* TPP_W_CANNOT_POP_INCLUDE_PATHS */
-#ifdef TPP_HAVE_TPP_W_INVALID_FLOAT
-#define TPP_W_INVALID_FLOAT_SUFFIX TPP_HAVE_TPP_W_INVALID_FLOAT
+#ifdef TPP_W_INVALID_FLOAT
+#define TPP_W_INVALID_FLOAT_SUFFIX TPP_W_INVALID_FLOAT
 #if TPP2_HAVE_GLOBAL_NAMESPACE
-#define W_INVALID_FLOAT_SUFFIX TPP_HAVE_TPP_W_INVALID_FLOAT
+#define W_INVALID_FLOAT_SUFFIX TPP_W_INVALID_FLOAT
 #endif /* TPP2_HAVE_GLOBAL_NAMESPACE */
-#endif /* TPP_HAVE_TPP_W_INVALID_FLOAT */
+#endif /* TPP_W_INVALID_FLOAT */
 #ifdef TPP_W_RESERVED_MACRO_PARAMETER_NAME
 #define TPP_W_SPECIAL_ARGUMENT_NAME TPP_W_RESERVED_MACRO_PARAMETER_NAME
 #if TPP2_HAVE_GLOBAL_NAMESPACE
@@ -4672,7 +4671,7 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofFtos(tpp_float f) {
 }
 
 
-TPP_INLINE TPP_FORMATPRINTER_DEFINE(_TPP_Escape_buffer_cb, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(_TPP_Escape_buffer_cb, arg, text, num_bytes) {
 	if (arg) {
 		char **p_buf = (char **)arg;
 		tpp_memcpy(*p_buf, text, num_bytes);
@@ -5542,7 +5541,7 @@ TPPConst_ToString(tpp_expr_value const *tpp_restrict self) {
 	tpp_string_builder builder;
 	tpp_string_builder_init(&builder);
 	status = tpp_expr_value_printrepr((tpp_expr_value *)self,
-	                                  &tpp_string_builder_print,
+	                                  tpp_formatprinter_of(tpp_string_builder_print),
 	                                  &builder);
 	if (status < 0) {
 		tpp_string_builder_fini(&builder);

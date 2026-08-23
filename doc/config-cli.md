@@ -5,14 +5,14 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L28844), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L28885), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
 be done using some other C API; it's only there as a convenience to you.
 
 The CLI loader must be used on a lexer that has already been initialized
-itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L27011)), though whether or not the its initial
+itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L27048)), though whether or not the its initial
 file has already been initialized doesn't matter (the CLI loader will never
 make persistent modifications to a lexer's current file/token).
 
@@ -123,7 +123,7 @@ TPP_HAVE_CLI && ((TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_CPP_MACROS)
 `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
 Delete a macro definition, the same way `#undef macro` would.
 
-Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L27378) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L27390)
+Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L27415) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L27427)
 
 <details><summary>Details</summary>
 
@@ -141,8 +141,8 @@ TPP_HAVE_CLI && (TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_CPP_MACROS
 `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
 Define or delete a preprocessor *"assertion"* (see [`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert)).
 
-Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L27408) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L27417) +
-                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L27424)
+Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L27445) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L27454) +
+                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L27461)
 
 <details><summary>Details</summary>
 
@@ -565,7 +565,7 @@ TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_WERROR)
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit))
 to `1`, or restore its default when this flag is disabled.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L26035) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L26072) be available.
 
 <details><summary>Details</summary>
 
@@ -581,7 +581,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0)
 `-fmax-errors=COUNT`:
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit)) to `COUNT`.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L26035) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L26072) be available.
 
 <details><summary>Details</summary>
 
@@ -597,13 +597,13 @@ TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0)
 `-W...`, `-Wno-...`:
 Turn emission of a specific warning on/off (similar to `#pragma TPP warning("-W...")`).
 
-When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L22834). When turned on,
+When turned off, the warning state is set to [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L22869). When turned on,
 the warning state is gradually increased from what it's previous state was:
 
-- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L22834) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22835)
-- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22835) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L22837) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
-  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22842) instead)
-- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22842)
+- [`TPP_WSTATE_DISABLED`](../src/tpp-amalgamation.h#L22869) is changed to [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22870)
+- [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22870) is changed to [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L22872) (if [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error)
+  is available; else, changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22877) instead)
+- [`TPP_HAVE_WARNING_ERROR`](config-core.md#tpp_have_warning_error) is changed to [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L22877)
 
 <details><summary>Details</summary>
 
@@ -617,7 +617,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNINGS
 ## TPP_HAVE_CLI_DASH_WERROR_WARNING
 
 `-Werror=NAME`:
-Configure the specified warning `NAME` as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L22838), or [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22835)
+Configure the specified warning [`NAME`](../src/tpp-amalgamation.h#L5876) as [`TPP_WSTATE_ERROR_OR_FATAL`](../src/tpp-amalgamation.h#L22873), or [`TPP_WSTATE_WARN`](../src/tpp-amalgamation.h#L22870)
 
 <details><summary>Details</summary>
 
@@ -630,14 +630,14 @@ TPP_HAVE_CLI && TPP_HAVE_WARNINGS
 
 ## TPP_HAVE_CLI_SETINPUTS
 
-Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29030), which can be used
+Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29071), which can be used
 to easily implement a high-level wrapper around the different APIs
 that exist to load files into the lexer:
 
-- [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L27219)
-- [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L27260)
-- [`tpp_lexer_initfile_io_ex()`](../src/tpp-amalgamation.h#L27204)
-- [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L27244)
+- [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L27256)
+- [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L27297)
+- [`tpp_lexer_initfile_io_ex()`](../src/tpp-amalgamation.h#L27241)
+- [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L27281)
 
 When this API is enabled and being used, it also becomes possible
 to enable some additional CLI options such as `-fsearch-include-path`
@@ -654,7 +654,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_SETINPUTS_DASH
 
-[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29030) supports a special case when the given
+[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29071) supports a special case when the given
 filename is `"-"`. When that is the case, *STDIN* is used as input
 instead, with [`TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME`](#tpp_have_cli_setinputs_stdin_filename) becoming the
 filename.
@@ -685,7 +685,7 @@ Default:
 ## TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 
 `-fsearch-include-path[=kind]` (where `kind` is one of `(user|system)`, defaulting to `user`):
-When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29030) (as enabled by
+When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L29071) (as enabled by
 [`TPP_HAVE_CLI_SETINPUTS`](#tpp_have_cli_setinputs)) when the specified file cannot be found (as a file realtive to the
 preprocessor's current working directory). If that happens, perform an additional search for
 the specified filename using `#include`-paths (s.a. [`TPP_HAVE_INCLUDE_PATH`](config-core.md#tpp_have_include_path)):

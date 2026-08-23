@@ -377,7 +377,7 @@ struct tpp_makefile_cli_default_target_data {
 	tpp_size      tmfcdtd_count; /* # of printed bytes */
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num_bytes) {
 	tpp_size count;
 	tpp_ssize result;
 	struct tpp_makefile_cli_default_target_data *data;
@@ -549,7 +549,7 @@ use_full_filename:
 			struct tpp_makefile_cli_default_target_data data;
 			data.tmfcdtd_count = 0;
 			data.tmfcdtd_mf    = self->tmkfcl_mf;
-			output_temp = tpp_makefile_cli_print_default_target(self, &tpp_makefile_cli_default_target_printer,
+			output_temp = tpp_makefile_cli_print_default_target(self, tpp_formatprinter_of(tpp_makefile_cli_default_target_printer),
 			                                                    &data, lc_filename);
 			output_count = data.tmfcdtd_count;
 		}

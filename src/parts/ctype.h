@@ -299,7 +299,6 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_e
 #endif /* TPP_HAVE_UNICODE */
 
 
-#ifndef TPP_UTOA_MAXLEN
 #if TPP_UINTMAX_MAX <= TPP_UINTMAX_C(255)
 #define TPP_UTOA_MAXLEN 3  /* `255` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(65535)
@@ -313,10 +312,7 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_e
 #else /* TPP_UINTMAX_MAX <= ... */
 #error "Unsupported 'TPP_UINTMAX_MAX'"
 #endif /* TPP_UINTMAX_MAX > ... */
-#endif /* !TPP_UTOA_MAXLEN */
-#ifndef TPP_ITOA_MAXLEN
 #define TPP_ITOA_MAXLEN (TPP_UTOA_MAXLEN + 1) /* +1 for leading `-` */
-#endif /* !TPP_ITOA_MAXLEN */
 
 
 /* Convert an integer into a string */
@@ -358,9 +354,11 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
  *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
+#ifndef tpp_fuzzy_memcmp
 TPP_DECL TPP_WUNUSED tpp_size TPPCALL
 tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len);
+#endif /* !tpp_fuzzy_memcmp */
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 

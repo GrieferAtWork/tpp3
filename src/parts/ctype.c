@@ -243,6 +243,7 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc) {
  *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
+#ifndef tpp_fuzzy_memcmp
 #ifdef tpp_alloca
 TPP_NOINLINE
 #endif /* tpp_alloca */
@@ -319,6 +320,7 @@ allocate_stack:
 	}
 	return temp;
 }
+#endif /* !tpp_fuzzy_memcmp */
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 TPP_DECL_END

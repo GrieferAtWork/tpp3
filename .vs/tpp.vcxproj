@@ -146,6 +146,7 @@
     <None Include="..\doc\config-core.md" />
     <None Include="..\doc\config-hook.md" />
     <None Include="..\doc\config-limit.md" />
+    <None Include="..\doc\config-misc.md" />
     <None Include="..\doc\config-token.md" />
     <None Include="..\doc\config-value.md" />
     <None Include="..\doc\config-warn.md" />

@@ -353,6 +353,7 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
+#ifndef tpp_lexer_decodeint_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result) {
@@ -362,6 +363,7 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
 		error = tpp_expr_value_init_int(result, value);
 	return error;
 }
+#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float
@@ -370,6 +372,7 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+#ifndef tpp_lexer_decodefloat_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result) {
@@ -379,6 +382,7 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 		error = tpp_expr_value_init_float(result, value);
 	return error;
 }
+#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 TPP_DECL_END

@@ -5335,6 +5335,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_restrict /* nothing */
 #endif /* !... */
 #endif /* !tpp_restrict */
+
 #ifndef TPP_NONNULL
 #if TPP_HOST_HAS_ATTRIBUTE(__nonnull__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_NONNULL(x) __attribute__((__nonnull__ x))
@@ -5342,6 +5343,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_NONNULL(x) /* nothing */
 #endif /* !... */
 #endif /* !TPP_NONNULL */
+
 #ifndef TPP_WUNUSED
 #if TPP_HOST_HAS_ATTRIBUTE(__warn_unused_result__) || TPP_GCC_VERSION_NUM >= 30300
 #define TPP_WUNUSED __attribute__((__warn_unused_result__))
@@ -5349,6 +5351,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_WUNUSED /* nothing */
 #endif /* !... */
 #endif /* !TPP_WUNUSED */
+
 #ifndef TPP_RETNONNULL
 #if TPP_HOST_HAS_ATTRIBUTE(__returns_nonnull__) || TPP_GCC_VERSION_NUM != 0
 #define TPP_RETNONNULL __attribute__((__returns_nonnull__))
@@ -5356,6 +5359,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_RETNONNULL /* nothing */
 #endif /* !... */
 #endif /* !TPP_RETNONNULL */
+
 #ifndef TPP_PURECALL
 #if TPP_HOST_HAS_ATTRIBUTE(__pure__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_PURECALL __attribute__((__pure__))
@@ -5365,6 +5369,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_PURECALL /* nothing */
 #endif /* !... */
 #endif /* !TPP_PURECALL */
+
 #ifndef TPP_CONSTCALL
 #if TPP_HOST_HAS_ATTRIBUTE(__const__) || TPP_GCC_VERSION_NUM >= 20400
 #define TPP_CONSTCALL __attribute__((__const__))
@@ -5372,6 +5377,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_CONSTCALL TPP_PURECALL
 #endif /* !... */
 #endif /* !TPP_CONSTCALL */
+
 #ifndef TPP_COLDCALL
 #if TPP_HOST_HAS_ATTRIBUTE(__cold__) || TPP_GCC_VERSION_NUM >= 40300
 #define TPP_COLDCALL __attribute__((__cold__))
@@ -5379,6 +5385,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_COLDCALL /* nothing */
 #endif /* !... */
 #endif /* !TPP_COLDCALL */
+
 #ifndef TPP_NOINLINE
 #if TPP_HOST_HAS_ATTRIBUTE(__noinline__) || TPP_GCC_VERSION_NUM >= 29600
 #define TPP_NOINLINE __attribute__((__noinline__))
@@ -5388,6 +5395,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_NOINLINE /* nothing */
 #endif /* !... */
 #endif /* !TPP_NOINLINE */
+
 #ifndef TPP_FLEX_ARRAY
 #if defined(_MSC_VER) || (TPP_GCC_VERSION_NUM && TPP_GCC_VERSION_NUM < 20970)
 #define TPP_FLEX_ARRAY 4096
@@ -5397,6 +5405,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define TPP_FLEX_ARRAY /* nothing */
 #endif /* !... */
 #endif /* !TPP_FLEX_ARRAY */
+
 #ifndef TPP_FALLTHRU
 #if TPP_HOST_HAS_CPP_ATTRIBUTE(fallthrough)
 #define TPP_FALLTHRU [[fallthrough]];
@@ -5663,9 +5672,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 
 #ifndef tpp_size
 #define tpp_size size_t
-#ifdef SIZE_MAX
 #define TPP_SIZE_MAX SIZE_MAX
-#endif /* SIZE_MAX */
 #endif /* !tpp_size */
 
 #ifndef tpp_ssize
@@ -5679,8 +5686,8 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 
 #ifndef tpp_hash
 #define tpp_hash      tpp_uint_fast32
-#define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #define TPP_HASH_MAX  TPP_UINT_FAST32_MAX
+#define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #endif /* !tpp_hash */
 
 #ifndef tpp_line
@@ -5737,12 +5744,16 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #define tpp_memset      memset
 #define tpp_memchr      memchr
 #define tpp_memmove     memmove
-#define tpp_memmoveup   memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
-#define tpp_memmovedown memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
 #if 0 /* Define if available; else, TPP will provide its own */
 #define tpp_memmem      memmem
 #endif
 #endif /* !tpp_memcpy */
+#ifndef tpp_memmoveup
+#define tpp_memmoveup tpp_memmove /* Same as "tpp_memmove", but guaranties that "dst >= src" */
+#endif /* !tpp_memmoveup */
+#ifndef tpp_memmovedown
+#define tpp_memmovedown tpp_memmove /* Same as "tpp_memmove", but guaranties that "dst <= src" */
+#endif /* !tpp_memmovedown */
 
 /* Use our own, custom definition of `strnlen()` to:
  * - Prevent GCC `-Wstringop-overread` warnings:
@@ -5855,20 +5866,42 @@ TPP_DECL_BEGIN
 /* Format-printer API */
 #ifndef tpp_formatprinter
 #define tpp_formatprinter tpp_formatprinter
-#define TPP_FORMATPRINTER_CC TPPCALL
-typedef tpp_ssize (TPP_FORMATPRINTER_CC *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
+typedef tpp_ssize (TPPCALL *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))
-#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
-	((*printer)(arg, (tpp_char const *)(CONSTstr), sizeof(CONSTstr) - sizeof(char)))
-#define TPP_FORMATPRINTER_DEFINE(name, arg, text, num_bytes) \
-	tpp_ssize (TPP_FORMATPRINTER_CC name)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	NAME(arg, text, num_bytes)
+#define tpp_formatprinter_of(NAME) (&NAME)
+#define TPP_FORMATPRINTER_DEFINE(NAME, arg, text, num_bytes) \
+	static tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#if !TPP_USE_STATIC
+#define TPP_FORMATPRINTER_IMPL(NAME, arg, text, num_bytes) \
+	TPP_IMPL tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#define TPP_FORMATPRINTER_DECL(NAME) \
+	TPP_DECL tpp_ssize (TPPCALL NAME)(void *arg, tpp_char const *text, tpp_size num_bytes)
+#endif /* !TPP_USE_STATIC */
 #endif /* !tpp_formatprinter */
+
+#if TPP_USE_STATIC
+#undef TPP_FORMATPRINTER_DECL
+#undef TPP_FORMATPRINTER_IMPL
+#define TPP_FORMATPRINTER_IMPL TPP_FORMATPRINTER_DEFINE
+#endif /* TPP_USE_STATIC */
+
+#ifndef tpp_formatprinter_print_byname
+#define tpp_formatprinter_print_byname(NAME, arg, text, num_bytes) \
+	tpp_formatprinter_print(tpp_formatprinter_of(NAME), arg, text, num_bytes)
+#endif /* !tpp_formatprinter_print_byname */
+
 #ifndef tpp_formatprinter_print_cstr
 #define tpp_formatprinter_print_cstr_IS_DEFAULT
 #define tpp_formatprinter_print_cstr(printer, arg, text, num_bytes) \
 	tpp_formatprinter_print(printer, arg, (tpp_char const *)(text), num_bytes)
 #endif /* !tpp_formatprinter_print_cstr */
+#ifndef tpp_formatprinter_print_conststr
+#define tpp_formatprinter_print_conststr(printer, arg, CONSTstr) \
+	tpp_formatprinter_print_cstr(printer, arg, CONSTstr, sizeof(CONSTstr) - sizeof(char))
+#endif /* !tpp_formatprinter_print_conststr */
 
 
 
@@ -5915,14 +5948,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #endif /* !tpp_lcinfo */
 
 #ifndef tpp_lcinfo_init
-#define tpp_lcinfo_init(self, line, col) \
-	(void)(*(self) = tpp_lcinfo_of(line, col))
+#define tpp_lcinfo_init(p_self, line, col) \
+	(void)(*(p_self) = tpp_lcinfo_of(line, col))
 #endif /* !tpp_lcinfo_init */
 #ifndef tpp_lcinfo_setline
-#define tpp_lcinfo_setline(self, line) tpp_lcinfo_init(self, line, tpp_lcinfo_getcol(*(self)))
+#define tpp_lcinfo_setline(p_self, line) tpp_lcinfo_init(p_self, line, tpp_lcinfo_getcol(*(p_self)))
 #endif /* !tpp_lcinfo_setline */
 #ifndef tpp_lcinfo_setcol
-#define tpp_lcinfo_setcol(self, col) tpp_lcinfo_init(self, tpp_lcinfo_getline(*(self)), col)
+#define tpp_lcinfo_setcol(p_self, col) tpp_lcinfo_init(p_self, tpp_lcinfo_getline(*(p_self)), col)
 #endif /* !tpp_lcinfo_setcol */
 #ifndef tpp_lcinfo_equals
 #define tpp_lcinfo_equals(a, b)                        \
@@ -5933,7 +5966,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 /* Specifies an invalid LC information object */
 #ifndef TPP_LCINFO_INVALID
 #define TPP_LCINFO_INVALID              tpp_lcinfo_of(-1, -1)
-#define tpp_lcinfo_isvalid(x)           (tpp_lcinfo_getcol(x) >= 0)
+#define tpp_lcinfo_isvalid(self)        (tpp_lcinfo_getcol(self) >= 0)
 #define tpp_lcinfo_init_invalid(p_self) tpp_lcinfo_init(p_self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 
@@ -8286,7 +8319,7 @@ TPP_DECL_END
 /* Number tokens                                                        */
 /************************************************************************/
 
-/* XXX: Support for intel-assembler-style hex literals to be treated as TPP_TOK_C_INT:
+/* XXX: Support for intel-assembler-style hex literals:
  * https://en.wikipedia.org/wiki/Hexadecimal#Intel
  *  - FFh  (same as 0xFF)
  *  - ffh  (same as 0xff)
@@ -13690,7 +13723,6 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_e
 #endif /* TPP_HAVE_UNICODE */
 
 
-#ifndef TPP_UTOA_MAXLEN
 #if TPP_UINTMAX_MAX <= TPP_UINTMAX_C(255)
 #define TPP_UTOA_MAXLEN 3  /* `255` */
 #elif TPP_UINTMAX_MAX <= TPP_UINTMAX_C(65535)
@@ -13704,10 +13736,7 @@ tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_e
 #else /* TPP_UINTMAX_MAX <= ... */
 #error "Unsupported 'TPP_UINTMAX_MAX'"
 #endif /* TPP_UINTMAX_MAX > ... */
-#endif /* !TPP_UTOA_MAXLEN */
-#ifndef TPP_ITOA_MAXLEN
 #define TPP_ITOA_MAXLEN (TPP_UTOA_MAXLEN + 1) /* +1 for leading `-` */
-#endif /* !TPP_ITOA_MAXLEN */
 
 
 /* Convert an integer into a string */
@@ -13749,9 +13778,11 @@ tpp_unicode_writeutf8(tpp_char buf[TPP_UTF8_MAXLEN], tpp_unichar uc);
  *                        The implementation uses `tpp_trymalloc`, so
  *                        this shouldn't be considered a fatal error
  * #endif // !tpp_alloca */
+#ifndef tpp_fuzzy_memcmp
 TPP_DECL TPP_WUNUSED tpp_size TPPCALL
 tpp_fuzzy_memcmp(tpp_char const *lhs, tpp_size lhs_len,
                  tpp_char const *rhs, tpp_size rhs_len);
+#endif /* !tpp_fuzzy_memcmp */
 #endif /* TPP_HAVE_TPP_FUZZY_MEMCMP */
 
 
@@ -14038,7 +14069,11 @@ tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self, tpp_size num_
 /* Print `text` into `tpp_string_builder *self`
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
-TPP_DECL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes);
+#if !TPP_USE_STATIC
+TPP_FORMATPRINTER_DECL(tpp_string_builder_print);
+#endif /* !TPP_USE_STATIC */
+#define tpp_string_builder_doprint(builder, text, num_bytes) \
+	tpp_formatprinter_print_byname(tpp_string_builder_print, builder, text, num_bytes)
 #endif /* TPP_HAVE_STRING_BUILDER */
 
 TPP_DECL_END
@@ -24416,9 +24451,9 @@ typedef struct tpp_hooks {
 	((self)->TPP_INTERNAL(th_warnprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_warnprinter), tpp_hooks_getcookie_warnprinter(self, lexer), text, num_bytes) : 0)
 #endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_WARNPRINTER_HOOK) */
 #if TPP_HOOK_ISRTUSER(TPP_HAVE_WARNPRINTER_HOOK) && defined(TPP_HOOK_WARNPRINTER)
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&TPP_HOOK_WARNPRINTER)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER tpp_formatprinter_of(TPP_HOOK_WARNPRINTER)
 #elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_WARNPRINTER_HOOK)
-#define _TPP_HOOKS_DEFAULT_WARNPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define _TPP_HOOKS_DEFAULT_WARNPRINTER tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_WARNPRINTER NULL
 #endif /* !... */
@@ -24452,12 +24487,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_fini_warnprinter(self) /* nothing */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_WARNPRINTER_HOOK) */
 #if TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_get_warnprinter(self) (&TPP_HOOK_WARNPRINTER)
+#define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(TPP_HOOK_WARNPRINTER)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_call_warnprinter(self, cookie, text, num_bytes) \
 	TPP_HOOK_WARNPRINTER(cookie, text, num_bytes)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_warnprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_call_warnprinter(self, cookie, text, num_bytes) \
 	_tpp_lexer_builtin_warn_or_mesg_printer(cookie, text, num_bytes)
@@ -24546,9 +24581,9 @@ typedef struct tpp_hooks {
 	((self)->TPP_INTERNAL(th_mesgprinter) ? tpp_formatprinter_print((self)->TPP_INTERNAL(th_mesgprinter), tpp_hooks_getcookie_mesgprinter(self, lexer), text, num_bytes) : 0)
 #endif /* TPP_HOOK_ISRTNOOP(TPP_HAVE_MESGPRINTER_HOOK) */
 #if TPP_HOOK_ISRTUSER(TPP_HAVE_MESGPRINTER_HOOK) && defined(TPP_HOOK_MESGPRINTER)
-#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&TPP_HOOK_MESGPRINTER)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER tpp_formatprinter_of(TPP_HOOK_MESGPRINTER)
 #elif TPP_HOOK_ISRTBULITIN(TPP_HAVE_MESGPRINTER_HOOK)
-#define _TPP_HOOKS_DEFAULT_MESGPRINTER (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define _TPP_HOOKS_DEFAULT_MESGPRINTER tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #else /* ... */
 #define _TPP_HOOKS_DEFAULT_MESGPRINTER NULL
 #endif /* !... */
@@ -24582,12 +24617,12 @@ typedef struct tpp_hooks {
 #define _tpp_hooks_fini_mesgprinter(self) /* nothing */
 #else /* TPP_HOOK_ISRT(TPP_HAVE_MESGPRINTER_HOOK) */
 #if TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_USER
-#define tpp_hooks_get_mesgprinter(self) (&TPP_HOOK_MESGPRINTER)
+#define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(TPP_HOOK_MESGPRINTER)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_call_mesgprinter(self, cookie, text, num_bytes) \
 	TPP_HOOK_MESGPRINTER(cookie, text, num_bytes)
 #elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
-#define tpp_hooks_get_mesgprinter(self) (&_tpp_lexer_builtin_warn_or_mesg_printer)
+#define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_call_mesgprinter(self, cookie, text, num_bytes) \
 	_tpp_lexer_builtin_warn_or_mesg_printer(cookie, text, num_bytes)
@@ -25851,7 +25886,9 @@ _tpp_hooks_call_isfloatsuffix(struct tpp_lexer *tpp_restrict lexer, tpp_char con
 /* Builtin hooks...                                                     */
 /************************************************************************/
 #if TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK
-TPP_DECL TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num_bytes);
+#if !TPP_USE_STATIC
+TPP_FORMATPRINTER_DECL(_tpp_lexer_builtin_warn_or_mesg_printer);
+#endif /* !TPP_USE_STATIC */
 #endif /* TPP_HAVE_BUILTIN_WARNPRINTER_HOOK || TPP_HAVE_BUILTIN_MESGPRINTER_HOOK */
 
 #if TPP_HAVE_BUILTIN_WARNHANDLER_HOOK
@@ -28350,9 +28387,11 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
+#ifndef tpp_lexer_decodeint_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result);
+#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 
@@ -28377,9 +28416,11 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
+#ifndef tpp_lexer_decodefloat_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result);
+#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 

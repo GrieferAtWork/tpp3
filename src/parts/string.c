@@ -109,10 +109,10 @@ tpp_string_builder_alloc_impl(tpp_string_builder *tpp_restrict self,
 	tpp_assert(cur_alloc >= self->tsb_len);
 	if (cur_alloc < min_alloc) {
 		tpp_size new_alloc = cur_alloc * 2;
-#if TPP_STRING_BUILDER_MINALLOC != 0
+#if TPP_STRING_BUILDER_MINALLOC > 1
 		if (new_alloc < TPP_STRING_BUILDER_MINALLOC)
 			new_alloc = TPP_STRING_BUILDER_MINALLOC;
-#endif /* TPP_STRING_BUILDER_MINALLOC != 0 */
+#endif /* TPP_STRING_BUILDER_MINALLOC > 1 */
 		if (new_alloc < min_alloc)
 			new_alloc = min_alloc;
 		buffer = _tpp_string_tryrealloc(buffer, new_alloc);
@@ -160,7 +160,7 @@ tpp_string_builder_tryalloc(tpp_string_builder *tpp_restrict self,
 /* Print "text" into "tpp_string_builder *self"
  * @return: num_bytes:                   Success
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
-TPP_IMPL TPP_WUNUSED TPP_FORMATPRINTER_DEFINE(tpp_string_builder_print, arg, text, num_bytes) {
+TPP_FORMATPRINTER_IMPL(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_string_builder *me = (tpp_string_builder *)arg;
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
 	if tpp_unlikely(!dst)

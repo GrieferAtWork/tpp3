@@ -537,8 +537,8 @@ tpp_emitter_printspace(tpp_emitter *tpp_restrict self, tpp_column count) {
 }
 
 #if TPP_EMITTER_HAVE_CURPOS
-#define tpp_emitter_getprinter(self) &_tpp_emitter_print
-static TPP_FORMATPRINTER_DEFINE(_tpp_emitter_print, arg, text, num_bytes) {
+#define tpp_emitter_getprinter(self) tpp_formatprinter_of(_tpp_emitter_print)
+TPP_FORMATPRINTER_DEFINE(_tpp_emitter_print, arg, text, num_bytes) {
 	tpp_emitter *self = (tpp_emitter *)arg;
 	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
 	if (result >= 0) {
@@ -576,12 +576,16 @@ tpp_emitter_printlf(tpp_emitter *tpp_restrict self, tpp_line count) {
 
 
 #if TPP_EMITTER_HAVE_NORMALIZE_C_STRING || (TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE))
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
 #if TPP_HAVE_TOKEN_ENCODESTRING
-	return tpp_token_encodestring(tpp_emitter_getprinter((tpp_emitter *)arg), arg, text, num_bytes);
+#define tpp_emitter_print_encodestring_call(self, text, num_bytes) \
+	tpp_token_encodestring(tpp_emitter_getprinter(self), self, text, num_bytes)
 #else /* TPP_HAVE_TOKEN_ENCODESTRING */
-	return tpp_emitter_output_printraw((tpp_emitter *)arg, text, num_bytes);
+#define tpp_emitter_print_encodestring_call(self, text, num_bytes) \
+	tpp_emitter_output_printraw(self, text, num_bytes)
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
+
+TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_encodestring, arg, text, num_bytes) {
+	return tpp_emitter_print_encodestring_call((tpp_emitter *)arg, text, num_bytes);
 }
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_STRING || (TPP_EMITTER_HAVE_MODE_EMIT && TPP_CONF_MAYBE_0(TPP_EMITTER_HAVE_NOLINE)) */
 
@@ -625,7 +629,7 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	result += temp;
 	if (emit_filename) {
 		partlen = tpp_strlen(emit_filename);
-		temp = tpp_emitter_print_encodestring(self, (tpp_char const *)emit_filename, partlen);
+		temp = tpp_emitter_print_encodestring_call(self, (tpp_char const *)emit_filename, partlen);
 		if (temp < 0) {
 			tpp_lcstate_init(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos,
 			                 tpp_lcstate_getline(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos) +
@@ -718,7 +722,7 @@ tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
 	}
 	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
 	if (filename && result >= 0) {
-		temp = tpp_emitter_print_encodestring(self, (tpp_char const *)filename, tpp_strlen(filename));
+		temp = tpp_emitter_print_encodestring_call(self, (tpp_char const *)filename, tpp_strlen(filename));
 		if (temp < 0)
 			return temp;
 		result += temp;
@@ -771,7 +775,7 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
 	if (result < 0)
 		return result;
-	temp = tpp_io_printpwd(&tpp_emitter_print_encodestring, self);
+	temp = tpp_io_printpwd(tpp_formatprinter_of(tpp_emitter_print_encodestring), self);
 	if (temp < 0)
 		return temp;
 	result += temp;
@@ -1154,7 +1158,7 @@ struct tpp_emitter_printbig_data {
 	bool         tepbd_after_x; /* True if after \x-sequence (meaning next regular byte mustn't be 0-9, a-f, A-F) */
 };
 
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_bytes) {
+TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_bytes) {
 	tpp_ssize temp, result = 0;
 	struct tpp_emitter_printbig_data *data;
 	data = (struct tpp_emitter_printbig_data *)arg;
@@ -1172,7 +1176,7 @@ static TPP_FORMATPRINTER_DEFINE(tpp_emitter_printbig_normal, arg, text, num_byte
 		}
 		data->tepbd_after_x = false;
 	}
-	temp = tpp_emitter_print_encodestring(data->tepbd_emitter, text, num_bytes);
+	temp = tpp_emitter_print_encodestring_call(data->tepbd_emitter, text, num_bytes);
 	if (temp < 0)
 		return temp;
 	result += temp;
@@ -1209,12 +1213,12 @@ tpp_emitter_printbig_big(void *arg, tpp_lexer *tpp_restrict lexer, tpp_uintmax v
 
 
 #if !TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS
-#define tpp_emitter_print_keyword(self, text, num_bytes) \
-	tpp_emitter_print((tpp_emitter *)(self), text, num_bytes)
+#define tpp_emitter_print_keyword tpp_emitter_print
 #else /* TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS */
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_keyword, arg, text, num_bytes) {
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_print_keyword(tpp_emitter *tpp_restrict self,
+                          tpp_char const *text, size_t num_bytes) {
 	tpp_ssize temp, result = 0;
-	tpp_emitter *self = (tpp_emitter *)arg;
 	tpp_char const *end = text + num_bytes;
 	tpp_char const *iter = text;
 	bool is_first = true;
@@ -1283,12 +1287,12 @@ err_temp:
 
 
 #if !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS
-#define tpp_emitter_print_generic(self, text, num_bytes) \
-	tpp_emitter_print((tpp_emitter *)(self), text, num_bytes)
+#define tpp_emitter_print_generic tpp_emitter_print
 #else /* !TPP_EMITTER_HAVE_NORMALIZE_BSE && !TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS */
-static TPP_FORMATPRINTER_DEFINE(tpp_emitter_print_generic, arg, text, num_bytes) {
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+tpp_emitter_print_generic(tpp_emitter *tpp_restrict self,
+                          tpp_char const *text, size_t num_bytes) {
 	tpp_ssize temp, result = 0;
-	tpp_emitter *self = (tpp_emitter *)arg;
 	tpp_char const *end = text + num_bytes;
 	tpp_char const *iter = text;
 	while (iter < end) {
@@ -1524,15 +1528,15 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 			data.tepbd_quote   = quote;
 			data.tepbd_after_x = false;
 			config.tldsc_arg = &data;
-			config.tldsc_dataprinter = &tpp_emitter_printbig_normal;
+			config.tldsc_dataprinter = tpp_formatprinter_of(tpp_emitter_printbig_normal);
 #if TPP_HAVE_UNICODE
-			config.tldsc_utf8printer = &tpp_emitter_printbig_normal;
+			config.tldsc_utf8printer = tpp_formatprinter_of(tpp_emitter_printbig_normal);
 #endif /* TPP_HAVE_UNICODE */
 			config.tldsc_bigprinter = &tpp_emitter_printbig_big;
 			temp = tpp_lexer_decodestring(lexer, &config);
 		}
 #else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
-		tpp_lexer_decodestring_config_init_simple(&config, &tpp_emitter_print_encodestring, self);
+		tpp_lexer_decodestring_config_init_simple(&config, tpp_formatprinter_of(tpp_emitter_print_encodestring), self);
 		temp = tpp_lexer_decodestring(lexer, &config);
 #endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 		temp = tpp_emitter_print(self, &quote, 1);
