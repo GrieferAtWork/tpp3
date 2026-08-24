@@ -808,6 +808,7 @@
 #define tl_time                                            TPP_INTERNAL(tl_time)
 #define tl_rngseed                                         TPP_INTERNAL(tl_rngseed)
 #define tl_file_and_line_format                            TPP_INTERNAL(tl_file_and_line_format)
+#define tl_userpwd                                         TPP_INTERNAL(tl_userpwd)
 #define tt_id                                              TPP_INTERNAL(tt_id)
 #define tlsb_id                                            TPP_INTERNAL(tlsb_id)
 #define tlsb_kwd                                           TPP_INTERNAL(tlsb_kwd)
@@ -34608,6 +34609,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
+
+#if TPP_HAVE_LEXER_USERPWD
+	self->tl_userpwd = NULL;
+#endif /* TPP_HAVE_LEXER_USERPWD */
 }
 
 
@@ -34659,6 +34664,11 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	if (!tpp_time_isempty(&self->tl_time))
 		tpp_time_fini(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
+
+#if TPP_HAVE_LEXER_USERPWD
+	if (self->tl_userpwd)
+		tpp_string_decref(self->tl_userpwd);
+#endif /* TPP_HAVE_LEXER_USERPWD */
 
 	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
 	               sizeof(*self) - sizeof(self->tl_core));
@@ -34756,6 +34766,12 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = from->tl_file_and_line_format;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
+
+#if TPP_HAVE_LEXER_USERPWD
+	self->tl_userpwd = from->tl_userpwd;
+	if (self->tl_userpwd)
+		tpp_string_incref(self->tl_userpwd);
+#endif /* TPP_HAVE_LEXER_USERPWD */
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS
@@ -50938,6 +50954,34 @@ err_tok_rollback_new_filename:
 	tpp_file_pop_eof_and_ifdef(file);
 	file->tf_pos = directive_eol;
 	tpp_file_autopopfile_break(file);
+
+#if TPP_HAVE_LEXER_USERPWD
+	if (new_filename &&
+	    tpp_string_len(new_filename) >= 2 &&
+	    tpp_string_str(new_filename)[tpp_string_len(new_filename) - 1] == '/' &&
+	    tpp_string_str(new_filename)[tpp_string_len(new_filename) - 2] == '/') {
+		/* Special case: given `new_filename` is actually a new `tpp_lexer_setuserpwd()` */
+		if (!tpp_string_isshared(new_filename)) {
+			new_filename->ts_len -= 2;
+			new_filename->ts_str[new_filename->ts_len] = '\0';
+		} else {
+			TPP_REF tpp_string *trimmed_filename;
+			tpp_size len = tpp_string_len(new_filename) - 2;
+			trimmed_filename = tpp_string_malloc(len);
+			if tpp_unlikely(!trimmed_filename) {
+				tpp_string_decref(new_filename);
+				return TPP_TOK_ENOMEM;
+			}
+			tpp_memcpy(tpp_string_str(trimmed_filename),
+			           tpp_string_str(new_filename),
+			           len * sizeof(tpp_char));
+			tpp_string_decref(new_filename);
+			new_filename = trimmed_filename;
+		}
+		tpp_lexer_setuserpwd_inherited(self, new_filename);
+		new_filename = NULL;
+	}
+#endif /* TPP_HAVE_LEXER_USERPWD */
 
 	if (textfile) {
 		/* Apply line number override (at directive EOL)

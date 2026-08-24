@@ -2386,6 +2386,34 @@ err_tok_rollback_new_filename:
 	file->tf_pos = directive_eol;
 	tpp_file_autopopfile_break(file);
 
+#if TPP_HAVE_LEXER_USERPWD
+	if (new_filename &&
+	    tpp_string_len(new_filename) >= 2 &&
+	    tpp_string_str(new_filename)[tpp_string_len(new_filename) - 1] == '/' &&
+	    tpp_string_str(new_filename)[tpp_string_len(new_filename) - 2] == '/') {
+		/* Special case: given `new_filename` is actually a new `tpp_lexer_setuserpwd()` */
+		if (!tpp_string_isshared(new_filename)) {
+			new_filename->ts_len -= 2;
+			new_filename->ts_str[new_filename->ts_len] = '\0';
+		} else {
+			TPP_REF tpp_string *trimmed_filename;
+			tpp_size len = tpp_string_len(new_filename) - 2;
+			trimmed_filename = tpp_string_malloc(len);
+			if tpp_unlikely(!trimmed_filename) {
+				tpp_string_decref(new_filename);
+				return TPP_TOK_ENOMEM;
+			}
+			tpp_memcpy(tpp_string_str(trimmed_filename),
+			           tpp_string_str(new_filename),
+			           len * sizeof(tpp_char));
+			tpp_string_decref(new_filename);
+			new_filename = trimmed_filename;
+		}
+		tpp_lexer_setuserpwd_inherited(self, new_filename);
+		new_filename = NULL;
+	}
+#endif /* TPP_HAVE_LEXER_USERPWD */
+
 	if (textfile) {
 		/* Apply line number override (at directive EOL)
 		 * If "textfile != file", then the file's current position should point

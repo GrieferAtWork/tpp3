@@ -232,6 +232,10 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
+
+#if TPP_HAVE_LEXER_USERPWD
+	self->tl_userpwd = NULL;
+#endif /* TPP_HAVE_LEXER_USERPWD */
 }
 
 
@@ -283,6 +287,11 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	if (!tpp_time_isempty(&self->tl_time))
 		tpp_time_fini(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
+
+#if TPP_HAVE_LEXER_USERPWD
+	if (self->tl_userpwd)
+		tpp_string_decref(self->tl_userpwd);
+#endif /* TPP_HAVE_LEXER_USERPWD */
 
 	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
 	               sizeof(*self) - sizeof(self->tl_core));
@@ -380,6 +389,12 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
 	self->tl_file_and_line_format = from->tl_file_and_line_format;
 #endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
+
+#if TPP_HAVE_LEXER_USERPWD
+	self->tl_userpwd = from->tl_userpwd;
+	if (self->tl_userpwd)
+		tpp_string_incref(self->tl_userpwd);
+#endif /* TPP_HAVE_LEXER_USERPWD */
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS

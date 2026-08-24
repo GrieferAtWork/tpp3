@@ -726,10 +726,20 @@
 #define TPP_HAVE_CPP_DIGIT_LINE (TPP_HAVE_CPP_DIRECTIVES ? TPP_COMMON_HAVE_CPP_DIRECTIVES_STD : 0) /* "-fdigit-directives" */
 #endif /* !TPP_HAVE_CPP_DIGIT_LINE */
 
-/* TODO: Add an API to `tpp_lexer` to expose a custom "working directory", which can
- *       be assigned by user-code via a `# 1 "/path/to/current/directory//"` directive
- *       (i.e.: when `TPP_HAVE_CPP_DIGIT_LINE` is used to assign a filename that ends
- *       with 2 trailing `//`) */
+/* Extension to `TPP_HAVE_CPP_DIGIT_LINE`: if the filename being assigned ends with 2
+ * trailing `//`, then strip those 2 characters and rather than assigning the string
+ * as the new name for the current file, remember it as the *working directory* of the
+ * preprocessor as far as debug information and diagnostics should be concerned (the
+ * actual *working directory* of the calling process, or as used when opening files
+ * isn't altered, and it is up to the hosting compiler use query this PWD override
+ * when generating its debug information).
+ *
+ * The following API are provided when this config is enabled:
+ * - **Getter**: `tpp_lexer_getuserpwd()`
+ * - **Setter**: `tpp_lexer_setuserpwd()`, `tpp_lexer_setuserpwd_inherited()` */
+#ifndef TPP_HAVE_LEXER_USERPWD
+#define TPP_HAVE_LEXER_USERPWD (TPP_HAVE_CPP_DIGIT_LINE && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_LEXER_USERPWD */
 
 /* Support for `#line 42 "foo.h"`-directives */
 #ifndef TPP_HAVE_CPP_LINE

@@ -1102,6 +1102,17 @@ tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self);
 #endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS */
 
 
+#if TPP_HAVE_JOINPATH
+/* Form an absolute filename by combining `relative_to` with `filename`
+ * @return: * :   The absolute path (must be free'd by caller using `tpp_free()`)
+ * @return: NULL: Out of memory. */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((2)) char *TPPCALL
+tpp_joinpath(/*0..1*/ char const *tpp_restrict relative_to,
+             /*1..1*/ /*utf-8*/ char const *filename,
+             tpp_size filename_maxlen);
+#endif /* TPP_HAVE_JOINPATH */
+
+
 TPP_DECL_END
 /*[[[tpp-end]]]*/
 

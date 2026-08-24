@@ -455,6 +455,7 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	char buf[sizeof("#  \"") + TPP_ITOA_MAXLEN - sizeof(char)];
 	char *buf_temp, *ptr = buf;
 	tpp_size partlen;
+	tpp_formatprinter printer;
 	*ptr++ = '#';
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, tpp_lcinfo_getline(line) + 1);
@@ -466,7 +467,16 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	result = tpp_emitter_output_printraw_cstr(self, buf, (tpp_size)(ptr - buf));
 	if (result < 0)
 		return result;
-	temp = tpp_io_printpwd(tpp_formatprinter_of(tpp_emitter_print_encodestring), self);
+	printer = tpp_formatprinter_of(tpp_emitter_print_encodestring);
+	/* Print the lexer's USERPWD override instead of the process's *actual* PWD */
+#if TPP_HAVE_LEXER_USERPWD
+	if (tpp_lexer_hasuserpwd(tpp_emitter_getlexer(self))) {
+		temp = tpp_lexer_printuserpwd(tpp_emitter_getlexer(self), printer, self);
+	} else
+#endif /* TPP_HAVE_LEXER_USERPWD */
+	{
+		temp = tpp_io_printpwd(printer, self);
+	}
 	if (temp < 0)
 		return temp;
 	result += temp;
