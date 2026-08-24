@@ -24740,9 +24740,45 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_io_withenv(char const *varname,
                tpp_errno (TPPCALL *cb)(void *arg, char const *envvalue),
                void *arg) {
-#if TPP_OS_WINDOWS && 0 /* TODO */
-	/* TODO */
-	GetEnvironmentVariableA(varname, );
+#if TPP_OS_WINDOWS
+	tpp_errno result = TPP_EOK;
+	DWORD dwBufsize = 512;
+	DWORD dwReqSize;
+	char *pBuffer = (char *)tpp_trymalloc((dwBufsize + 1) * sizeof(char));
+	if tpp_unlikely(!pBuffer) {
+		dwBufsize = 1;
+		pBuffer = (char *)tpp_malloc((dwBufsize + 1) * sizeof(char));
+		if tpp_unlikely(!pBuffer)
+			goto err_nomem;
+	}
+again_getvar:
+#define tpp_io_withenv_return_error(error) \
+	do {                                   \
+		result = (error);                  \
+		goto done_pBuffer;                 \
+	} while (0)
+	TPP_SYSCALL({
+		dwReqSize = GetEnvironmentVariableA(varname, pBuffer, dwBufsize + 1);
+	}, tpp_io_withenv_return_error);
+#undef tpp_io_withenv_return_error
+	if (dwReqSize > dwBufsize) {
+		/* Need a larger buffer */
+		char *pNewBuffer = (char *)tpp_realloc(pBuffer, dwReqSize * sizeof(char));
+		if tpp_unlikely(!pNewBuffer) {
+			result = TPP_ENOMEM;
+			goto done_pBuffer;
+		}
+		pBuffer   = pNewBuffer;
+		dwBufsize = dwReqSize - 1;
+		goto again_getvar;
+	} else if (dwReqSize > 0) {
+		result = (*cb)(arg, pBuffer);
+	}
+done_pBuffer:
+	tpp_free(pBuffer);
+	return result;
+err_nomem:
+	return TPP_ENOMEM;
 #else /* TPP_OS_WINDOWS */
 	tpp_errno result;
 	char const *value;
