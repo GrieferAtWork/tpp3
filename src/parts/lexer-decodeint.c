@@ -249,6 +249,17 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 		                        *newend != '+' &&
 		                        *newend != '-'))
 			++newend;
+		if (newend <= start) {
+			/* Special case for something like `.123` -- this can never be an integer :( */
+			*result = 0;
+			if (p_suffix_start)
+				*p_suffix_start = tpp_lexer_gettokenend(self);
+#if TPP_HAVE_TPP_W_INVALID_INTEGER
+			return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+#else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
+			return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+		}
 		if (newend < end) {
 			newend = tpp_preparse_skipbse_bck(self, start, newend);
 			if (newend > start)
