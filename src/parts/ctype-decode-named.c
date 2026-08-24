@@ -299,7 +299,7 @@ nope:
 /* Wrapper around `tpp_xml_entity_printnearest()` and `tpp_unicode_byname_printnearest()`
  * that automatically does the right thing, including adding a leading `&` before printing
  * the name of a (potentially) closest matching XML escape sequence. */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_ssize TPPCALL
 tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
                               tpp_formatprinter printer, void *arg,
                               struct tpp_lexer const *tpp_restrict lexer) {

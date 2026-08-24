@@ -165,7 +165,7 @@ tpp_xml_entity_lookup(char const *tpp_restrict name, bool has_trailing_semicolon
 	print(' *');
 	print(' * @return: * : Sum of return values of `printer`');
 	print(' * @return: <0: First negative return value of `printer` */');
-	print('TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL');
+	print('TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL');
 	print('tpp_xml_entity_printnearest(char const *tpp_restrict name,');
 	print('                            bool has_trailing_semicolon,');
 	print('                            tpp_formatprinter printer, void *arg) {');

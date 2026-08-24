@@ -195,12 +195,12 @@ typedef struct tpp_emitter {
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
 #ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_init(tpp_emitter *tpp_restrict self,
                  tpp_lexer *tpp_restrict lexer,
                  tpp_formatprinter output);
 #else /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_emitter_init(tpp_emitter *tpp_restrict self,
                   tpp_formatprinter output);
 #define tpp_emitter_init(self, lexer, output)           \

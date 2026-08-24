@@ -37,7 +37,7 @@ TPP_DECL_BEGIN
 #define TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE 1024
 #endif /* !TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE */
 
-static TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+static TPP_WUNUSED TPP_NONNULL((4)) tpp_ssize TPPCALL
 tpp_io_readfile_blocking_with_buffer(tpp_io_handle file, tpp_formatprinter printer, void *arg,
                                      tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes,
                                      tpp_char *buffer, tpp_size bufsize) {
@@ -67,7 +67,7 @@ tpp_io_readfile_blocking_with_buffer(tpp_io_handle file, tpp_formatprinter print
 }
 
 #ifndef tpp_alloca
-static TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+static TPP_WUNUSED TPP_NONNULL((4)) tpp_ssize TPPCALL
 tpp_io_readfile_blocking_with_stack_buffer(tpp_io_handle file, tpp_formatprinter printer, void *arg,
                                            tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes) {
 	tpp_char buffer[TPP_IO_READFILE_BLOCKING_STACK_BUFSIZE];
@@ -76,7 +76,7 @@ tpp_io_readfile_blocking_with_stack_buffer(tpp_io_handle file, tpp_formatprinter
 }
 #endif /* !tpp_alloca */
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((2, 4)) tpp_ssize TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((4)) tpp_ssize TPPCALL
 tpp_io_readfile_blocking(tpp_io_handle file, tpp_formatprinter printer, void *arg,
                          tpp_uintmax *tpp_restrict p_read_bytes, tpp_uintmax max_bytes) {
 	tpp_ssize result;
@@ -148,7 +148,7 @@ tpp_io_readfile_blocking(tpp_io_handle file, tpp_formatprinter printer, void *ar
  *                        parsing stop position is described by `*p_final_state`
  * @return: < 0: Failure: Either `printer` returned this value, or trying to
  *                        yield to the next token resulted in an error. */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
                      tpp_formatprinter printer, void *arg,
                      unsigned int *p_final_state) {

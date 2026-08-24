@@ -767,7 +767,7 @@ tpp_lexer_dumper_printincludes(tpp_lexer_dumper *tpp_restrict self,
  * @param: what: Set of `TPP_LEXER_DUMP_DEFINITIONS_*`
  * @return: * :  Sum of return values of `printer`
  * @return: < 0: First negative return value of `printer` */
-TPP_IMPL TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+TPP_IMPL TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_dump_definitions(tpp_lexer *tpp_restrict self,
                            tpp_formatprinter printer, void *arg,
                            unsigned int what) {

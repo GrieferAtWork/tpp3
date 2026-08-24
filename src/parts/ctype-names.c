@@ -1270,7 +1270,7 @@ tpp_utoa_hex(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
  *
  * @return: * : Sum of return values of `printer`
  * @return: <0: First negative return value of `printer` */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_size TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_size TPPCALL
 tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
                                 tpp_formatprinter printer, void *arg,
                                 struct tpp_lexer const *tpp_restrict lexer) {

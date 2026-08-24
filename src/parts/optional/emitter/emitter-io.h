@@ -37,7 +37,7 @@ TPP_DECL_BEGIN
  * @return: < 0: First negative return value of `printer`
  * @return: TPP_SSIZE_OFERR(TPP_EIO):    I/O error
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+TPP_DECL TPP_WUNUSED tpp_ssize TPPCALL
 tpp_io_printpwd(tpp_formatprinter printer, void *arg);
 #endif /* !tpp_io_printpwd */
 #endif /* TPP_EMITTER_HAVE_IO_PRINTPWD */

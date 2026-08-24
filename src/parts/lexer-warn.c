@@ -67,7 +67,7 @@ TPP_DECL_BEGIN
  * @param: args:    Extra varargs-arguments for `format`
  * @return: >= 0:   Sum of return values of `printer`
  * @return: < 0:    First negative return value of `printer` */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPVCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_ssize TPPVCALL
 tpp_lexer_printf_warning(tpp_lexer const *tpp_restrict self,
                          tpp_lexer_printf_info *tpp_restrict info,
                          tpp_formatprinter printer, void *arg,
@@ -81,28 +81,28 @@ tpp_lexer_printf_warning(tpp_lexer const *tpp_restrict self,
 }
 
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+static TPP_WUNUSED tpp_ssize TPPCALL
 tpp_format_print_uint(tpp_formatprinter printer, void *arg, tpp_uintmax value) {
 	char buf[TPP_UTOA_MAXLEN];
 	char const *start = tpp_utoa(buf, value);
 	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+static TPP_WUNUSED tpp_ssize TPPCALL
 tpp_format_print_int(tpp_formatprinter printer, void *arg, tpp_intmax value) {
 	char buf[TPP_ITOA_MAXLEN];
 	char const *start = tpp_itoa(buf, value);
 	return tpp_formatprinter_print_cstr(printer, arg, start, (tpp_size)((buf + tpp_lengthof(buf)) - start));
 }
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_start(tpp_lexer const *tpp_restrict self,
                        tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
 	return tpp_formatprinter_print_conststr(printer, arg, "`");
 }
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_quote_end(tpp_lexer const *tpp_restrict self,
                      tpp_formatprinter printer, void *arg) {
 	(void)self; /* XXX: Do something more interesting here! */
@@ -137,7 +137,7 @@ tpp_format_token_data_hexrepr(tpp_char *dst, tpp_unichar uc) {
 }
 #endif /* TPP_HAVE_UNICODE */
 
-static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_format_token_data(tpp_lexer const *tpp_restrict self,
                       tpp_formatprinter printer, void *arg,
                       tpp_char const *start, tpp_size length) {
@@ -249,7 +249,7 @@ tpp_lexer_vprintf_warning_skipblock(char const *format) {
 	tpp_unreachable();
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 5)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_ssize TPPCALL
 tpp_lexer_vprintf_warning(tpp_lexer const *tpp_restrict self,
                           tpp_lexer_printf_info *tpp_restrict info,
                           tpp_formatprinter printer, void *arg,
@@ -536,7 +536,7 @@ err_temp:
 }
 
 
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_vwarnf_impl_custom(tpp_lexer *tpp_restrict const _self,
                              tpp_lexer_printf_info *tpp_restrict const _info,
                              tpp_ssize *const _p_printer_result,
@@ -658,7 +658,7 @@ TPP_FORMATPRINTER_DEFINE(tpp_dummy_printer, arg, text, num_bytes) {
  * @return: >= 0: Success (sum of return values of `printer`)
  * @return: < 0:  Failure (first negative return value of `printer`)
  * @return: TPP_SSIZE_OFERR(*): A `TPP_WARNING_EX` returned something other than `TPP_EOK` */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_lexer_vwarnf_mesg(tpp_lexer *tpp_restrict self,
                       tpp_lexer_printf_info *tpp_restrict info,
                       tpp_formatprinter printer, void *arg,

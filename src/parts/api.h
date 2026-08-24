@@ -867,8 +867,7 @@ TPP_DECL_BEGIN
 
 /* Format-printer API */
 #ifndef tpp_formatprinter
-#define tpp_formatprinter tpp_formatprinter
-/* TODO: Remove `tpp_formatprinter` arguments from `TPP_NONNULL` -- API consumers may override `tpp_formatprinter` as a non-pointer */
+#define tpp_formatprinter tpp_formatprinter /* Always non-null */
 typedef tpp_ssize (TPPCALL *tpp_formatprinter)(void *arg, tpp_char const *text, tpp_size num_bytes);
 #define tpp_formatprinter_print(printer, arg, text, num_bytes) \
 	((*printer)(arg, text, num_bytes))

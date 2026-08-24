@@ -238,7 +238,7 @@ TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
 /************************************************************************/
 
 /* Apply Makefile-escape rules to `data...+=num_bytes` and print the result to `printer` */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED tpp_ssize TPPCALL
 tpp_makefile_escape(tpp_formatprinter printer, void *arg,
                     tpp_char const *data, tpp_size num_bytes,
                     tpp_size *p_num_bytes_printed) {
@@ -1262,7 +1262,7 @@ TPP_CLI_HELP1("-MMD", "Generate a Makefile\n"
  * @param: input_filename: The `__FILE__` filename of the linked lexer
  * @return: * : Sum of return values of `printer` */
 #ifndef tpp_makefile_cli_print_default_target
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 4)) tpp_ssize TPPCALL
 tpp_makefile_cli_print_default_target(tpp_makefile_cli_loader *tpp_restrict self,
                                       tpp_formatprinter printer, void *arg,
                                       char const *input_filename) {

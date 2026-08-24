@@ -206,7 +206,7 @@ again:
  *
  * @return: * :  Sum of positive return values from printers
  * @return: < 0: First negative return value from printers */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
                                 tpp_formatprinter printer, void *arg) {
 	tpp_token const *const token = tpp_lexer_gettoken(self);

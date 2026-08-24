@@ -135,7 +135,7 @@ tpp_io_printpwd_utf16_to_utf8(tpp_uint_least16 const *src, tpp_size src_count, t
  * @return: < 0: First negative return value of `printer`
  * @return: TPP_SSIZE_OFERR(TPP_EIO):    I/O error
  * @return: TPP_SSIZE_OFERR(TPP_ENOMEM): Out of memory */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
+TPP_IMPL TPP_WUNUSED tpp_ssize TPPCALL
 tpp_io_printpwd(tpp_formatprinter printer, void *arg) {
 #if TPP_OS_WINDOWS || TPP_OS_UNIX
 #if TPP_OS_WINDOWS
