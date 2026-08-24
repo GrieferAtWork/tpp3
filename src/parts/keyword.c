@@ -2341,20 +2341,217 @@ tpp_lexer_openfile_ex_check_mask_flags(/*1..1*/ tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE_EX */
 #endif /* TPP_HAVE_LEXER_OPENFILE_EX */
 
-static TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
-tpp_lexer_openfile_impl_(/*1..1*/ tpp_lexer *tpp_restrict self,
-                         /*0..1*/ char const *tpp_restrict relative_to,
-                         /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_len,
-                         /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result
+
+
+#if TPP_HAVE_INCLUDE_REMAP
+/* Lazily create + return a keyword for the string:
+ * >> f"{headof(relative_to) ?: "."}/{dir2[:dir2_len]}/header.gcc"
+ *
+ * - When `dir2_len == 0`, `header.gcc` is appended directly to
+ *   `headof(relative_to)`: `f"{headof(relative_to) ?: "."}/header.gcc"`
+ * - Leading `./` sequences do not actually appear in the keyword.
+ *   When `headof(relative_to)` is empty, directly start with `dir2`
+ * - When both `headof(relative_to)` and `dir2` are empty, then the
+ *   returned keyword is for the *exact* string `header.gcc`
+ * - The string `header.gcc` is actually whatever has been configured
+ *   by `TPP_CONFIG_INCLUDE_REMAP_FILENAME`
+ *
+ * @param: dir2: Secondary directory (**WITHOUT** trailing slashes)
+ * @return: * :   The remap-file keyword
+ * @return: NULL: Out-of-memory
+ */
+static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
+tpp_keywords_require_remap_file_kwd(/*1..1*/ tpp_keywords *tpp_restrict self,
+                                    /*0..1*/ char const *tpp_restrict relative_to,
+                                    /*0..1*/ char const *dir2, tpp_size dir2_len) {
+	static char const remap_filename[] = TPP_CONFIG_INCLUDE_REMAP_FILENAME;
+	tpp_hash full_filename_hash = TPP_HASH_INITIAL;
+	tpp_size full_filename_len;
+	tpp_size i, relative_to_len = 0;
+	tpp_char *dst_iter;
+	tpp_keyword *result;
+	if (relative_to) {
+		char const *iter = relative_to;
+		for (;; ++iter) {
+			char ch = *iter;
+			if (!ch)
+				break;
+			if (TPP_FS_ISSEP(ch))
+				relative_to_len = (tpp_size)(iter - relative_to);
+		}
+	}
+
+	/* Construct the hash for the final filename. */
+	full_filename_len = relative_to_len;
+	for (i = 0; i < relative_to_len; ++i) {
+		tpp_char ch = (tpp_char)relative_to[i];
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+	}
+	if (relative_to_len) {
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
+		++full_filename_len;
+	}
+	if (dir2_len) {
+		i = 0;
+		do {
+			tpp_char ch = (tpp_char)dir2[i];
+			full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+		} while (++i < dir2_len);
+		full_filename_len += dir2_len;
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
+		++full_filename_len;
+	}
+	full_filename_len += tpp_lengthof(remap_filename) - 1;
+	for (i = 0; i < tpp_lengthof(remap_filename) - 1; ++i) {
+		tpp_char ch = (tpp_char)remap_filename[i];
+		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
+	}
+
+	/* Search the keyword table for an entry  */
+	result = self->tks_bckv[full_filename_hash & self->tks_bckm];
+	for (; result; result = result->tk_next) {
+		tpp_char const *src_iter;
+		if (result->tk_hash != full_filename_hash)
+			continue;
+		if (result->tk_len != full_filename_len)
+			continue;
+		src_iter = result->tk_kwd;
+		if (relative_to_len) {
+			if (tpp_memcmp(src_iter, relative_to, relative_to_len * sizeof(char)) != 0)
+				continue;
+			src_iter += relative_to_len;
+			if (*src_iter != TPP_FS_SEP)
+				continue;
+			++src_iter;
+		}
+		if (dir2_len) {
+			if (tpp_memcmp(src_iter, dir2, dir2_len * sizeof(char)) != 0)
+				continue;
+			src_iter += dir2_len;
+			if (*src_iter != TPP_FS_SEP)
+				continue;
+			++src_iter;
+		}
+		if (tpp_memcmp(src_iter, remap_filename, sizeof(remap_filename)) != 0)
+			continue;
+
+		/* Found an existing entry for this remap file! */
+		return result;
+	}
+
+	/* Must create a new keyword for the remap file */
+	result = _tpp_keyword_alloc(full_filename_len);
+	if tpp_unlikely(!result)
+		return NULL;
+	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
+#if TPP_HAVE_CPP_MACROS
+	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
+#endif /* TPP_HAVE_CPP_MACROS */
+#if TPP_HAVE_KEYWORD_MISC
+	result->tk_misc = NULL;
+#endif /* TPP_HAVE_KEYWORD_MISC */
+	tpp_keyword_init_refcnt(result);
+	result->tk_hash = full_filename_hash;
+	result->tk_len  = full_filename_len;
+	dst_iter = result->tk_kwd;
+	if (relative_to_len) {
+		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, relative_to, relative_to_len * sizeof(char));
+		*dst_iter++ = TPP_FS_SEP;
+	}
+	if (dir2_len) {
+		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, dir2, dir2_len * sizeof(char));
+		*dst_iter++ = TPP_FS_SEP;
+	}
+	tpp_memcpy(dst_iter, remap_filename, sizeof(remap_filename));
+	tpp_assert((dst_iter + (sizeof(remap_filename) / sizeof(char)) - 1) ==
+	           (result->tk_kwd + result->tk_len));
+
+	/* NOTE: Technically, we'd need to search for builtin keywords matching "result" at this point.
+	 *
+	 * But we're just going to assume that `TPP_CONFIG_INCLUDE_REMAP_FILENAME` is configured as
+	 * something sane like `header.gcc`, which contains a `.`, and that the user didn't define weird
+	 * builtin keywords like `TPP_KWD(KWD_header_gcc, "header.gcc")`
+	 *
+	 * If you *actually* did something *that* insane, then you'll have to define the hidden config
+	 * option seen here to prevent potential issues for doing so. */
+#ifndef TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
+#define TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC 0
+#endif /* !TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
+#if TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
+	{
+		tpp_keyword const *builtin_keyword;
+		builtin_keyword = tpp_builtin_getkeyword(result->tk_kwd,
+		                                         result->tk_len,
+		                                         result->tk_hash);
+		if tpp_unlikely(builtin_keyword) {
+			tpp_keyword_destroy(result);
+			return tpp_keywords_copybuiltin(self, builtin_keyword);
+		}
+	}
+#endif /* TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
+
+	/* Insert into the keyword map. */
+	return tpp_keywords_inskeyword(self, result);
+}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
+
+
 #if TPP_HAVE_LEXER_OPENFILE_EX
-                         , tpp_lexer_openfile_flags mask_flags
-#define tpp_lexer_openfile_impl(self, relative_to, filename, filename_len, result, mask_flags) \
-	tpp_lexer_openfile_impl_(self, relative_to, filename, filename_len, result, mask_flags)
+/* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
+ * included before, and its keyword has any of the bits specified by `mask_flags` set.
+ *
+ * NOTES:
+ * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
+ *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
+ *   is currently considered to be `#if defined()`.
+ * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
+ *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
+ *   somewhere on the `#include`-stack.
+ * - Also: when `mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED`, and the file's keyword
+ *   doesn't already have the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag set, the open will
+ *   succeed, and the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag will become set (so-as to
+ *   implement the include-once semantics of `#import`)
+ * - This function always sets `tlofr_fileflags = TPP_FILE_FLAGS_NORMAL`.
+ *   If the given `relative_to` belongs to a system header, then it is up
+ *   to the caller to set that flag. `tpp_lexer_open_include_string_ex()`
+ *   will do so automatically after calling this function.
+ *
+ * @param: mask_flags: Set of flags describing circumstances under which `TPP_EMASKED`
+ *                     should be returned:
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
+ *                     - `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
+ *
+ * @return: TPP_EOK:     Success
+ * @return: TPP_ENOMEM:  Insufficient memory
+ * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
+ *                       given, and the file is already located on the `#include`-stack.
+ * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
+tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
+                      /*0..1*/ char const *tpp_restrict relative_to,
+                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
+                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
+                      tpp_lexer_openfile_flags mask_flags)
 #else /* TPP_HAVE_LEXER_OPENFILE_EX */
-#define tpp_lexer_openfile_impl(self, relative_to, filename, filename_len, result, mask_flags) \
-	tpp_lexer_openfile_impl_(self, relative_to, filename, filename_len, result)
+/* Construct the filename, open the file, and initialize `result` accordingly
+ * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
+ *                      in case `filename` is a relative path, in which case the
+ *                      filename of the file to open should be relative to the
+ *                      directory of `relative_to`
+ * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
+tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
+                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
+                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-                         ) {
+{
 #if TPP_HAVE_USER_KEYWORDS
 	bool is_known_keyword = false;
 #define tpp_lexer_openfile_keyword                    tpp_keyword
@@ -2377,6 +2574,64 @@ tpp_lexer_openfile_impl_(/*1..1*/ tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 	tpp_io_handle handle;
 	tpp_lexer_openfile_keyword *result_kwd;
+	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
+
+	/* Support for `header.gcc` include-replacements. */
+#if TPP_HAVE_INCLUDE_REMAP
+	if (tpp_lexer_has(self, INCLUDE_REMAP)) {
+		tpp_errno error;
+		char const *replacement;
+		tpp_keyword *remap_kwd;
+		remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds, relative_to, NULL, 0);
+		if tpp_unlikely(!remap_kwd)
+			return TPP_ENOMEM;
+		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement);
+		if (error != TPP_ENOENT) {
+use_replacement:
+			if (TPP_ISERR(error))
+				return error;
+			/* Use the replacement filename:
+			 * - Include the file relative to the `header.gcc` file('s directory)
+			 * - Include the file by the name specified within the `header.gcc` file */
+			relative_to  = tpp_keyword_getcstr(remap_kwd);
+			filename     = replacement;
+			filename_len = tpp_strlen(replacement);
+		} else if (!TPP_FS_ISABS(filename, filename_len)) {
+			/* Search for additional remap files if "filename" contains /-characters */
+			tpp_size i;
+			for (i = 0; i < filename_len;) {
+				char ch = filename[i];
+				if (TPP_FS_ISSEP(ch)) {
+					tpp_size sep_end = i + 1;
+					while (sep_end < filename_len) {
+						ch = filename[sep_end];
+						if (!TPP_FS_ISSEP(ch))
+							break;
+						++sep_end;
+					}
+					if (sep_end >= filename_len)
+						break;
+					remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds,
+					                                                relative_to,
+					                                                filename, i);
+					if tpp_unlikely(!remap_kwd)
+						return TPP_ENOMEM;
+					error = tpp_keyword_find_include_remap(remap_kwd,
+					                                       filename + sep_end,
+					                                       filename_len - sep_end,
+					                                       &replacement);
+					if (error != TPP_ENOENT)
+						goto use_replacement;
+					i = sep_end;
+				} else {
+					++i;
+				}
+			}
+		}
+	}
+#endif /* TPP_HAVE_INCLUDE_REMAP */
+
+	/* Deal with absolute include filenames. */
 	if (TPP_FS_ISABS(filename, filename_len) || !relative_to) {
 		tpp_lexer_openfile_keyword *new_result_kwd;
 		char *kwd_end;
@@ -2786,275 +3041,6 @@ err_nomem:
 #undef tpp_lexer_openfile_keyword_tryrealloc
 #undef tpp_lexer_openfile_keyword_realloc
 #undef tpp_lexer_openfile_keyword_free
-}
-
-#if TPP_HAVE_INCLUDE_REMAP
-/* Lazily create + return a keyword for the string:
- * >> f"{headof(relative_to) ?: "."}/{dir2[:dir2_len]}/header.gcc"
- *
- * - When `dir2_len == 0`, `header.gcc` is appended directly to
- *   `headof(relative_to)`: `f"{headof(relative_to) ?: "."}/header.gcc"`
- * - Leading `./` sequences do not actually appear in the keyword.
- *   When `headof(relative_to)` is empty, directly start with `dir2`
- * - When both `headof(relative_to)` and `dir2` are empty, then the
- *   returned keyword is for the *exact* string `header.gcc`
- * - The string `header.gcc` is actually whatever has been configured
- *   by `TPP_CONFIG_INCLUDE_REMAP_FILENAME`
- *
- * @param: dir2: Secondary directory (**WITHOUT** trailing slashes)
- * @return: * :   The remap-file keyword
- * @return: NULL: Out-of-memory
- */
-static TPP_WUNUSED TPP_NONNULL((1)) tpp_keyword *TPPCALL
-tpp_keywords_require_remap_file_kwd(/*1..1*/ tpp_keywords *tpp_restrict self,
-                                    /*0..1*/ char const *tpp_restrict relative_to,
-                                    /*0..1*/ char const *dir2, tpp_size dir2_len) {
-	static char const header_filename[] = TPP_CONFIG_INCLUDE_REMAP_FILENAME;
-	tpp_hash full_filename_hash = TPP_HASH_INITIAL;
-	tpp_size full_filename_len;
-	tpp_size i, relative_to_len = 0;
-	tpp_char *dst_iter;
-	tpp_keyword *result;
-	if (relative_to) {
-		char const *iter = relative_to;
-		for (;; ++iter) {
-			char ch = *iter;
-			if (!ch)
-				break;
-			if (TPP_FS_ISSEP(ch))
-				relative_to_len = (tpp_size)(iter - relative_to);
-		}
-	}
-
-	/* Construct the hash for the final filename. */
-	full_filename_len = relative_to_len;
-	for (i = 0; i < relative_to_len; ++i) {
-		tpp_char ch = (tpp_char)relative_to[i];
-		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
-	}
-	if (relative_to_len) {
-		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
-		++full_filename_len;
-	}
-	if (dir2_len) {
-		i = 0;
-		do {
-			tpp_char ch = (tpp_char)dir2[i];
-			full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
-		} while (++i < dir2_len);
-		full_filename_len += dir2_len;
-		full_filename_hash = tpp_hash_combine_char(full_filename_hash, TPP_FS_SEP);
-		++full_filename_len;
-	}
-	full_filename_len += tpp_lengthof(header_filename) - 1;
-	for (i = 0; i < tpp_lengthof(header_filename) - 1; ++i) {
-		tpp_char ch = (tpp_char)header_filename[i];
-		full_filename_hash = tpp_hash_combine_char(full_filename_hash, ch);
-	}
-
-	/* Search the keyword table for an entry  */
-	result = self->tks_bckv[full_filename_hash & self->tks_bckm];
-	for (; result; result = result->tk_next) {
-		tpp_char const *src_iter;
-		if (result->tk_hash != full_filename_hash)
-			continue;
-		if (result->tk_len != full_filename_len)
-			continue;
-		src_iter = result->tk_kwd;
-		if (relative_to_len) {
-			if (tpp_memcmp(src_iter, relative_to, relative_to_len * sizeof(char)) != 0)
-				continue;
-			src_iter += relative_to_len;
-			if (*src_iter != TPP_FS_SEP)
-				continue;
-			++src_iter;
-		}
-		if (dir2_len) {
-			if (tpp_memcmp(src_iter, dir2, dir2_len * sizeof(char)) != 0)
-				continue;
-			src_iter += dir2_len;
-			if (*src_iter != TPP_FS_SEP)
-				continue;
-			++src_iter;
-		}
-		if (tpp_memcmp(src_iter, header_filename, sizeof(header_filename)) != 0)
-			continue;
-
-		/* Found an existing entry for this remap file! */
-		return result;
-	}
-
-	/* Must create a new keyword for the remap file */
-	result = _tpp_keyword_alloc(full_filename_len);
-	if tpp_unlikely(!result)
-		return NULL;
-	result->tk_id = (tpp_token_id)((unsigned int)TPP_TOK_USERKEYWORD_BEGIN + self->tks_kwdc);
-#if TPP_HAVE_CPP_MACROS
-	result->tk_macro = _TPP_KEYWORD_MACRO_UNDEFINED;
-#endif /* TPP_HAVE_CPP_MACROS */
-#if TPP_HAVE_KEYWORD_MISC
-	result->tk_misc = NULL;
-#endif /* TPP_HAVE_KEYWORD_MISC */
-	tpp_keyword_init_refcnt(result);
-	result->tk_hash = full_filename_hash;
-	result->tk_len  = full_filename_len;
-	dst_iter = result->tk_kwd;
-	if (relative_to_len) {
-		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, relative_to, relative_to_len * sizeof(char));
-		*dst_iter++ = TPP_FS_SEP;
-	}
-	if (dir2_len) {
-		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, dir2, dir2_len * sizeof(char));
-		*dst_iter++ = TPP_FS_SEP;
-	}
-	tpp_memcpy(dst_iter, header_filename, sizeof(header_filename));
-	tpp_assert((dst_iter + (sizeof(header_filename) / sizeof(char)) - 1) ==
-	           (result->tk_kwd + result->tk_len));
-
-	/* NOTE: Technically, we'd need to search for builtin keywords matching "result" at this point.
-	 *
-	 * But we're just going to assume that `TPP_CONFIG_INCLUDE_REMAP_FILENAME` is configured as
-	 * something sane like `header.gcc`, which contains a `.`, and that the user didn't define weird
-	 * builtin keywords like `TPP_KWD(KWD_header_gcc, "header.gcc")`
-	 *
-	 * If you *actually* did something *that* insane, then you'll have to define the hidden config
-	 * option seen here to prevent potential issues for doing so. */
-#ifndef TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
-#define TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC 0
-#endif /* !TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
-#if TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC
-	{
-		tpp_keyword const *builtin_keyword;
-		builtin_keyword = tpp_builtin_getkeyword(result->tk_kwd,
-		                                         result->tk_len,
-		                                         result->tk_hash);
-		if tpp_unlikely(builtin_keyword) {
-			tpp_keyword_destroy(result);
-			return tpp_keywords_copybuiltin(self, builtin_keyword);
-		}
-	}
-#endif /* TPP_HAVE_BUILTIN_KEYWORDS_ENDING_IN_HEADER_GCC */
-
-	/* Insert into the keyword map. */
-	return tpp_keywords_inskeyword(self, result);
-}
-#endif /* TPP_HAVE_INCLUDE_REMAP */
-
-
-#if TPP_HAVE_LEXER_OPENFILE_EX
-/* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
- * included before, and its keyword has any of the bits specified by `mask_flags` set.
- *
- * NOTES:
- * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
- *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
- *   is currently considered to be `#if defined()`.
- * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
- *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
- *   somewhere on the `#include`-stack.
- * - Also: when `mask_flags & TPP_KEYWORD_FLAG_HDR_IMPORTED`, and the file's keyword
- *   doesn't already have the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag set, the open will
- *   succeed, and the `TPP_KEYWORD_FLAG_HDR_IMPORTED` flag will become set (so-as to
- *   implement the include-once semantics of `#import`)
- * - This function always sets `tlofr_fileflags = TPP_FILE_FLAGS_NORMAL`.
- *   If the given `relative_to` belongs to a system header, then it is up
- *   to the caller to set that flag. `tpp_lexer_open_include_string_ex()`
- *   will do so automatically after calling this function.
- *
- * @param: mask_flags: Set of flags describing circumstances under which `TPP_EMASKED`
- *                     should be returned:
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED`
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_ONCE`
- *                     - `TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`
- *                     - `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`
- *
- * @return: TPP_EOK:     Success
- * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
- *                       given, and the file is already located on the `#include`-stack.
- * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
-tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
-                      /*0..1*/ char const *tpp_restrict relative_to,
-                      /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
-                      /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
-                      tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-/* Construct the filename, open the file, and initialize `result` accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
- *                      in case `filename` is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of `relative_to`
- * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
-tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
-                   /*0..1*/ char const *tpp_restrict relative_to,
-                   /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
-                   /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result)
-#endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
-	tpp_size filename_len = tpp_strnlen(filename, filename_maxlen);
-#if TPP_HAVE_INCLUDE_REMAP
-	if (tpp_lexer_has(self, INCLUDE_REMAP)) {
-		tpp_errno error;
-		char const *replacement;
-		tpp_keyword *remap_kwd;
-		remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds, relative_to, NULL, 0);
-		if tpp_unlikely(!remap_kwd)
-			return TPP_ENOMEM;
-		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement);
-		if (error != TPP_ENOENT) {
-use_replacement:
-			if (TPP_ISERR(error))
-				return error;
-			/* Use the replacement filename:
-			 * - Include the file relative to the `header.gcc` file('s directory)
-			 * - Include the file by the name specified within the `header.gcc` file */
-			relative_to  = tpp_keyword_getcstr(remap_kwd);
-			filename     = replacement;
-			filename_len = tpp_strlen(replacement);
-		} else if (!TPP_FS_ISABS(filename, filename_len)) {
-			/* Search for additional remap files if "filename" contains /-characters */
-			tpp_size i;
-			for (i = 0; i < filename_len;) {
-				char ch = filename[i];
-				if (TPP_FS_ISSEP(ch)) {
-					tpp_size sep_end = i + 1;
-					while (sep_end < filename_len) {
-						ch = filename[sep_end];
-						if (!TPP_FS_ISSEP(ch))
-							break;
-						++sep_end;
-					}
-					if (sep_end >= filename_len)
-						break;
-					remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds,
-					                                                relative_to,
-					                                                filename, i);
-					if tpp_unlikely(!remap_kwd)
-						return TPP_ENOMEM;
-					error = tpp_keyword_find_include_remap(remap_kwd,
-					                                       filename + sep_end,
-					                                       filename_len - sep_end,
-					                                       &replacement);
-					if (error != TPP_ENOENT)
-						goto use_replacement;
-					i = sep_end;
-				} else {
-					++i;
-				}
-			}
-		}
-	}
-#endif /* TPP_HAVE_INCLUDE_REMAP */
-
-	/* Just open the specified `filename` relative to the specified directory */
-	return tpp_lexer_openfile_impl(self, relative_to,
-	                               filename, filename_len,
-	                               result, mask_flags);
 }
 #endif /* TPP_HAVE_LEXER_OPENFILE */
 

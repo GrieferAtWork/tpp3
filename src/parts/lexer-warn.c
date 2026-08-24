@@ -717,6 +717,14 @@ _tpp_lexer_builtin_warnhandler(
 	}
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
+	/* TODO: Most places that we're printing `tpp_lexer_getfileandlineformat()` should be followed
+	 *       by an additional 2 lines showing like this (or something similar):
+	 * >> 42 |    foo(bar, foobar, barfoo);
+	 * >>    |                     ^~~~~~
+	 *
+	 * Whether or not that is done should be its own config
+	 * like -fwarn-source-location (or some other name)
+	 */
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
 		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
 		                                        tpp_lexer_getfileandlineformat(self));

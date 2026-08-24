@@ -5658,12 +5658,12 @@ eof:
 			if (TPP_ISERR(error))
 				goto return_error;
 
-			/* TODO: Manipulate the file such that the warning won't be triggered a second
-			 *       time if someone tries to call `tpp_lexer_yieldraw()` once again (which
-			 *       can easily happen in the most likely case of us getting here due to
-			 *       the last line containing a `#endif` without a subsequent linefeed, in
-			 *       which case we get here once during the directive-prescan, and once again
-			 *       when the directive tries to yield its follow-up token.
+			/* XXX: Manipulate the file such that the warning won't be triggered a second
+			 *      time if someone tries to call `tpp_lexer_yieldraw()` once again (which
+			 *      can easily happen in the most likely case of us getting here due to
+			 *      the last line containing a `#endif` without a subsequent linefeed, in
+			 *      which case we get here once during the directive-prescan, and once again
+			 *      when the directive tries to yield its follow-up token.
 			 * XXX: How:
 			 * - Can't append actual line-feed to tf_chunk (don't invent tokens)
 			 * - Can't replace tf_chunk with an empty string (conflicts with tpp_file_setkeep)
