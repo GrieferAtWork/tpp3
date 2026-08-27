@@ -526,10 +526,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1400)
-- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1417)
-- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1398)
-- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1399)
+- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1403)
+- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1420)
+- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1401)
+- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1402)
 
 <details><summary>Details</summary>
 
@@ -556,10 +556,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1432)
-- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1483)
-- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1479)
-- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1480)
+- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1435)
+- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1486)
+- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1482)
+- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1483)
 
 <details><summary>Details</summary>
 
@@ -581,7 +581,7 @@ but taking a completely different approach in order to get there:
   been dumped.
   - If not, or if the macro's definition has changed, dump it now.
     If there was a different definition, emit a `#undef` first.
-- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L16937)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1392)
+- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L16937)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1395)
   is called while a keyword-token is loaded into the lexer), and the
   linked keyword doesn't have a user-defined macro definition (i.e.
   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
@@ -599,10 +599,10 @@ NOTE: In order to determine the name of the macro when it is used
 Because this feature also requires a hook, it must be turned on
 using the following APIs, rather than directly setting its feature:
 
-- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1644)
-- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1646)
-- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1640)
-- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1641)
+- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1647)
+- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1649)
+- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1643)
+- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1644)
 
 Configure as one of:
 
@@ -660,10 +660,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1497)
-- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1514)
-- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1495)
-- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1496)
+- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1500)
+- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1517)
+- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1498)
+- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1499)
 
 <details><summary>Details</summary>
 
@@ -688,10 +688,10 @@ Because this feature uses the [`TPP_HAVE_FILE_PUSHED_HOOK`](config-hook.md#tpp_h
 must be turned on using the following APIs, rather than directly
 setting its feature:
 
-- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1659)
-- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1661)
-- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1655)
-- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1656)
+- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1662)
+- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1664)
+- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1658)
+- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1659)
 
 Configure as one of:
 
@@ -716,10 +716,10 @@ instead emit a(nother) `#line` (or `# <linenum>`) directive.
 
 When negative, the threshold is configurable at runtime.
 When configured as `0`, the threshold becomes infinite (at
-runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1319) for this)
+runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1322) for this)
 
-**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1317)<br/>
-**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1318)
+**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1320)<br/>
+**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1321)
 
 <details><summary>Details</summary>
 
@@ -732,7 +732,7 @@ Default:
 
 ## TPP_EMITTER_HAVE_IO_PRINTPWD
 
-Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L945) that can be used to print the hosting
+Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L948) that can be used to print the hosting
 process's current working directory to a given [`tpp_formatprinter`](../src/tpp-amalgamation.h#L5868).
 
 Configure as one of:
@@ -751,7 +751,7 @@ TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
 
 ## TPP_EMITTER_HAVE_CLI
 
-Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1690)
+Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1693)
 
 Configure as one of:
 
@@ -829,7 +829,7 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
-CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1798) is called):
+CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1801) is called):
 [`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L28818)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's

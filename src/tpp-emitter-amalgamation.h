@@ -40,12 +40,15 @@
  *   way that those 2 tokens aren't adjacent.
  * - The emitter will also emit *magic* whitespace whenever 2 adjacent tokens
  *   require the presence of such to prevent accidental token concatenation:
- *   >> #define FOO() foo
+ *   >> #define foo() foo
+ *   >> #define FOO() foo12
  *   >> foo()bar
+ *   >> FOO()bar
  *   emitted like this:
- *   >> foo
+ *   >> foo  bar
+ *   >> foo12
  *   >> #line 2
- *   >>    bar
+ *   >>      bar
  */
 
 #ifndef TPP_AMALGAMATION_H
