@@ -37,14 +37,17 @@ TPP_DECL_BEGIN
 #if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start) {
+	tpp_errno error;
 	unsigned int radix = 10;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char const *suffix_start = iter;
 	tpp_char ch;
-	*result = 0;
+	error = tpp_expr_intvalue_init_zero(result);
+	if (TPP_ISERR(error))
+		return error;
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
@@ -105,7 +108,6 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 	}
 
 	for (;;) {
-		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		if (tpp_ascii_isdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asdigit(ch);
@@ -131,13 +133,13 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 		}
 		if (digit >= radix)
 			break;
-		old_value = *result;
-		new_value = old_value;
-		new_value *= radix;
-		new_value += digit;
-		*result = new_value;
-		if (new_value < old_value)
-			goto handle_invalid;
+		error = tpp_expr_intvalue_muladd(result, radix, digit);
+		if (TPP_ISERR(error)) {
+			if (error == TPP_ENOENT)
+				goto handle_invalid;
+			goto err_r;
+		}
+
 		suffix_start = iter;
 #ifdef WANT_continue_with_ch
 #undef WANT_continue_with_ch
@@ -157,21 +159,28 @@ handle_invalid:
 	if (p_suffix_start)
 		*p_suffix_start = end;
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-	return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+	error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-	return TPP_EOK;
+	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+err_r:
+	if (TPP_ISERR(error))
+		tpp_expr_intvalue_fini(result);
+	return error;
 }
 #endif /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT */
 
 #if TPP_HAVE_TOK_PASCAL_HEX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
-                            tpp_intmax *tpp_restrict result) {
+                            /*out*/ tpp_expr_intvalue *tpp_restrict result) {
+	tpp_errno error;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char ch;
-	*result = 0;
+	error = tpp_expr_intvalue_init_zero(result);
+	if (TPP_ISERR(error))
+		return error;
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
@@ -181,7 +190,6 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 	if (iter >= end)
 		goto handle_invalid;
 	do {
-		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		ch   = *iter++;
 		iter = tpp_preparse_skipbse_fwd(self, iter, end);
@@ -194,21 +202,24 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 		} else {
 			goto handle_invalid;
 		}
-		old_value = *result;
-		new_value = old_value;
-		new_value <<= 4;
-		new_value += digit;
-		*result = new_value;
-		if (new_value < old_value)
-			goto handle_invalid;
+		error = tpp_expr_intvalue_muladd(result, 16, digit);
+		if (TPP_ISERR(error)) {
+			if (error == TPP_ENOENT)
+				goto handle_invalid;
+			goto err_r;
+		}
 	} while (iter < end);
 	return TPP_EOK;
 handle_invalid:
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-	return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+	error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-	return TPP_EOK;
+	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+err_r:
+	if (TPP_ISERR(error))
+		tpp_expr_intvalue_fini(result);
+	return error;
 }
 #endif /* TPP_HAVE_TOK_PASCAL_HEX */
 
@@ -228,12 +239,12 @@ handle_invalid:
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:       Success
+ * @return: TPP_EOK:       Success (caller must finalize `*result`)
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 	tpp_assert(TPP_TOK_ISNUMBER(tok));
@@ -251,14 +262,20 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 			++newend;
 		if (newend <= start) {
 			/* Special case for something like `.123` -- this can never be an integer :( */
-			*result = 0;
+			tpp_errno error;
+			error = tpp_expr_intvalue_init_zero(result);
+			if (TPP_ISERR(error))
+				return error;
 			if (p_suffix_start)
 				*p_suffix_start = tpp_lexer_gettokenend(self);
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-			return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+			error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-			return TPP_EOK;
+			error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+			if (TPP_ISERR(error))
+				tpp_expr_intvalue_fini(result);
+			return error;
 		}
 		if (newend < end) {
 			newend = tpp_preparse_skipbse_bck(self, start, newend);
@@ -333,9 +350,26 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TOK_INT
 	TPP_CASE_TPP_TOK_INT {
 #if TPP_HAVE_LEXER_DECODEINT
-		tpp_intmax intvalue;
-		tpp_errno error = tpp_lexer_decodeint_ex(self, &intvalue, p_suffix_start);
-		*result = (tpp_float)intvalue;
+		tpp_expr_intvalue expr_intvalue;
+		tpp_errno error = tpp_lexer_decodeint_ex(self, &expr_intvalue, p_suffix_start);
+		if (!TPP_ISERR(error)) {
+			tpp_intmax intvalue;
+			error = tpp_expr_intvalue_asintmax(&expr_intvalue, &intvalue);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_INVALID_INTEGER
+					error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+#else  /* TPP_HAVE_TPP_W_INVALID_INTEGER */
+					error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+				}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				intvalue = 0;
+			}
+			tpp_expr_intvalue_fini(&expr_intvalue);
+			*result = (tpp_float)intvalue;
+		}
 		return error;
 #else /* TPP_HAVE_LEXER_DECODEINT */
 		*result = 0.0;
@@ -364,17 +398,15 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
-#ifndef tpp_lexer_decodeint_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result) {
-	tpp_intmax value;
+	tpp_expr_intvalue value;
 	tpp_errno error = tpp_lexer_decodeint(self, &value);
 	if (!TPP_ISERR(error))
-		error = tpp_expr_value_init_int(result, value);
+		error = tpp_expr_value_init_expr_intvalue(result, value);
 	return error;
 }
-#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float
@@ -383,7 +415,6 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#ifndef tpp_lexer_decodefloat_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result) {
@@ -393,7 +424,6 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 		error = tpp_expr_value_init_float(result, value);
 	return error;
 }
-#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 TPP_DECL_END

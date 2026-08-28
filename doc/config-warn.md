@@ -62,6 +62,7 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_expected_identifier_after_defined"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_DEFINED`
 - <a name="tpp_have_tpp_w_expected_identifier_after_assertion"></a>`TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_ASSERTION`
 - <a name="tpp_have_tpp_w_bad_expression_operands"></a>`TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS`
+- <a name="tpp_have_tpp_w_integer_overflow"></a>`TPP_HAVE_TPP_W_INTEGER_OVERFLOW`
 - <a name="tpp_have_tpp_w_divide_by_zero"></a>`TPP_HAVE_TPP_W_DIVIDE_BY_ZERO`
 - <a name="tpp_have_tpp_w_invalid_integer"></a>`TPP_HAVE_TPP_W_INVALID_INTEGER`
 - <a name="tpp_have_tpp_w_invalid_float"></a>`TPP_HAVE_TPP_W_INVALID_FLOAT`

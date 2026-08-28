@@ -156,7 +156,6 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)));
 	for (;;) {
 		tpp_char byte;
-		tpp_intmax intval;
 		tpp_token_id tok;
 		tpp_errno error;
 #if TPP_HAVE_FILE_ENCODING_EMBED
@@ -208,12 +207,27 @@ yield_at_eof_when_expecting_int:;
 		} else
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 		{
-			error = tpp_lexer_decodeint(self, &intval);
+			tpp_expr_intvalue intval_expr;
+			tpp_intmax intval;
+			error = tpp_lexer_decodeint(self, &intval_expr);
 			if (TPP_ISERR(error)) {
+handle_integer_decode_error:
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return TPP_SSIZE_OFERR(error);
 			}
+			error = tpp_expr_intvalue_asintmax(&intval_expr, &intval);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					intval = -1;
+				} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				{
+					goto handle_integer_decode_error;
+				}
+			}
+
 			if (intval < 0 || intval > 0xff) {
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;

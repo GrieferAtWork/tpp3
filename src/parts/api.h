@@ -682,7 +682,7 @@
 #ifdef PTRDIFF_MAX
 #define TPP_SSIZE_MAX PTRDIFF_MAX
 #elif defined(TPP_SIZE_MAX)
-#define TPP_SSIZE_MAX ((TPP_SIZE_MAX >> 1) - 1)
+#define TPP_SSIZE_MAX (TPP_SIZE_MAX >> 1)
 #endif /* ... */
 #endif /* !tpp_ssize */
 

@@ -1560,16 +1560,47 @@ print_generic_string:;
 
 #if TPP_EMITTER_HAVE_NORMALIZE_C_INT
 	TPP_CASE_TPP_TOK_INT {
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR || defined(tpp_expr_value_printrepr)
+		tpp_expr_intvalue intval_expr;
+		tpp_char const *suffix_start;
+		tpp_errno error;
+		tpp_ssize temp, result;
+		if (!tpp_emitter_has(self, NORMALIZE_C_INT))
+			break;
+		error = tpp_lexer_decodeint_ex(lexer, &intval_expr, &suffix_start);
+		if (TPP_ISERR(error))
+			return TPP_SSIZE_OFERR(error);
+		result = tpp_expr_intvalue_printrepr(tpp_emitter_getlexer(self), &intval_expr,
+			                                 tpp_emitter_getprinter(self), self);
+		tpp_expr_intvalue_fini(&intval_expr);
+		if (result < 0)
+			return result;
+		temp = tpp_emitter_print_generic(self, suffix_start, (tpp_size)(token_end - suffix_start));
+		if (temp < 0)
+			return temp;
+		result += temp;
+		return result;
+#else /* TPP_HAVE_EXPR_VALUE_PRINTREPR || tpp_expr_value_printrepr */
 		tpp_intmax intval;
+		tpp_expr_intvalue intval_expr;
 		tpp_char const *suffix_start;
 		char buf[TPP_ITOA_MAXLEN], *intbase;
 		tpp_errno error;
 		tpp_ssize temp, result;
 		if (!tpp_emitter_has(self, NORMALIZE_C_INT))
 			break;
-		error = tpp_lexer_decodeint_ex(lexer, &intval, &suffix_start);
+		error = tpp_lexer_decodeint_ex(lexer, &intval_expr, &suffix_start);
 		if (TPP_ISERR(error))
 			return TPP_SSIZE_OFERR(error);
+		error = tpp_expr_intvalue_asintmax(&intval_expr, &intval);
+		tpp_expr_intvalue_fini(&intval_expr);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT)
+				break;
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			return TPP_SSIZE_OFERR(error);
+		}
 		intbase = tpp_itoa(buf, intval);
 		result = tpp_emitter_print_cstr(self, intbase, (tpp_size)(buf + TPP_ITOA_MAXLEN - intbase));
 		if (result < 0)
@@ -1579,6 +1610,7 @@ print_generic_string:;
 			return temp;
 		result += temp;
 		return result;
+#endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR && !tpp_expr_value_printrepr */
 	}	break;
 #endif /* TPP_EMITTER_HAVE_NORMALIZE_C_INT */
 

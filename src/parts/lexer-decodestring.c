@@ -2416,7 +2416,6 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
-#ifndef tpp_lexer_parsecharacter_expr
 /* Convenience wrapper around `tpp_lexer_parsecharacter_literal()`
  * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
  *
@@ -2436,9 +2435,16 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 	tpp_errno error = tpp_lexer_parsecharacter_literal(self, &value, flags);
 	if (TPP_ISERR(error))
 		return error;
-	return tpp_expr_value_init_int(result, (tpp_intmax)value);
+	error = tpp_expr_value_init_uintmax(result, value);
+	if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+		error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+#else /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+		error = TPP_EOK;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+	}
+	return error;
 }
-#endif /* !tpp_lexer_parsecharacter_expr */
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 

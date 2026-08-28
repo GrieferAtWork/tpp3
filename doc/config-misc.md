@@ -2092,7 +2092,7 @@ bool tpp_expr_value_isstring(tpp_expr_value const *self);
 #endif // TPP_HAVE_BUILTIN_EXPR_STRINGS
 
 /* Extract values from `self` (these are allowed to assume that `tpp_expr_value_is*(self)`) */
-tpp_errno tpp_expr_value_asint(tpp_expr_value const *self, tpp_intmax *p_result);
+tpp_errno tpp_expr_value_asintmax(tpp_expr_value const *self, tpp_intmax *p_result);
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 tpp_errno tpp_expr_value_asfloat(tpp_expr_value const *self, tpp_intmax *p_result);
 #endif // TPP_HAVE_BUILTIN_EXPR_FLOATS
@@ -2101,7 +2101,7 @@ tpp_errno tpp_expr_value_asstringref(tpp_expr_value const *self, TPP_REF tpp_str
 #endif // TPP_HAVE_BUILTIN_EXPR_STRINGS
 
 /* Initialize `self` */
-tpp_errno tpp_expr_value_init_int(tpp_expr_value *self, tpp_intmax v);
+tpp_errno tpp_expr_value_init_expr_intvalue(tpp_expr_value *self, tpp_intmax v);
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 tpp_errno tpp_expr_value_init_float(tpp_expr_value *self, tpp_float v);
 #endif // TPP_HAVE_BUILTIN_EXPR_FLOATS

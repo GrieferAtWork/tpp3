@@ -5014,6 +5014,12 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "bad operand types in %[%s%s%s%s%s%s%]")
 #endif /* TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
 
+#if TPP_HAVE_TPP_W_INTEGER_OVERFLOW
+#define TPP_W_INTEGER_OVERFLOW TPP_W_INTEGER_OVERFLOW
+TPP_WARNING(TPP_W_INTEGER_OVERFLOW, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
+            "integer overflow/underflow in %[%s%s%s%]")
+#endif /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 #define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
 TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
@@ -5680,7 +5686,7 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #ifdef PTRDIFF_MAX
 #define TPP_SSIZE_MAX PTRDIFF_MAX
 #elif defined(TPP_SIZE_MAX)
-#define TPP_SSIZE_MAX ((TPP_SIZE_MAX >> 1) - 1)
+#define TPP_SSIZE_MAX (TPP_SIZE_MAX >> 1)
 #endif /* ... */
 #endif /* !tpp_ssize */
 
@@ -11404,6 +11410,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_STRINGS)
 #endif /* !TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
+#ifndef TPP_HAVE_TPP_W_INTEGER_OVERFLOW
+#define TPP_HAVE_TPP_W_INTEGER_OVERFLOW \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_EXPR_INTVALUE_MATH_CANOVERFLOW || TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW))
+#endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
 #ifndef TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 #define TPP_HAVE_TPP_W_DIVIDE_BY_ZERO \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_VALUE)
@@ -12402,6 +12412,26 @@ TPP_DECL_END
 #define TPP_HAVE_LEXER_PARSECHARACTER_EXPR 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+/* Define to `1` if `tpp_expr_intvalue_*` operations may return
+ * `TPP_ENOENT` to indicate integer overflow/underflow.
+ *
+ * Override this to either:
+ * - Disable overflow checks in the builtin implementation
+ * - Or if you're supplying your own implementation that uses
+ *   arbitrary precision integers. */
+#ifndef TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define TPP_EXPR_INTVALUE_MATH_CANOVERFLOW 1
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* Define to `1` if `tpp_expr_intvalue_asintmax` can overflow/underflow. */
+#ifndef TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if defined(tpp_expr_intvalue)
+#define TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW (!TPP_EXPR_INTVALUE_MATH_CANOVERFLOW)
+#else /* tpp_expr_intvalue */
+#define TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW 0
+#endif /* !tpp_expr_intvalue */
+#endif /* !TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
 
 /* Provide a builtin implementation for `tpp_expr_value` and its API */
 #undef TPP_HAVE_BUILTIN_EXPR_VALUE
@@ -14348,6 +14378,361 @@ tpp_time_fromenviron(tpp_time *tpp_restrict p_time);
 /* File: parts/expr.h                                                   */
 /************************************************************************/
 
+#ifndef tpp_expr_intvalue
+typedef struct tpp_expr_intvalue {
+	tpp_intmax TPP_INTERNAL(teiv_value); /* Integer value */
+} tpp_expr_intvalue;
+
+/* Finalize `self` */
+#define tpp_expr_intvalue_fini(self) (void)0
+
+/* @return: TPP_EOK:      Success
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_init_zero(self) \
+	((self)->TPP_INTERNAL(teiv_value) = 0, TPP_EOK)
+
+/* @return: TPP_EOK:      Success
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_init_copy(self, from) \
+	((self)->TPP_INTERNAL(teiv_value) =         \
+	 (from)->TPP_INTERNAL(teiv_value),          \
+	 TPP_EOK)
+
+/* @return: TPP_EOK:      Success
+ * #if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+ * @return: TPP_ENOENT:   SOFT_ERROR: Out-of-range
+ * #endif // TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_asintmax(self, p_result) \
+	(*(p_result) = (self)->TPP_INTERNAL(teiv_value), TPP_EOK)
+
+/* @return: TPP_EOK:      Yes
+ * @return: TPP_ENOENT:   No
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_iszero(self) \
+	(((self)->TPP_INTERNAL(teiv_value) == 0) ? TPP_EOK : TPP_ENOENT)
+
+/* @return: TPP_EOK:      Yes
+ * @return: TPP_ENOENT:   No
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_isneg(self) \
+	(((self)->TPP_INTERNAL(teiv_value) < 0) ? TPP_EOK : TPP_ENOENT)
+
+#if TPP_HAVE_LEXER_DECODEINT
+/* >> [self] = ([self] * mul) + add;
+ * Used to implement `tpp_lexer_decodeint()`
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_muladd tpp_expr_intvalue_muladd
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_expr_intvalue_muladd(tpp_expr_intvalue *tpp_restrict self,
+                         unsigned int mul, unsigned int add) {
+	tpp_intmax const oldval = self->TPP_INTERNAL(teiv_value);
+	tpp_intmax const newval1 = oldval * mul;
+	tpp_intmax const newval2 = newval1 + add;
+	self->TPP_INTERNAL(teiv_value) = newval2;
+	if tpp_unlikely(newval1 < oldval || newval2 < newval1)
+		return TPP_ENOENT;
+	return TPP_EOK;
+}
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_muladd(self, mul, add) \
+	((self)->TPP_INTERNAL(teiv_value) *= (mul),  \
+	 (self)->TPP_INTERNAL(teiv_value) += (add),  \
+	 TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#endif /* TPP_HAVE_LEXER_DECODEINT */
+
+#undef _TPP_INTMAX_MIN
+#define _TPP_INTMAX_MIN ((tpp_intmax)((TPP_UINTMAX_MAX >> 1) + 1))
+#undef _TPP_INTMAX_MAX
+#define _TPP_INTMAX_MAX ((tpp_intmax)(TPP_UINTMAX_MAX >> 1))
+
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+/* >> [self] = v;
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_init_uintmax(self, v)          \
+	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(v), \
+	 ((tpp_uintmax)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)  \
+	 ? TPP_EOK                                           \
+	 : TPP_ENOENT)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_init_uintmax(self, v)          \
+	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(v), \
+	 TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+/* >> [self] = v;
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW && TPP_SIZE_MAX >= TPP_UINTMAX_MAX
+#define tpp_expr_intvalue_init_size(self, /*tpp_size*/ v)           \
+	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_ssize)(v), \
+	 ((tpp_size)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)                \
+	 ? TPP_EOK                                                      \
+	 : TPP_ENOENT)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW && TPP_SIZE_MAX >= TPP_UINTMAX_MAX */
+#define tpp_expr_intvalue_init_size(self, /*tpp_size*/ v) \
+	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_ssize)(v), TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW || TPP_SIZE_MAX < TPP_UINTMAX_MAX */
+#define tpp_expr_intvalue_init_char(self, /*tpp_char*/ v) \
+	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_char)(v), TPP_EOK)
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+#if TPP_HAVE_BUILTIN_EXPR_VALUE
+#define tpp_expr_intvalue_init_one(self) \
+	((self)->TPP_INTERNAL(teiv_value) = 1, TPP_EOK)
+#define tpp_expr_intvalue_init_bool(self, v) \
+	((self)->TPP_INTERNAL(teiv_value) = (v), TPP_EOK)
+
+/* >> [p_result] = -[self];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_neg(self, p_result)                                  \
+	((p_result)->TPP_INTERNAL(teiv_value) = -(self)->TPP_INTERNAL(teiv_value), \
+	 (((p_result)->TPP_INTERNAL(teiv_value) < 0) ==                            \
+	  ((self)->TPP_INTERNAL(teiv_value) > 0))                                  \
+	 ? TPP_EOK                                                                 \
+	 : TPP_ENOENT)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_neg(self, p_result) \
+	((p_result)->TPP_INTERNAL(teiv_value) = -(self)->TPP_INTERNAL(teiv_value), TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = ~[self];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_inv(self, p_result)                                  \
+	((p_result)->TPP_INTERNAL(teiv_value) = ~(self)->TPP_INTERNAL(teiv_value), \
+	 TPP_EOK)
+
+/* >> [p_result] = [lhs] + [rhs];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_add(lhs, rhs, p_result)                                                                                       \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) +                                                          \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)),                                                          \
+	 (((rhs)->TPP_INTERNAL(teiv_value) > 0 && (lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX - (rhs)->TPP_INTERNAL(teiv_value))) || \
+	  ((rhs)->TPP_INTERNAL(teiv_value) < 0 && (lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN - (rhs)->TPP_INTERNAL(teiv_value))))   \
+	 ? TPP_ENOENT                                                                                                                       \
+	 : TPP_EOK)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_add(lhs, rhs, p_result)                              \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) + \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = [lhs] - [rhs];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_sub(lhs, rhs, p_result)                                                                                       \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) -                                                          \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)),                                                          \
+	 (((rhs)->TPP_INTERNAL(teiv_value) < 0 && (lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX + (rhs)->TPP_INTERNAL(teiv_value))) || \
+	  ((rhs)->TPP_INTERNAL(teiv_value) > 0 && (lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN + (rhs)->TPP_INTERNAL(teiv_value))))   \
+	 ? TPP_ENOENT                                                                                                                       \
+	 : TPP_EOK)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_sub(lhs, rhs, p_result)                              \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) - \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = [lhs] * [rhs];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_mul(lhs, rhs, p_result)                                                  \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) *                     \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)),                     \
+	 (lhs)->TPP_INTERNAL(teiv_value) > 0                                                           \
+	 ? ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
+	    ? ((lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(teiv_value))   \
+	       ? TPP_ENOENT /* +lhs * +lhs */                                                          \
+	       : TPP_EOK)                                                                              \
+	    : ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(teiv_value))   \
+	       ? TPP_ENOENT /* +lhs * -lhs */                                                          \
+	       : TPP_EOK))                                                                             \
+	 : ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
+	    ? ((lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(teiv_value))   \
+	       ? TPP_ENOENT /* -lhs * +lhs */                                                          \
+	       : TPP_EOK)                                                                              \
+	    : ((lhs)->TPP_INTERNAL(teiv_value) &&                                                      \
+	       ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(teiv_value))) \
+	       ? TPP_ENOENT /* -lhs * -lhs */                                                          \
+	       : TPP_EOK)))
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_mul(lhs, rhs, p_result)                              \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) * \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = [lhs] / [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Divide-by-zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_div(lhs, rhs, p_result)                                 \
+	((rhs)->TPP_INTERNAL(teiv_value)                                              \
+	 ? ((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) / \
+	                                            (rhs)->TPP_INTERNAL(teiv_value)), \
+	    TPP_EOK)                                                                  \
+	 : TPP_ENOENT)
+
+/* >> [p_result] = [lhs] % [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Divide-by-zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_mod(lhs, rhs, p_result)                                 \
+	((rhs)->TPP_INTERNAL(teiv_value)                                              \
+	 ? ((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) % \
+	                                            (rhs)->TPP_INTERNAL(teiv_value)), \
+	    TPP_EOK)                                                                  \
+	 : TPP_ENOENT)
+
+#undef _TPP_UINTMAX_BITS
+#if TPP_UINTMAX_MAX <= TPP_UINT_LEAST8_C(0xff)
+#define _TPP_UINTMAX_BITS 8
+#elif TPP_UINTMAX_MAX <= TPP_UINT_LEAST16_C(0xffff)
+#define _TPP_UINTMAX_BITS 16
+#elif TPP_UINTMAX_MAX <= TPP_UINT_LEAST32_C(0xffffffff)
+#define _TPP_UINTMAX_BITS 32
+#elif TPP_UINTMAX_MAX <= TPP_UINT_LEAST64_C(0xffffffffffffffff)
+#define _TPP_UINTMAX_BITS 64
+#else /* TPP_UINTMAX_MAX <= ... */
+#define _TPP_UINTMAX_BITS 128
+#endif /* TPP_UINTMAX_MAX > ... */
+
+/* >> [p_result] = [lhs] << [rhs];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_shl(lhs, rhs, p_result)                                                                   \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value)),   \
+	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS ||                                                       \
+	  (lhs)->TPP_INTERNAL(teiv_value) != ((p_result)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value))) \
+	 ? TPP_ENOENT                                                                                                   \
+	 : TPP_EOK)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_shl(lhs, rhs, p_result) \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value)), TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = [lhs] >> [rhs];
+ * @return: TPP_EOK:      OK
+ * #if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ENOENT:   Overflow
+ * #endif // TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+#define tpp_expr_intvalue_shr(lhs, rhs, p_result)                                                                   \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)),   \
+	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS ||                                                       \
+	  (lhs)->TPP_INTERNAL(teiv_value) != ((p_result)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value))) \
+	 ? TPP_ENOENT                                                                                                   \
+	 : TPP_EOK)
+#else /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_expr_intvalue_shr(lhs, rhs, p_result) \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)), TPP_EOK)
+#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+
+/* >> [p_result] = [lhs] & [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_and(lhs, rhs, p_result)                              \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) & \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+
+/* >> [p_result] = [lhs] ^ [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_xor(lhs, rhs, p_result)                              \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) ^ \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+
+/* >> [p_result] = [lhs] | [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_or(lhs, rhs, p_result)                               \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) | \
+	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+	 TPP_EOK)
+
+/* Store `< 0`, `== 0` or `> 0` to `*(int *)p_delta`, based on result of `lhs <=> rhs`
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_intvalue_cmp(lhs, rhs, p_delta)                                       \
+	(*(p_delta) = ((lhs)->TPP_INTERNAL(teiv_value) < (rhs)->TPP_INTERNAL(teiv_value)   \
+	               ? -1                                                                \
+	               : (lhs)->TPP_INTERNAL(teiv_value) > (rhs)->TPP_INTERNAL(teiv_value) \
+	                 ? 1                                                               \
+	                 : 0),                                                             \
+	 TPP_EOK)
+
+/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#ifndef tpp_expr_value_printrepr
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_expr_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
+                            tpp_expr_intvalue *tpp_restrict self,
+                            tpp_formatprinter printer, void *arg);
+#endif /* !tpp_expr_value_printrepr */
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
+#endif /* !tpp_expr_intvalue */
+
+
+#if TPP_HAVE_BUILTIN_EXPR_VALUE
+#ifndef tpp_expr_intvalue_init_bool
+#define tpp_expr_intvalue_init_bool(self, v)   \
+	((v) ? tpp_expr_intvalue_init_one(self, v) \
+	     : tpp_expr_intvalue_init_zero(self, v))
+#endif /* !tpp_expr_intvalue_init_bool */
+#ifndef tpp_expr_intvalue_init_zero
+#define tpp_expr_intvalue_init_zero(self) tpp_expr_intvalue_init_bool(self, 0)
+#endif /* !tpp_expr_intvalue_init_zero */
+#ifndef tpp_expr_intvalue_init_one
+#define tpp_expr_intvalue_init_one(self) tpp_expr_intvalue_init_bool(self, 1)
+#endif /* !tpp_expr_intvalue_init_one */
+#endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
+
+
 #if TPP_HAVE_BUILTIN_EXPR_VALUE
 #undef _TPP_EXPR_VALUE_KIND_MULTIPLE
 typedef enum _tpp_expr_value_kind {
@@ -14370,17 +14755,17 @@ typedef enum _tpp_expr_value_kind {
 typedef struct tpp_expr_value {
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
 	_tpp_expr_value_kind TPP_INTERNAL(xv_kind); /* Expression value kind */
-#define _tpp_expr_value_getkind(self)    (self)->TPP_INTERNAL(xv_kind)
-#define _tpp_expr_value_setkind(self, v) , (self)->TPP_INTERNAL(xv_kind) = (v)
+#define _tpp_expr_value_getkind(self)     (self)->TPP_INTERNAL(xv_kind)
+#define _tpp_expr_value_setkind_(self, v) (self)->TPP_INTERNAL(xv_kind) = (v),
 #else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
-#define _tpp_expr_value_getkind(self)    _TPP_EXPR_VALUE_KIND_INT
-#define _tpp_expr_value_setkind(self, v) /* nothing */
+#define _tpp_expr_value_getkind(self)     _TPP_EXPR_VALUE_KIND_INT
+#define _tpp_expr_value_setkind_(self, v) /* nothing */
 #endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
 
 	/* Expression value union */
 	union {
-		tpp_intmax          TPP_INTERNAL(xd_int);    /* [valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_INT)] */
-#define _tpp_expr_value_getint(self) (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int)
+		tpp_expr_intvalue   TPP_INTERNAL(xd_int);    /* [valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_INT)] */
+#define _tpp_expr_value_getint(self) (&(self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int))
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		tpp_float           TPP_INTERNAL(xd_float);  /* [valid_if(_tpp_expr_value_getkind(self) == _TPP_EXPR_VALUE_KIND_FLOAT)] */
 #define _tpp_expr_value_getfloat(self) (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_float)
@@ -14410,13 +14795,22 @@ typedef struct tpp_expr_value {
 #define tpp_expr_value_move(dst, src) (void)(*(dst) = *(src))
 
 /* Copy-construct `src` into `dst`
- * @return: TPP_EOK: Success */
-#define tpp_expr_value_copy(dst, src) \
-	(*(dst) = *(src)_tpp_expr_value_incref(dst), TPP_EOK)
+ * @return: TPP_EOK:      Success
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_expr_value_copy(dst, src)                           \
+	(*(dst) = *(src)_tpp_expr_value_incref(dst),                \
+	 tpp_expr_value_isint(dst)                                  \
+	 ? tpp_expr_intvalue_init_copy(_tpp_expr_value_getint(dst), \
+	                               _tpp_expr_value_getint(src)) \
+	 : TPP_EOK)
 
 /* Finalize `self` (never fails) */
-#define tpp_expr_value_fini(self) \
-	((void)0 _tpp_expr_value_decref(self), tpp_dbg_memset(self, sizeof(*(self))))
+#define tpp_expr_value_fini(self)                          \
+	((void)0 _tpp_expr_value_decref(self),                 \
+	 tpp_expr_value_isint(self)                            \
+	 ? tpp_expr_intvalue_fini(_tpp_expr_value_getint(dst)) \
+	 : (void)0,                                            \
+	 tpp_dbg_memset(self, sizeof(tpp_expr_value)))
 
 /* Check which native representation is used by `self` (never fails) */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
@@ -14438,7 +14832,8 @@ typedef struct tpp_expr_value {
 /* Extract a specifically-typed value from `self`
  * Caller must ensure that `tpp_expr_value_is*` returned true.
  * @return: TPP_EOK: Success */
-#define tpp_expr_value_asint(self, p_result) (*(p_result) = _tpp_expr_value_getint(self), TPP_EOK)
+#define tpp_expr_value_asintmax(self, p_result) \
+	tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(self), p_result)
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 #define tpp_expr_value_asfloat(self, p_result) (*(p_result) = _tpp_expr_value_getfloat(self), TPP_EOK)
 #endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
@@ -14451,17 +14846,42 @@ typedef struct tpp_expr_value {
 
 /* Initialize `self` as int-typed, with `v` as value
  * @return: TPP_EOK: Success */
-#define tpp_expr_value_init_int(self, /*tpp_intmax*/ v)       \
-	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int) = (v) \
-	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_INT), \
+#define tpp_expr_value_init_expr_intvalue(self, /*inherit(always)*/ /*tpp_expr_intvalue **/ v) \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT)                                  \
+	 (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_int) = (v),                                 \
 	 TPP_EOK)
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+#define tpp_expr_value_init_uintmax(self, /*tpp_uintmax*/ v)  \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_uintmax(_tpp_expr_value_getint(self), v))
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+#define tpp_expr_value_init_size(self, /*tpp_size*/ v)        \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_size(_tpp_expr_value_getint(self), v))
+#define tpp_expr_value_init_char(self, /*tpp_char*/ v)        \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_char(_tpp_expr_value_getint(self), v))
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* Initialize to int=0/1 */
+#define tpp_expr_value_init_bool(self, v)                     \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_bool(_tpp_expr_value_getint(self), v))
+#define tpp_expr_value_init_zero(self)                        \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(self)))
+#define tpp_expr_value_init_one(self)                         \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_INT) \
+	 tpp_expr_intvalue_init_one(_tpp_expr_value_getint(self)))
+
 
 /* Initialize `self` as float-typed, with `v` as value
  * @return: TPP_EOK: Success */
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
-#define tpp_expr_value_init_float(self, /*tpp_float*/ v)        \
-	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_float) = (v) \
-	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_FLOAT), \
+#define tpp_expr_value_init_float(self, /*tpp_float*/ v)         \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_FLOAT)  \
+	 (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_float) = (v), \
 	 TPP_EOK)
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 
@@ -14470,13 +14890,13 @@ typedef struct tpp_expr_value {
  * @return: TPP_EOK: Success */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 #define tpp_expr_value_init_string(self, /*tpp_string **/ str)                 \
-	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str)             \
-	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_STRING),               \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_STRING)               \
+	 (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str),            \
 	 tpp_string_incref((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string)), \
 	 TPP_EOK)
 #define tpp_expr_value_init_string_inherited(self, /*inherit(always)*/ /*TPP_REF tpp_string **/ str) \
-	((self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str)                                   \
-	 _tpp_expr_value_setkind(self, _TPP_EXPR_VALUE_KIND_STRING),                                     \
+	(_tpp_expr_value_setkind_(self, _TPP_EXPR_VALUE_KIND_STRING)                                     \
+	 (self)->TPP_INTERNAL(xv_data).TPP_INTERNAL(xd_string) = (str),                                  \
 	 TPP_EOK)
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
@@ -14537,17 +14957,18 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL tpp_expr_value_asb
 #define tpp_expr_value_asbool tpp_expr_value_asbool
 
 #else /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
-#define tpp_expr_value_pos(lexer, self, result)               tpp_expr_value_init_int(result, +_tpp_expr_value_getint(self))
-#define tpp_expr_value_neg(lexer, self, result)               tpp_expr_value_init_int(result, -_tpp_expr_value_getint(self))
-#define tpp_expr_value_inv(lexer, self, result)               tpp_expr_value_init_int(result, ~_tpp_expr_value_getint(self))
-#define tpp_expr_value_add(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) + _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_sub(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) - _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_mul(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) * _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_shl(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) << _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_shr(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) >> _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_and(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) & _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_xor(lexer, lhs, rhs, result)           tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) | _tpp_expr_value_getint(rhs))
-#define tpp_expr_value_or(lexer, lhs, rhs, result)            tpp_expr_value_init_int(result, _tpp_expr_value_getint(lhs) ^ _tpp_expr_value_getint(rhs))
+/* TODO: Use `tpp_expr_intvalue_*` APIs from above */
+#define tpp_expr_value_pos(lexer, self, result)               tpp_expr_value_init_expr_intvalue(result, +_tpp_expr_value_getint(self))
+#define tpp_expr_value_neg(lexer, self, result)               tpp_expr_value_init_expr_intvalue(result, -_tpp_expr_value_getint(self))
+#define tpp_expr_value_inv(lexer, self, result)               tpp_expr_value_init_expr_intvalue(result, ~_tpp_expr_value_getint(self))
+#define tpp_expr_value_add(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) + _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_sub(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) - _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_mul(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) * _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_shl(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) << _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_shr(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) >> _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_and(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) & _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_xor(lexer, lhs, rhs, result)           tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) | _tpp_expr_value_getint(rhs))
+#define tpp_expr_value_or(lexer, lhs, rhs, result)            tpp_expr_value_init_expr_intvalue(result, _tpp_expr_value_getint(lhs) ^ _tpp_expr_value_getint(rhs))
 #define tpp_expr_value_cmp_eq(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) == _tpp_expr_value_getint(rhs)), TPP_EOK)
 #define tpp_expr_value_cmp_ne(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) != _tpp_expr_value_getint(rhs)), TPP_EOK)
 #define tpp_expr_value_cmp_lo(lexer, lhs, rhs, p_bool_result) (*(p_bool_result) = (_tpp_expr_value_getint(lhs) < _tpp_expr_value_getint(rhs)), TPP_EOK)
@@ -14571,34 +14992,30 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#ifndef tpp_expr_value_printrepr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
                          tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg);
+#endif /* !tpp_expr_value_printrepr */
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 
 /* Initialize to int=0 */
 #ifndef tpp_expr_value_init_zero
-#ifdef tpp_expr_value_init_bool
 #define tpp_expr_value_init_zero(self) tpp_expr_value_init_bool(self, 0)
-#else /* tpp_expr_value_init_bool */
-#define tpp_expr_value_init_zero(self) tpp_expr_value_init_int(self, 0)
-#endif /* !tpp_expr_value_init_bool */
 #endif /* !tpp_expr_value_init_zero */
 
 /* Initialize to int=1 */
 #ifndef tpp_expr_value_init_one
-#ifdef tpp_expr_value_init_bool
 #define tpp_expr_value_init_one(self) tpp_expr_value_init_bool(self, 1)
-#else /* tpp_expr_value_init_bool */
-#define tpp_expr_value_init_one(self) tpp_expr_value_init_int(self, 1)
-#endif /* !tpp_expr_value_init_bool */
 #endif /* !tpp_expr_value_init_one */
 
 /* Initialize to int=0/1 */
 #ifndef tpp_expr_value_init_bool
-#define tpp_expr_value_init_bool(self, v) tpp_expr_value_init_int(self, (v) ? 1 : 0)
+#define tpp_expr_value_init_bool(self, v) \
+	((v) ? tpp_expr_value_init_one(self)  \
+	     : tpp_expr_value_init_zero(self))
 #endif /* !tpp_expr_value_init_bool */
 
 #ifndef tpp_expr_value_pos
@@ -28363,12 +28780,12 @@ tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:       Success
+ * @return: TPP_EOK:       Success (caller must finalize `*result`)
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start);
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)
@@ -28380,14 +28797,9 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
-/* TODO: Instead of being overwritable, `tpp_expr_value` should be split into different types,
- *       and `tpp_lexer_decodeint_ex()` should use a set of macros that would easily allow one
- *       to implement arbitrary precision integers *WITHOUT* re-implementing integer parsing! */
-#ifndef tpp_lexer_decodeint_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result);
-#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 
@@ -28412,11 +28824,9 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#ifndef tpp_lexer_decodefloat_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result);
-#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 
@@ -28650,12 +29060,10 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O error while yielding to next token
  * @return: TPP_EUSER(*):  User-defined error from hook */
-#ifndef tpp_lexer_parsecharacter_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,
                               unsigned int flags);
-#endif /* !tpp_lexer_parsecharacter_expr */
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 

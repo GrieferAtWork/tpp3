@@ -1442,6 +1442,7 @@ handle_status:
 #if TPP_HAVE_TOK_INT
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
+			tpp_expr_intvalue expr_value;
 			tpp_char value_ch[1];
 
 			/* (try to) stream #embed-data directly into buffer */
@@ -1461,10 +1462,23 @@ handle_status:
 				goto again_handle_tok;
 #endif /* TPP_HAVE_LEXER_PARSEEMBED */
 
-			error = tpp_lexer_decodeint(self, &value);
+			error = tpp_lexer_decodeint(self, &expr_value);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_builder;
+			}
+			error = tpp_expr_intvalue_asintmax(&expr_value, &value);
+			tpp_expr_intvalue_fini(&expr_value);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					value = -1;
+				} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				{
+					tok = TPP_TOK_OFERR(error);
+					goto err_tok_builder;
+				}
 			}
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 			if ((tpp_intmax)(tpp_char)value != value) {
@@ -1855,9 +1869,22 @@ again_yield:
 	}
 	*p_value = 0;
 	if (TPP_TOK_ISINT(tok)) {
-		tpp_errno error = tpp_lexer_decodeint(self, p_value);
+		tpp_expr_intvalue expr_value;
+		tpp_errno error = tpp_lexer_decodeint(self, &expr_value);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		error = tpp_expr_intvalue_asintmax(&expr_value, p_value);
+		tpp_expr_intvalue_fini(&expr_value);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				*p_value = -1;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				return TPP_TOK_OFERR(error);
+			}
+		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));

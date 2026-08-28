@@ -5406,7 +5406,7 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 #define TPP_CONST_STRING   _TPP_EXPR_VALUE_KIND_STRING /* Use tpp_expr_value_isstring() */
 #define c_kind             TPP_INTERNAL(xv_kind)       /* Use tpp_expr_value_is*() */
 #define c_data             TPP_INTERNAL(xv_data)       /* Use tpp_expr_value_as*() */
-#define c_int              TPP_INTERNAL(xd_int)        /* Use tpp_expr_value_asint() */
+#define c_int              TPP_INTERNAL(xd_int)        /* Use tpp_expr_value_asintmax() */
 #define c_float            TPP_INTERNAL(xd_float)      /* Use tpp_expr_value_asfloat() */
 #define c_string           TPP_INTERNAL(xd_string)     /* Use tpp_expr_value_asstringref() */
 
@@ -5423,7 +5423,7 @@ TPP_INLINE bool TPPConst_IsBool(tpp_expr_value *self) {
 	tpp_errno error;
 	if (!tpp_expr_value_isint(self))
 		return false;
-	error = tpp_expr_value_asint(self, &value);
+	error = tpp_expr_value_asintmax(self, &value);
 	if (TPP_ISERR(error))
 		return TPP2_FATAL(false);
 	return value == 0 || value == 1;
@@ -5433,10 +5433,10 @@ TPP_INLINE tpp_intmax TPPConst_AsInt(tpp_expr_value *self) {
 	tpp_errno error;
 	tpp_intmax value;
 	if (tpp_expr_value_isint(self)) {
-		error = tpp_expr_value_asint(self, &value);
+		error = tpp_expr_value_asintmax(self, &value);
 	} else if (tpp_expr_value_isfloat(self)) {
 		tpp_float float_value;
-		error = tpp_expr_value_asint(self, &float_value);
+		error = tpp_expr_value_asintmax(self, &float_value);
 		value = (tpp_intmax)float_value;
 	} else if (tpp_expr_value_isstring(self)) {
 		TPP_REF tpp_string *string_value;
@@ -5458,7 +5458,7 @@ TPP_INLINE tpp_float TPPConst_AsFloat(tpp_expr_value *self) {
 	tpp_float value;
 	if (tpp_expr_value_isint(self)) {
 		tpp_intmax int_value;
-		error = tpp_expr_value_asint(self, &int_value);
+		error = tpp_expr_value_asintmax(self, &int_value);
 		value = (tpp_float)int_value;
 	} else if (tpp_expr_value_isfloat(self)) {
 		error = tpp_expr_value_asfloat(self, &value);
@@ -5502,7 +5502,11 @@ TPP_INLINE void TPPConst_ToInt(tpp_expr_value *self) {
 		if (TPP_ISERR(error))
 			value = TPP2_FATAL(0.0);
 		tpp_expr_value_fini(self);
-		error = tpp_expr_value_init_int(self, (tpp_intmax)value);
+		/* Secret (and not really supported), but `tpp_expr_value_init_bool()`
+		 * for all-builtin impls can actually set any "tpp_intmax" value (and
+		 * not just 0/1) -- but if the user overrides it, that may no longer
+		 * be the case, so ~shhh~ */
+		error = tpp_expr_value_init_bool(self, (tpp_intmax)value);
 		if (TPP_ISERR(error))
 			(void)TPP2_FATAL(0);
 	} else if (tpp_expr_value_isstring(self)) {
@@ -5511,7 +5515,7 @@ TPP_INLINE void TPPConst_ToInt(tpp_expr_value *self) {
 		if (TPP_ISERR(error))
 			string_value = TPP2_FATAL(tpp_string_newempty());
 		tpp_expr_value_fini(self);
-		error = tpp_expr_value_init_int(self, tpp_string_len(string_value) ? 1 : 0);
+		error = tpp_expr_value_init_bool(self, tpp_string_len(string_value) ? 1 : 0);
 		tpp_string_decref(string_value);
 		if (TPP_ISERR(error))
 			(void)TPP2_FATAL(0);
@@ -5521,7 +5525,7 @@ TPP_INLINE void TPPConst_ToInt(tpp_expr_value *self) {
 }
 
 TPP_INLINE void TPPConst_ZERO(tpp_expr_value *self) {
-	tpp_errno error = tpp_expr_value_init_int(self, 0);
+	tpp_errno error = tpp_expr_value_init_zero(self, 0);
 	if (TPP_ISERR(error))
 		(void)TPP2_FATAL(0);
 }

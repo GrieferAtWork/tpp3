@@ -332,6 +332,7 @@
 #define tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS        TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS         TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
 #define tef_TPP_EXT_CPP_FEATURE_MACROS                     TPP_INTERNAL(tef_TPP_EXT_CPP_FEATURE_MACROS)
+#define teiv_value                                         TPP_INTERNAL(teiv_value)
 #define xv_kind                                            TPP_INTERNAL(xv_kind)
 #define xd_int                                             TPP_INTERNAL(xd_int)
 #define xv_data                                            TPP_INTERNAL(xv_data)
@@ -36211,8 +36212,32 @@ tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {
 
 #if TPP_HAVE_BUILTIN_EXPR_VALUE
 
+
+#ifndef tpp_expr_intvalue
+/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#ifndef tpp_expr_value_printrepr
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_expr_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
+                            tpp_expr_intvalue *tpp_restrict self,
+                            tpp_formatprinter printer, void *arg) {
+	char value_buffer[TPP_ITOA_MAXLEN];
+	char *value_ptr = tpp_itoa(value_buffer, self->teiv_value);
+	tpp_size value_len = (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr);
+	(void)lexer;
+	return tpp_formatprinter_print_cstr(printer, arg, value_ptr, value_len);
+}
+#endif /* !tpp_expr_value_printrepr */
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* !tpp_expr_intvalue */
+
+
 /* Invoke operators on expression values. */
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
+
+#if TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS || TPP_HAVE_TPP_W_INTEGER_OVERFLOW
 static TPP_CONSTCALL TPP_WUNUSED char const *TPPCALL
 tpp_expr_value_kindrepr(_tpp_expr_value_kind kind) {
 	switch (kind) {
@@ -36226,6 +36251,7 @@ tpp_expr_value_kindrepr(_tpp_expr_value_kind kind) {
 	default: tpp_unreachable();
 	}
 }
+#endif /* TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS || TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
 
 #if TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS
 #define tpp_warn_bad_operands_unary(lexer, op_repr, self) \
@@ -36252,6 +36278,20 @@ tpp_expr_value_kindrepr(_tpp_expr_value_kind kind) {
 #endif /* !TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
 
 
+#if TPP_HAVE_TPP_W_INTEGER_OVERFLOW
+#define tpp_warn_integer_overflow_unary(lexer, op_repr, self) \
+	tpp_lexer_warnf(lexer, TPP_W_INTEGER_OVERFLOW,            \
+	                op_repr, tpp_expr_value_kindrepr(_tpp_expr_value_getkind(self)), "")
+#define tpp_warn_integer_overflow_binary(lexer, lhs, op_repr, rhs)                  \
+	tpp_lexer_warnf(lexer, TPP_W_INTEGER_OVERFLOW,                                  \
+	                tpp_expr_value_kindrepr(_tpp_expr_value_getkind(lhs)), op_repr, \
+	                tpp_expr_value_kindrepr(_tpp_expr_value_getkind(rhs)))
+#else /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+#define tpp_warn_integer_overflow_unary(lexer, op_repr, self)      TPP_EOK
+#define tpp_warn_integer_overflow_binary(lexer, lhs, op_repr, rhs) TPP_EOK
+#endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+
+
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_expr_value_pos(struct tpp_lexer *tpp_restrict lexer,
                    /*in*/ tpp_expr_value *tpp_restrict self,
@@ -36274,7 +36314,16 @@ tpp_expr_value_neg(struct tpp_lexer *tpp_restrict lexer,
 	tpp_errno error;
 	switch (_tpp_expr_value_getkind(self)) {
 	case _TPP_EXPR_VALUE_KIND_INT:
-		error = tpp_expr_value_init_int(result, -_tpp_expr_value_getint(self));
+		_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+		error = tpp_expr_intvalue_neg(_tpp_expr_value_getint(self),
+		                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+		if (error == TPP_ENOENT) {
+			error = tpp_warn_integer_overflow_unary(lexer, "-", self);
+			if (!TPP_ISERR(error))
+				error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+		}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
 		break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 	case _TPP_EXPR_VALUE_KIND_FLOAT:
@@ -36301,7 +36350,9 @@ tpp_expr_value_inv(struct tpp_lexer *tpp_restrict lexer,
 	tpp_errno error;
 	switch (_tpp_expr_value_getkind(self)) {
 	case _TPP_EXPR_VALUE_KIND_INT:
-		error = tpp_expr_value_init_int(result, ~_tpp_expr_value_getint(self));
+		_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+		error = tpp_expr_intvalue_inv(_tpp_expr_value_getint(self),
+		                              _tpp_expr_value_getint(result));
 		break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS || TPP_HAVE_BUILTIN_EXPR_STRINGS
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
@@ -36332,15 +36383,34 @@ tpp_expr_value_add(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_int(result, lhs_value + _tpp_expr_value_getint(rhs));
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_add(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " + ", rhs);
+				if (!TPP_ISERR(error))
+					error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+			}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
 			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
-		case _TPP_EXPR_VALUE_KIND_FLOAT:
-			error = tpp_expr_value_init_float(result, (tpp_float)lhs_value + _tpp_expr_value_getfloat(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_FLOAT: {
+			tpp_intmax lhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lhs), &lhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " + ", rhs);
+				if (!TPP_ISERR(error))
+					lhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, (tpp_float)lhs_value + _tpp_expr_value_getfloat(rhs));
+		}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		case _TPP_EXPR_VALUE_KIND_STRING:
@@ -36355,9 +36425,19 @@ tpp_expr_value_add(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float lhs_value = _tpp_expr_value_getfloat(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_float(result, lhs_value + (tpp_float)_tpp_expr_value_getint(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_INT: {
+			tpp_intmax rhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &rhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " + ", rhs);
+				if (!TPP_ISERR(error))
+					rhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, lhs_value + (tpp_float)rhs_value);
+		}	break;
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			error = tpp_expr_value_init_float(result, lhs_value + _tpp_expr_value_getfloat(rhs));
 			break;
@@ -36417,15 +36497,34 @@ tpp_expr_value_sub(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_int(result, lhs_value - _tpp_expr_value_getint(rhs));
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_sub(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " - ", rhs);
+				if (!TPP_ISERR(error))
+					error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+			}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
 			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
-		case _TPP_EXPR_VALUE_KIND_FLOAT:
-			error = tpp_expr_value_init_float(result, (tpp_float)lhs_value - _tpp_expr_value_getfloat(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_FLOAT: {
+			tpp_intmax lhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lhs), &lhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " - ", rhs);
+				if (!TPP_ISERR(error))
+					lhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, (tpp_float)lhs_value - _tpp_expr_value_getfloat(rhs));
+		}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		case _TPP_EXPR_VALUE_KIND_STRING:
@@ -36440,9 +36539,19 @@ tpp_expr_value_sub(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float lhs_value = _tpp_expr_value_getfloat(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_float(result, lhs_value - (tpp_float)_tpp_expr_value_getint(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_INT: {
+			tpp_intmax rhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &rhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " - ", rhs);
+				if (!TPP_ISERR(error))
+					rhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, lhs_value - (tpp_float)rhs_value);
+		}	break;
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			error = tpp_expr_value_init_float(result, lhs_value - _tpp_expr_value_getfloat(rhs));
 			break;
@@ -36485,15 +36594,34 @@ tpp_expr_value_mul(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_int(result, lhs_value * _tpp_expr_value_getint(rhs));
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_mul(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " * ", rhs);
+				if (!TPP_ISERR(error))
+					error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+			}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
 			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
-		case _TPP_EXPR_VALUE_KIND_FLOAT:
-			error = tpp_expr_value_init_float(result, (tpp_float)lhs_value * _tpp_expr_value_getfloat(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_FLOAT: {
+			tpp_intmax lhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lhs), &lhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " * ", rhs);
+				if (!TPP_ISERR(error))
+					lhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, (tpp_float)lhs_value * _tpp_expr_value_getfloat(rhs));
+		}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		case _TPP_EXPR_VALUE_KIND_STRING: {
@@ -36511,9 +36639,19 @@ tpp_expr_value_mul(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float lhs_value = _tpp_expr_value_getfloat(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_float(result, lhs_value * (tpp_float)_tpp_expr_value_getint(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_INT: {
+			tpp_intmax rhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &rhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " * ", rhs);
+				if (!TPP_ISERR(error))
+					rhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, lhs_value * (tpp_float)rhs_value);
+		}	break;
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			error = tpp_expr_value_init_float(result, lhs_value * _tpp_expr_value_getfloat(rhs));
 			break;
@@ -36540,7 +36678,19 @@ tpp_expr_value_mul(struct tpp_lexer *tpp_restrict lexer,
 #define WANT_err_bad_types
 handle_multiply_string:
 		lhs_value  = _tpp_expr_value_getstring(lhs);
-		multiplier = _tpp_expr_value_getint(rhs);
+		error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &multiplier);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error != TPP_ENOENT)
+				return error;
+			error = tpp_warn_integer_overflow_binary(lexer, lhs, " * ", rhs);
+			if (TPP_ISERR(error))
+				return error;
+			multiplier = 0;
+#else /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			return error;
+#endif /* !TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+		}
 		if (multiplier < 0)
 			multiplier = 0; /* ??? */
 		if (multiplier > (tpp_intmax)TPP_SIZE_MAX)
@@ -36597,25 +36747,35 @@ tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			if (rhs_value == 0) {
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_div(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+			if (error == TPP_ENOENT) {
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 				error = tpp_lexer_warnf(lexer, TPP_W_DIVIDE_BY_ZERO);
 				if (TPP_ISERR(error))
 					break;
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-				error = tpp_expr_value_init_int(result, 0);
-			} else {
-				error = tpp_expr_value_init_int(result, lhs_value / rhs_value);
+				error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
 			}
-		}	break;
-#if TPP_HAVE_BUILTIN_EXPR_FLOATS
-		case _TPP_EXPR_VALUE_KIND_FLOAT:
-			error = tpp_expr_value_init_float(result, (tpp_float)lhs_value / _tpp_expr_value_getfloat(rhs));
 			break;
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+		case _TPP_EXPR_VALUE_KIND_FLOAT: {
+			tpp_intmax lhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lhs), &lhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " / ", rhs);
+				if (!TPP_ISERR(error))
+					lhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, (tpp_float)lhs_value / _tpp_expr_value_getfloat(rhs));
+		}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 		case _TPP_EXPR_VALUE_KIND_STRING:
@@ -36630,9 +36790,19 @@ tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
 		tpp_float lhs_value = _tpp_expr_value_getfloat(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT:
-			error = tpp_expr_value_init_float(result, lhs_value / (tpp_float)_tpp_expr_value_getint(rhs));
-			break;
+		case _TPP_EXPR_VALUE_KIND_INT: {
+			tpp_intmax rhs_value;
+			error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &rhs_value);
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " / ", rhs);
+				if (!TPP_ISERR(error))
+					rhs_value = 0;
+			}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			if (!TPP_ISERR(error))
+				error = tpp_expr_value_init_float(result, lhs_value / (tpp_float)rhs_value);
+		}	break;
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			error = tpp_expr_value_init_float(result, lhs_value / _tpp_expr_value_getfloat(rhs));
 			break;
@@ -36675,21 +36845,21 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			if (rhs_value == 0) {
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_mod(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+			if (error == TPP_ENOENT) {
 #if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 				error = tpp_lexer_warnf(lexer, TPP_W_DIVIDE_BY_ZERO);
 				if (TPP_ISERR(error))
 					break;
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-				error = tpp_expr_value_init_int(result, 0);
-			} else {
-				error = tpp_expr_value_init_int(result, lhs_value % rhs_value);
+				error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
 			}
-		}	break;
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -36740,12 +36910,20 @@ tpp_expr_value_shl(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			error = tpp_expr_value_init_int(result, lhs_value << rhs_value);
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_shl(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " << ", rhs);
+				if (!TPP_ISERR(error))
+					error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+			}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -36795,12 +36973,20 @@ tpp_expr_value_shr(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			error = tpp_expr_value_init_int(result, lhs_value >> rhs_value);
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_shr(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+#if TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				error = tpp_warn_integer_overflow_binary(lexer, lhs, " >> ", rhs);
+				if (!TPP_ISERR(error))
+					error = tpp_expr_intvalue_init_zero(_tpp_expr_value_getint(result));
+			}
+#endif /* TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -36850,12 +37036,13 @@ tpp_expr_value_and(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			error = tpp_expr_value_init_int(result, lhs_value & rhs_value);
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_and(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -36905,12 +37092,13 @@ tpp_expr_value_xor(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			error = tpp_expr_value_init_int(result, lhs_value ^ rhs_value);
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_xor(_tpp_expr_value_getint(lhs),
+			                              _tpp_expr_value_getint(rhs),
+			                              _tpp_expr_value_getint(result));
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -36960,12 +37148,13 @@ tpp_expr_value_or(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			error = tpp_expr_value_init_int(result, lhs_value | rhs_value);
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+			error = tpp_expr_intvalue_or(_tpp_expr_value_getint(lhs),
+			                             _tpp_expr_value_getint(rhs),
+			                             _tpp_expr_value_getint(result));
+			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
 			goto err_bad_types;
@@ -37015,23 +37204,34 @@ tpp_expr_value_cmp_impl(struct tpp_lexer *tpp_restrict lexer,
 	switch (_tpp_expr_value_getkind(lhs)) {
 
 	case _TPP_EXPR_VALUE_KIND_INT: {
-		tpp_intmax lhs_value = _tpp_expr_value_getint(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
-		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
-			if (lhs_value < rhs_value) {
-				*p_delta = -1;
-			} else if (lhs_value > rhs_value) {
-				*p_delta = 1;
-			} else {
-				*p_delta = 0;
-			}
-			return TPP_EOK;
-		}	break;
+		case _TPP_EXPR_VALUE_KIND_INT:
+			return tpp_expr_intvalue_cmp(_tpp_expr_value_getint(lhs),
+			                             _tpp_expr_value_getint(rhs),
+			                             p_delta);
 
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT: {
+			tpp_intmax lhs_value;
 			tpp_float rhs_value = _tpp_expr_value_getfloat(rhs);
+			tpp_errno error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lhs), &lhs_value);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error != TPP_ENOENT)
+					return error;
+				error = tpp_expr_intvalue_isneg(_tpp_expr_value_getint(lhs));
+				if (error == TPP_ENOENT) {
+					*p_delta = 1; /* VERY_LARGE_POSITIVE_INT > float */
+				} else {
+					*p_delta = -1; /* VERY_LARGE_NEGATIVE_INT < float */
+					if (TPP_ISERR(error))
+						return error;
+				}
+				break;
+#else /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				return error;
+#endif /* !TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			}
 			if (lhs_value < rhs_value) {
 				*p_delta = -1;
 			} else if (lhs_value > rhs_value) {
@@ -37058,7 +37258,25 @@ tpp_expr_value_cmp_impl(struct tpp_lexer *tpp_restrict lexer,
 		tpp_float lhs_value = _tpp_expr_value_getfloat(lhs);
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT: {
-			tpp_intmax rhs_value = _tpp_expr_value_getint(rhs);
+			tpp_intmax rhs_value;
+			tpp_errno error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(rhs), &rhs_value);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error != TPP_ENOENT)
+					return error;
+				error = tpp_expr_intvalue_isneg(_tpp_expr_value_getint(rhs));
+				if (error == TPP_ENOENT) {
+					*p_delta = -1; /* float < VERY_LARGE_POSITIVE_INT */
+				} else {
+					*p_delta = 1; /* float > VERY_LARGE_NEGATIVE_INT */
+					if (TPP_ISERR(error))
+						return error;
+				}
+				break;
+#else /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				return error;
+#endif /* !TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			}
 			if (lhs_value < rhs_value) {
 				*p_delta = -1;
 			} else if (lhs_value > rhs_value) {
@@ -37218,7 +37436,7 @@ tpp_expr_value_lengthof(struct tpp_lexer *tpp_restrict lexer,
 	}
 	self_value = _tpp_expr_value_getstring(self);
 	lengthof   = tpp_string_len(self_value);
-	return tpp_expr_value_init_int(result, lengthof);
+	return tpp_expr_value_init_size(result, lengthof);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL
@@ -37229,21 +37447,32 @@ tpp_expr_value_getindex(struct tpp_lexer *tpp_restrict lexer,
 	tpp_string const *lhs_value;
 	tpp_intmax index_value;
 	tpp_char result_value;
+	tpp_errno error;
 	if (!tpp_expr_value_isstring(lhs) || !tpp_expr_value_isint(index)) {
-		tpp_errno error = tpp_warn_bad_operands_binary2(lexer, lhs, "[", index, "]");
+		error = tpp_warn_bad_operands_binary2(lexer, lhs, "[", index, "]");
 		if (TPP_ISERR(error))
 			return error;
 		return tpp_expr_value_copy(result, lhs);
 	}
-	lhs_value   = _tpp_expr_value_getstring(lhs);
-	index_value = _tpp_expr_value_getint(index);
+	lhs_value = _tpp_expr_value_getstring(lhs);
+	error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(index), &index_value);
+	if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+		if (error == TPP_ENOENT) {
+			index_value = 0;
+		} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+		{
+			return error;
+		}
+	}
 	if (index_value < 0 || index_value > (tpp_intmax)tpp_string_len(lhs_value))
 		index_value = tpp_string_len(lhs_value); /* XXX: TPP_W_INDEX_OUT_OF_BOUNDS */
 	result_value = tpp_string_str(lhs_value)[(tpp_size)index_value];
 	/* XXX: If hosting compiler has "-fsigned-char", must:
 	 *      >> result_value = (tpp_intmax)(signed char)result_value;
 	 * iow: values [128,255] must become negative [-128,-1] */
-	return tpp_expr_value_init_int(result, result_value);
+	return tpp_expr_value_init_char(result, result_value);
 }
 
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 5)) tpp_errno TPPCALL
@@ -37252,6 +37481,7 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
                         /*in*/ tpp_expr_value *lo,
                         /*in*/ tpp_expr_value *hi,
                         /*out*/ tpp_expr_value *tpp_restrict result) {
+	tpp_errno error;
 	tpp_string const *lhs_value;
 	tpp_string *result_string;
 	tpp_intmax lo_value, hi_value;
@@ -37259,15 +37489,41 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	if (!tpp_expr_value_isstring(lhs) ||
 	    (lo && !tpp_expr_value_isint(lo)) ||
 	    (hi && !tpp_expr_value_isint(hi))) {
-		tpp_errno error = tpp_warn_bad_operands_trinary(lexer, lhs, "[", lo, ":", hi, "]");
+		error = tpp_warn_bad_operands_trinary(lexer, lhs, "[", lo, ":", hi, "]");
 		if (TPP_ISERR(error))
 			return error;
 		return tpp_expr_value_copy(result, lhs);
 	}
 	lhs_value = _tpp_expr_value_getstring(lhs);
 	lhs_size  = tpp_string_len(lhs_value);
-	lo_value  = lo ? _tpp_expr_value_getint(lo) : (tpp_intmax)0;
-	hi_value  = hi ? _tpp_expr_value_getint(hi) : (tpp_intmax)lhs_size;
+	lo_value  = (tpp_intmax)0;
+	hi_value  = (tpp_intmax)lhs_size;
+	if (lo) {
+		error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(lo), &lo_value);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				lo_value = (tpp_intmax)0;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				return error;
+			}
+		}
+	}
+	if (hi) {
+		error = tpp_expr_intvalue_asintmax(_tpp_expr_value_getint(hi), &hi_value);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				hi_value = (tpp_intmax)lhs_size;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				return error;
+			}
+		}
+	}
 	if (lo_value >= (tpp_intmax)lhs_size || !lhs_size)
 		goto return_empty_string;
 	if (lo_value < 0) {
@@ -37312,9 +37568,16 @@ tpp_expr_value_asbool(struct tpp_lexer *tpp_restrict lexer,
                       bool *tpp_restrict p_bool_result) {
 	(void)lexer;
 	switch (_tpp_expr_value_getkind(self)) {
-	case _TPP_EXPR_VALUE_KIND_INT:
-		*p_bool_result = _tpp_expr_value_getint(self) != 0;
-		break;
+	case _TPP_EXPR_VALUE_KIND_INT: {
+		tpp_errno error = tpp_expr_intvalue_iszero(_tpp_expr_value_getint(self));
+		if (error == TPP_ENOENT) {
+			*p_bool_result = true; /* non-zero */
+		} else if (!TPP_ISERR(error)) {
+			*p_bool_result = false; /* zero */
+		} else {
+			return error;
+		}
+	}	break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 	case _TPP_EXPR_VALUE_KIND_FLOAT:
 		*p_bool_result = _tpp_expr_value_getfloat(self) != 0.0;
@@ -37347,9 +37610,9 @@ tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer,
 		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-		error = tpp_expr_value_init_int(result, 0);
+		error = tpp_expr_value_init_expr_intvalue(result, 0);
 	} else {
-		error = tpp_expr_value_init_int(result, lhs_value / rhs_value);
+		error = tpp_expr_value_init_expr_intvalue(result, lhs_value / rhs_value);
 	}
 	return error;
 }
@@ -37368,9 +37631,9 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
 		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
-		error = tpp_expr_value_init_int(result, 0);
+		error = tpp_expr_value_init_expr_intvalue(result, 0);
 	} else {
-		error = tpp_expr_value_init_int(result, lhs_value % rhs_value);
+		error = tpp_expr_value_init_expr_intvalue(result, lhs_value % rhs_value);
 	}
 	return error;
 }
@@ -37381,16 +37644,11 @@ tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer,
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#ifndef tpp_expr_value_printrepr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
                          tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg) {
-#if TPP_HAVE_BUILTIN_EXPR_FLOATS
-	char value_buffer[TPP_ITOA_MAXLEN < TPP_FTOA_MAXLEN ? TPP_FTOA_MAXLEN : TPP_ITOA_MAXLEN];
-#else /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
-	char value_buffer[TPP_ITOA_MAXLEN];
-#endif /* !TPP_HAVE_BUILTIN_EXPR_FLOATS */
-	char *value_ptr;
 	(void)lexer;
 #if _TPP_EXPR_VALUE_KIND_MULTIPLE
 	switch (_tpp_expr_value_getkind(self)) {
@@ -37400,6 +37658,7 @@ tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
 
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 	case _TPP_EXPR_VALUE_KIND_FLOAT: {
+		char value_buffer[TPP_FTOA_MAXLEN];
 		tpp_float value = _tpp_expr_value_getfloat(self);
 		tpp_size value_len = tpp_ftoa(value_buffer, value);
 		return tpp_formatprinter_print_cstr(printer, arg, value_buffer, value_len);
@@ -37429,12 +37688,10 @@ tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
 	default: tpp_unreachable();
 	}
 #endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
-	value_ptr = tpp_itoa(value_buffer, _tpp_expr_value_getint(self));
-	return tpp_formatprinter_print_cstr(printer, arg, value_ptr,
-	                                    (tpp_size)((value_buffer +
-	                                                TPP_ITOA_MAXLEN) -
-	                                               value_ptr));
+	return tpp_expr_intvalue_printrepr(lexer, _tpp_expr_value_getint(self),
+	                                   printer, arg);
 }
+#endif /* !tpp_expr_value_printrepr */
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
@@ -46163,6 +46420,7 @@ again_yield_and_handle:
 #if TPP_HAVE_TOK_INT
 	{
 		tpp_intmax mode;
+		tpp_expr_intvalue mode_expr;
 		bool negative;
 	TPP_CASE_TPP_TOK_INT
 		negative = false;
@@ -46183,10 +46441,23 @@ again_yield_and_handle:
 				break;
 			}
 		}
-		error = tpp_lexer_decodeint(self, &mode);
+		error = tpp_lexer_decodeint(self, &mode_expr);
 		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			break;
+		}
+		error = tpp_expr_intvalue_asintmax(&mode_expr, &mode);
+		tpp_expr_intvalue_fini(&mode_expr);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				mode = 0;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				tok = TPP_TOK_OFERR(error);
+				break;
+			}
 		}
 		if (negative)
 			mode = -mode;
@@ -46243,11 +46514,26 @@ again_handle_set_warning_state:
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax warning_number;
 			tpp_warning_id warning_id;
-			error = tpp_lexer_decodeint(self, &warning_number);
+			tpp_expr_intvalue warning_number_expr;
+			error = tpp_lexer_decodeint(self, &warning_number_expr);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				break;
 			}
+			error = tpp_expr_intvalue_asintmax(&warning_number_expr, &warning_number);
+			tpp_expr_intvalue_fini(&warning_number_expr);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					warning_number = -1;
+				} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				{
+					tok = TPP_TOK_OFERR(error);
+					break;
+				}
+			}
+
 			warning_id = TPP_W_COUNT;
 #ifdef UINT_MAX
 			if (warning_number >= 0 && warning_number <= (tpp_intmax)(tpp_uintmax)UINT_MAX)
@@ -47116,9 +47402,22 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 
 	/* Next token must be an integer */
 	if (TPP_TOK_ISINT(tok)) {
-		error = tpp_lexer_decodeint(self, &value);
+		tpp_expr_intvalue expr_value;
+		error = tpp_lexer_decodeint(self, &expr_value);
 		if (TPP_ISERR(error))
 			return error;
+		error = tpp_expr_intvalue_asintmax(&expr_value, &value);
+		tpp_expr_intvalue_fini(&expr_value);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				value = 0;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				return error;
+			}
+		}
 		value &= TPP_LEGACY_KEYWORD_FLAG_MASK;
 		if (data.tlpptskfd_keyword) {
 			error = tpp_keyword_set_legacy_flags(data.tlpptskfd_keyword,
@@ -48053,14 +48352,17 @@ again_yield_nextfile:
 #if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start) {
+	tpp_errno error;
 	unsigned int radix = 10;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char const *suffix_start = iter;
 	tpp_char ch;
-	*result = 0;
+	error = tpp_expr_intvalue_init_zero(result);
+	if (TPP_ISERR(error))
+		return error;
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
@@ -48121,7 +48423,6 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 	}
 
 	for (;;) {
-		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		if (tpp_ascii_isdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asdigit(ch);
@@ -48147,13 +48448,13 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 		}
 		if (digit >= radix)
 			break;
-		old_value = *result;
-		new_value = old_value;
-		new_value *= radix;
-		new_value += digit;
-		*result = new_value;
-		if (new_value < old_value)
-			goto handle_invalid;
+		error = tpp_expr_intvalue_muladd(result, radix, digit);
+		if (TPP_ISERR(error)) {
+			if (error == TPP_ENOENT)
+				goto handle_invalid;
+			goto err_r;
+		}
+
 		suffix_start = iter;
 #ifdef WANT_continue_with_ch
 #undef WANT_continue_with_ch
@@ -48173,21 +48474,28 @@ handle_invalid:
 	if (p_suffix_start)
 		*p_suffix_start = end;
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-	return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+	error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-	return TPP_EOK;
+	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+err_r:
+	if (TPP_ISERR(error))
+		tpp_expr_intvalue_fini(result);
+	return error;
 }
 #endif /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT */
 
 #if TPP_HAVE_TOK_PASCAL_HEX
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
-                            tpp_intmax *tpp_restrict result) {
+                            /*out*/ tpp_expr_intvalue *tpp_restrict result) {
+	tpp_errno error;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char ch;
-	*result = 0;
+	error = tpp_expr_intvalue_init_zero(result);
+	if (TPP_ISERR(error))
+		return error;
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
@@ -48197,7 +48505,6 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 	if (iter >= end)
 		goto handle_invalid;
 	do {
-		tpp_intmax new_value, old_value;
 		unsigned int digit;
 		ch   = *iter++;
 		iter = tpp_preparse_skipbse_fwd(self, iter, end);
@@ -48210,21 +48517,24 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 		} else {
 			goto handle_invalid;
 		}
-		old_value = *result;
-		new_value = old_value;
-		new_value <<= 4;
-		new_value += digit;
-		*result = new_value;
-		if (new_value < old_value)
-			goto handle_invalid;
+		error = tpp_expr_intvalue_muladd(result, 16, digit);
+		if (TPP_ISERR(error)) {
+			if (error == TPP_ENOENT)
+				goto handle_invalid;
+			goto err_r;
+		}
 	} while (iter < end);
 	return TPP_EOK;
 handle_invalid:
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-	return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+	error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-	return TPP_EOK;
+	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+err_r:
+	if (TPP_ISERR(error))
+		tpp_expr_intvalue_fini(result);
+	return error;
 }
 #endif /* TPP_HAVE_TOK_PASCAL_HEX */
 
@@ -48244,12 +48554,12 @@ handle_invalid:
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:       Success
+ * @return: TPP_EOK:       Success (caller must finalize `*result`)
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 	tpp_assert(TPP_TOK_ISNUMBER(tok));
@@ -48267,14 +48577,20 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 			++newend;
 		if (newend <= start) {
 			/* Special case for something like `.123` -- this can never be an integer :( */
-			*result = 0;
+			tpp_errno error;
+			error = tpp_expr_intvalue_init_zero(result);
+			if (TPP_ISERR(error))
+				return error;
 			if (p_suffix_start)
 				*p_suffix_start = tpp_lexer_gettokenend(self);
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
-			return tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+			error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-			return TPP_EOK;
+			error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+			if (TPP_ISERR(error))
+				tpp_expr_intvalue_fini(result);
+			return error;
 		}
 		if (newend < end) {
 			newend = tpp_preparse_skipbse_bck(self, start, newend);
@@ -48349,9 +48665,26 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TOK_INT
 	TPP_CASE_TPP_TOK_INT {
 #if TPP_HAVE_LEXER_DECODEINT
-		tpp_intmax intvalue;
-		tpp_errno error = tpp_lexer_decodeint_ex(self, &intvalue, p_suffix_start);
-		*result = (tpp_float)intvalue;
+		tpp_expr_intvalue expr_intvalue;
+		tpp_errno error = tpp_lexer_decodeint_ex(self, &expr_intvalue, p_suffix_start);
+		if (!TPP_ISERR(error)) {
+			tpp_intmax intvalue;
+			error = tpp_expr_intvalue_asintmax(&expr_intvalue, &intvalue);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_INVALID_INTEGER
+					error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
+#else  /* TPP_HAVE_TPP_W_INVALID_INTEGER */
+					error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
+				}
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				intvalue = 0;
+			}
+			tpp_expr_intvalue_fini(&expr_intvalue);
+			*result = (tpp_float)intvalue;
+		}
 		return error;
 #else /* TPP_HAVE_LEXER_DECODEINT */
 		*result = 0.0;
@@ -48380,17 +48713,15 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
-#ifndef tpp_lexer_decodeint_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result) {
-	tpp_intmax value;
+	tpp_expr_intvalue value;
 	tpp_errno error = tpp_lexer_decodeint(self, &value);
 	if (!TPP_ISERR(error))
-		error = tpp_expr_value_init_int(result, value);
+		error = tpp_expr_value_init_expr_intvalue(result, value);
 	return error;
 }
-#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float
@@ -48399,7 +48730,6 @@ tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#ifndef tpp_lexer_decodefloat_expr
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result) {
@@ -48409,7 +48739,6 @@ tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
 		error = tpp_expr_value_init_float(result, value);
 	return error;
 }
-#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 /************************************************************************/
@@ -48542,7 +48871,6 @@ tpp_lexer_parseembed(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_TOK_ISINT(tpp_lexer_gettok(self)));
 	for (;;) {
 		tpp_char byte;
-		tpp_intmax intval;
 		tpp_token_id tok;
 		tpp_errno error;
 #if TPP_HAVE_FILE_ENCODING_EMBED
@@ -48594,12 +48922,27 @@ yield_at_eof_when_expecting_int:;
 		} else
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 		{
-			error = tpp_lexer_decodeint(self, &intval);
+			tpp_expr_intvalue intval_expr;
+			tpp_intmax intval;
+			error = tpp_lexer_decodeint(self, &intval_expr);
 			if (TPP_ISERR(error)) {
+handle_integer_decode_error:
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return TPP_SSIZE_OFERR(error);
 			}
+			error = tpp_expr_intvalue_asintmax(&intval_expr, &intval);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					intval = -1;
+				} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				{
+					goto handle_integer_decode_error;
+				}
+			}
+
 			if (intval < 0 || intval > 0xff) {
 				if (p_final_state)
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
@@ -50205,7 +50548,7 @@ handle_offset_param:
 		if (TPP_ISERR(error))
 			return error;
 		if (tpp_expr_value_isint(&int_value_expr)) {
-			error = tpp_expr_value_asint(&int_value_expr, &int_value);
+			error = tpp_expr_value_asintmax(&int_value_expr, &int_value);
 		} else {
 			bool as_bool;
 			error = tpp_expr_value_asbool(lexer, &int_value_expr, &as_bool);
@@ -50808,15 +51151,28 @@ tpp_lexer_handle_digit_directive(tpp_lexer *tpp_restrict self,
 	tpp_errno error;
 	tpp_size rel_digit_loc;
 	tpp_intmax new_linenumber;
+	tpp_expr_intvalue temp_intvalue;
 	TPP_REF tpp_string *new_filename = NULL;
 	tpp_token_id tok;
 	directive_start = file->tf_pos;
 	file->tf_pos = directive_iter;
-	error = tpp_lexer_decodeint(self, &new_linenumber);
+	error = tpp_lexer_decodeint(self, &temp_intvalue);
 	if (TPP_ISERR(error)) {
 err_autopopfile_break_error:
 		tpp_file_autopopfile_break(file);
 		return TPP_TOK_OFERR(error);
+	}
+	error = tpp_expr_intvalue_asintmax(&temp_intvalue, &new_linenumber);
+	tpp_expr_intvalue_fini(&temp_intvalue);
+	if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+		if (error == TPP_ENOENT) {
+			new_linenumber = -1; /* Undefined... */
+		} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+		{
+			goto err_autopopfile_break_error;
+		}
 	}
 
 	/* Load the remainder of the directive. */
@@ -50872,13 +51228,23 @@ err_tok_rollback:
 			tok = tpp_lexer_yield_blocking(self);
 		if (!TPP_TOK_ISINT(tok))
 			break;
-		error = tpp_lexer_decodeint(self, &user_flag);
+		error = tpp_lexer_decodeint(self, &temp_intvalue);
 		if (TPP_ISERR(error)) {
-#if TPP_HAVE_FILE_DUMMY
 err_error_rollback_new_filename:
-#endif /* TPP_HAVE_FILE_DUMMY */
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_rollback_new_filename;
+		}
+		error = tpp_expr_intvalue_asintmax(&temp_intvalue, &user_flag);
+		tpp_expr_intvalue_fini(&temp_intvalue);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				user_flag = -1; /* Undefined... */
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				goto err_error_rollback_new_filename;
+			}
 		}
 		switch (user_flag) {
 
@@ -51043,10 +51409,24 @@ err_tok_rollback:
 #if TPP_HAVE_TOK_INT
 	if (TPP_TOK_ISINT(tok)) {
 		/* Decode line number */
-		error = tpp_lexer_decodeint(self, &new_linenumber);
+		tpp_expr_intvalue new_linenumber_expr;
+		error = tpp_lexer_decodeint(self, &new_linenumber_expr);
 		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_rollback;
+		}
+		error = tpp_expr_intvalue_asintmax(&new_linenumber_expr, &new_linenumber);
+		tpp_expr_intvalue_fini(&new_linenumber_expr);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				new_linenumber = -1; /* Undefined... */
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				tok = TPP_TOK_OFERR(error);
+				goto err_tok_rollback;
+			}
 		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
@@ -54169,6 +54549,7 @@ handle_status:
 #if TPP_HAVE_TOK_INT
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax value;
+			tpp_expr_intvalue expr_value;
 			tpp_char value_ch[1];
 
 			/* (try to) stream #embed-data directly into buffer */
@@ -54188,10 +54569,23 @@ handle_status:
 				goto again_handle_tok;
 #endif /* TPP_HAVE_LEXER_PARSEEMBED */
 
-			error = tpp_lexer_decodeint(self, &value);
+			error = tpp_lexer_decodeint(self, &expr_value);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_builder;
+			}
+			error = tpp_expr_intvalue_asintmax(&expr_value, &value);
+			tpp_expr_intvalue_fini(&expr_value);
+			if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					value = -1;
+				} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+				{
+					tok = TPP_TOK_OFERR(error);
+					goto err_tok_builder;
+				}
 			}
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 			if ((tpp_intmax)(tpp_char)value != value) {
@@ -54582,9 +54976,22 @@ again_yield:
 	}
 	*p_value = 0;
 	if (TPP_TOK_ISINT(tok)) {
-		tpp_errno error = tpp_lexer_decodeint(self, p_value);
+		tpp_expr_intvalue expr_value;
+		tpp_errno error = tpp_lexer_decodeint(self, &expr_value);
 		if (TPP_ISERR(error))
 			return TPP_TOK_OFERR(error);
+		error = tpp_expr_intvalue_asintmax(&expr_value, p_value);
+		tpp_expr_intvalue_fini(&expr_value);
+		if (TPP_ISERR(error)) {
+#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+			if (error == TPP_ENOENT) {
+				*p_value = -1;
+			} else
+#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+			{
+				return TPP_TOK_OFERR(error);
+			}
+		}
 		do {
 			tok = tpp_lexer_yield_blocking(self);
 		} while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok));
@@ -59065,7 +59472,6 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 
 
 #if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
-#ifndef tpp_lexer_parsecharacter_expr
 /* Convenience wrapper around `tpp_lexer_parsecharacter_literal()`
  * On success (!TPP_ISERR(return)), caller must "tpp_expr_value_fini(result)"
  *
@@ -59085,9 +59491,16 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
 	tpp_errno error = tpp_lexer_parsecharacter_literal(self, &value, flags);
 	if (TPP_ISERR(error))
 		return error;
-	return tpp_expr_value_init_int(result, (tpp_intmax)value);
+	error = tpp_expr_value_init_uintmax(result, value);
+	if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
+		error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
+#else /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+		error = TPP_EOK;
+#endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
+	}
+	return error;
 }
-#endif /* !tpp_lexer_parsecharacter_expr */
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 

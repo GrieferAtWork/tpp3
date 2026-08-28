@@ -2519,12 +2519,12 @@ tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
  *                         suffix always ends at `tpp_lexer_gettokenend(self)`,
  *                         and if there is no suffix, this function will store
  *                         a pointer to `tpp_lexer_gettokenend(self)` instead.
- * @return: TPP_EOK:       Success
+ * @return: TPP_EOK:       Success (caller must finalize `*result`)
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
-                       tpp_intmax *tpp_restrict result,
+                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start);
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)
@@ -2536,14 +2536,9 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEINT_EXPR
-/* TODO: Instead of being overwritable, `tpp_expr_value` should be split into different types,
- *       and `tpp_lexer_decodeint_ex()` should use a set of macros that would easily allow one
- *       to implement arbitrary precision integers *WITHOUT* re-implementing integer parsing! */
-#ifndef tpp_lexer_decodeint_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result);
-#endif /* !tpp_lexer_decodeint_expr */
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
 
 
@@ -2568,11 +2563,9 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EUSER(*):  User-defined error from hook */
 #if TPP_HAVE_LEXER_DECODEFLOAT_EXPR
-#ifndef tpp_lexer_decodefloat_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodefloat_expr(tpp_lexer *tpp_restrict self,
                            tpp_expr_value *tpp_restrict result);
-#endif /* !tpp_lexer_decodefloat_expr */
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT_EXPR */
 
 
@@ -2806,12 +2799,10 @@ tpp_lexer_parsestring_expr(tpp_lexer *tpp_restrict self,
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O error while yielding to next token
  * @return: TPP_EUSER(*):  User-defined error from hook */
-#ifndef tpp_lexer_parsecharacter_expr
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,
                               unsigned int flags);
-#endif /* !tpp_lexer_parsecharacter_expr */
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 
