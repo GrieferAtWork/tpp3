@@ -5185,6 +5185,29 @@ TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 1(TPP_WG_BIG_CHARACTER), 1(2022), TPP_WST
 
 
 /************************************************************************/
+/* -Wdivide-by-zero                                                     */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO
+#define TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO \
+	(TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE)
+#endif /* !TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO */
+#if TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO
+#ifndef TPP_WGNAME_DIVIDE_BY_ZERO
+#define TPP_WGNAME_DIVIDE_BY_ZERO 1("divide-by-zero")
+#endif /* !TPP_WGNAME_DIVIDE_BY_ZERO */
+#define TPP_WG_DIVIDE_BY_ZERO TPP_WG_DIVIDE_BY_ZERO
+TPP_WGROUP(TPP_WG_DIVIDE_BY_ZERO, TPP_WGNAME_DIVIDE_BY_ZERO, TPP_WSTATE_ERROR_OR_FATAL)
+#endif /* TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO */
+
+#if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
+#define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
+TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 1(TPP_WG_DIVIDE_BY_ZERO), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
+            "division by zero")
+#endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -5231,12 +5254,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_INTEGER_OVERFLOW, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "integer overflow/underflow in %[%s%s%s%]")
 #endif /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
-
-#if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
-#define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
-TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
-            "division by zero")
-#endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS

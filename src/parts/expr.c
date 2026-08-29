@@ -1292,13 +1292,13 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	if (lo_value < 0) {
 		lo_value += (tpp_intmax)lhs_size;
 		if (lo_value < 0)
-			lo_value = (tpp_intmax)lhs_size - ((-lo_value) % (tpp_intmax)lhs_size);
+			lo_value = 0;
 	}
 	tpp_assert((tpp_size)lo_value <= lhs_size);
 	if (hi_value < 0) {
 		hi_value += lhs_size;
 		if (hi_value < 0)
-			hi_value = (tpp_intmax)lhs_size - ((-hi_value) % (tpp_intmax)lhs_size);
+			hi_value = 0;
 	} else if (hi_value > (tpp_intmax)lhs_size) {
 		hi_value = (tpp_intmax)lhs_size;
 	}

@@ -2194,7 +2194,6 @@ tpp_errno tpp_intvalue_shl(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p
 
 /* >> [p_result] = [lhs] >> [rhs];
  * @return: TPP_EOK:      OK
- * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 tpp_errno tpp_intvalue_shr(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
 

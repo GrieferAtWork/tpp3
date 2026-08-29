@@ -4973,6 +4973,29 @@ TPP_WARNING(TPP_W_CHARACTER_TOO_LARGE, 1(TPP_WG_BIG_CHARACTER), 1(2022), TPP_WST
 
 
 /************************************************************************/
+/* -Wdivide-by-zero                                                     */
+/************************************************************************/
+#ifndef TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO
+#define TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO \
+	(TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE)
+#endif /* !TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO */
+#if TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO
+#ifndef TPP_WGNAME_DIVIDE_BY_ZERO
+#define TPP_WGNAME_DIVIDE_BY_ZERO 1("divide-by-zero")
+#endif /* !TPP_WGNAME_DIVIDE_BY_ZERO */
+#define TPP_WG_DIVIDE_BY_ZERO TPP_WG_DIVIDE_BY_ZERO
+TPP_WGROUP(TPP_WG_DIVIDE_BY_ZERO, TPP_WGNAME_DIVIDE_BY_ZERO, TPP_WSTATE_ERROR_OR_FATAL)
+#endif /* TPP_HAVE_TPP_WG_DIVIDE_BY_ZERO */
+
+#if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
+#define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
+TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 1(TPP_WG_DIVIDE_BY_ZERO), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
+            "division by zero")
+#endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
+
+
+
+/************************************************************************/
 /* Misc warnings...                                                     */
 /************************************************************************/
 #if TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK
@@ -5019,12 +5042,6 @@ TPP_WARNING(TPP_W_BAD_EXPRESSION_OPERANDS, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
 TPP_WARNING(TPP_W_INTEGER_OVERFLOW, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "integer overflow/underflow in %[%s%s%s%]")
 #endif /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
-
-#if TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
-#define TPP_W_DIVIDE_BY_ZERO TPP_W_DIVIDE_BY_ZERO
-TPP_WARNING(TPP_W_DIVIDE_BY_ZERO, 0(), 1(2124), TPP_WSTATE_ERROR_OR_FATAL,
-            "division by zero")
-#endif /* TPP_HAVE_TPP_W_DIVIDE_BY_ZERO */
 
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
@@ -14567,18 +14584,18 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
 	 (lhs)->TPP_INTERNAL(teiv_value) > 0                                                           \
 	 ? ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
 	    ? ((lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* +lhs * +lhs */                                                          \
+	       ? TPP_ENOENT /* +lhs * +rhs */                                                          \
 	       : TPP_EOK)                                                                              \
-	    : ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* +lhs * -lhs */                                                          \
+	    : ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN / (lhs)->TPP_INTERNAL(teiv_value))   \
+	       ? TPP_ENOENT /* +lhs * -rhs */                                                          \
 	       : TPP_EOK))                                                                             \
 	 : ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
-	    ? ((lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* -lhs * +lhs */                                                          \
+	    ? ((lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN / (rhs)->TPP_INTERNAL(teiv_value))   \
+	       ? TPP_ENOENT /* -lhs * +rhs */                                                          \
 	       : TPP_EOK)                                                                              \
 	    : ((lhs)->TPP_INTERNAL(teiv_value) &&                                                      \
 	       ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(teiv_value))) \
-	       ? TPP_ENOENT /* -lhs * -lhs */                                                          \
+	       ? TPP_ENOENT /* -lhs * -rhs */                                                          \
 	       : TPP_EOK)))
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
 #define tpp_intvalue_mul(lhs, rhs, p_result)                                   \
@@ -14640,19 +14657,13 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
 
 /* >> [p_result] = [lhs] >> [rhs];
  * @return: TPP_EOK:      OK
- * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
-#if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_shr(lhs, rhs, p_result)                                                                        \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)),   \
-	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS ||                                                       \
-	  (lhs)->TPP_INTERNAL(teiv_value) != ((p_result)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value))) \
-	 ? TPP_ENOENT                                                                                                   \
-	 : TPP_EOK)
-#else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_shr(lhs, rhs, p_result) \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)), TPP_EOK)
-#endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
+#define tpp_intvalue_shr(lhs, rhs, p_result)                                                                      \
+	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)), \
+	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS                                                        \
+	  ? (void)((p_result)->TPP_INTERNAL(teiv_value) = 0)                                                          \
+	  : (void)0),                                                                                                 \
+	 TPP_EOK)
 
 /* >> [p_result] = [lhs] & [rhs];
  * @return: TPP_EOK:      OK

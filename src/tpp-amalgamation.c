@@ -37470,13 +37470,13 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	if (lo_value < 0) {
 		lo_value += (tpp_intmax)lhs_size;
 		if (lo_value < 0)
-			lo_value = (tpp_intmax)lhs_size - ((-lo_value) % (tpp_intmax)lhs_size);
+			lo_value = 0;
 	}
 	tpp_assert((tpp_size)lo_value <= lhs_size);
 	if (hi_value < 0) {
 		hi_value += lhs_size;
 		if (hi_value < 0)
-			hi_value = (tpp_intmax)lhs_size - ((-hi_value) % (tpp_intmax)lhs_size);
+			hi_value = 0;
 	} else if (hi_value > (tpp_intmax)lhs_size) {
 		hi_value = (tpp_intmax)lhs_size;
 	}
@@ -59751,11 +59751,6 @@ handle_comment:
 			token->tt_end += 2;
 		} else
 #endif /* TPP_HAVE_TRIGRAPHS */
-#if TPP_HAVE_DIGRAPHS
-		if (*token->tt_start == '%') {
-			token->tt_end += 1;
-		} else
-#endif /* TPP_HAVE_DIGRAPHS */
 		{
 		}
 	}	TPP_FALLTHRU
@@ -59769,7 +59764,7 @@ handle_comment:
 		/* XXX: This probably shouldn't expand macros if it ends up being an assertion...
 		 *      But if it ends up being a string, then we *must* expand macros...
 		 * However: TPP2 also used to expand macros here, so there's that excuse I
-		 *          needed. Just follow whatt TPP2 did and always expand macros here! */
+		 *          needed. Just follow what TPP2 did and always expand macros here! */
 		tok = tpp_lexer_yield_forexpr(self);
 		if (TPP_TOK_ISERR(tok))
 			return TPP_TOK_ASERR(tok);
@@ -59874,6 +59869,18 @@ handle_comment:
 				tok = tpp_lexer_yield_forexpr(self);
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
+				/* Assume that this is the result of the user forgetting to use `#!`:
+				 * >> #define IS_DEFINED(x) (defined(x) && x)
+				 * >> #define MY_FEATURE 42
+				 * >> #if IS_DEFINED(MY_FEATURE)
+				 * >> ...
+				 * >> #endif
+				 *
+				 * Here, we'll see `defined(42) && 42`, which is incorrect, and
+				 * the user should fix this by writing the following instead:
+				 * >> #define IS_DEFINED(x) (defined(#!x) && x)
+				 */
+				is_defined = true;
 			}
 #endif /* TPP_HAVE_TOK_STRINGLIKE || TPP_HAVE_TOK_INT || TPP_HAVE_TOK_FLOAT */
 		}
@@ -60117,6 +60124,11 @@ err_r_tok_index:
 				tok = tpp_lexer_yield_forexpr(self);
 				if (TPP_TOK_ISERR(tok))
 					return TPP_TOK_ASERR(tok);
+				if (tok != ']') {
+					error = tpp_px_expr(self, NULL);
+					if (TPP_ISERR(error))
+						return error;
+				}
 			}
 		}
 		tok = tpp_lexer_gettok(self);
@@ -60578,7 +60590,9 @@ err_r:
 		tpp_expr_value_fini(result);
 	return error;
 }
+#if TPP_HAVE_TOK_AMP_AMP || TPP_HAVE_TOK_HAT_HAT || TPP_HAVE_TOK_PIPE_PIPE
 TPP_DEFINE_PX_PARSER(tpp_px_xor, tpp_px_or, tpp_px_or_suffix, TPP_TEST_PX_OR_SUFFIX)
+#endif /* TPP_HAVE_TOK_AMP_AMP || TPP_HAVE_TOK_HAT_HAT || TPP_HAVE_TOK_PIPE_PIPE */
 
 
 /************************************************************************/
@@ -60636,7 +60650,9 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 #endif /* TPP_HAVE_TPP_W_PAREN_AROUND_LAND && TPP_HAVE_TOK_PIPE_PIPE */
 	return TPP_EOK;
 }
+#if TPP_HAVE_TOK_HAT_HAT || TPP_HAVE_TOK_PIPE_PIPE
 TPP_DEFINE_PX_PARSER(tpp_px_or, tpp_px_land, tpp_px_land_suffix, TPP_TEST_PX_LAND_SUFFIX)
+#endif /* TPP_HAVE_TOK_HAT_HAT || TPP_HAVE_TOK_PIPE_PIPE */
 #else /* TPP_HAVE_TOK_AMP_AMP */
 #define TPP_HAVE_PX_LAND_SUFFIX          0
 #define TPP_CASE_PX_LAND_SUFFIX          /* nothing */
@@ -60691,7 +60707,9 @@ tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 	} while (TPP_TEST_PX_LXOR_SUFFIX(tpp_lexer_gettok(self)));
 	return TPP_EOK;
 }
+#if TPP_HAVE_TOK_PIPE_PIPE
 TPP_DEFINE_PX_PARSER(tpp_px_land, tpp_px_lxor, tpp_px_lxor_suffix, TPP_TEST_PX_LXOR_SUFFIX)
+#endif /* TPP_HAVE_TOK_PIPE_PIPE */
 #else /* TPP_HAVE_TOK_HAT_HAT */
 #define TPP_HAVE_PX_LXOR_SUFFIX          0
 #define TPP_CASE_PX_LXOR_SUFFIX          /* nothing */
@@ -60746,7 +60764,9 @@ tpp_px_lor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 	} while (TPP_TEST_PX_LOR_SUFFIX(tpp_lexer_gettok(self)));
 	return TPP_EOK;
 }
+#if 0 /* Not needed for `tpp_px_question_suffix()` */
 TPP_DEFINE_PX_PARSER(tpp_px_lxor, tpp_px_lor, tpp_px_lor_suffix, TPP_TEST_PX_LOR_SUFFIX)
+#endif
 #else /* TPP_HAVE_TOK_PIPE_PIPE */
 #define TPP_HAVE_PX_LOR_SUFFIX          0
 #define TPP_CASE_PX_LOR_SUFFIX          /* nothing */
@@ -60798,7 +60818,7 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 #endif /* TPP_HAVE_BUILTIN_EXPR_IF_ELSE_OPTIONAL_TT */
 		{
 			tpp_expr_value_fini(result);
-			error = tpp_px_lor(self, cond_is_true ? result : NULL);
+			error = tpp_px_expr(self, cond_is_true ? result : NULL);
 			if (TPP_ISERR(error))
 				return error;
 			tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(':')); /* Doesn't have to be "tpp_lexer_skip_forexpr" */
@@ -60817,7 +60837,7 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 		}
 	} else {
 		if (tok != ':') {
-			error = tpp_px_lor(self, NULL);
+			error = tpp_px_expr(self, NULL);
 			if (TPP_ISERR(error))
 				return error;
 			tok = tpp_lexer_gettok(self);
