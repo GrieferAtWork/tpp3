@@ -90,6 +90,9 @@ tpp_makefile_io_open(/*utf-8*/ char const *tpp_restrict filename,
 #ifdef O_CLOEXEC
 	                 O_CLOEXEC |
 #endif /* O_CLOEXEC */
+#ifdef O_TRUNC
+	                 O_TRUNC |
+#endif /* O_TRUNC */
 	                 0;
 	int fd;
 	TPP_SYSCALL({
