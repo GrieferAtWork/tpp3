@@ -137,9 +137,12 @@ handle_comment:
 			case '~': error = tpp_expr_value_inv(self, result, &new_result); break;
 			case '!': {
 				bool b_value;
-				error = tpp_expr_value_asbool(self, result, &b_value);
-				if (TPP_ISERR(error))
+				error = tpp_expr_value_asbool(self, result);
+				if (TPP_ISERR(error) && error != TPP_ENOENT) {
+					tpp_expr_value_fini(result);
 					return error;
+				}
+				b_value = error != TPP_ENOENT;
 				error = tpp_expr_value_init_bool(&new_result, !b_value);
 			}	break;
 			default: tpp_unreachable();
@@ -389,10 +392,11 @@ again_handle_if:
 			return error;
 		is_true = false;
 		if (result) {
-			error = tpp_expr_value_asbool(self, result, &is_true);
+			error = tpp_expr_value_asbool(self, result);
 			tpp_expr_value_fini(result);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error) && error != TPP_ENOENT)
 				return error;
+			is_true = error != TPP_ENOENT;
 		}
 		tok = tpp_lexer_skip(self, TPP_TOK_OFCHAR(')')); /* Doesn't have to be "tpp_lexer_skip_forexpr" */
 		if (TPP_TOK_ISERR(tok))
@@ -816,26 +820,36 @@ tpp_px_cmp_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 			goto err_r;
 		}
 		if (result) {
+			int cmp_delta;
 			bool cmp_result;
 			tpp_expr_value rhs;
 			error = tpp_px_shift(self, &rhs);
 			if (TPP_ISERR(error))
 				goto err_r;
-			switch (what) {
-			case '<': error = tpp_expr_value_cmp_lo(self, result, &rhs, &cmp_result); break;
-			case '>': error = tpp_expr_value_cmp_gr(self, result, &rhs, &cmp_result); break;
-#if TPP_HAVE_TOK_LANGLE_EQUAL
-			case TPP_TOK_LANGLE_EQUAL: error = tpp_expr_value_cmp_le(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
-#if TPP_HAVE_TOK_RANGLE_EQUAL
-			case TPP_TOK_RANGLE_EQUAL: error = tpp_expr_value_cmp_ge(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
-			default: tpp_unreachable();
-			}
+			error = tpp_expr_value_cmp(self, result, &rhs, &cmp_delta);
 			tpp_expr_value_fini(&rhs);
 			tpp_expr_value_fini(result);
 			if (TPP_ISERR(error))
 				return error;
+			switch (what) {
+			case '<':
+				cmp_result = cmp_delta < 0;
+				break;
+			case '>':
+				cmp_result = cmp_delta > 0;
+				break;
+#if TPP_HAVE_TOK_LANGLE_EQUAL
+			case TPP_TOK_LANGLE_EQUAL:
+				cmp_result = cmp_delta <= 0;
+				break;
+#endif /* TPP_HAVE_TOK_LANGLE_EQUAL */
+#if TPP_HAVE_TOK_RANGLE_EQUAL
+			case TPP_TOK_RANGLE_EQUAL:
+				cmp_result = cmp_delta >= 0;
+				break;
+#endif /* TPP_HAVE_TOK_RANGLE_EQUAL */
+			default: tpp_unreachable();
+			}
 			error = tpp_expr_value_init_bool(result, cmp_result);
 		} else {
 			error = tpp_px_shift(self, NULL);
@@ -883,23 +897,29 @@ tpp_px_cmpeq_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_valu
 		}
 		if (result) {
 			bool cmp_result;
+			int cmp_delta;
 			tpp_expr_value rhs;
 			error = tpp_px_cmp(self, &rhs);
 			if (TPP_ISERR(error))
 				goto err_r;
-			switch (what) {
-#if TPP_HAVE_TOK_EQUAL_EQUAL
-			case TPP_TOK_EQUAL_EQUAL: error = tpp_expr_value_cmp_eq(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
-#if TPP_HAVE_TOK_EXCLAIM_EQUAL
-			case TPP_TOK_EXCLAIM_EQUAL: error = tpp_expr_value_cmp_ne(self, result, &rhs, &cmp_result); break;
-#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
-			default: tpp_unreachable();
-			}
+			error = tpp_expr_value_cmp(self, result, &rhs, &cmp_delta);
 			tpp_expr_value_fini(&rhs);
 			tpp_expr_value_fini(result);
 			if (TPP_ISERR(error))
 				return error;
+			switch (what) {
+#if TPP_HAVE_TOK_EQUAL_EQUAL
+			case TPP_TOK_EQUAL_EQUAL:
+				cmp_result = cmp_delta == 0;
+				break;
+#endif /* TPP_HAVE_TOK_EQUAL_EQUAL */
+#if TPP_HAVE_TOK_EXCLAIM_EQUAL
+			case TPP_TOK_EXCLAIM_EQUAL:
+				cmp_result = cmp_delta != 0;
+				break;
+#endif /* TPP_HAVE_TOK_EXCLAIM_EQUAL */
+			default: tpp_unreachable();
+			}
 			error = tpp_expr_value_init_bool(result, cmp_result);
 		} else {
 			error = tpp_px_cmp(self, NULL);
@@ -1067,18 +1087,20 @@ tpp_px_land_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 		}
 		if (result) {
 			bool is_true;
-			error = tpp_expr_value_asbool(self, result, &is_true);
+			error = tpp_expr_value_asbool(self, result);
 			tpp_expr_value_fini(result);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error) && error != TPP_ENOENT)
 				return error;
+			is_true = error != TPP_ENOENT;
 			error = tpp_px_or(self, is_true ? result : NULL);
 			if (TPP_ISERR(error))
 				return error;
 			if (is_true) {
-				error = tpp_expr_value_asbool(self, result, &is_true);
+				error = tpp_expr_value_asbool(self, result);
 				tpp_expr_value_fini(result);
-				if (TPP_ISERR(error))
+				if (TPP_ISERR(error) && error != TPP_ENOENT)
 					return error;
+				is_true = error != TPP_ENOENT;
 			}
 			error = tpp_expr_value_init_bool(result, is_true);
 		} else {
@@ -1132,17 +1154,19 @@ tpp_px_lxor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value
 		}
 		if (result) {
 			bool lhs_is_true, rhs_is_true;
-			error = tpp_expr_value_asbool(self, result, &lhs_is_true);
+			error = tpp_expr_value_asbool(self, result);
 			tpp_expr_value_fini(result);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error) && error != TPP_ENOENT)
 				return error;
+			lhs_is_true = error != TPP_ENOENT;
 			error = tpp_px_land(self, result);
 			if (TPP_ISERR(error))
 				return error;
-			error = tpp_expr_value_asbool(self, result, &rhs_is_true);
+			error = tpp_expr_value_asbool(self, result);
 			tpp_expr_value_fini(result);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error) && error != TPP_ENOENT)
 				return error;
+			rhs_is_true = error != TPP_ENOENT;
 			error = tpp_expr_value_init_bool(result, lhs_is_true ^ rhs_is_true);
 		} else {
 			error = tpp_px_land(self, NULL);
@@ -1183,18 +1207,20 @@ tpp_px_lor_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_value 
 		}
 		if (result) {
 			bool is_true;
-			error = tpp_expr_value_asbool(self, result, &is_true);
+			error = tpp_expr_value_asbool(self, result);
 			tpp_expr_value_fini(result);
-			if (TPP_ISERR(error))
+			if (TPP_ISERR(error) && error != TPP_ENOENT)
 				return error;
+			is_true = error != TPP_ENOENT;
 			error = tpp_px_lxor(self, is_true ? NULL : result);
 			if (TPP_ISERR(error))
 				return error;
 			if (!is_true) {
-				error = tpp_expr_value_asbool(self, result, &is_true);
+				error = tpp_expr_value_asbool(self, result);
 				tpp_expr_value_fini(result);
-				if (TPP_ISERR(error))
+				if (TPP_ISERR(error) && error != TPP_ENOENT)
 					return error;
+				is_true = error != TPP_ENOENT;
 			}
 			error = tpp_expr_value_init_bool(result, is_true);
 		} else {
@@ -1230,9 +1256,10 @@ tpp_px_question_suffix(tpp_lexer *tpp_restrict self, /*opt:[in|out]*/ tpp_expr_v
 		goto err_result_tok;
 	if (result) {
 		bool cond_is_true;
-		error = tpp_expr_value_asbool(self, result, &cond_is_true);
-		if (TPP_ISERR(error))
+		error = tpp_expr_value_asbool(self, result);
+		if (TPP_ISERR(error) && error != TPP_ENOENT)
 			goto err_result;
+		cond_is_true = error != TPP_ENOENT;
 		tok = tpp_lexer_gettok(self);
 		while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok)) {
 			tok = tpp_lexer_yield_blocking(self);

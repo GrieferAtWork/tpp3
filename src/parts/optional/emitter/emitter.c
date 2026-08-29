@@ -1252,7 +1252,7 @@ print_generic_string:;
 #if TPP_EMITTER_HAVE_NORMALIZE_C_INT
 	TPP_CASE_TPP_TOK_INT {
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR || defined(tpp_expr_value_printrepr)
-		tpp_expr_intvalue intval_expr;
+		tpp_intvalue intval_expr;
 		tpp_char const *suffix_start;
 		tpp_errno error;
 		tpp_ssize temp, result;
@@ -1261,9 +1261,9 @@ print_generic_string:;
 		error = tpp_lexer_decodeint_ex(lexer, &intval_expr, &suffix_start);
 		if (TPP_ISERR(error))
 			return TPP_SSIZE_OFERR(error);
-		result = tpp_expr_intvalue_printrepr(tpp_emitter_getlexer(self), &intval_expr,
-			                                 tpp_emitter_getprinter(self), self);
-		tpp_expr_intvalue_fini(&intval_expr);
+		result = tpp_intvalue_printrepr(tpp_emitter_getlexer(self), &intval_expr,
+			                            tpp_emitter_getprinter(self), self);
+		tpp_intvalue_fini(&intval_expr);
 		if (result < 0)
 			return result;
 		temp = tpp_emitter_print_generic(self, suffix_start, (tpp_size)(token_end - suffix_start));
@@ -1273,7 +1273,7 @@ print_generic_string:;
 		return result;
 #else /* TPP_HAVE_EXPR_VALUE_PRINTREPR || tpp_expr_value_printrepr */
 		tpp_intmax intval;
-		tpp_expr_intvalue intval_expr;
+		tpp_intvalue intval_expr;
 		tpp_char const *suffix_start;
 		char buf[TPP_ITOA_MAXLEN], *intbase;
 		tpp_errno error;
@@ -1283,13 +1283,13 @@ print_generic_string:;
 		error = tpp_lexer_decodeint_ex(lexer, &intval_expr, &suffix_start);
 		if (TPP_ISERR(error))
 			return TPP_SSIZE_OFERR(error);
-		error = tpp_expr_intvalue_asintmax(&intval_expr, &intval);
-		tpp_expr_intvalue_fini(&intval_expr);
+		error = tpp_intvalue_asintmax(&intval_expr, &intval);
+		tpp_intvalue_fini(&intval_expr);
 		if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 			if (error == TPP_ENOENT)
 				break;
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 			return TPP_SSIZE_OFERR(error);
 		}
 		intbase = tpp_itoa(buf, intval);

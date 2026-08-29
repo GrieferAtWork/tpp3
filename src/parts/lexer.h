@@ -2524,7 +2524,7 @@ tpp_lexer_isidentifier(tpp_lexer *tpp_restrict self,
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
-                       /*out*/ tpp_expr_intvalue *tpp_restrict result,
+                       /*out*/ tpp_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start);
 #define tpp_lexer_decodeint(self, result) \
 	tpp_lexer_decodeint_ex(self, result, NULL)

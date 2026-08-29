@@ -5412,10 +5412,12 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 
 #define TPPConst_IsTrue(self) TPPConst_IsTrue_(TPP2_LEXER, self)
 TPP_INLINE bool TPPConst_IsTrue_(tpp_lexer *lexer, tpp_expr_value *self) {
-	bool result;
-	if (tpp_expr_value_asbool(lexer, self, &result))
+	tpp_errno error = tpp_expr_value_asbool(lexer, self, &result);
+	if (error == TPP_ENOENT)
+		return false;
+	if (TPP_ISERR(error))
 		return TPP2_FATAL(false);
-	return result;
+	return true;
 }
 
 TPP_INLINE bool TPPConst_IsBool(tpp_expr_value *self) {
@@ -5424,6 +5426,8 @@ TPP_INLINE bool TPPConst_IsBool(tpp_expr_value *self) {
 	if (!tpp_expr_value_isint(self))
 		return false;
 	error = tpp_expr_value_asintmax(self, &value);
+	if (error == TPP_ENOENT)
+		return true;
 	if (TPP_ISERR(error))
 		return TPP2_FATAL(false);
 	return value == 0 || value == 1;
@@ -5434,9 +5438,11 @@ TPP_INLINE tpp_intmax TPPConst_AsInt(tpp_expr_value *self) {
 	tpp_intmax value;
 	if (tpp_expr_value_isint(self)) {
 		error = tpp_expr_value_asintmax(self, &value);
+		if (error == TPP_ENOENT)
+			return -1; /* Overflow? */
 	} else if (tpp_expr_value_isfloat(self)) {
 		tpp_float float_value;
-		error = tpp_expr_value_asintmax(self, &float_value);
+		error = tpp_expr_value_asfloat(self, &float_value);
 		value = (tpp_intmax)float_value;
 	} else if (tpp_expr_value_isstring(self)) {
 		TPP_REF tpp_string *string_value;
@@ -5459,6 +5465,8 @@ TPP_INLINE tpp_float TPPConst_AsFloat(tpp_expr_value *self) {
 	if (tpp_expr_value_isint(self)) {
 		tpp_intmax int_value;
 		error = tpp_expr_value_asintmax(self, &int_value);
+		if (error == TPP_ENOENT)
+			return -1.0; /* INF? */
 		value = (tpp_float)int_value;
 	} else if (tpp_expr_value_isfloat(self)) {
 		error = tpp_expr_value_asfloat(self, &value);
@@ -5485,12 +5493,11 @@ TPP_INLINE void TPPConst_InitCopy(tpp_expr_value *self, tpp_expr_value *right) {
 
 #define TPPConst_ToBool(self) TPPConst_ToBool_(TPP2_LEXER, self)
 TPP_INLINE void TPPConst_ToBool_(tpp_lexer *lexer, tpp_expr_value *self) {
-	bool result;
-	tpp_errno error = tpp_expr_value_asbool(lexer, self, &result);
-	if (TPP_ISERR(error))
-		result = TPP2_FATAL(false);
+	tpp_errno error = tpp_expr_value_asbool(lexer, self);
+	if (TPP_ISERR(error) && error != TPP_ENOENT)
+		error = TPP2_FATAL(TPP_ENOENT);
 	tpp_expr_value_fini(self);
-	error = tpp_expr_value_init_bool(self, result);
+	error = tpp_expr_value_init_bool(self, error != TPP_ENOENT);
 	if (TPP_ISERR(error))
 		(void)TPP2_FATAL(0);
 }

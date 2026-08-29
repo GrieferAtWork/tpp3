@@ -5909,7 +5909,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TPP_W_BAD_EXPRESSION_OPERANDS */
 #ifndef TPP_HAVE_TPP_W_INTEGER_OVERFLOW
 #define TPP_HAVE_TPP_W_INTEGER_OVERFLOW \
-	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_EXPR_INTVALUE_MATH_CANOVERFLOW || TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW))
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_INTVALUE_MATH_CANOVERFLOW || TPP_INTVALUE_ASINTMAX_CANOVERFLOW))
 #endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
 #ifndef TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 #define TPP_HAVE_TPP_W_DIVIDE_BY_ZERO \
@@ -6910,25 +6910,25 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
-/* Define to `1` if `tpp_expr_intvalue_*` operations may return
+/* Define to `1` if `tpp_intvalue_*` operations may return
  * `TPP_ENOENT` to indicate integer overflow/underflow.
  *
  * Override this to either:
  * - Disable overflow checks in the builtin implementation
  * - Or if you're supplying your own implementation that uses
  *   arbitrary precision integers. */
-#ifndef TPP_EXPR_INTVALUE_MATH_CANOVERFLOW
-#define TPP_EXPR_INTVALUE_MATH_CANOVERFLOW 1
-#endif /* !TPP_EXPR_INTVALUE_MATH_CANOVERFLOW */
+#ifndef TPP_INTVALUE_MATH_CANOVERFLOW
+#define TPP_INTVALUE_MATH_CANOVERFLOW 1
+#endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
-/* Define to `1` if `tpp_expr_intvalue_asintmax` can overflow/underflow. */
-#ifndef TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
-#if defined(tpp_expr_intvalue)
-#define TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW (!TPP_EXPR_INTVALUE_MATH_CANOVERFLOW)
-#else /* tpp_expr_intvalue */
-#define TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW 0
-#endif /* !tpp_expr_intvalue */
-#endif /* !TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+/* Define to `1` if `tpp_intvalue_asintmax` can overflow/underflow. */
+#ifndef TPP_INTVALUE_ASINTMAX_CANOVERFLOW
+#if defined(tpp_intvalue)
+#define TPP_INTVALUE_ASINTMAX_CANOVERFLOW (!TPP_INTVALUE_MATH_CANOVERFLOW)
+#else /* tpp_intvalue */
+#define TPP_INTVALUE_ASINTMAX_CANOVERFLOW 0
+#endif /* !tpp_intvalue */
+#endif /* !TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 
 /* Provide a builtin implementation for `tpp_expr_value` and its API */
 #undef TPP_HAVE_BUILTIN_EXPR_VALUE

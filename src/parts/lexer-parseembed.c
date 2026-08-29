@@ -207,7 +207,7 @@ yield_at_eof_when_expecting_int:;
 		} else
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
 		{
-			tpp_expr_intvalue intval_expr;
+			tpp_intvalue intval_expr;
 			tpp_intmax intval;
 			error = tpp_lexer_decodeint(self, &intval_expr);
 			if (TPP_ISERR(error)) {
@@ -216,13 +216,13 @@ handle_integer_decode_error:
 					*p_final_state = TPP_LEXER_PARSEEMBED_STATE_INTEGER;
 				return TPP_SSIZE_OFERR(error);
 			}
-			error = tpp_expr_intvalue_asintmax(&intval_expr, &intval);
+			error = tpp_intvalue_asintmax(&intval_expr, &intval);
 			if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 				if (error == TPP_ENOENT) {
 					intval = -1;
 				} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 				{
 					goto handle_integer_decode_error;
 				}

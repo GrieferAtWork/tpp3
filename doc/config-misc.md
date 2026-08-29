@@ -1588,7 +1588,7 @@ Example:
 
 
 
-## XXX: tpp_ascii_issymstrt, tpp_ascii_issymcont, tpp_ascii_isdigit, tpp_ascii_isspace, tpp_ascii_islf
+## tpp_ascii_issymstrt, tpp_ascii_issymcont, tpp_ascii_isdigit, tpp_ascii_isspace, tpp_ascii_islf
 
 Used to implement low-level ASCII-based character trait tests.
 
@@ -2071,18 +2071,181 @@ tpp_size tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *
 
 
 
+## tpp_intvalue
+
+In order to allow you to hook an arbitrary-precision integer types into TPP, the following API may be overwritten by the user, and will be used by TPP to implement functions like `tpp_lexer_decodeint()`. This API is also used by the default implementation of `tpp_expr_value` (see below), so any overrides defined here will also be used by that API.
+
+NOTE: All functions returning `tpp_errno` are expected to return `TPP_EOK` on success, and `TPP_ISERR(*)` to indicate **HARD_ERROR**. Some functions are also allowed to return `TPP_ENOENT` to indicate overflow or some other function-specific value. When that is the case, such behavior is documented with the function below.
+
+```c
+#define tpp_intvalue my_tpp_intvalue
+typedef ... my_tpp_intvalue;
+
+void tpp_intvalue_fini(tpp_intvalue *self); // Finalizer
+tpp_errno tpp_intvalue_init_zero(tpp_intvalue *self); // Initializer
+tpp_errno tpp_intvalue_init_copy(tpp_intvalue *dst, tpp_intvalue const *src); // Copy-constructor
+
+
+/* @return: TPP_EOK:      Success
+ * @return: TPP_ENOENT:   SOFT_ERROR: Out-of-range (only if `TPP_INTVALUE_ASINTMAX_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_asintmax(tpp_intvalue *self, tpp_intmax *p_result);
+
+
+#if TPP_HAVE_LEXER_DECODEINT
+/* >> [self] = ([self] * mul) + add;
+ * Used to implement `tpp_lexer_decodeint()`
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#if TPP_INTVALUE_MATH_CANOVERFLOW
+tpp_errno tpp_intvalue_muladd(tpp_intvalue *self, unsigned int mul, unsigned int add);
+#endif /* TPP_HAVE_LEXER_DECODEINT */
+
+
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+/* >> [self] = v;
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_init_uintmax(tpp_intvalue *self, tpp_uintmax v);
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+
+
+/************************************************************************/
+/* Extra APIs needed used by the builtin impl of `tpp_expr_value`       */
+/************************************************************************/
+#if TPP_HAVE_BUILTIN_EXPR_VALUE
+
+tpp_errno tpp_intvalue_init_zero(tpp_intvalue *self); // Initialize to value `1`
+tpp_errno tpp_intvalue_init_bool(tpp_intvalue *self, bool v); // Initialize to value `0` / `1`
+
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+/* >> [self] = v;
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_init_size(tpp_intvalue *self, tpp_size v);
+
+/* >> [self] = v;
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_init_char(tpp_intvalue *self, tpp_char v);
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+/* @return: TPP_EOK:      Non-zero
+ * @return: TPP_ENOENT:   Zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_asbool(tpp_intvalue *self);
+
+/* @return: TPP_EOK:      Yes
+ * @return: TPP_ENOENT:   No
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_isneg(tpp_intvalue *self);
+
+
+/* >> [p_result] = -[self];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_neg(tpp_intvalue *self, tpp_intvalue *p_result);
+
+/* >> [p_result] = ~[self];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_inv(tpp_intvalue *self, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] + [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_add(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] - [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_sub(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] * [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_mul(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] / [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Divide-by-zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_div(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] % [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Divide-by-zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_mod(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] << [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_shl(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] >> [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_shr(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] & [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_and(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] ^ [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_xor(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* >> [p_result] = [lhs] | [rhs];
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_or(tpp_intvalue *lhs, tpp_intvalue *rhs, tpp_intvalue *p_result);
+
+/* Store `< 0`, `== 0` or `> 0` to `*p_delta`, based on result of `lhs <=> rhs`
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_cmp(tpp_intvalue *lhs, tpp_intvalue *rhs, int *p_delta);
+
+/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+tpp_ssize tpp_intvalue_printrepr(tpp_lexer *lexer, tpp_intvalue *self, tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
+```
+
+
+
 ## tpp_expr_value
 
 In order to perform operations in builtin lexer expressions, a large, overwritable API of functions to perform those operations on abstract `tpp_expr_value` objects is used, and can be overwritten by the host compiler in order to better integrate its own expression system into TPP.
 
+NOTE: All functions returning `tpp_errno` are expected to return `TPP_EOK` on success, and `TPP_ISERR(*)` to indicate **HARD_ERROR**. Some functions are also allowed to return `TPP_ENOENT` to indicate an additional success-style return value, but those are explicitly documented below.
+
 ```c
-typedef ... tpp_expr_value; // Abstract
+#define tpp_intvalue my_tpp_expr_value
+typedef ... my_tpp_expr_value; // Opaque
 
 void tpp_expr_value_fini(tpp_expr_value *self); // Finalizer
 void tpp_expr_value_move(tpp_expr_value *dst, tpp_expr_value *src); // Move-constructor
 tpp_errno tpp_expr_value_copy(tpp_expr_value *dst, tpp_expr_value const *src); // Copy-constructor
 
-/* Check which native representation is used by `self` */
+/************************************************************************/
+/* Check which native representation is used by `self`                  */
+/************************************************************************/
 bool tpp_expr_value_isint(tpp_expr_value const *self);
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 bool tpp_expr_value_isfloat(tpp_expr_value const *self);
@@ -2091,17 +2254,33 @@ bool tpp_expr_value_isfloat(tpp_expr_value const *self);
 bool tpp_expr_value_isstring(tpp_expr_value const *self);
 #endif // TPP_HAVE_BUILTIN_EXPR_STRINGS
 
+
+/************************************************************************/
 /* Extract values from `self` (these are allowed to assume that `tpp_expr_value_is*(self)`) */
+/************************************************************************/
+// TPP_ENOENT: Stored value is too large to fit into `tpp_intmax`
 tpp_errno tpp_expr_value_asintmax(tpp_expr_value const *self, tpp_intmax *p_result);
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
-tpp_errno tpp_expr_value_asfloat(tpp_expr_value const *self, tpp_intmax *p_result);
+tpp_errno tpp_expr_value_asfloat(tpp_expr_value const *self, tpp_float *p_result);
 #endif // TPP_HAVE_BUILTIN_EXPR_FLOATS
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 tpp_errno tpp_expr_value_asstringref(tpp_expr_value const *self, TPP_REF tpp_string **p_result);
 #endif // TPP_HAVE_BUILTIN_EXPR_STRINGS
 
-/* Initialize `self` */
-tpp_errno tpp_expr_value_init_expr_intvalue(tpp_expr_value *self, tpp_intmax v);
+
+/************************************************************************/
+/* Initialize `self`                                                    */
+/************************************************************************/
+tpp_errno tpp_expr_value_init_bool(tpp_expr_value *self, bool v); // Init as integer 0/1
+tpp_errno tpp_expr_value_init_zero(tpp_expr_value *self); // Init as integer 0
+tpp_errno tpp_expr_value_init_one(tpp_expr_value *self); // Init as integer 1
+
+tpp_errno tpp_expr_value_init_expr_intvalue(tpp_expr_value *self, /*inherit(always)*/ tpp_intvalue *v);
+#if TPP_HAVE_LEXER_PARSECHARACTER_EXPR
+/* @return: TPP_ENOENT: Given value `v` is too large. */
+tpp_errno tpp_expr_value_init_uintmax(tpp_expr_value *self, tpp_uintmax v);
+#endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 tpp_errno tpp_expr_value_init_float(tpp_expr_value *self, tpp_float v);
 #endif // TPP_HAVE_BUILTIN_EXPR_FLOATS
@@ -2111,7 +2290,10 @@ tpp_errno tpp_expr_value_init_string_inherited(tpp_expr_value *self, /*inherit(a
 #endif // TPP_HAVE_BUILTIN_EXPR_STRINGS
 
 
-/* Operator invocation */
+/* Operator invocation
+ * NOTE: Integer overflow (if it *can* happen) *must* be handled by *within* these
+ *       functions, preferably by triggering a `TPP_W_INTEGER_OVERFLOW` warning.
+ * iow: unlike the `tpp_intvalue_*` API (see above), these _DONT_ return `TPP_ENOENT` */
 tpp_errno tpp_expr_value_pos(tpp_lexer *lexer, /*in*/ tpp_expr_value *self, /*out*/ tpp_expr_value *result);
 tpp_errno tpp_expr_value_neg(tpp_lexer *lexer, /*in*/ tpp_expr_value *self, /*out*/ tpp_expr_value *result);
 tpp_errno tpp_expr_value_inv(tpp_lexer *lexer, /*in*/ tpp_expr_value *self, /*out*/ tpp_expr_value *result);
@@ -2125,12 +2307,7 @@ tpp_errno tpp_expr_value_shr(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*
 tpp_errno tpp_expr_value_and(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ tpp_expr_value *result);
 tpp_errno tpp_expr_value_xor(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ tpp_expr_value *result);
 tpp_errno tpp_expr_value_or(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ tpp_expr_value *result);
-tpp_errno tpp_expr_value_cmp_eq(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
-tpp_errno tpp_expr_value_cmp_ne(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
-tpp_errno tpp_expr_value_cmp_lo(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
-tpp_errno tpp_expr_value_cmp_le(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
-tpp_errno tpp_expr_value_cmp_gr(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
-tpp_errno tpp_expr_value_cmp_ge(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ bool *p_bool_result);
+tpp_errno tpp_expr_value_cmp(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *rhs, /*out*/ int *p_delta);
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 tpp_errno tpp_expr_value_lengthof(tpp_lexer *lexer, /*in*/ tpp_expr_value *self, /*out*/ tpp_expr_value *result);
 tpp_errno tpp_expr_value_getindex(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, /*in*/ tpp_expr_value *index, /*out*/ tpp_expr_value *result);
@@ -2139,9 +2316,11 @@ tpp_errno tpp_expr_value_getrange(tpp_lexer *lexer, /*in*/ tpp_expr_value *lhs, 
 
 
 /* Determine the boolean-style value of `self`
- * Must be able to handle any kind of expression value.
- * @return: TPP_EOK: Success */
-tpp_errno tpp_expr_value_asbool(tpp_lexer *lexer, /*in*/ tpp_expr_value *self, bool *p_bool_result);
+ * Works for any kind of expression value.
+ * @return: TPP_EOK:      Is non-zero
+ * @return: TPP_ENOENT:   Is zero
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_expr_value_asbool(tpp_lexer *lexer, /*in*/ tpp_expr_value *self);
 
 
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
@@ -2152,13 +2331,7 @@ tpp_ssize tpp_expr_value_printrepr(tpp_lexer *lexer, tpp_expr_value *self,
 
 
 
-## XXX: tpp_lexer_decodeint_expr
-
-## XXX: tpp_lexer_decodefloat_expr
-
 ## XXX: tpp_lexer_parsestring_expr
-
-## XXX: tpp_lexer_parsecharacter_expr
 
 ## XXX: TPP_FS_HAVE_DRIVES
 

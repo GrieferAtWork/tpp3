@@ -573,7 +573,7 @@ again_yield_and_handle:
 #if TPP_HAVE_TOK_INT
 	{
 		tpp_intmax mode;
-		tpp_expr_intvalue mode_expr;
+		tpp_intvalue mode_expr;
 		bool negative;
 	TPP_CASE_TPP_TOK_INT
 		negative = false;
@@ -599,14 +599,14 @@ again_yield_and_handle:
 			tok = TPP_TOK_OFERR(error);
 			break;
 		}
-		error = tpp_expr_intvalue_asintmax(&mode_expr, &mode);
-		tpp_expr_intvalue_fini(&mode_expr);
+		error = tpp_intvalue_asintmax(&mode_expr, &mode);
+		tpp_intvalue_fini(&mode_expr);
 		if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 			if (error == TPP_ENOENT) {
 				mode = 0;
 			} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 			{
 				tok = TPP_TOK_OFERR(error);
 				break;
@@ -667,20 +667,20 @@ again_handle_set_warning_state:
 		TPP_CASE_TPP_TOK_INT {
 			tpp_intmax warning_number;
 			tpp_warning_id warning_id;
-			tpp_expr_intvalue warning_number_expr;
+			tpp_intvalue warning_number_expr;
 			error = tpp_lexer_decodeint(self, &warning_number_expr);
 			if (TPP_ISERR(error)) {
 				tok = TPP_TOK_OFERR(error);
 				break;
 			}
-			error = tpp_expr_intvalue_asintmax(&warning_number_expr, &warning_number);
-			tpp_expr_intvalue_fini(&warning_number_expr);
+			error = tpp_intvalue_asintmax(&warning_number_expr, &warning_number);
+			tpp_intvalue_fini(&warning_number_expr);
 			if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 				if (error == TPP_ENOENT) {
 					warning_number = -1;
 				} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 				{
 					tok = TPP_TOK_OFERR(error);
 					break;
@@ -1570,18 +1570,18 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags(tpp_lexer *tpp_restrict self) {
 
 	/* Next token must be an integer */
 	if (TPP_TOK_ISINT(tok)) {
-		tpp_expr_intvalue expr_value;
+		tpp_intvalue expr_value;
 		error = tpp_lexer_decodeint(self, &expr_value);
 		if (TPP_ISERR(error))
 			return error;
-		error = tpp_expr_intvalue_asintmax(&expr_value, &value);
-		tpp_expr_intvalue_fini(&expr_value);
+		error = tpp_intvalue_asintmax(&expr_value, &value);
+		tpp_intvalue_fini(&expr_value);
 		if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 			if (error == TPP_ENOENT) {
 				value = 0;
 			} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 			{
 				return error;
 			}

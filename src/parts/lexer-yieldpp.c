@@ -500,15 +500,16 @@ tpp_lexer_parse_if_directive(tpp_lexer *tpp_restrict self,
 
 	/* Evaluate expression result (and warn about trailing tokens) */
 	if (!TPP_ISERR(result)) {
-		bool b_expr_value;
-		result = tpp_expr_value_asbool(self, &expr_value, &b_expr_value);
+		result = tpp_expr_value_asbool(self, &expr_value);
 		tpp_expr_value_fini(&expr_value);
 #if TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE
-		if (!TPP_ISERR(result) && tpp_lexer_gettok(self) != TPP_TOK_EOF)
-			result = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
+		if ((!TPP_ISERR(result) || result == TPP_ENOENT) && tpp_lexer_gettok(self) != TPP_TOK_EOF) {
+			tpp_errno error = tpp_lexer_warnf(self, TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE, directive_name);
+			tpp_assert(error != TPP_ENOENT);
+			if (TPP_ISERR(error))
+				result = error;
+		}
 #endif /* TPP_HAVE_TPP_W_EXTRA_TOKENS_AFTER_DIRECTIVE */
-		if (!TPP_ISERR(result))
-			result = b_expr_value ? TPP_EOK : TPP_ENOENT;
 	}
 
 	/* Cleanup files pushed by the expression */
@@ -1637,10 +1638,21 @@ handle_offset_param:
 			return error;
 		if (tpp_expr_value_isint(&int_value_expr)) {
 			error = tpp_expr_value_asintmax(&int_value_expr, &int_value);
+			if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_INTEGER_OVERFLOW
+				error = tpp_lexer_warnf(lexer, TPP_W_INTEGER_OVERFLOW, "<#embed parameter>", "", "");
+#else /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+				error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+				int_value = 0;
+			}
 		} else {
-			bool as_bool;
-			error = tpp_expr_value_asbool(lexer, &int_value_expr, &as_bool);
-			int_value = as_bool ? 1 : 0;
+			error = tpp_expr_value_asbool(lexer, &int_value_expr);
+			int_value = 1;
+			if (error == TPP_ENOENT) {
+				error = TPP_EOK;
+				int_value = 0;
+			}
 		}
 		tpp_expr_value_fini(&int_value_expr);
 		if (TPP_ISERR(error))
@@ -2239,7 +2251,7 @@ tpp_lexer_handle_digit_directive(tpp_lexer *tpp_restrict self,
 	tpp_errno error;
 	tpp_size rel_digit_loc;
 	tpp_intmax new_linenumber;
-	tpp_expr_intvalue temp_intvalue;
+	tpp_intvalue temp_intvalue;
 	TPP_REF tpp_string *new_filename = NULL;
 	tpp_token_id tok;
 	directive_start = file->tf_pos;
@@ -2250,14 +2262,14 @@ err_autopopfile_break_error:
 		tpp_file_autopopfile_break(file);
 		return TPP_TOK_OFERR(error);
 	}
-	error = tpp_expr_intvalue_asintmax(&temp_intvalue, &new_linenumber);
-	tpp_expr_intvalue_fini(&temp_intvalue);
+	error = tpp_intvalue_asintmax(&temp_intvalue, &new_linenumber);
+	tpp_intvalue_fini(&temp_intvalue);
 	if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 		if (error == TPP_ENOENT) {
 			new_linenumber = -1; /* Undefined... */
 		} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 		{
 			goto err_autopopfile_break_error;
 		}
@@ -2322,14 +2334,14 @@ err_error_rollback_new_filename:
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_rollback_new_filename;
 		}
-		error = tpp_expr_intvalue_asintmax(&temp_intvalue, &user_flag);
-		tpp_expr_intvalue_fini(&temp_intvalue);
+		error = tpp_intvalue_asintmax(&temp_intvalue, &user_flag);
+		tpp_intvalue_fini(&temp_intvalue);
 		if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 			if (error == TPP_ENOENT) {
 				user_flag = -1; /* Undefined... */
 			} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 			{
 				goto err_error_rollback_new_filename;
 			}
@@ -2497,20 +2509,20 @@ err_tok_rollback:
 #if TPP_HAVE_TOK_INT
 	if (TPP_TOK_ISINT(tok)) {
 		/* Decode line number */
-		tpp_expr_intvalue new_linenumber_expr;
+		tpp_intvalue new_linenumber_expr;
 		error = tpp_lexer_decodeint(self, &new_linenumber_expr);
 		if (TPP_ISERR(error)) {
 			tok = TPP_TOK_OFERR(error);
 			goto err_tok_rollback;
 		}
-		error = tpp_expr_intvalue_asintmax(&new_linenumber_expr, &new_linenumber);
-		tpp_expr_intvalue_fini(&new_linenumber_expr);
+		error = tpp_intvalue_asintmax(&new_linenumber_expr, &new_linenumber);
+		tpp_intvalue_fini(&new_linenumber_expr);
 		if (TPP_ISERR(error)) {
-#if TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW
+#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
 			if (error == TPP_ENOENT) {
 				new_linenumber = -1; /* Undefined... */
 			} else
-#endif /* TPP_EXPR_INTVALUE_ASINTMAX_CANOVERFLOW */
+#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
 			{
 				tok = TPP_TOK_OFERR(error);
 				goto err_tok_rollback;
