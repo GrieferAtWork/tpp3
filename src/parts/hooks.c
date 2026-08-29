@@ -828,7 +828,7 @@ _tpp_hooklist2_add(tpp_hooklist2 **tpp_restrict p_self,
 			if (ent->thle_cb == cb && ent->thle_cookie == arg) {
 				/* Already registered -> move to back (so it gets called first) */
 				tpp_size num_after = (old_size - index) - 1;
-				tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
+				(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
 				ent += num_after;
 				ent->thle_cb     = cb;
 				ent->thle_cookie = arg;
@@ -878,7 +878,7 @@ _tpp_hooklist2_del(tpp_hooklist2 **tpp_restrict p_self,
 					tpp_free(self);
 				} else {
 					tpp_size num_after = (--self->thl_size - index);
-					tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
+					(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
 					/* Release unused memory... */
 					self = (tpp_hooklist2 *)tpp_tryrealloc(self,
 					                                       self->thl_size *
@@ -910,7 +910,7 @@ _tpp_hooklist1_add(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 			if (ent->thle_cb == cb) {
 				/* Already registered -> move to back (so it gets called first) */
 				tpp_size num_after = (old_size - index) - 1;
-				tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
+				(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
 				ent += num_after;
 				ent->thle_cb = cb;
 				return TPP_EOK;
@@ -956,7 +956,7 @@ _tpp_hooklist1_del(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 					tpp_free(self);
 				} else {
 					tpp_size num_after = (--self->thl_size - index);
-					tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
+					(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
 					/* Release unused memory... */
 					self = (tpp_hooklist1 *)tpp_tryrealloc(self,
 					                                       self->thl_size *

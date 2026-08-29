@@ -881,7 +881,7 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 
 				/* See if this match is better (we want the longest match possible) */
 				if (match_ptr == NULL || (parser->tuntp_pos > match_ptr)) {
-					tpp_memcpy(match_uc, uc, this_match_count * sizeof(tpp_unichar));
+					(void)tpp_memcpy(match_uc, uc, this_match_count * sizeof(tpp_unichar));
 					match_ptr   = parser->tuntp_pos;
 					match_count = this_match_count;
 				}
@@ -895,7 +895,7 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 	}
 
 	if (match_ptr) {
-		tpp_memcpy(uc, match_uc, match_count * sizeof(tpp_unichar));
+		(void)tpp_memcpy(uc, match_uc, match_count * sizeof(tpp_unichar));
 		parser->tuntp_pos = match_ptr;
 		return match_count;
 	}

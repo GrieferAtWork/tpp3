@@ -285,11 +285,11 @@ tpp_expr_value_add(struct tpp_lexer *tpp_restrict lexer,
 		                                  tpp_string_len(rhs_value));
 		if tpp_unlikely(!result_string)
 			return TPP_ENOMEM;
-		tpp_memcpy(tpp_string_str(result_string), tpp_string_str(lhs_value),
-		           tpp_string_len(lhs_value) * sizeof(tpp_char));
-		tpp_memcpy(tpp_string_str(result_string) + tpp_string_len(lhs_value),
-		           tpp_string_str(rhs_value),
-		           tpp_string_len(rhs_value) * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(result_string), tpp_string_str(lhs_value),
+		                 tpp_string_len(lhs_value) * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(result_string) + tpp_string_len(lhs_value),
+		                 tpp_string_str(rhs_value),
+		                 tpp_string_len(rhs_value) * sizeof(tpp_char));
 		error = tpp_expr_value_init_string_inherited(result, result_string);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
@@ -1310,9 +1310,9 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	result_string = tpp_string_malloc(result_size);
 	if tpp_unlikely(!result_string)
 		return TPP_ENOMEM;
-	tpp_memcpy(tpp_string_str(result_string),
-	           tpp_string_str(lhs_value) + (tpp_size)lo_value,
-	           result_size * sizeof(tpp_char));
+	(void)tpp_memcpy(tpp_string_str(result_string),
+	                 tpp_string_str(lhs_value) + (tpp_size)lo_value,
+	                 result_size * sizeof(tpp_char));
 	return tpp_expr_value_init_string_inherited(result, result_string);
 return_empty_string:
 	result_string = tpp_string_newempty();

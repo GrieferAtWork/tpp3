@@ -165,7 +165,7 @@ TPP_FORMATPRINTER_IMPL(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
 	if tpp_unlikely(!dst)
 		goto err_nomem;
-	tpp_memcpy(dst, text, num_bytes);
+	(void)tpp_memcpy(dst, text, num_bytes);
 	return (tpp_ssize)num_bytes;
 err_nomem:
 	return TPP_SSIZE_OFERR(TPP_ENOMEM);

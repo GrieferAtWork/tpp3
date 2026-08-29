@@ -87,7 +87,7 @@ tpp_string_buffer_append(tpp_string_buffer *tpp_restrict self,
 		self->tsb_alloc = min_alloc;
 	}
 	tpp_assert(min_alloc <= self->tsb_alloc);
-	tpp_memcpy(self->tsb_data + self->tsb_size, data, num_bytes);
+	(void)tpp_memcpy(self->tsb_data + self->tsb_size, data, num_bytes);
 	self->tsb_size += num_bytes;
 	return true;
 }
@@ -527,7 +527,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			va_nargs_value = (argc - macro_argc) + 1;
 		endp = tpp_utoa(va_nargs, va_nargs_value);
 		va_nargs_len = (tpp_size)((va_nargs + tpp_lengthof(va_nargs)) - endp);
-		tpp_memmovedown(va_nargs, endp, va_nargs_len);
+		(void)tpp_memmovedown(va_nargs, endp, va_nargs_len);
 		result_chunk_size += va_nargs_len * macro->tm_data.tmd_func.tmf_n_vanargs;
 	}
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/

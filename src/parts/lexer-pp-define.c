@@ -1742,7 +1742,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		dst = (tpp_char *)tpp_mempcpy(dst, macro_params, macro_params_len * sizeof(char));
 		*dst++ = ' '; /* Always have whitespace here to prevent
 		               * function-style macro in case of "-DFOO=(10)" */
-		tpp_memcpy(dst, macro_body, macro_body_len * sizeof(char));
+		(void)tpp_memcpy(dst, macro_body, macro_body_len * sizeof(char));
 		tpp_assert((dst + macro_body_len) == tpp_string_end(def_chunk));
 	}
 

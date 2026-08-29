@@ -1172,6 +1172,33 @@ Example:
 
 
 
+## tpp_qsort
+
+Wrapper around `qsort`, as defined by the C standard
+
+```c
+void tpp_qsort(void *p, tpp_size elem_count, tpp_size elem_size, OPAQUE cmp);
+
+/* Define a static compare-callback `NAME` for use with `tpp_qsort()` */
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) \
+	...
+```
+
+<details><summary>Details</summary>
+
+Example:
+
+```c
+#include <stdlib.h>
+
+#define tpp_qsort qsort
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) \
+	static int NAME(void const *lhs, void const *rhs)
+```
+</details>
+
+
+
 ## tpp_malloc, tpp_trymalloc, tpp_tryrealloc, tpp_realloc, tpp_free
 
 Wrappers around heap-functions, as defined by the C standard.

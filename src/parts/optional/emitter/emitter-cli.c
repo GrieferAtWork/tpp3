@@ -798,9 +798,9 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
 				break;
 			/* Add "arg" to trailing list of unknown arguments */
 			--argc;
-			tpp_memmovedown(&argv[0], &argv[1],
-			                (argc + unknown_count) *
-			                sizeof(char *));
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
 			argv[argc + unknown_count] = arg;
 			++unknown_count;
 			result = TPP_EOK;
@@ -819,7 +819,9 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
 				unsigned int total_count_minus_1 = argc + unknown_count - 1;
 				while (shift_count--) {
 					arg = argv[0];
-					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					(void)tpp_memmovedown(&argv[0], &argv[1],
+					                      total_count_minus_1 *
+					                      sizeof(char *));
 					argv[total_count_minus_1] = arg;
 				}
 			}

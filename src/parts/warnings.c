@@ -155,7 +155,7 @@ tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 	if (self->tw_pushcnt == 0) {
 		tpp_warnings *prev = self->tw_prev;
 		_tpp_warnings_fini_common(self);
-		tpp_memcpy(self, prev, sizeof(tpp_warnings));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_warnings));
 		_tpp_warnings_free(prev);
 		tpp_assert(self->tw_pushcnt != 0);
 	}
@@ -281,10 +281,10 @@ tpp_warnings_require_suppress(tpp_warnings *tpp_restrict self,
 		self->tw_suppressions.tws_ctxa = new_alloc;
 	}
 	tpp_assert(self->tw_suppressions.tws_ctxc < self->tw_suppressions.tws_ctxa);
-	tpp_memmoveup(&self->tw_suppressions.tws_ctxv[lo + 1],
-	              &self->tw_suppressions.tws_ctxv[lo],
-	              (self->tw_suppressions.tws_ctxc - lo) *
-	              sizeof(tpp_warning_suppress_item));
+	(void)tpp_memmoveup(&self->tw_suppressions.tws_ctxv[lo + 1],
+	                    &self->tw_suppressions.tws_ctxv[lo],
+	                    (self->tw_suppressions.tws_ctxc - lo) *
+	                    sizeof(tpp_warning_suppress_item));
 	++self->tw_suppressions.tws_ctxc;
 	result = &self->tw_suppressions.tws_ctxv[lo];
 	result->twsi_count  = 0;
@@ -363,9 +363,9 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 			if (item) {
 				tpp_size index = (tpp_size)(item - self->tw_suppressions.tws_ctxv);
 				--self->tw_suppressions.tws_ctxc;
-				tpp_memmovedown(item, item + 1,
-				                (self->tw_suppressions.tws_ctxc - index) *
-				                sizeof(tpp_warning_suppress_item));
+				(void)tpp_memmovedown(item, item + 1,
+				                      (self->tw_suppressions.tws_ctxc - index) *
+				                      sizeof(tpp_warning_suppress_item));
 			}
 		} else {
 			tpp_assert(tpp_warnings_find_suppress(self, ctx_id) == NULL &&
@@ -494,9 +494,9 @@ _tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_i
 
 			/* Delete the suppression entry */
 			--self->tw_suppressions.tws_ctxc;
-			tpp_memmovedown(item, item + 1,
-			                (self->tw_suppressions.tws_ctxc - mid) *
-			                sizeof(tpp_warning_suppress_item));
+			(void)tpp_memmovedown(item, item + 1,
+			                      (self->tw_suppressions.tws_ctxc - mid) *
+			                      sizeof(tpp_warning_suppress_item));
 		}
 
 		/* Treat supressed warning as disabled. */

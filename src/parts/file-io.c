@@ -483,7 +483,7 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 		return 0; /* Nothing changed! */
 	szCorrectSize = tpp_strlen(fData.cFileName);
 	if (szCorrectSize <= after_last_sep_bufsize)
-		tpp_memcpy(after_last_sep, fData.cFileName, szCorrectSize * sizeof(char));
+		(void)tpp_memcpy(after_last_sep, fData.cFileName, szCorrectSize * sizeof(char));
 	return (tpp_ssize)szCorrectSize;
 #else /* TPP_OS_WINDOWS */
 #if !TPP_IGNORE_INVALID_CONFIGURATION

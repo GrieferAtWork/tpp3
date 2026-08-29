@@ -150,7 +150,7 @@ TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
 tpp_inplace_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
 	char const *const p = tpp_utoa(buf, value);
 	tpp_size len = (tpp_size)((buf + TPP_UTOA_MAXLEN) - p);
-	tpp_memmovedown(buf, p, len);
+	(void)tpp_memmovedown(buf, p, len);
 	return buf + len;
 }
 
@@ -180,7 +180,7 @@ tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value) {
 	tpp_assert(decimal_start >= p);
 	while ((decimal_len > 1) && decimal_start[decimal_len - 1] == '0')
 		--decimal_len;
-	tpp_memmovedown(decimal_start, p, decimal_len);
+	(void)tpp_memmovedown(decimal_start, p, decimal_len);
 	p += decimal_len;
 	return (tpp_size)(p - buf);
 }
@@ -308,7 +308,7 @@ allocate_stack:
 				cost = temp;
 			v1[j + 1] = cost;
 		}
-		tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
+		(void)tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
 	}
 	temp = v1[rhs_len];
 #ifdef tpp_alloca

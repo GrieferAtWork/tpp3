@@ -172,7 +172,7 @@ tpp_assertions_copy(tpp_assertions *tpp_restrict self,
 		self->tass_bckm = usemask;
 		self->tass_bckv = vec;
 		if (from->tass_bckm == usemask) {
-			tpp_memcpy(vec, from->tass_bckv, mapsize);
+			(void)tpp_memcpy(vec, from->tass_bckv, mapsize);
 		} else {
 			tpp_hash i;
 			tpp_bzero(vec, mapsize);
@@ -335,7 +335,7 @@ tpp_keyword_include_remap_entry_copy(tpp_keyword_include_remap_entry const *tpp_
 	tpp_keyword_include_remap_entry *result;
 	result = _tpp_keyword_include_remap_entry_alloc(fromlen, tolen);
 	if tpp_likely(result)
-		tpp_memcpy(result, self, _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen));
+		(void)tpp_memcpy(result, self, _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen));
 	return result;
 }
 
@@ -560,10 +560,10 @@ tpp_keyword_include_remap_builder_append(tpp_keyword_include_remap_builder *tpp_
 	entry = tpp_keyword_include_remap_entry_new(from, fromlen, to, tolen);
 	if tpp_unlikely(!entry)
 		return TPP_ENOMEM;
-	tpp_memmoveup(&map->tkirm_list[lo + 1],
-	              &map->tkirm_list[lo],
-	              (map->tkirm_count - lo) *
-	              sizeof(tpp_keyword_include_remap_entry *));
+	(void)tpp_memmoveup(&map->tkirm_list[lo + 1],
+	                    &map->tkirm_list[lo],
+	                    (map->tkirm_count - lo) *
+	                    sizeof(tpp_keyword_include_remap_entry *));
 	map->tkirm_list[lo] = entry;
 	++map->tkirm_count;
 	tpp_assert(map->tkirm_count <= self->tkirmb_alc);
@@ -1690,7 +1690,8 @@ tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 	result->tk_hash = self->tk_hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = self->tk_len;
-	tpp_memcpy(result->tk_kwd, self->tk_kwd, (self->tk_len + 1) * sizeof(tpp_char));
+	(void)tpp_memcpy(result->tk_kwd, self->tk_kwd,
+	                 (self->tk_len + 1) * sizeof(tpp_char));
 	return result;
 }
 
@@ -2124,7 +2125,8 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	result->tk_hash = kwd->tk_hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = kwd->tk_len;
-	tpp_memcpy(result->tk_kwd, kwd->tk_kwd, (kwd->tk_len + 1) * sizeof(tpp_char));
+	(void)tpp_memcpy(result->tk_kwd, kwd->tk_kwd,
+	                 (kwd->tk_len + 1) * sizeof(tpp_char));
 	result = tpp_keywords_inskeyword(self, result);
 done:
 	return result;
@@ -2460,7 +2462,7 @@ tpp_keywords_require_remap_file_kwd(/*1..1*/ tpp_keywords *tpp_restrict self,
 		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, dir2, dir2_len * sizeof(char));
 		*dst_iter++ = TPP_FS_SEP;
 	}
-	tpp_memcpy(dst_iter, remap_filename, sizeof(remap_filename));
+	(void)tpp_memcpy(dst_iter, remap_filename, sizeof(remap_filename));
 	tpp_assert((dst_iter + (sizeof(remap_filename) / sizeof(char)) - 1) ==
 	           (result->tk_kwd + result->tk_len));
 
@@ -2812,7 +2814,7 @@ resize_to_new_size:
 					tpp_lexer_openfile_keyword_setlen(result_kwd, new_size);
 					iter     = tpp_lexer_openfile_keyword_cstr(result_kwd) + iter_off;
 					next_sep = tpp_lexer_openfile_keyword_cstr(result_kwd) + next_off;
-					tpp_memmoveup(next_sep + delta, next_sep, (old_size - next_off) * sizeof(char));
+					(void)tpp_memmoveup(next_sep + delta, next_sep, (old_size - next_off) * sizeof(char));
 					next_off += delta;
 					*next_sep = '\0';
 					next_sep += delta;

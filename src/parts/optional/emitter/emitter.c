@@ -306,7 +306,7 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, line + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	if (emit_filename) {
 		*ptr++ = ' ';
@@ -403,7 +403,7 @@ tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, tpp_lcstate_getline(&ent->temsf_curpos) + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	if (filename) {
 		*ptr++ = ' ';
@@ -460,7 +460,7 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, tpp_lcinfo_getline(line) + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	*ptr++ = ' ';
 	*ptr++ = '\"';

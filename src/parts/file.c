@@ -311,7 +311,7 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 		tpp_assert(needed >= 2);
 		tpp_assert(needed <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		tpp_assert((have + consume) <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
-		tpp_memcpy(self->tlcs_data + have, text, consume * sizeof(tpp_char));
+		(void)tpp_memcpy(self->tlcs_data + have, text, consume * sizeof(tpp_char));
 		have += consume;
 		tpp_assert(have <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		if (have < needed)
@@ -769,7 +769,7 @@ again:
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
 			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
-			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
+			(void)tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
 			self->tf_end -= unused_head;
@@ -847,7 +847,7 @@ reuse_old_chunk:
 			if tpp_unlikely(!new_chunk)
 				return TPP_ENOMEM;
 		}
-		tpp_memcpy(tpp_string_str(new_chunk), base, old_inuse);
+		(void)tpp_memcpy(tpp_string_str(new_chunk), base, old_inuse);
 		if (old_chunk) {
 			tpp_size unused_head = (tpp_size)(base - tpp_string_str(old_chunk));
 #if TPP_HAVE_FILE_KEEPPOS
@@ -968,30 +968,30 @@ amend_tail_data:
 			/* Detect BOM and multi-byte encodings */
 			if ((tpp_size)read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
 				read_status -= 3; /* UTF-8-BOM */
-				tpp_memmovedown(io_dst, io_dst + 3, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 3, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_FORCE_UTF8;
 				if tpp_unlikely(read_status == 0)
 					goto again;
 			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0x00 && io_dst[1] == 0x00 &&
 			                                          io_dst[2] == 0xfe && io_dst[3] == 0xff)) {
 				read_status -= 4; /* UTF-32-BE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 4, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_BE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0xff && io_dst[1] == 0xfe &&
 			                                          io_dst[2] == 0x00 && io_dst[3] == 0x00)) {
 				read_status -= 4; /* UTF-32-LE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 4, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_LE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xfe && io_dst[1] == 0xff)) {
 				read_status -= 2; /* UTF-16-BE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 2, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_BE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xff && io_dst[1] == 0xfe)) {
 				read_status -= 2; /* UTF-16-LE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 2, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_LE;
 				goto convert_multiword_to_utf8;
 			} else {
@@ -1053,7 +1053,7 @@ convert_multiword_to_utf8:
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
 			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (tpp_uint_least8)tail_size;
-			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
+			(void)tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
 		dst_end = tpp_string_end(new_chunk);
@@ -1080,8 +1080,8 @@ convert_multiword_to_utf8:
 				 * and add to tail (this character can only be decoded when the
 				 * "next word" has also been fully read, where that "next word"
 				 * should be the LOW_UTF16 surrogate) */
-				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
-				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
+				(void)tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
+				                    self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[1] = raw_last_word.w8[1];
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc += 2;
@@ -1110,7 +1110,7 @@ convert_multiword_to_utf8:
 		/* Shift decoded unicode data to its final position. */
 		out_size = (tpp_size)(dst_end - dst_base);
 		io_dst = (tpp_char *)self->tf_end;
-		tpp_memmovedown(io_dst, dst_base, out_size);
+		(void)tpp_memmovedown(io_dst, dst_base, out_size);
 		if tpp_unlikely(out_size == 0) {
 			/* This can happen (e.g.) when a single byte was read from a pipe,
 			 * but the multi-byte codec requires at least 2/4 bytes in order
@@ -1142,7 +1142,7 @@ convert_multiword_to_utf8:
 		if (is_first_chunk)
 			++dst_base; /* Skip over first leading "," in initial chunk */
 		out_size = (tpp_size)(dst_end - dst_base);
-		tpp_memmovedown(io_dst, dst_base, out_size);
+		(void)tpp_memmovedown(io_dst, dst_base, out_size);
 		self->tf_end += out_size;
 		goto done;
 #define WANT_done

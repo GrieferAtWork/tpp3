@@ -94,7 +94,7 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 	tpp_assert(tpp_extensions_canpop(self));
 	if (self->te_pushcnt == 0) {
 		tpp_extensions *prev = self->te_prev;
-		tpp_memcpy(self, prev, sizeof(tpp_extensions));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_extensions));
 		_tpp_extensions_free(prev);
 		tpp_assert(self->te_pushcnt != 0);
 	}
@@ -113,7 +113,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 		copy = _tpp_extensions_alloc();
 		if tpp_unlikely(!copy)
 			goto err_nomem;
-		tpp_memcpy(copy, self, sizeof(tpp_extensions));
+		(void)tpp_memcpy(copy, self, sizeof(tpp_extensions));
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}

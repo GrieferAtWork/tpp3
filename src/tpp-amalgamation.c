@@ -1706,7 +1706,7 @@ _tpp_hooklist2_add(tpp_hooklist2 **tpp_restrict p_self,
 			if (ent->thle_cb == cb && ent->thle_cookie == arg) {
 				/* Already registered -> move to back (so it gets called first) */
 				tpp_size num_after = (old_size - index) - 1;
-				tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
+				(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
 				ent += num_after;
 				ent->thle_cb     = cb;
 				ent->thle_cookie = arg;
@@ -1756,7 +1756,7 @@ _tpp_hooklist2_del(tpp_hooklist2 **tpp_restrict p_self,
 					tpp_free(self);
 				} else {
 					tpp_size num_after = (--self->thl_size - index);
-					tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
+					(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist2_entry));
 					/* Release unused memory... */
 					self = (tpp_hooklist2 *)tpp_tryrealloc(self,
 					                                       self->thl_size *
@@ -1788,7 +1788,7 @@ _tpp_hooklist1_add(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 			if (ent->thle_cb == cb) {
 				/* Already registered -> move to back (so it gets called first) */
 				tpp_size num_after = (old_size - index) - 1;
-				tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
+				(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
 				ent += num_after;
 				ent->thle_cb = cb;
 				return TPP_EOK;
@@ -1834,7 +1834,7 @@ _tpp_hooklist1_del(tpp_hooklist1 **tpp_restrict p_self, void (*cb)(void)) {
 					tpp_free(self);
 				} else {
 					tpp_size num_after = (--self->thl_size - index);
-					tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
+					(void)tpp_memmovedown(ent, ent + 1, num_after * sizeof(tpp_hooklist1_entry));
 					/* Release unused memory... */
 					self = (tpp_hooklist1 *)tpp_tryrealloc(self,
 					                                       self->thl_size *
@@ -1990,7 +1990,7 @@ TPP_FORMATPRINTER_IMPL(tpp_string_builder_print, arg, text, num_bytes) {
 	tpp_char *dst = tpp_string_builder_alloc(me, num_bytes);
 	if tpp_unlikely(!dst)
 		goto err_nomem;
-	tpp_memcpy(dst, text, num_bytes);
+	(void)tpp_memcpy(dst, text, num_bytes);
 	return (tpp_ssize)num_bytes;
 err_nomem:
 	return TPP_SSIZE_OFERR(TPP_ENOMEM);
@@ -2101,7 +2101,7 @@ TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) char *TPPCALL
 tpp_inplace_utoa(char buf[TPP_UTOA_MAXLEN], tpp_uintmax value) {
 	char const *const p = tpp_utoa(buf, value);
 	tpp_size len = (tpp_size)((buf + TPP_UTOA_MAXLEN) - p);
-	tpp_memmovedown(buf, p, len);
+	(void)tpp_memmovedown(buf, p, len);
 	return buf + len;
 }
 
@@ -2131,7 +2131,7 @@ tpp_ftoa(char buf[TPP_FTOA_MAXLEN], tpp_float value) {
 	tpp_assert(decimal_start >= p);
 	while ((decimal_len > 1) && decimal_start[decimal_len - 1] == '0')
 		--decimal_len;
-	tpp_memmovedown(decimal_start, p, decimal_len);
+	(void)tpp_memmovedown(decimal_start, p, decimal_len);
 	p += decimal_len;
 	return (tpp_size)(p - buf);
 }
@@ -2259,7 +2259,7 @@ allocate_stack:
 				cost = temp;
 			v1[j + 1] = cost;
 		}
-		tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
+		(void)tpp_memcpy(v0, v1, rhs_len * sizeof(tpp_size));
 	}
 	temp = v1[rhs_len];
 #ifdef tpp_alloca
@@ -18610,7 +18610,7 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 
 				/* See if this match is better (we want the longest match possible) */
 				if (match_ptr == NULL || (parser->tuntp_pos > match_ptr)) {
-					tpp_memcpy(match_uc, uc, this_match_count * sizeof(tpp_unichar));
+					(void)tpp_memcpy(match_uc, uc, this_match_count * sizeof(tpp_unichar));
 					match_ptr   = parser->tuntp_pos;
 					match_count = this_match_count;
 				}
@@ -18624,7 +18624,7 @@ tpp_unam_node_matchtext_children(tpp_unam_node const *tpp_restrict db_first_chil
 	}
 
 	if (match_ptr) {
-		tpp_memcpy(uc, match_uc, match_count * sizeof(tpp_unichar));
+		(void)tpp_memcpy(uc, match_uc, match_count * sizeof(tpp_unichar));
 		parser->tuntp_pos = match_ptr;
 		return match_count;
 	}
@@ -24676,7 +24676,7 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 		return 0; /* Nothing changed! */
 	szCorrectSize = tpp_strlen(fData.cFileName);
 	if (szCorrectSize <= after_last_sep_bufsize)
-		tpp_memcpy(after_last_sep, fData.cFileName, szCorrectSize * sizeof(char));
+		(void)tpp_memcpy(after_last_sep, fData.cFileName, szCorrectSize * sizeof(char));
 	return (tpp_ssize)szCorrectSize;
 #else /* TPP_OS_WINDOWS */
 #if !TPP_IGNORE_INVALID_CONFIGURATION
@@ -25144,7 +25144,7 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 		tpp_assert(needed >= 2);
 		tpp_assert(needed <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		tpp_assert((have + consume) <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
-		tpp_memcpy(self->tlcs_data + have, text, consume * sizeof(tpp_char));
+		(void)tpp_memcpy(self->tlcs_data + have, text, consume * sizeof(tpp_char));
 		have += consume;
 		tpp_assert(have <= (sizeof(self->tlcs_data) / sizeof(tpp_char)));
 		if (have < needed)
@@ -25602,7 +25602,7 @@ again:
 #endif /* !__OPTIMIZE_SIZE__ */
 		{
 			tpp_file_io_prepare_unload(self, tpp_string_str(old_chunk), unused_head);
-			tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
+			(void)tpp_memmovedown(tpp_string_str(old_chunk), base, old_inuse);
 			base -= unused_head;
 			self->tf_pos -= unused_head;
 			self->tf_end -= unused_head;
@@ -25680,7 +25680,7 @@ reuse_old_chunk:
 			if tpp_unlikely(!new_chunk)
 				return TPP_ENOMEM;
 		}
-		tpp_memcpy(tpp_string_str(new_chunk), base, old_inuse);
+		(void)tpp_memcpy(tpp_string_str(new_chunk), base, old_inuse);
 		if (old_chunk) {
 			tpp_size unused_head = (tpp_size)(base - tpp_string_str(old_chunk));
 #if TPP_HAVE_FILE_KEEPPOS
@@ -25801,30 +25801,30 @@ amend_tail_data:
 			/* Detect BOM and multi-byte encodings */
 			if ((tpp_size)read_status >= 3 && (io_dst[0] == 0xef && io_dst[1] == 0xbb && io_dst[2] == 0xbf)) {
 				read_status -= 3; /* UTF-8-BOM */
-				tpp_memmovedown(io_dst, io_dst + 3, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 3, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_FORCE_UTF8;
 				if tpp_unlikely(read_status == 0)
 					goto again;
 			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0x00 && io_dst[1] == 0x00 &&
 			                                          io_dst[2] == 0xfe && io_dst[3] == 0xff)) {
 				read_status -= 4; /* UTF-32-BE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 4, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_BE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 4 && (io_dst[0] == 0xff && io_dst[1] == 0xfe &&
 			                                          io_dst[2] == 0x00 && io_dst[3] == 0x00)) {
 				read_status -= 4; /* UTF-32-LE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 4, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 4, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF32_LE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xfe && io_dst[1] == 0xff)) {
 				read_status -= 2; /* UTF-16-BE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 2, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_BE;
 				goto convert_multiword_to_utf8;
 			} else if ((tpp_size)read_status >= 2 && (io_dst[0] == 0xff && io_dst[1] == 0xfe)) {
 				read_status -= 2; /* UTF-16-LE-BOM */
-				tpp_memmovedown(io_dst, io_dst + 2, read_status);
+				(void)tpp_memmovedown(io_dst, io_dst + 2, read_status);
 				self->tf_enc = TPP_FILE_ENCODING_UTF16_LE;
 				goto convert_multiword_to_utf8;
 			} else {
@@ -25886,7 +25886,7 @@ convert_multiword_to_utf8:
 			read_status -= tail_size;
 			tail_base = io_dst + (tpp_size)read_status;
 			self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc = (tpp_uint_least8)tail_size;
-			tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
+			(void)tpp_memcpy(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_base, tail_size);
 		}
 
 		dst_end = tpp_string_end(new_chunk);
@@ -25913,8 +25913,8 @@ convert_multiword_to_utf8:
 				 * and add to tail (this character can only be decoded when the
 				 * "next word" has also been fully read, where that "next word"
 				 * should be the LOW_UTF16 surrogate) */
-				tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
-				              self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
+				(void)tpp_memmoveup(self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv + 2,
+				                    self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, tail_size);
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[0] = raw_last_word.w8[0];
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv[1] = raw_last_word.w8[1];
 				self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc += 2;
@@ -25943,7 +25943,7 @@ convert_multiword_to_utf8:
 		/* Shift decoded unicode data to its final position. */
 		out_size = (tpp_size)(dst_end - dst_base);
 		io_dst = (tpp_char *)self->tf_end;
-		tpp_memmovedown(io_dst, dst_base, out_size);
+		(void)tpp_memmovedown(io_dst, dst_base, out_size);
 		if tpp_unlikely(out_size == 0) {
 			/* This can happen (e.g.) when a single byte was read from a pipe,
 			 * but the multi-byte codec requires at least 2/4 bytes in order
@@ -25975,7 +25975,7 @@ convert_multiword_to_utf8:
 		if (is_first_chunk)
 			++dst_base; /* Skip over first leading "," in initial chunk */
 		out_size = (tpp_size)(dst_end - dst_base);
-		tpp_memmovedown(io_dst, dst_base, out_size);
+		(void)tpp_memmovedown(io_dst, dst_base, out_size);
 		self->tf_end += out_size;
 		goto done;
 #define WANT_done
@@ -27005,7 +27005,7 @@ tpp_assertions_copy(tpp_assertions *tpp_restrict self,
 		self->tass_bckm = usemask;
 		self->tass_bckv = vec;
 		if (from->tass_bckm == usemask) {
-			tpp_memcpy(vec, from->tass_bckv, mapsize);
+			(void)tpp_memcpy(vec, from->tass_bckv, mapsize);
 		} else {
 			tpp_hash i;
 			tpp_bzero(vec, mapsize);
@@ -27168,7 +27168,7 @@ tpp_keyword_include_remap_entry_copy(tpp_keyword_include_remap_entry const *tpp_
 	tpp_keyword_include_remap_entry *result;
 	result = _tpp_keyword_include_remap_entry_alloc(fromlen, tolen);
 	if tpp_likely(result)
-		tpp_memcpy(result, self, _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen));
+		(void)tpp_memcpy(result, self, _tpp_keyword_include_remap_entry_sizeof(fromlen, tolen));
 	return result;
 }
 
@@ -27393,10 +27393,10 @@ tpp_keyword_include_remap_builder_append(tpp_keyword_include_remap_builder *tpp_
 	entry = tpp_keyword_include_remap_entry_new(from, fromlen, to, tolen);
 	if tpp_unlikely(!entry)
 		return TPP_ENOMEM;
-	tpp_memmoveup(&map->tkirm_list[lo + 1],
-	              &map->tkirm_list[lo],
-	              (map->tkirm_count - lo) *
-	              sizeof(tpp_keyword_include_remap_entry *));
+	(void)tpp_memmoveup(&map->tkirm_list[lo + 1],
+	                    &map->tkirm_list[lo],
+	                    (map->tkirm_count - lo) *
+	                    sizeof(tpp_keyword_include_remap_entry *));
 	map->tkirm_list[lo] = entry;
 	++map->tkirm_count;
 	tpp_assert(map->tkirm_count <= self->tkirmb_alc);
@@ -28523,7 +28523,8 @@ tpp_keyword_copy(tpp_keyword const *tpp_restrict self) {
 	result->tk_hash = self->tk_hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = self->tk_len;
-	tpp_memcpy(result->tk_kwd, self->tk_kwd, (self->tk_len + 1) * sizeof(tpp_char));
+	(void)tpp_memcpy(result->tk_kwd, self->tk_kwd,
+	                 (self->tk_len + 1) * sizeof(tpp_char));
 	return result;
 }
 
@@ -28957,7 +28958,8 @@ tpp_keywords_copybuiltin(tpp_keywords *tpp_restrict self,
 	result->tk_hash = kwd->tk_hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = kwd->tk_len;
-	tpp_memcpy(result->tk_kwd, kwd->tk_kwd, (kwd->tk_len + 1) * sizeof(tpp_char));
+	(void)tpp_memcpy(result->tk_kwd, kwd->tk_kwd,
+	                 (kwd->tk_len + 1) * sizeof(tpp_char));
 	result = tpp_keywords_inskeyword(self, result);
 done:
 	return result;
@@ -29293,7 +29295,7 @@ tpp_keywords_require_remap_file_kwd(/*1..1*/ tpp_keywords *tpp_restrict self,
 		dst_iter = (tpp_char *)tpp_mempcpy(dst_iter, dir2, dir2_len * sizeof(char));
 		*dst_iter++ = TPP_FS_SEP;
 	}
-	tpp_memcpy(dst_iter, remap_filename, sizeof(remap_filename));
+	(void)tpp_memcpy(dst_iter, remap_filename, sizeof(remap_filename));
 	tpp_assert((dst_iter + (sizeof(remap_filename) / sizeof(char)) - 1) ==
 	           (result->tk_kwd + result->tk_len));
 
@@ -29645,7 +29647,7 @@ resize_to_new_size:
 					tpp_lexer_openfile_keyword_setlen(result_kwd, new_size);
 					iter     = tpp_lexer_openfile_keyword_cstr(result_kwd) + iter_off;
 					next_sep = tpp_lexer_openfile_keyword_cstr(result_kwd) + next_off;
-					tpp_memmoveup(next_sep + delta, next_sep, (old_size - next_off) * sizeof(char));
+					(void)tpp_memmoveup(next_sep + delta, next_sep, (old_size - next_off) * sizeof(char));
 					next_off += delta;
 					*next_sep = '\0';
 					next_sep += delta;
@@ -30431,7 +30433,7 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 
 #if TPP_HAVE_EXTENSIONS
 static tpp_size tpp_extension_name_offsets_byname[TPP_EXT_COUNT ? TPP_EXT_COUNT : 1] = {};
-static int tpp_extension_name_offset_compare(void const *lhs, void const *rhs) {
+TPP_QSORT_DEFINE_CALLBACK(tpp_extension_name_offset_compare, lhs, rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
 	tpp_size rhs_value = *(tpp_size const *)rhs;
 	char const *lhs_string = (char const *)&tpp_extension_names + lhs_value;
@@ -30440,11 +30442,11 @@ static int tpp_extension_name_offset_compare(void const *lhs, void const *rhs) {
 }
 
 static void tpp_init_extension_name_offsets_byname_impl(void) {
-	tpp_memcpy(tpp_extension_name_offsets_byname,
-	           tpp_extension_name_offsets_byid,
-	           sizeof(tpp_extension_name_offsets_byid));
-	qsort(tpp_extension_name_offsets_byname, TPP_EXT_COUNT, sizeof(tpp_size),
-	      &tpp_extension_name_offset_compare);
+	(void)tpp_memcpy(tpp_extension_name_offsets_byname,
+	                 tpp_extension_name_offsets_byid,
+	                 sizeof(tpp_extension_name_offsets_byid));
+	(void)tpp_qsort(tpp_extension_name_offsets_byname, TPP_EXT_COUNT, sizeof(tpp_size),
+	                &tpp_extension_name_offset_compare);
 }
 
 static void tpp_init_extension_name_offsets_byname(void) {
@@ -30457,7 +30459,7 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 #if TPP_HAVE_WARNINGS
 static tpp_size tpp_warning_group_name_offsets_byname[TPP_WGN_COUNT] = {};
-static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rhs) {
+TPP_QSORT_DEFINE_CALLBACK(tpp_warning_group_name_offset_compare, lhs, rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
 	tpp_size rhs_value = *(tpp_size const *)rhs;
 	char const *lhs_string = (char const *)&tpp_warning_group_names + lhs_value;
@@ -30466,11 +30468,11 @@ static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rh
 }
 
 static void tpp_init_warning_group_name_offsets_byname_impl(void) {
-	tpp_memcpy(tpp_warning_group_name_offsets_byname,
-	           tpp_warning_group_name_offsets_bynameid,
-	           sizeof(tpp_warning_group_name_offsets_bynameid));
-	qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
-	      &tpp_warning_group_name_offset_compare);
+	(void)tpp_memcpy(tpp_warning_group_name_offsets_byname,
+	                 tpp_warning_group_name_offsets_bynameid,
+	                 sizeof(tpp_warning_group_name_offsets_bynameid));
+	(void)tpp_qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
+	                &tpp_warning_group_name_offset_compare);
 }
 
 static void tpp_init_warning_group_name_offsets_byname(void) {
@@ -31578,9 +31580,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 		result = _tpp_macro_alloc_function(expand_count);
 		if tpp_unlikely(!result)
 			return NULL;
-		tpp_memcpy(result->tm_data.tmd_func.tmf_expand,
-		           self->tm_data.tmd_func.tmf_expand,
-		           expand_count * sizeof(tpp_macro_opcode));
+		(void)tpp_memcpy(result->tm_data.tmd_func.tmf_expand,
+		                 self->tm_data.tmd_func.tmf_expand,
+		                 expand_count * sizeof(tpp_macro_opcode));
 		result->tm_data.tmd_func.tmf_argc = self->tm_data.tmd_func.tmf_argc;
 		argv_copy = (tpp_macro_argument *)tpp_malloc(result->tm_data.tmd_func.tmf_argc *
 		                                             sizeof(tpp_macro_argument));
@@ -31588,9 +31590,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 			_tpp_macro_free(result);
 			return NULL;
 		}
-		tpp_memcpy(argv_copy, self->tm_data.tmd_func.tmf_argv,
-		           result->tm_data.tmd_func.tmf_argc *
-		           sizeof(tpp_macro_argument));
+		(void)tpp_memcpy(argv_copy, self->tm_data.tmd_func.tmf_argv,
+		                 result->tm_data.tmd_func.tmf_argc *
+		                 sizeof(tpp_macro_argument));
 		result->tm_data.tmd_func.tmf_argv    = argv_copy;
 		result->tm_data.tmd_func.tmf_expbase = self->tm_data.tmd_func.tmf_expbase;
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
@@ -32358,7 +32360,7 @@ tpp_extensions_pop(tpp_extensions *tpp_restrict self) {
 	tpp_assert(tpp_extensions_canpop(self));
 	if (self->te_pushcnt == 0) {
 		tpp_extensions *prev = self->te_prev;
-		tpp_memcpy(self, prev, sizeof(tpp_extensions));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_extensions));
 		_tpp_extensions_free(prev);
 		tpp_assert(self->te_pushcnt != 0);
 	}
@@ -32377,7 +32379,7 @@ tpp_extensions_setid(tpp_extensions *tpp_restrict self,
 		copy = _tpp_extensions_alloc();
 		if tpp_unlikely(!copy)
 			goto err_nomem;
-		tpp_memcpy(copy, self, sizeof(tpp_extensions));
+		(void)tpp_memcpy(copy, self, sizeof(tpp_extensions));
 		self->te_prev    = copy;
 		self->te_pushcnt = 0;
 	}
@@ -33378,7 +33380,7 @@ tpp_warnings_pop(tpp_warnings *tpp_restrict self) {
 	if (self->tw_pushcnt == 0) {
 		tpp_warnings *prev = self->tw_prev;
 		_tpp_warnings_fini_common(self);
-		tpp_memcpy(self, prev, sizeof(tpp_warnings));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_warnings));
 		_tpp_warnings_free(prev);
 		tpp_assert(self->tw_pushcnt != 0);
 	}
@@ -33504,10 +33506,10 @@ tpp_warnings_require_suppress(tpp_warnings *tpp_restrict self,
 		self->tw_suppressions.tws_ctxa = new_alloc;
 	}
 	tpp_assert(self->tw_suppressions.tws_ctxc < self->tw_suppressions.tws_ctxa);
-	tpp_memmoveup(&self->tw_suppressions.tws_ctxv[lo + 1],
-	              &self->tw_suppressions.tws_ctxv[lo],
-	              (self->tw_suppressions.tws_ctxc - lo) *
-	              sizeof(tpp_warning_suppress_item));
+	(void)tpp_memmoveup(&self->tw_suppressions.tws_ctxv[lo + 1],
+	                    &self->tw_suppressions.tws_ctxv[lo],
+	                    (self->tw_suppressions.tws_ctxc - lo) *
+	                    sizeof(tpp_warning_suppress_item));
 	++self->tw_suppressions.tws_ctxc;
 	result = &self->tw_suppressions.tws_ctxv[lo];
 	result->twsi_count  = 0;
@@ -33586,9 +33588,9 @@ _tpp_warnings_setctx_nofail(tpp_warnings *tpp_restrict self,
 			if (item) {
 				tpp_size index = (tpp_size)(item - self->tw_suppressions.tws_ctxv);
 				--self->tw_suppressions.tws_ctxc;
-				tpp_memmovedown(item, item + 1,
-				                (self->tw_suppressions.tws_ctxc - index) *
-				                sizeof(tpp_warning_suppress_item));
+				(void)tpp_memmovedown(item, item + 1,
+				                      (self->tw_suppressions.tws_ctxc - index) *
+				                      sizeof(tpp_warning_suppress_item));
 			}
 		} else {
 			tpp_assert(tpp_warnings_find_suppress(self, ctx_id) == NULL &&
@@ -33717,9 +33719,9 @@ _tpp_warnings_invoke_nofail(tpp_warnings const *tpp_restrict self, tpp_warning_i
 
 			/* Delete the suppression entry */
 			--self->tw_suppressions.tws_ctxc;
-			tpp_memmovedown(item, item + 1,
-			                (self->tw_suppressions.tws_ctxc - mid) *
-			                sizeof(tpp_warning_suppress_item));
+			(void)tpp_memmovedown(item, item + 1,
+			                      (self->tw_suppressions.tws_ctxc - mid) *
+			                      sizeof(tpp_warning_suppress_item));
 		}
 
 		/* Treat supressed warning as disabled. */
@@ -33827,9 +33829,9 @@ tpp_include_path_list_pushtail(tpp_include_path_list *tpp_restrict self,
 			/* Move entry to back */
 			tpp_include_path_entry temp = *entry;
 			++i;
-			tpp_memmovedown(entry, entry + 1,
-			                (self->tipl_size - i) *
-			                sizeof(tpp_include_path_entry));
+			(void)tpp_memmovedown(entry, entry + 1,
+			                      (self->tipl_size - i) *
+			                      sizeof(tpp_include_path_entry));
 			self->tipl_list[self->tipl_size - 1] = temp;
 			return TPP_EOK;
 		}
@@ -33868,9 +33870,9 @@ tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
 		if (tpp_include_path_entry_equals(entry, path, pathlen)) {
 			/* Move entry to front */
 			tpp_include_path_entry temp = *entry;
-			tpp_memmoveup(&self->tipl_list[1],
-			              &self->tipl_list[0],
-			              i * sizeof(tpp_include_path_entry));
+			(void)tpp_memmoveup(&self->tipl_list[1],
+			                    &self->tipl_list[0],
+			                    i * sizeof(tpp_include_path_entry));
 			self->tipl_list[0] = temp;
 			return TPP_EOK;
 		}
@@ -33889,9 +33891,9 @@ tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
 		tpp_include_path_string_free(newpath);
 		return TPP_ENOMEM;
 	}
-	tpp_memmoveup(&new_list[1], &new_list[0],
-	              self->tipl_size *
-	              sizeof(tpp_include_path_entry));
+	(void)tpp_memmoveup(&new_list[1], &new_list[0],
+	                    self->tipl_size *
+	                    sizeof(tpp_include_path_entry));
 	tpp_include_path_entry_init_inherited(&new_list[0], newpath);
 	self->tipl_list = new_list;
 	++self->tipl_size;
@@ -33917,9 +33919,9 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 			/* Remove this entry */
 			tpp_include_path_entry temp = *entry;
 			--self->tipl_size;
-			tpp_memmovedown(entry + 0, entry + 1,
-			                (self->tipl_size - i) *
-			                sizeof(tpp_include_path_entry));
+			(void)tpp_memmovedown(entry + 0, entry + 1,
+			                      (self->tipl_size - i) *
+			                      sizeof(tpp_include_path_entry));
 			_tpp_include_path_entry_fini(&temp);
 			return TPP_EOK;
 		}
@@ -34221,7 +34223,7 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 	if (self->tip_pushcnt == 0) {
 		tpp_include_paths *prev = self->tip_prev;
 		tpp_include_paths_fini_common(self);
-		tpp_memcpy(self, prev, sizeof(tpp_include_paths));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_include_paths));
 		_tpp_include_paths_free(prev);
 		tpp_assert(self->tip_pushcnt != 0);
 	}
@@ -36461,11 +36463,11 @@ tpp_expr_value_add(struct tpp_lexer *tpp_restrict lexer,
 		                                  tpp_string_len(rhs_value));
 		if tpp_unlikely(!result_string)
 			return TPP_ENOMEM;
-		tpp_memcpy(tpp_string_str(result_string), tpp_string_str(lhs_value),
-		           tpp_string_len(lhs_value) * sizeof(tpp_char));
-		tpp_memcpy(tpp_string_str(result_string) + tpp_string_len(lhs_value),
-		           tpp_string_str(rhs_value),
-		           tpp_string_len(rhs_value) * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(result_string), tpp_string_str(lhs_value),
+		                 tpp_string_len(lhs_value) * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(result_string) + tpp_string_len(lhs_value),
+		                 tpp_string_str(rhs_value),
+		                 tpp_string_len(rhs_value) * sizeof(tpp_char));
 		error = tpp_expr_value_init_string_inherited(result, result_string);
 	}	break;
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
@@ -37486,9 +37488,9 @@ tpp_expr_value_getrange(struct tpp_lexer *tpp_restrict lexer,
 	result_string = tpp_string_malloc(result_size);
 	if tpp_unlikely(!result_string)
 		return TPP_ENOMEM;
-	tpp_memcpy(tpp_string_str(result_string),
-	           tpp_string_str(lhs_value) + (tpp_size)lo_value,
-	           result_size * sizeof(tpp_char));
+	(void)tpp_memcpy(tpp_string_str(result_string),
+	                 tpp_string_str(lhs_value) + (tpp_size)lo_value,
+	                 result_size * sizeof(tpp_char));
 	return tpp_expr_value_init_string_inherited(result, result_string);
 return_empty_string:
 	result_string = tpp_string_newempty();
@@ -45818,7 +45820,7 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		dst = (tpp_char *)tpp_mempcpy(dst, macro_params, macro_params_len * sizeof(char));
 		*dst++ = ' '; /* Always have whitespace here to prevent
 		               * function-style macro in case of "-DFOO=(10)" */
-		tpp_memcpy(dst, macro_body, macro_body_len * sizeof(char));
+		(void)tpp_memcpy(dst, macro_body, macro_body_len * sizeof(char));
 		tpp_assert((dst + macro_body_len) == tpp_string_end(def_chunk));
 	}
 
@@ -47822,8 +47824,8 @@ tpp_lexer_process_pragma_TPP_keyword_feature_cb(void *arg, tpp_string *chunk,
 		feature_str = tpp_string_malloc(length);
 		if tpp_unlikely(!feature_str)
 			return TPP_ENOMEM;
-		tpp_memcpy(tpp_string_str(feature_str), str,
-		           length * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(feature_str), str,
+		                 length * sizeof(tpp_char));
 	}
 	result = tpp_keyword_setfeature(data->tlpptkfd_keyword,
 	                                data->tlpptkfd_kind,
@@ -51376,9 +51378,9 @@ err_tok_rollback_new_filename:
 				tpp_string_decref(new_filename);
 				return TPP_TOK_ENOMEM;
 			}
-			tpp_memcpy(tpp_string_str(trimmed_filename),
-			           tpp_string_str(new_filename),
-			           len * sizeof(tpp_char));
+			(void)tpp_memcpy(tpp_string_str(trimmed_filename),
+			                 tpp_string_str(new_filename),
+			                 len * sizeof(tpp_char));
 			tpp_string_decref(new_filename);
 			new_filename = trimmed_filename;
 		}
@@ -52404,7 +52406,7 @@ tpp_string_buffer_append(tpp_string_buffer *tpp_restrict self,
 		self->tsb_alloc = min_alloc;
 	}
 	tpp_assert(min_alloc <= self->tsb_alloc);
-	tpp_memcpy(self->tsb_data + self->tsb_size, data, num_bytes);
+	(void)tpp_memcpy(self->tsb_data + self->tsb_size, data, num_bytes);
 	self->tsb_size += num_bytes;
 	return true;
 }
@@ -52844,7 +52846,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 			va_nargs_value = (argc - macro_argc) + 1;
 		endp = tpp_utoa(va_nargs, va_nargs_value);
 		va_nargs_len = (tpp_size)((va_nargs + tpp_lengthof(va_nargs)) - endp);
-		tpp_memmovedown(va_nargs, endp, va_nargs_len);
+		(void)tpp_memmovedown(va_nargs, endp, va_nargs_len);
 		result_chunk_size += va_nargs_len * macro->tm_data.tmd_func.tmf_n_vanargs;
 	}
 #endif /* TPP_HAVE_MACRO_DATA_FUNC_N_VANARGS*/
@@ -53359,7 +53361,7 @@ tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
 	chunk = tpp_string_malloc(textsize);
 	if tpp_unlikely(!chunk)
 		return TPP_TOK_ENOMEM;
-	tpp_memcpy(tpp_string_str(chunk), text, textsize);
+	(void)tpp_memcpy(tpp_string_str(chunk), text, textsize);
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk),
 	                                         textsize, chunk);
 }
@@ -53597,7 +53599,8 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				tpp_feature_test_macro_expansion_len = (tpp_size)((char *)tpp_feature_test_macro_expansion +
 					                                              tpp_lengthof(tpp_feature_test_macro_expansion) -
 					                                              expansion_dst);
-				tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst, tpp_feature_test_macro_expansion_len);
+				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst,
+					                  tpp_feature_test_macro_expansion_len);
 				goto after_expansion_mode_assignment;
 #define WANT_after_expansion_mode_assignment
 			}	break;
@@ -55243,11 +55246,11 @@ TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_by
 	remaining = (data->tsbied_builder->tsb_buf->ts_str +
 	             tpp_string_builder_getlen(data->tsbied_builder)) -
 	            data->tsbied_text;
-	tpp_memmoveup(data->tsbied_text + delta_size,
-	              data->tsbied_text, remaining * sizeof(tpp_char));
+	(void)tpp_memmoveup(data->tsbied_text + delta_size,
+	                    data->tsbied_text, remaining * sizeof(tpp_char));
 
 	/* Inject escaped representation */
-	tpp_memcpy(data->tsbied_text - 1, text, num_bytes * sizeof(tpp_char));
+	(void)tpp_memcpy(data->tsbied_text - 1, text, num_bytes * sizeof(tpp_char));
 	data->tsbied_text += delta_size;
 
 	/* Tell caller to restart "tpp_token_encodestring()" from updated base position */
@@ -63238,9 +63241,9 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 				break;
 			/* Add "arg" to trailing list of unknown arguments */
 			--argc;
-			tpp_memmovedown(&argv[0], &argv[1],
-			                (argc + unknown_count) *
-			                sizeof(char *));
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
 			argv[argc + unknown_count] = arg;
 			++unknown_count;
 			result = TPP_EOK;
@@ -63259,7 +63262,9 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 				unsigned int total_count_minus_1 = argc + unknown_count - 1;
 				while (shift_count--) {
 					arg = argv[0];
-					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					(void)tpp_memmovedown(&argv[0], &argv[1],
+					                      total_count_minus_1 *
+					                      sizeof(char *));
 					argv[total_count_minus_1] = arg;
 				}
 			}
@@ -63520,9 +63525,9 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 			tpp_errno error = tpp_lexer_pushfile_ofr(self->tcl_lexer, ofr);
 			if (TPP_ISERR(error)) {
 				tpp_size remaming = (self->tcl_includec - 1) - i;
-				tpp_memmovedown(&self->tcl_includev[0],
-				                &self->tcl_includev[i],
-				                remaming * sizeof(tpp_lexer_openfile_result));
+				(void)tpp_memmovedown(&self->tcl_includev[0],
+				                      &self->tcl_includev[i],
+				                      remaming * sizeof(tpp_lexer_openfile_result));
 				self->tcl_includec = remaming;
 				return error;
 			}

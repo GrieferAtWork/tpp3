@@ -615,7 +615,7 @@ tpp_emitter_print_line_directive(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, line + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	if (emit_filename) {
 		*ptr++ = ' ';
@@ -712,7 +712,7 @@ tpp_emitter_print_cpp_digit_applyfile_(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, tpp_lcstate_getline(&ent->temsf_curpos) + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	if (filename) {
 		*ptr++ = ' ';
@@ -769,7 +769,7 @@ tpp_emitter_print_cpp_digit_working_directory(tpp_emitter *tpp_restrict self,
 	*ptr++ = ' ';
 	buf_temp = tpp_itoa(ptr, tpp_lcinfo_getline(line) + 1);
 	partlen = (tpp_size)(ptr + TPP_ITOA_MAXLEN - buf_temp);
-	tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
+	ptr = (char *)tpp_memmovedown(ptr, buf_temp, partlen * sizeof(char));
 	ptr += partlen;
 	*ptr++ = ' ';
 	*ptr++ = '\"';
@@ -3131,9 +3131,9 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
 				break;
 			/* Add "arg" to trailing list of unknown arguments */
 			--argc;
-			tpp_memmovedown(&argv[0], &argv[1],
-			                (argc + unknown_count) *
-			                sizeof(char *));
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
 			argv[argc + unknown_count] = arg;
 			++unknown_count;
 			result = TPP_EOK;
@@ -3152,7 +3152,9 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
 				unsigned int total_count_minus_1 = argc + unknown_count - 1;
 				while (shift_count--) {
 					arg = argv[0];
-					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					(void)tpp_memmovedown(&argv[0], &argv[1],
+					                      total_count_minus_1 *
+					                      sizeof(char *));
 					argv[total_count_minus_1] = arg;
 				}
 			}

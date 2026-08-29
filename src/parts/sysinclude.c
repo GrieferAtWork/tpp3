@@ -120,9 +120,9 @@ tpp_include_path_list_pushtail(tpp_include_path_list *tpp_restrict self,
 			/* Move entry to back */
 			tpp_include_path_entry temp = *entry;
 			++i;
-			tpp_memmovedown(entry, entry + 1,
-			                (self->tipl_size - i) *
-			                sizeof(tpp_include_path_entry));
+			(void)tpp_memmovedown(entry, entry + 1,
+			                      (self->tipl_size - i) *
+			                      sizeof(tpp_include_path_entry));
 			self->tipl_list[self->tipl_size - 1] = temp;
 			return TPP_EOK;
 		}
@@ -161,9 +161,9 @@ tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
 		if (tpp_include_path_entry_equals(entry, path, pathlen)) {
 			/* Move entry to front */
 			tpp_include_path_entry temp = *entry;
-			tpp_memmoveup(&self->tipl_list[1],
-			              &self->tipl_list[0],
-			              i * sizeof(tpp_include_path_entry));
+			(void)tpp_memmoveup(&self->tipl_list[1],
+			                    &self->tipl_list[0],
+			                    i * sizeof(tpp_include_path_entry));
 			self->tipl_list[0] = temp;
 			return TPP_EOK;
 		}
@@ -182,9 +182,9 @@ tpp_include_path_list_pushhead(tpp_include_path_list *tpp_restrict self,
 		tpp_include_path_string_free(newpath);
 		return TPP_ENOMEM;
 	}
-	tpp_memmoveup(&new_list[1], &new_list[0],
-	              self->tipl_size *
-	              sizeof(tpp_include_path_entry));
+	(void)tpp_memmoveup(&new_list[1], &new_list[0],
+	                    self->tipl_size *
+	                    sizeof(tpp_include_path_entry));
 	tpp_include_path_entry_init_inherited(&new_list[0], newpath);
 	self->tipl_list = new_list;
 	++self->tipl_size;
@@ -210,9 +210,9 @@ tpp_include_path_list_remove(tpp_include_path_list *tpp_restrict self,
 			/* Remove this entry */
 			tpp_include_path_entry temp = *entry;
 			--self->tipl_size;
-			tpp_memmovedown(entry + 0, entry + 1,
-			                (self->tipl_size - i) *
-			                sizeof(tpp_include_path_entry));
+			(void)tpp_memmovedown(entry + 0, entry + 1,
+			                      (self->tipl_size - i) *
+			                      sizeof(tpp_include_path_entry));
 			_tpp_include_path_entry_fini(&temp);
 			return TPP_EOK;
 		}
@@ -514,7 +514,7 @@ tpp_include_paths_pop(tpp_include_paths *tpp_restrict self) {
 	if (self->tip_pushcnt == 0) {
 		tpp_include_paths *prev = self->tip_prev;
 		tpp_include_paths_fini_common(self);
-		tpp_memcpy(self, prev, sizeof(tpp_include_paths));
+		(void)tpp_memcpy(self, prev, sizeof(tpp_include_paths));
 		_tpp_include_paths_free(prev);
 		tpp_assert(self->tip_pushcnt != 0);
 	}

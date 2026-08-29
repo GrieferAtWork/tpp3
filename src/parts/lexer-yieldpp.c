@@ -2438,9 +2438,9 @@ err_tok_rollback_new_filename:
 				tpp_string_decref(new_filename);
 				return TPP_TOK_ENOMEM;
 			}
-			tpp_memcpy(tpp_string_str(trimmed_filename),
-			           tpp_string_str(new_filename),
-			           len * sizeof(tpp_char));
+			(void)tpp_memcpy(tpp_string_str(trimmed_filename),
+			                 tpp_string_str(new_filename),
+			                 len * sizeof(tpp_char));
 			tpp_string_decref(new_filename);
 			new_filename = trimmed_filename;
 		}

@@ -898,9 +898,9 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
 				break;
 			/* Add "arg" to trailing list of unknown arguments */
 			--argc;
-			tpp_memmovedown(&argv[0], &argv[1],
-			                (argc + unknown_count) *
-			                sizeof(char *));
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
 			argv[argc + unknown_count] = arg;
 			++unknown_count;
 			result = TPP_EOK;
@@ -919,7 +919,9 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
 				unsigned int total_count_minus_1 = argc + unknown_count - 1;
 				while (shift_count--) {
 					arg = argv[0];
-					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					(void)tpp_memmovedown(&argv[0], &argv[1],
+					                      total_count_minus_1 *
+					                      sizeof(char *));
 					argv[total_count_minus_1] = arg;
 				}
 			}
@@ -1062,8 +1064,8 @@ use_full_filename:
 			if tpp_unlikely(!output_buf)
 				return TPP_ENOMEM;
 			ptr = (char *)tpp_mempcpy(output_buf, filename, filename_len * sizeof(char));
-			tpp_memcpy(ptr, TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION,
-			           sizeof(TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION));
+			(void)tpp_memcpy(ptr, TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION,
+			                 sizeof(TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION));
 			/* Use this one as filename */
 			error = tpp_makefile_setoutput_file(self->tmkfcl_mf, output_buf);
 			tpp_free(output_buf);

@@ -1514,9 +1514,9 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 				break;
 			/* Add "arg" to trailing list of unknown arguments */
 			--argc;
-			tpp_memmovedown(&argv[0], &argv[1],
-			                (argc + unknown_count) *
-			                sizeof(char *));
+			(void)tpp_memmovedown(&argv[0], &argv[1],
+			                      (argc + unknown_count) *
+			                      sizeof(char *));
 			argv[argc + unknown_count] = arg;
 			++unknown_count;
 			result = TPP_EOK;
@@ -1535,7 +1535,9 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 				unsigned int total_count_minus_1 = argc + unknown_count - 1;
 				while (shift_count--) {
 					arg = argv[0];
-					tpp_memmovedown(&argv[0], &argv[1], total_count_minus_1 * sizeof(char *));
+					(void)tpp_memmovedown(&argv[0], &argv[1],
+					                      total_count_minus_1 *
+					                      sizeof(char *));
 					argv[total_count_minus_1] = arg;
 				}
 			}
@@ -1796,9 +1798,9 @@ tpp_cli_loader_flush(tpp_cli_loader *tpp_restrict self) {
 			tpp_errno error = tpp_lexer_pushfile_ofr(self->tcl_lexer, ofr);
 			if (TPP_ISERR(error)) {
 				tpp_size remaming = (self->tcl_includec - 1) - i;
-				tpp_memmovedown(&self->tcl_includev[0],
-				                &self->tcl_includev[i],
-				                remaming * sizeof(tpp_lexer_openfile_result));
+				(void)tpp_memmovedown(&self->tcl_includev[0],
+				                      &self->tcl_includev[i],
+				                      remaming * sizeof(tpp_lexer_openfile_result));
 				self->tcl_includec = remaming;
 				return error;
 			}

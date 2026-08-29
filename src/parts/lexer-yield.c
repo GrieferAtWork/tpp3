@@ -194,7 +194,7 @@ tpp_lexer_push_textfile(tpp_lexer *tpp_restrict self,
 	chunk = tpp_string_malloc(textsize);
 	if tpp_unlikely(!chunk)
 		return TPP_TOK_ENOMEM;
-	tpp_memcpy(tpp_string_str(chunk), text, textsize);
+	(void)tpp_memcpy(tpp_string_str(chunk), text, textsize);
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk),
 	                                         textsize, chunk);
 }
@@ -432,7 +432,8 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				tpp_feature_test_macro_expansion_len = (tpp_size)((char *)tpp_feature_test_macro_expansion +
 					                                              tpp_lengthof(tpp_feature_test_macro_expansion) -
 					                                              expansion_dst);
-				tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst, tpp_feature_test_macro_expansion_len);
+				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst,
+					                  tpp_feature_test_macro_expansion_len);
 				goto after_expansion_mode_assignment;
 #define WANT_after_expansion_mode_assignment
 			}	break;
@@ -2105,11 +2106,11 @@ TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_by
 	remaining = (data->tsbied_builder->tsb_buf->ts_str +
 	             tpp_string_builder_getlen(data->tsbied_builder)) -
 	            data->tsbied_text;
-	tpp_memmoveup(data->tsbied_text + delta_size,
-	              data->tsbied_text, remaining * sizeof(tpp_char));
+	(void)tpp_memmoveup(data->tsbied_text + delta_size,
+	                    data->tsbied_text, remaining * sizeof(tpp_char));
 
 	/* Inject escaped representation */
-	tpp_memcpy(data->tsbied_text - 1, text, num_bytes * sizeof(tpp_char));
+	(void)tpp_memcpy(data->tsbied_text - 1, text, num_bytes * sizeof(tpp_char));
 	data->tsbied_text += delta_size;
 
 	/* Tell caller to restart "tpp_token_encodestring()" from updated base position */

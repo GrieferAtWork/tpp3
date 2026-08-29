@@ -394,7 +394,7 @@ __pragma(tpp_exec("#define TPP_BUILTIN_KEYWORD_COUNT " _TPP_STR(__TPP_EVAL(
 
 #if TPP_HAVE_EXTENSIONS
 static tpp_size tpp_extension_name_offsets_byname[TPP_EXT_COUNT ? TPP_EXT_COUNT : 1] = {};
-static int tpp_extension_name_offset_compare(void const *lhs, void const *rhs) {
+TPP_QSORT_DEFINE_CALLBACK(tpp_extension_name_offset_compare, lhs, rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
 	tpp_size rhs_value = *(tpp_size const *)rhs;
 	char const *lhs_string = (char const *)&tpp_extension_names + lhs_value;
@@ -403,11 +403,11 @@ static int tpp_extension_name_offset_compare(void const *lhs, void const *rhs) {
 }
 
 static void tpp_init_extension_name_offsets_byname_impl(void) {
-	tpp_memcpy(tpp_extension_name_offsets_byname,
-	           tpp_extension_name_offsets_byid,
-	           sizeof(tpp_extension_name_offsets_byid));
-	qsort(tpp_extension_name_offsets_byname, TPP_EXT_COUNT, sizeof(tpp_size),
-	      &tpp_extension_name_offset_compare);
+	(void)tpp_memcpy(tpp_extension_name_offsets_byname,
+	                 tpp_extension_name_offsets_byid,
+	                 sizeof(tpp_extension_name_offsets_byid));
+	(void)tpp_qsort(tpp_extension_name_offsets_byname, TPP_EXT_COUNT, sizeof(tpp_size),
+	                &tpp_extension_name_offset_compare);
 }
 
 static void tpp_init_extension_name_offsets_byname(void) {
@@ -420,7 +420,7 @@ static void tpp_init_extension_name_offsets_byname(void) {
 
 #if TPP_HAVE_WARNINGS
 static tpp_size tpp_warning_group_name_offsets_byname[TPP_WGN_COUNT] = {};
-static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rhs) {
+TPP_QSORT_DEFINE_CALLBACK(tpp_warning_group_name_offset_compare, lhs, rhs) {
 	tpp_size lhs_value = *(tpp_size const *)lhs;
 	tpp_size rhs_value = *(tpp_size const *)rhs;
 	char const *lhs_string = (char const *)&tpp_warning_group_names + lhs_value;
@@ -429,11 +429,11 @@ static int tpp_warning_group_name_offset_compare(void const *lhs, void const *rh
 }
 
 static void tpp_init_warning_group_name_offsets_byname_impl(void) {
-	tpp_memcpy(tpp_warning_group_name_offsets_byname,
-	           tpp_warning_group_name_offsets_bynameid,
-	           sizeof(tpp_warning_group_name_offsets_bynameid));
-	qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
-	      &tpp_warning_group_name_offset_compare);
+	(void)tpp_memcpy(tpp_warning_group_name_offsets_byname,
+	                 tpp_warning_group_name_offsets_bynameid,
+	                 sizeof(tpp_warning_group_name_offsets_bynameid));
+	(void)tpp_qsort(tpp_warning_group_name_offsets_byname, TPP_WGN_COUNT, sizeof(tpp_size),
+	                &tpp_warning_group_name_offset_compare);
 }
 
 static void tpp_init_warning_group_name_offsets_byname(void) {

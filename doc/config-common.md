@@ -25,8 +25,8 @@ TPP_PROFILE != TPP_PROFILE_MINIMAL
 
 Common configuration describing if extensions configuration should be used in defaults.
 When disabled, default configurations use...
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6621) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6619)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6620) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6618)
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6633) instead of [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6631)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6632) instead of [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6630)
 
 s.a.: [`TPP_COMMON_HAVE_FEATURES`](#tpp_common_have_features)
 
@@ -43,8 +43,8 @@ TPP_HAVE_EXTENSIONS
 
 Common configuration describing if feature configuration should be used in defaults.
 When disabled, default configurations use...
-- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6619) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6621)
-- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6618) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6620)
+- ... [`TPP_CONF_EXT0`](../src/tpp-amalgamation.h#L6631) instead of [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6633)
+- ... [`TPP_CONF_EXT1`](../src/tpp-amalgamation.h#L6630) instead of [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6632)
 
 s.a.: [`TPP_COMMON_HAVE_EXTENSIONS`](#tpp_common_have_extensions)
 
@@ -74,7 +74,7 @@ Default:
 
 Default configuration for [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf), [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment), indicating if tokens that are normally through
-of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28146)
+of as no-ops should be emitted by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28158)
 
 <details><summary>Details</summary>
 
@@ -215,7 +215,7 @@ at runtime.
 
 The ability to override these expansions is a prerequisite for
 [`TPP_HAVE_PRAGMA_TPP_KEYWORD_FEATURES`](config-core.md#tpp_have_pragma_tpp_keyword_features), as well as the associated
-APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L22732) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L22742).
+APIs [`tpp_keyword_getfeature()`](../src/tpp-amalgamation.h#L22744) and [`tpp_keyword_setfeature()`](../src/tpp-amalgamation.h#L22754).
 
 <details><summary>Details</summary>
 

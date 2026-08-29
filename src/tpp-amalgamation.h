@@ -5807,6 +5807,18 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 
 
 
+/* Sorting API */
+#ifndef tpp_qsort
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+#include <stdlib.h>
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define tpp_qsort qsort
+#define TPP_QSORT_DEFINE_CALLBACK(NAME, lhs, rhs) \
+	static int NAME(void const *lhs, void const *rhs)
+#endif /* !tpp_qsort */
+
+
+
 /* Heap API */
 #ifndef tpp_malloc
 #if !TPP_HOST_NO_SYSTEM_INCLUDES

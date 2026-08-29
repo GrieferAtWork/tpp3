@@ -1975,8 +1975,8 @@ tpp_lexer_process_pragma_TPP_keyword_feature_cb(void *arg, tpp_string *chunk,
 		feature_str = tpp_string_malloc(length);
 		if tpp_unlikely(!feature_str)
 			return TPP_ENOMEM;
-		tpp_memcpy(tpp_string_str(feature_str), str,
-		           length * sizeof(tpp_char));
+		(void)tpp_memcpy(tpp_string_str(feature_str), str,
+		                 length * sizeof(tpp_char));
 	}
 	result = tpp_keyword_setfeature(data->tlpptkfd_keyword,
 	                                data->tlpptkfd_kind,

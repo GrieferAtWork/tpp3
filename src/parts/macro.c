@@ -111,9 +111,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 		result = _tpp_macro_alloc_function(expand_count);
 		if tpp_unlikely(!result)
 			return NULL;
-		tpp_memcpy(result->tm_data.tmd_func.tmf_expand,
-		           self->tm_data.tmd_func.tmf_expand,
-		           expand_count * sizeof(tpp_macro_opcode));
+		(void)tpp_memcpy(result->tm_data.tmd_func.tmf_expand,
+		                 self->tm_data.tmd_func.tmf_expand,
+		                 expand_count * sizeof(tpp_macro_opcode));
 		result->tm_data.tmd_func.tmf_argc = self->tm_data.tmd_func.tmf_argc;
 		argv_copy = (tpp_macro_argument *)tpp_malloc(result->tm_data.tmd_func.tmf_argc *
 		                                             sizeof(tpp_macro_argument));
@@ -121,9 +121,9 @@ tpp_macro_copy(tpp_macro const *tpp_restrict self) {
 			_tpp_macro_free(result);
 			return NULL;
 		}
-		tpp_memcpy(argv_copy, self->tm_data.tmd_func.tmf_argv,
-		           result->tm_data.tmd_func.tmf_argc *
-		           sizeof(tpp_macro_argument));
+		(void)tpp_memcpy(argv_copy, self->tm_data.tmd_func.tmf_argv,
+		                 result->tm_data.tmd_func.tmf_argc *
+		                 sizeof(tpp_macro_argument));
 		result->tm_data.tmd_func.tmf_argv    = argv_copy;
 		result->tm_data.tmd_func.tmf_expbase = self->tm_data.tmd_func.tmf_expbase;
 #if TPP_HAVE_MACRO_DATA_FUNC_N_VAOPT
