@@ -550,7 +550,7 @@ tpp_io_withenv(char const *varname,
                tpp_errno (TPPCALL *cb)(void *arg, char const *envvalue),
                void *arg) {
 #if TPP_OS_WINDOWS
-	tpp_errno result = TPP_EOK;
+	tpp_errno result = TPP_ENOENT;
 	DWORD dwBufsize = 512;
 	DWORD dwReqSize;
 	char *pBuffer = (char *)tpp_trymalloc((dwBufsize + 1) * sizeof(char));

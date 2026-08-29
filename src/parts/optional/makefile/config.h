@@ -287,10 +287,52 @@
 	(TPP_MAKEFILE_HAVE_CLI && TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_PHONY))
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MP */
 
-/* TODO: Support for `$DEPENDENCIES_OUTPUT` */
-/* TODO: Support for `$SUNPRO_DEPENDENCIES` */
-
 /* XXX: CLI option to control `TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH` */
+
+/* Check for an environment variable `TPP_MAKEFILE_CONFIG_CLI_ENV_MD`
+ * that is checked for a filename (+ optional target name) to use as
+ * a Makefile target when not otherwise already enabled.
+ *
+ * The environment variable's value must be one of:
+ * - `<file>`:          Same as `-MD -MF <file>`
+ * - `<file> <target>`  Same as `-MD -MF <file> -MT <target>` */
+#ifndef TPP_MAKEFILE_HAVE_CLI_ENV_MD
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                                                  \
+	(TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
+	 (!TPP_MAKEFILE_HAVE_USER_DEPENDENCIES || TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)))
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MD */
+
+/* Extension to `TPP_MAKEFILE_HAVE_CLI_ENV_MD`: when an environment
+ * variable `TPP_MAKEFILE_CONFIG_CLI_ENV_MD` is present and ends up
+ * being used to turn on Makefile generation, the produced makefile
+ * will *NOT* contain  */
+#ifndef TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE (TPP_MAKEFILE_HAVE_CLI_ENV_MD && 1)
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE */
+
+/* Name of the environment variable checked-for by `TPP_MAKEFILE_HAVE_CLI_ENV_MD` */
+#ifndef TPP_MAKEFILE_CONFIG_CLI_ENV_MD
+#define TPP_MAKEFILE_CONFIG_CLI_ENV_MD "SUNPRO_DEPENDENCIES"
+#endif /* !TPP_MAKEFILE_CONFIG_CLI_ENV_MD */
+
+/* Check for an environment variable `TPP_MAKEFILE_CONFIG_CLI_ENV_MMD`
+ * that is checked for a filename (+ optional target name) to use as
+ * a Makefile target when not otherwise already enabled.
+ *
+ * The environment variable's value must be one of:
+ * - `<file>`:          Same as `-MMD -MF <file>`
+ * - `<file> <target>`  Same as `-MMD -MF <file> -MT <target>` */
+#ifndef TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                                                 \
+	(TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
+	 (TPP_MAKEFILE_HAVE_USER_DEPENDENCIES || TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)))
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
+
+/* Name of the environment variable checked-for by `TPP_MAKEFILE_HAVE_CLI_ENV_MMD` */
+#ifndef TPP_MAKEFILE_CONFIG_CLI_ENV_MMD
+#define TPP_MAKEFILE_CONFIG_CLI_ENV_MMD "DEPENDENCIES_OUTPUT"
+#endif /* !TPP_MAKEFILE_CONFIG_CLI_ENV_MMD */
+
 
 
 

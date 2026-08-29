@@ -951,6 +951,105 @@ TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num
 	return result;
 }
 
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+static char const tpp_makefile_cli_loader_target_printed_marker[] = "";
+
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_makefile_cli_loader_configure_with_env_impl(tpp_makefile_cli_loader *tpp_restrict self,
+                                                char const *env_value) {
+	tpp_errno error;
+	char const *target_start;
+
+	/* Turn on the makefile */
+	tpp_makefile_cli_loader_enablemakefile(self); /* Set flag that CLI turned on Makefile */
+	error = tpp_makefile_enable(self->tmkfcl_mf); /* Turn on the actual makefile */
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Find start of Makefile target in environment variable.
+	 * NOTE: We mirror GCC behavior here, in that we *only* accept U+0020 SPACE
+	 *       as separator between filename and target, with no way of quoting
+	 *       or escaping the filename such that it could contain SPACE, too. */
+	target_start = tpp_strchr(env_value, ' ');
+	if (target_start) {
+		tpp_ssize output_temp;
+		tpp_size output_count;
+		tpp_size filename_len;
+		char *filename_copy;
+
+		/* Set output filename of Makefile */
+		filename_len = (tpp_size)(target_start - env_value);
+#ifdef tpp_alloca
+		filename_copy = (char *)tpp_alloca((filename_len + 1) * sizeof(char));
+		*(char *)tpp_mempcpy(filename_copy, env_value, filename_len * sizeof(char)) = '\0';
+		error = tpp_makefile_setoutput_file(self->tmkfcl_mf, filename_copy);
+#else /* tpp_alloca */
+		filename_copy = (char *)tpp_malloc((filename_len + 1) * sizeof(char));
+		if tpp_unlikely(!filename_copy)
+			return TPP_ENOMEM;
+		*(char *)tpp_mempcpy(filename_copy, env_value, filename_len * sizeof(char)) = '\0';
+		error = tpp_makefile_setoutput_file(self->tmkfcl_mf, filename_copy);
+		tpp_free(filename_copy);
+#endif /* !tpp_alloca */
+		if (TPP_ISERR(error))
+			return error;
+
+		/* Also mirroring GCC: if there might be multiple, consecutive
+		 * spaces, then we *only* skip the first of them. */
+		++target_start;
+
+		/* Print target name if environment variable contains it. */
+		output_count = tpp_strlen(target_start);
+		output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, target_start, output_count);
+		if (output_temp < 0)
+			return TPP_SSIZE_ASERR(output_temp);
+		(void)output_count;
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+		self->tmkfcl_mf->tmkf_curcol = (tpp_column)output_count;
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+
+		/* Remember that we've already printed the target */
+		self->tmkfcl_target = tpp_makefile_cli_loader_target_printed_marker;
+	} else {
+		/* No target name contained in variable
+		 * -> entire variable is name of Makefile output file */
+		error = tpp_makefile_setoutput_file(self->tmkfcl_mf, env_value);
+	}
+
+	return error;
+}
+
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD
+static TPP_NOINLINE tpp_errno TPPCALL
+tpp_makefile_cli_loader_configure_with_env_md(void *arg, char const *envvalue) {
+	tpp_makefile_cli_loader *me = (tpp_makefile_cli_loader *)arg;
+	/* Emit *all* dependencies... */
+#if TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
+	tpp_makefile_disablefeature(me->tmkfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+#endif /* TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+
+	/* ... but actually wait: don't emit dependencies for the preprocessor "main" file(s) */
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE
+	tpp_makefile_cli_loader_enableomitmainfile(me);
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE */
+	return tpp_makefile_cli_loader_configure_with_env_impl(me, envvalue);
+}
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD */
+
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+static TPP_NOINLINE tpp_errno TPPCALL
+tpp_makefile_cli_loader_configure_with_env_mmd(void *arg, char const *envvalue) {
+	tpp_makefile_cli_loader *me = (tpp_makefile_cli_loader *)arg;
+	/* Only emit *user*-dependencies (iow: don't emit dependencies
+	 * if there are any system headers on the `#include`-stack) */
+#if TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
+	tpp_makefile_enablefeature(me->tmkfcl_mf, TPP_MAKEFILE_FEAT_USER_DEPENDENCIES);
+#endif /* TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+	return tpp_makefile_cli_loader_configure_with_env_impl(me, envvalue);
+}
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
+
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning
@@ -994,10 +1093,39 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 	}
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
-	/* Check if Makefile generation is enabled (if it isn't don't do anything else) */
+	/* Check if Makefile generation is enabled (if it isn't don't do anything else)
+	 *
+	 * NOTE: Checking environ only happens if CLI didn't already turn on Makefile.
+	 *       As such, if both CLI and environ are present, then environ won't ever
+	 *       get checked, meaning CLI overrides whatever environ might say. */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
-	if (!tpp_makefile_cli_loader_getmakefileenabled(self))
+	if (!tpp_makefile_cli_loader_getmakefileenabled(self)) {
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+		/* Check for environment variables. */
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+		error = tpp_io_withenv(TPP_MAKEFILE_CONFIG_CLI_ENV_MMD,
+		                       &tpp_makefile_cli_loader_configure_with_env_mmd,
+		                       self);
+		if (error == TPP_ENOENT)
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
+		{
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD
+			error = tpp_io_withenv(TPP_MAKEFILE_CONFIG_CLI_ENV_MD,
+			                       &tpp_makefile_cli_loader_configure_with_env_md,
+			                       self);
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD */
+		}
+		if (TPP_ISERR(error) && error != TPP_ENOENT)
+			return error;
+		if (tpp_makefile_cli_loader_getmakefileenabled(self)) {
+			/* Makefile was enabled */
+			if (self->tmkfcl_target == tpp_makefile_cli_loader_target_printed_marker)
+				goto after_print_output_filename;
+			goto do_print_output_filename;
+		}
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
 		return TPP_EOK;
+	}
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED */
 
 	/* Turn on the linked makefile */
@@ -1098,23 +1226,28 @@ use_full_filename:
 #endif /* !... */
 	} else
 #endif /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
-	if (output_filename) {
-		output_count = tpp_strlen(output_filename);
-		output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, output_filename, output_count);
-	} else {
-		/* Auto-determine target name based on __FILE__ */
-		tpp_file const *lc = tpp_lexer_getlcfile(tpp_makefile_getlexer(self->tmkfcl_mf));
-		char const *lc_filename = tpp_file_getrealfilename(lc);
-		if tpp_unlikely(lc_filename == NULL) {
-			output_count = 0;
-			output_temp  = 0;
+	{
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+do_print_output_filename:
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
+		if (output_filename) {
+			output_count = tpp_strlen(output_filename);
+			output_temp = tpp_makefile_output_printraw_cstr(self->tmkfcl_mf, output_filename, output_count);
 		} else {
-			struct tpp_makefile_cli_default_target_data data;
-			data.tmfcdtd_count = 0;
-			data.tmfcdtd_mf    = self->tmkfcl_mf;
-			output_temp = tpp_makefile_cli_print_default_target(self, tpp_formatprinter_of(tpp_makefile_cli_default_target_printer),
-			                                                    &data, lc_filename);
-			output_count = data.tmfcdtd_count;
+			/* Auto-determine target name based on __FILE__ */
+			tpp_file const *lc = tpp_lexer_getlcfile(tpp_makefile_getlexer(self->tmkfcl_mf));
+			char const *lc_filename = tpp_file_getrealfilename(lc);
+			if tpp_unlikely(lc_filename == NULL) {
+				output_count = 0;
+				output_temp  = 0;
+			} else {
+				struct tpp_makefile_cli_default_target_data data;
+				data.tmfcdtd_count = 0;
+				data.tmfcdtd_mf    = self->tmkfcl_mf;
+				output_temp = tpp_makefile_cli_print_default_target(self, tpp_formatprinter_of(tpp_makefile_cli_default_target_printer),
+				                                                    &data, lc_filename);
+				output_count = data.tmfcdtd_count;
+			}
 		}
 	}
 	if (output_temp < 0)
@@ -1123,6 +1256,9 @@ use_full_filename:
 #if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
 	self->tmkfcl_mf->tmkf_curcol = (tpp_column)output_count;
 #endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+#if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
+after_print_output_filename:
+#endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
 
 	/* Print the trailing `:` following the target name */
 	output_temp = tpp_makefile_output_printraw_conststr(self->tmkfcl_mf, ":");
@@ -1136,7 +1272,7 @@ use_full_filename:
 	 * on the #include-stack (since those won't appear as
 	 * "new" dependencies anymore after this point!) */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-	{
+	if (!tpp_makefile_cli_loader_getomitmainfile(self)) {
 		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmkfcl_mf);
 		tpp_file const *file = tpp_lexer_getfile(lexer);
 		do {
