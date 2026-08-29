@@ -75,7 +75,9 @@ tpp_warning_suppressions_copy(tpp_warning_suppressions *tpp_restrict self,
 		                                              sizeof(tpp_warning_suppress_item));
 		if tpp_unlikely(!vec)
 			return TPP_ENOMEM;
-		tpp_memcpy(vec, from->tws_ctxv, self->tws_ctxc * sizeof(tpp_warning_suppress_item));
+		vec = (tpp_warning_suppress_item *)tpp_memcpy(vec, from->tws_ctxv,
+		                                              self->tws_ctxc *
+		                                              sizeof(tpp_warning_suppress_item));
 		self->tws_ctxv = vec;
 	}
 	return TPP_EOK;

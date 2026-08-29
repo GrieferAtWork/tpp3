@@ -25751,8 +25751,9 @@ reuse_old_chunk:
 		io_size = TPP_FILE_UTF16_IOSIZE(io_size);
 amend_tail_data:
 		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
-			tpp_memcpy(io_dst, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
-			io_dst += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			io_dst = (tpp_char *)tpp_mempcpy(io_dst,
+			                                 self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv,
+			                                 self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
 			io_size -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 		}
 		break;
@@ -28857,8 +28858,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 	result->tk_hash = hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = len;
-	tpp_memcpy(result->tk_kwd, kwd, len * sizeof(tpp_char));
-	result->tk_kwd[len] = (tpp_char)'\0';
+	*((tpp_char *)tpp_mempcpy(result->tk_kwd, kwd, len * sizeof(tpp_char))) = (tpp_char)'\0';
 	result = tpp_keywords_inskeyword(self, result);
 done:
 	return result;
@@ -29054,8 +29054,7 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 
 		/* Copy segment into "dst_iter" */
 append_to_dst_iter:
-		tpp_memcpy(dst_iter, src, segment_len * sizeof(char));
-		dst_iter += segment_len;
+		dst_iter = (char *)tpp_mempcpy(dst_iter, src, segment_len * sizeof(char));
 		if (next_sep >= src_end)
 			goto done;
 
@@ -29498,8 +29497,7 @@ without_relative_to:
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
 		dst_base = tpp_lexer_openfile_keyword_cstr(result_kwd);
-		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
-		dst_iter = dst_base + rel_size;
+		dst_iter = (char *)tpp_mempcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
@@ -29917,8 +29915,7 @@ without_relative_to:
 		result = (char *)tpp_malloc((whole_size + 1) * sizeof(char));
 		if tpp_unlikely(!result)
 			return NULL;
-		tpp_memcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
-		dst_iter = result + rel_size;
+		dst_iter = (char *)tpp_mempcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_end = tpp_fs_normalize(dst_iter, result, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - result);
@@ -33301,7 +33298,9 @@ tpp_warning_suppressions_copy(tpp_warning_suppressions *tpp_restrict self,
 		                                              sizeof(tpp_warning_suppress_item));
 		if tpp_unlikely(!vec)
 			return TPP_ENOMEM;
-		tpp_memcpy(vec, from->tws_ctxv, self->tws_ctxc * sizeof(tpp_warning_suppress_item));
+		vec = (tpp_warning_suppress_item *)tpp_memcpy(vec, from->tws_ctxv,
+		                                              self->tws_ctxc *
+		                                              sizeof(tpp_warning_suppress_item));
 		self->tws_ctxv = vec;
 	}
 	return TPP_EOK;
@@ -33794,13 +33793,12 @@ tpp_include_path_string_new(char const *path, tpp_size pathlen) {
 	result = tpp_string_malloc(pathlen + 1);
 	if tpp_unlikely(!result)
 		return NULL;
-	tpp_memcpy(result->ts_str, path, pathlen * sizeof(char));
-	result->ts_str[pathlen] = TPP_FS_SEP;
+	*((tpp_char *)tpp_mempcpy(result->ts_str, path, pathlen * sizeof(char))) = TPP_FS_SEP;
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 	result = (char *)tpp_malloc((pathlen + 2) * sizeof(char));
 	if tpp_unlikely(!result)
 		return NULL;
-	tpp_memcpy(result, path, pathlen * sizeof(char));
+	result = (char *)tpp_memcpy(result, path, pathlen * sizeof(char));
 	result[pathlen + 0] = TPP_FS_SEP;
 	result[pathlen + 1] = '\0';
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
@@ -33990,7 +33988,7 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 			tpp_free(listcopy);
 			return TPP_ENOMEM;
 		}
-		tpp_memcpy(path_copy, src->tipe_path, (pathlen + 1) * sizeof(char));
+		path_copy = (char *)tpp_memcpy(path_copy, src->tipe_path, (pathlen + 1) * sizeof(char));
 		dst->tipe_path = path_copy;
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 	}
@@ -36714,9 +36712,8 @@ handle_multiply_string:
 			return TPP_ENOMEM;
 		dst = tpp_string_str(result_string);
 		for (i = 0; i < (tpp_size)multiplier; ++i) {
-			tpp_memcpy(dst, tpp_string_str(lhs_value),
-			           lhs_length * sizeof(tpp_char));
-			dst += lhs_length;
+			dst = (tpp_char *)tpp_mempcpy(dst, tpp_string_str(lhs_value),
+			                              lhs_length * sizeof(tpp_char));
 		}
 		error = tpp_expr_value_init_string_inherited(result, result_string);
 	}	break;
@@ -52705,8 +52702,7 @@ TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
 TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 	tpp_char **p_dst = (tpp_char **)arg;
 	tpp_char *dst = *p_dst;
-	tpp_memcpy(dst, text, num_bytes);
-	dst += num_bytes;
+	dst = (tpp_char *)tpp_mempcpy(dst, text, num_bytes);
 	*p_dst = dst;
 	return 0;
 }
@@ -52920,9 +52916,8 @@ next_op:
 
 		case TPP_MACRO_OPCODE_COPY: {
 			tpp_size bytes = *pc++;
-			tpp_memcpy(dst, src, bytes);
+			dst = (tpp_char *)tpp_mempcpy(dst, src, bytes);
 			src += bytes;
-			dst += bytes;
 			goto next_op;
 		}
 
@@ -52931,10 +52926,9 @@ next_op:
 			tpp_macro_expinfo const *expinfo = &invoke_expinfo[argi];
 			tpp_assert(argi < macro_argc);
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_exp != 0);
-			tpp_memcpy(dst,
-			           tpp_macro_expinfo_getdata(expinfo),
-			           tpp_macro_expinfo_getsize(expinfo));
-			dst += tpp_macro_expinfo_getsize(expinfo);
+			dst = (tpp_char *)tpp_mempcpy(dst,
+			                              tpp_macro_expinfo_getdata(expinfo),
+			                              tpp_macro_expinfo_getsize(expinfo));
 			src += *pc++;
 			goto next_op;
 		}
@@ -52981,8 +52975,7 @@ next_op:
 			tpp_assert(argi < macro_argc);
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-			tpp_memcpy(dst, arginfo->tlai_start, raw_size);
-			dst += raw_size;
+			dst = (tpp_char *)tpp_mempcpy(dst, arginfo->tlai_start, raw_size);
 			src += *pc++;
 			goto next_op;
 		}
@@ -53002,10 +52995,8 @@ next_op:
 			tpp_size bytes;
 			src += *pc++;
 			bytes = *pc++;
-			if (argc >= macro_argc) {
-				tpp_memcpy(dst, src, bytes);
-				dst += bytes;
-			}
+			if (argc >= macro_argc)
+				dst = (tpp_char *)tpp_mempcpy(dst, src, bytes);
 			src += bytes;
 			src += *pc++;
 			goto next_op;
@@ -53023,8 +53014,7 @@ next_op:
 			 *   the macro compiler sets "tm_data.tmd_func.tmf_n_vanargs != 0"
 			 * - When "tm_data.tmd_func.tmf_n_vanargs != 0", then "va_nargs_len"
 			 *   gets initialized to its correct value above! */
-			tpp_memcpy(dst, va_nargs, va_nargs_len);
-			dst += va_nargs_len;
+			dst = (tpp_char *)tpp_mempcpy(dst, va_nargs, va_nargs_len);
 			goto next_op;
 		}
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */

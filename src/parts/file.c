@@ -918,8 +918,9 @@ reuse_old_chunk:
 		io_size = TPP_FILE_UTF16_IOSIZE(io_size);
 amend_tail_data:
 		if (self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc) {
-			tpp_memcpy(io_dst, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv, self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
-			io_dst += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+			io_dst = (tpp_char *)tpp_mempcpy(io_dst,
+			                                 self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailv,
+			                                 self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc);
 			io_size -= self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
 		}
 		break;

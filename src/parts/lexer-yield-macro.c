@@ -385,8 +385,7 @@ TPP_FORMATPRINTER_DEFINE(tpp_count_printer, arg, text, num_bytes) {
 TPP_FORMATPRINTER_DEFINE(tpp_buffer_printer, arg, text, num_bytes) {
 	tpp_char **p_dst = (tpp_char **)arg;
 	tpp_char *dst = *p_dst;
-	tpp_memcpy(dst, text, num_bytes);
-	dst += num_bytes;
+	dst = (tpp_char *)tpp_mempcpy(dst, text, num_bytes);
 	*p_dst = dst;
 	return 0;
 }
@@ -600,9 +599,8 @@ next_op:
 
 		case TPP_MACRO_OPCODE_COPY: {
 			tpp_size bytes = *pc++;
-			tpp_memcpy(dst, src, bytes);
+			dst = (tpp_char *)tpp_mempcpy(dst, src, bytes);
 			src += bytes;
-			dst += bytes;
 			goto next_op;
 		}
 
@@ -611,10 +609,9 @@ next_op:
 			tpp_macro_expinfo const *expinfo = &invoke_expinfo[argi];
 			tpp_assert(argi < macro_argc);
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins_exp != 0);
-			tpp_memcpy(dst,
-			           tpp_macro_expinfo_getdata(expinfo),
-			           tpp_macro_expinfo_getsize(expinfo));
-			dst += tpp_macro_expinfo_getsize(expinfo);
+			dst = (tpp_char *)tpp_mempcpy(dst,
+			                              tpp_macro_expinfo_getdata(expinfo),
+			                              tpp_macro_expinfo_getsize(expinfo));
 			src += *pc++;
 			goto next_op;
 		}
@@ -661,8 +658,7 @@ next_op:
 			tpp_assert(argi < macro_argc);
 			tpp_assert(macro->tm_data.tmd_func.tmf_argv[argi].tma_ins != 0);
 			raw_size = (tpp_size)(arginfo->tlai_end - arginfo->tlai_start);
-			tpp_memcpy(dst, arginfo->tlai_start, raw_size);
-			dst += raw_size;
+			dst = (tpp_char *)tpp_mempcpy(dst, arginfo->tlai_start, raw_size);
 			src += *pc++;
 			goto next_op;
 		}
@@ -682,10 +678,8 @@ next_op:
 			tpp_size bytes;
 			src += *pc++;
 			bytes = *pc++;
-			if (argc >= macro_argc) {
-				tpp_memcpy(dst, src, bytes);
-				dst += bytes;
-			}
+			if (argc >= macro_argc)
+				dst = (tpp_char *)tpp_mempcpy(dst, src, bytes);
 			src += bytes;
 			src += *pc++;
 			goto next_op;
@@ -703,8 +697,7 @@ next_op:
 			 *   the macro compiler sets "tm_data.tmd_func.tmf_n_vanargs != 0"
 			 * - When "tm_data.tmd_func.tmf_n_vanargs != 0", then "va_nargs_len"
 			 *   gets initialized to its correct value above! */
-			tpp_memcpy(dst, va_nargs, va_nargs_len);
-			dst += va_nargs_len;
+			dst = (tpp_char *)tpp_mempcpy(dst, va_nargs, va_nargs_len);
 			goto next_op;
 		}
 #endif /* TPP_HAVE_VA_NARGS_IN_MACROS */

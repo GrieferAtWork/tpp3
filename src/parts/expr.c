@@ -536,9 +536,8 @@ handle_multiply_string:
 			return TPP_ENOMEM;
 		dst = tpp_string_str(result_string);
 		for (i = 0; i < (tpp_size)multiplier; ++i) {
-			tpp_memcpy(dst, tpp_string_str(lhs_value),
-			           lhs_length * sizeof(tpp_char));
-			dst += lhs_length;
+			dst = (tpp_char *)tpp_mempcpy(dst, tpp_string_str(lhs_value),
+			                              lhs_length * sizeof(tpp_char));
 		}
 		error = tpp_expr_value_init_string_inherited(result, result_string);
 	}	break;

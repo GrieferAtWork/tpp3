@@ -4674,8 +4674,7 @@ TPP_INLINE tpp_size TPPCALL TPP_SizeofFtos(tpp_float f) {
 TPP_FORMATPRINTER_DEFINE(_TPP_Escape_buffer_cb, arg, text, num_bytes) {
 	if (arg) {
 		char **p_buf = (char **)arg;
-		tpp_memcpy(*p_buf, text, num_bytes);
-		*p_buf += num_bytes;
+		*p_buf = (char *)tpp_mempcpy(*p_buf, text, num_bytes);
 	}
 	return (tpp_ssize)num_bytes;
 }

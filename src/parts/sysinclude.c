@@ -86,13 +86,12 @@ tpp_include_path_string_new(char const *path, tpp_size pathlen) {
 	result = tpp_string_malloc(pathlen + 1);
 	if tpp_unlikely(!result)
 		return NULL;
-	tpp_memcpy(result->ts_str, path, pathlen * sizeof(char));
-	result->ts_str[pathlen] = TPP_FS_SEP;
+	*((tpp_char *)tpp_mempcpy(result->ts_str, path, pathlen * sizeof(char))) = TPP_FS_SEP;
 #else /* TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 	result = (char *)tpp_malloc((pathlen + 2) * sizeof(char));
 	if tpp_unlikely(!result)
 		return NULL;
-	tpp_memcpy(result, path, pathlen * sizeof(char));
+	result = (char *)tpp_memcpy(result, path, pathlen * sizeof(char));
 	result[pathlen + 0] = TPP_FS_SEP;
 	result[pathlen + 1] = '\0';
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
@@ -282,7 +281,7 @@ tpp_include_path_list_copy(tpp_include_path_list *tpp_restrict self,
 			tpp_free(listcopy);
 			return TPP_ENOMEM;
 		}
-		tpp_memcpy(path_copy, src->tipe_path, (pathlen + 1) * sizeof(char));
+		path_copy = (char *)tpp_memcpy(path_copy, src->tipe_path, (pathlen + 1) * sizeof(char));
 		dst->tipe_path = path_copy;
 #endif /* !TPP_HAVE_INCLUDE_PATH_ENTRY_IS_STRING */
 	}

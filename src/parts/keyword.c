@@ -2025,8 +2025,7 @@ tpp_keywords_newkeyword(tpp_keywords *tpp_restrict self,
 	result->tk_hash = hash;
 	tpp_keyword_init_refcnt(result);
 	result->tk_len = len;
-	tpp_memcpy(result->tk_kwd, kwd, len * sizeof(tpp_char));
-	result->tk_kwd[len] = (tpp_char)'\0';
+	*((tpp_char *)tpp_mempcpy(result->tk_kwd, kwd, len * sizeof(tpp_char))) = (tpp_char)'\0';
 	result = tpp_keywords_inskeyword(self, result);
 done:
 	return result;
@@ -2222,8 +2221,7 @@ tpp_fs_normalize(/*utf-8*/ char *dst_iter,  /* Output pointer destination buffer
 
 		/* Copy segment into "dst_iter" */
 append_to_dst_iter:
-		tpp_memcpy(dst_iter, src, segment_len * sizeof(char));
-		dst_iter += segment_len;
+		dst_iter = (char *)tpp_mempcpy(dst_iter, src, segment_len * sizeof(char));
 		if (next_sep >= src_end)
 			goto done;
 
@@ -2666,8 +2664,7 @@ without_relative_to:
 		if tpp_unlikely(!result_kwd)
 			goto err_nomem;
 		dst_base = tpp_lexer_openfile_keyword_cstr(result_kwd);
-		tpp_memcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
-		dst_iter = dst_base + rel_size;
+		dst_iter = (char *)tpp_mempcpy(dst_base, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_end = tpp_fs_normalize(dst_iter, dst_base, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - dst_base);
@@ -3085,8 +3082,7 @@ without_relative_to:
 		result = (char *)tpp_malloc((whole_size + 1) * sizeof(char));
 		if tpp_unlikely(!result)
 			return NULL;
-		tpp_memcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
-		dst_iter = result + rel_size;
+		dst_iter = (char *)tpp_mempcpy(result, rel_base, rel_size * sizeof(char)); /* Including trailing '/' */
 		dst_end = tpp_fs_normalize(dst_iter, result, filename, filename_len);
 		*dst_end = '\0';
 		whole_size = (tpp_size)(dst_end - result);
