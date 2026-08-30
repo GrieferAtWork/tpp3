@@ -25012,6 +25012,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 	tpp_ifdef_stack_fini(&self->tf_ifdef);
 #endif /* TPP_HAVE_IFDEF_STACK */
 	switch (self->tf_kind) {
+
 	case TPP_FILE_KIND_IO:
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS || TPP_HAVE_KEYWORD_INCLCOUNT
 #if TPP_HAVE_FILE_NOKWD
@@ -25084,9 +25085,8 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 #endif /* TPP_HAVE_FILE_DUMMY */
 		if (self->tf_data.td_text.tft_user_filename)
 			tpp_string_decref(self->tf_data.td_text.tft_user_filename);
-		break;
 #endif /* TPP_HAVE_FILE_SETFILENAME */
-
+		break;
 
 #if TPP_HAVE_CPP_MACROS
 	case TPP_FILE_KIND_MACRO: {
@@ -25107,6 +25107,7 @@ tpp_file_fini(tpp_file *tpp_restrict self) {
 		tpp_macro_decref(macro);
 	}	break;
 #endif /* TPP_HAVE_CPP_MACROS */
+
 	default: break;
 	}
 	tpp_dbg_memset(self, sizeof(*self));
