@@ -845,6 +845,7 @@ err_nomem:
 
 
 
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT
 /* Same as above, but always initializes *exactly* `argc` arguments,
  * and automatically emits `TPP_W_TOO_FEW_ARGUMENTS` when fewer were
  * parsed. */
@@ -899,7 +900,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 	}
 	return result;
 }
-
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT */
 #endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 TPP_DECL_END

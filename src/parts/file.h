@@ -1166,7 +1166,7 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos);
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or `TPP_LCINFO_INVALID` if unknown */
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 	/* Projection (source) file:
 	 * >> #define foo(x) 10+x+20
 	 * >> foo(15)
@@ -1187,21 +1187,21 @@ typedef struct tpp_lcinfo_ex {
 	 * thereof), the projection location might even be wrong. */
 	tpp_file       *tlcix_projfile; /* [0..1] Projection source file, or NULL if queried position wasn't projected */
 	tpp_char const *tlcix_projpos;  /* [1..1][valid_if(tlcix_fromfile)] Position in `tlcix_projfile` */
-#endif /* TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 } tpp_lcinfo_ex;
 
 /* Same as `tpp_file_getlcinfo()`, but if the current file is an expanded macro, see if
  * the specified `pos` points into the expanded portion of a macro argument, in which
  * case this function also (tries to) include information on where that argument was
  * projected from. */
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 TPP_DECL TPP_NONNULL((1, 2, 3)) void TPPCALL
 tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
                       tpp_lcinfo_ex *tpp_restrict result);
-#else /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 #define tpp_file_getlcinfo_ex(self, pos, result) \
 	(void)((result)->tlcix_info = tpp_file_getlcinfo(self, pos))
-#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* !TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 
 
 

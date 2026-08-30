@@ -1689,7 +1689,7 @@ tpp_lexer_readchar(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos,
                    tpp_char *tpp_restrict p_result);
 
-#if TPP_HAVE_UNICODE
+#if TPP_HAVE_LEXER_READUNICHAR
 /* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
  * character and return it. */
@@ -1697,7 +1697,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_char const **tpp_restrict p_pos,
                       tpp_unichar *tpp_restrict p_result);
-#endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_LEXER_READUNICHAR */
 
 
 
@@ -2405,6 +2405,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         unsigned int flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT
 /* Same as above, but always initializes *exactly* `argc` arguments,
  * and automatically emits `TPP_W_TOO_FEW_ARGUMENTS` when fewer were
  * parsed. */
@@ -2423,6 +2424,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
                               char const *opt_function_name_for_messages,
                               unsigned int flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT */
 #endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 

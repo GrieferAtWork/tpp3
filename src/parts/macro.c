@@ -592,6 +592,7 @@ again_read_opcode:
 	goto again_read_opcode;
 }
 
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 /* Return `(tpp_size)(argument_pos - argument_start)`, but do special handling when
  * `TPP_MACRO_OPCODE_INS_STR` / `TPP_MACRO_OPCODE_INS_CHR`, where the offset into
  * the text that was originally encoded (via tpp_token_encodestring()) is returned
@@ -635,6 +636,7 @@ tpp_macro_determine_argument_offset(tpp_macro_opcode argument_opcode,
 	}
 	return (tpp_size)(argument_pos - argument_start);
 }
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 
 
 /* Figure out the line/column of `pos` in `expanded_text`, as produced
@@ -653,7 +655,9 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 	tpp_assert(expanded_text_file->tf_kind == TPP_FILE_KIND_MACRO);
 	tpp_assert(expanded_text_file->tf_data.td_macro.tfm_macro == self);
 	result->tlcix_info = TPP_LCINFO_INVALID;
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 	result->tlcix_projfile = NULL;
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 
 	vars.tmflcsv_pc           = self->tm_data.tmd_func.tmf_expand;
 	vars.tmflcsv_expand_start = tpp_string_str(expanded_text);
@@ -674,6 +678,7 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 	result->tlcix_info = tpp_lcstate_getlc(&lcstate);
 
 	/* Check if position belongs to a macro argument */
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 	if (vars.tmflcsv_argopcode != NULL && expanded_text_file->tf_tprev) {
 		tpp_macro_opcode const argument_opcode = vars.tmflcsv_argopcode[0];
 		tpp_size const argument_index          = vars.tmflcsv_argopcode[1];
@@ -817,6 +822,7 @@ tpp_macro_func_lcinfo(tpp_macro const *self,
 #endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 		}
 	}
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 }
 
 #endif /* TPP_HAVE_CPP_MACROS */

@@ -384,7 +384,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	 * - If "tok == ']", find next unmatched ']'
 	 * - If "tok == '}", find next unmatched '}'
 	 * - If "tok == '>", find next unmatched '>' */
-#if TPP_HAVE_LEXER_MANUALPOPFILE
+#if TPP_HAVE_LEXER_MANUALPOPFILE && TPP_HAVE_LEXER_SEEKPP_RPAREN
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 	if (tok == ')' || tok == ']' || tok == '}' || tok == '>')
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
@@ -436,7 +436,7 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 			result = backup.tlsb_id;
 		return result;
 	}
-#endif /* TPP_HAVE_LEXER_MANUALPOPFILE */
+#endif /* TPP_HAVE_LEXER_MANUALPOPFILE && TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 	if (tok == ',') {
 		/* XXX: Seek to the next ','-token, so-long as no unmatched ) ] } or > is found first */

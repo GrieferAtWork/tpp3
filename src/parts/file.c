@@ -1328,7 +1328,7 @@ done:
  * the specified `pos` points into the expanded portion of a macro argument, in which
  * case this function also (tries to) include information on where that argument was
  * projected from. */
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 TPP_IMPL TPP_NONNULL((1, 2, 3)) void TPPCALL
 tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
                       tpp_lcinfo_ex *tpp_restrict result) {
@@ -1357,7 +1357,7 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 	result->tlcix_projfile = NULL;
 	result->tlcix_info = tpp_file_getlcinfo(self, pos);
 }
-#endif /* TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 
 
 

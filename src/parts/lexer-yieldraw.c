@@ -40,170 +40,6 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_UNICODE
 
-/* Read a single unicode character from a given utf-8 blob.
- * WARNING: This function doesn't do any validity checking,
- *          allowing over-long utf-8 sequences, as well as
- *          incorrectly positioned UTF-8 continuation bytes. */
-TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8(tpp_char const **tpp_restrict p_pos, tpp_char const *end) {
-	tpp_char const *pos = *p_pos;
-	tpp_unichar uc;
-	if tpp_unlikely(pos >= end)
-		return 0;
-	uc = (tpp_unichar)*pos++;
-	if (uc >= 0xc0) {
-		tpp_uint_least8 len = tpp_unicode_utf8seqlen_mb_getmax(uc);
-		tpp_size maxlen = (tpp_size)(end - pos) + 1;
-		if ((tpp_size)len > maxlen)
-			len = (tpp_uint_least8)maxlen;
-		switch (len) {
-		case 0:
-		case 1:
-			break;
-		case 2:
-			uc = (uc & 0x1f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 3:
-			uc  = (uc & 0x0f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 4:
-			uc  = (uc & 0x07) << 18;
-			uc |= (*pos++ & 0x3f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 5:
-			uc = (uc & 0x03) << 24;
-			uc |= (*pos++ & 0x3f) << 18;
-			uc |= (*pos++ & 0x3f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 6:
-			uc = (uc & 0x01) << 30;
-			uc |= (*pos++ & 0x3f) << 24;
-			uc |= (*pos++ & 0x3f) << 18;
-			uc |= (*pos++ & 0x3f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 7:
-			uc = (*pos++ & 0x03/*0x3f*/) << 30;
-			uc |= (*pos++ & 0x3f) << 24;
-			uc |= (*pos++ & 0x3f) << 18;
-			uc |= (*pos++ & 0x3f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		case 8:
-			/*uc = (*pos & 0x3f) << 36;*/
-			++pos;
-			uc = (*pos++ & 0x03/*0x3f*/) << 30;
-			uc |= (*pos++ & 0x3f) << 24;
-			uc |= (*pos++ & 0x3f) << 18;
-			uc |= (*pos++ & 0x3f) << 12;
-			uc |= (*pos++ & 0x3f) << 6;
-			uc |= (*pos++ & 0x3f);
-			break;
-		default: tpp_unreachable();
-		}
-	}
-	*p_pos = pos;
-	return uc;
-}
-
-/* Same as `tpp_unicode_readutf8()`, but read in reverse, such
- * that the last byte of the returned character is `(*p_end)[-1]`
- * (assuming that `*p_end > base`). */
-TPP_IMPL /*TPP_WUNUSED*/ TPP_NONNULL((1, 2)) tpp_unichar TPPCALL
-tpp_unicode_readutf8_bck(tpp_char const *base, tpp_char const **tpp_restrict p_end) {
-	tpp_unichar uc;
-	tpp_char const *iter = *p_end;
-	tpp_uint_least8 seqlen = 1;
-	if tpp_unlikely(iter <= base)
-		return 0;
-	for (;;) {
-		uc = *--iter;
-		if ((uc & 0xc0) != 0x80)
-			break;
-		if (seqlen >= 8)
-			break;
-		++seqlen;
-		if (iter <= base)
-			break;
-	}
-	if (uc >= 0xc0) {
-		switch (seqlen) {
-
-		case 0:
-		case 1:
-			break;
-
-		case 2:
-			uc  = (uc & 0x1f) << 6;
-			uc |= (iter[0] & 0x3f);
-			break;
-
-		case 3:
-			uc  = (uc & 0x0f) << 12;
-			uc |= (iter[0] & 0x3f) << 6;
-			uc |= (iter[1] & 0x3f);
-			break;
-
-		case 4:
-			uc  = (uc & 0x07) << 18;
-			uc |= (iter[0] & 0x3f) << 12;
-			uc |= (iter[1] & 0x3f) << 6;
-			uc |= (iter[2] & 0x3f);
-			break;
-
-		case 5:
-			uc  = (uc & 0x03) << 24;
-			uc |= (iter[0] & 0x3f) << 18;
-			uc |= (iter[1] & 0x3f) << 12;
-			uc |= (iter[2] & 0x3f) << 6;
-			uc |= (iter[3] & 0x3f);
-			break;
-
-		case 6:
-			uc  = (uc & 0x01) << 30;
-			uc |= (iter[0] & 0x3f) << 24;
-			uc |= (iter[1] & 0x3f) << 18;
-			uc |= (iter[2] & 0x3f) << 12;
-			uc |= (iter[3] & 0x3f) << 6;
-			uc |= (iter[4] & 0x3f);
-			break;
-
-		case 7:
-			uc  = (iter[0] & 0x03/*0x3f*/) << 30;
-			uc |= (iter[1] & 0x3f) << 24;
-			uc |= (iter[2] & 0x3f) << 18;
-			uc |= (iter[3] & 0x3f) << 12;
-			uc |= (iter[4] & 0x3f) << 6;
-			uc |= (iter[5] & 0x3f);
-			break;
-
-		case 8:
-			/*result = (iter[0] & 0x3f) << 36;*/
-			uc  = (iter[1] & 0x03/*0x3f*/) << 30;
-			uc |= (iter[2] & 0x3f) << 24;
-			uc |= (iter[3] & 0x3f) << 18;
-			uc |= (iter[4] & 0x3f) << 12;
-			uc |= (iter[5] & 0x3f) << 6;
-			uc |= (iter[6] & 0x3f);
-			break;
-
-		default: tpp_unreachable();
-		}
-	}
-	*p_end = iter;
-	return uc;
-}
-
-
 /* Decode a single utf-8 character.
  * - If necessary, expand the current file's chunk
  * - If an illegal utf-8 byte sequence is encountered,
@@ -944,7 +780,7 @@ not_a_trigraph:
 }
 
 
-#if TPP_HAVE_UNICODE
+#if TPP_HAVE_LEXER_READUNICHAR
 /* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
  * character and return it. */
@@ -967,7 +803,7 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 	}
 	return error;
 }
-#endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_LEXER_READUNICHAR */
 
 
 

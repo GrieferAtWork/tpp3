@@ -1415,7 +1415,7 @@ tpp_lexer_yield_handle___TPP_STR_PACK(tpp_lexer *tpp_restrict self) {
 		goto err_nomem_builder;
 	for (;;) {
 		tpp_ssize status;
-		tok = tpp_lexer_yield(self); /* Pre-loaded by `tpp_lexer_seekpp_rparen_exact()`, so no need for `tpp_lexer_yield_blocking()` */
+		tok = tpp_lexer_yield_blocking(self);
 #if TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED
 again_handle_tok:
 #endif /* TPP_HAVE_TOK_INT && TPP_HAVE_LEXER_PARSEEMBED */

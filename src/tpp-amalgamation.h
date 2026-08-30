@@ -11256,7 +11256,7 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_LEXER_SEEKPP_RPAREN)
 #endif /* !TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
-#define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && TPP_HAVE_CPP_MACROS)
+#define TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS (TPP_HAVE_WARNINGS && (TPP_HAVE_CPP_MACROS || TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT))
 #endif /* !TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 #ifndef TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME
 #define TPP_HAVE_TPP_W_RESERVED_MACRO_PARAMETER_NAME  \
@@ -11805,6 +11805,29 @@ TPP_DECL_END
 #define TPP_HAVE_WSYSTEM_HEADERS ((TPP_HAVE_PROFILE_NOT_MINIMAL && TPP_HAVE_FILE_SYSHDR) ? TPP_COMMON_CONF_EXT0 : 0) /* "-fWsystem-headers" */
 #endif /* !TPP_HAVE_WSYSTEM_HEADERS */
 
+/* Provide extra information `tlcix_projpos` and `tlcix_projfile`
+ * in `tpp_lcinfo_ex`, as returned by `tpp_file_getlcinfo_ex()`.
+ *
+ * This information can be used to describe the projection origin
+ * of expanded arguments in macro invocations. */
+#ifndef TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
+#if (TPP_HAVE_CPP_MACROS && (TPP_HAVE_PROFILE_ALL || TPP_HAVE_BUILTIN_WARNHANDLER_HOOK))
+#define TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
+
+/* Provide a function `tpp_lexer_readunichar()` that can be used
+ * to easily read+decode a utf-8 character translated to UTF-32. */
+#ifndef TPP_HAVE_LEXER_READUNICHAR
+#if (TPP_HAVE_UNICODE && (TPP_HAVE_PROFILE_ALL || TPP_HAVE_LEXER_YIELD_INCLUDE_STRING))
+#define TPP_HAVE_LEXER_READUNICHAR 1
+#else /* ... */
+#define TPP_HAVE_LEXER_READUNICHAR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_READUNICHAR */
+
 /* Provide a function `tpp_lexer_seekpp_rparen()` that can be used
  * to find the position of a matching `)`-token for the purpose
  * of macro argument lists. */
@@ -11818,6 +11841,26 @@ TPP_DECL_END
 #ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 #define TPP_HAVE_LEXER_SEEKPP_RPAREN_EX (TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS)
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+
+/* Provide a function `tpp_lexer_seekpp_rparen_exact()` (and
+ * `tpp_lexer_seekpp_rparen_exact_ex()` if `TPP_HAVE_LEXER_SEEKPP_RPAREN_EX`
+ * is also enabled) that wraps `tpp_lexer_seekpp_rparen()` whilst ensuring that
+ * the number of arguments given is as expected (raising `TPP_W_EXPECTED_STRING`
+ * if a discrepancy is detected). */
+#ifndef TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT
+#if (TPP_HAVE_LEXER_SEEKPP_RPAREN &&        \
+     (TPP_HAVE_PROFILE_ALL ||               \
+      TPP_HAVE_MACRO___pragma ||            \
+      TPP_HAVE_MACRO___TPP_IDENTIFIER ||    \
+      TPP_HAVE_MACRO___TPP_STR_DECOMPILE || \
+      TPP_HAVE_MACRO___TPP_EXEC ||          \
+      TPP_HAVE_CPP_EMBED ||                 \
+      TPP_HAVE_MACRO___has_embed))
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT */
 
 /* Enable support for `tpp_file` keeping track of the state of active `#ifdef` directives
  * via an embedded `tpp_ifdef_stack` strcture (accessible via `tpp_file_getifdef()`) */
@@ -11866,8 +11909,8 @@ TPP_DECL_END
  * in order to improve `tpp_file_getlcinfo_ex()`'s `tlcix_proj*` return values,
  * by making them less error-prone. */
 #ifndef TPP_HAVE_FILE_MACRO_TRACKARGS
-#if (TPP_HAVE_CPP_MACROS &&          \
-     TPP_HAVE_LEXER_SEEKPP_RPAREN && \
+#if (TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS && \
+     TPP_HAVE_LEXER_SEEKPP_RPAREN &&       \
      TPP_HAVE_PROFILE_NOT_MINIMAL)
 #define TPP_HAVE_FILE_MACRO_TRACKARGS 1
 #else /* ... */
@@ -21682,7 +21725,7 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos);
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or `TPP_LCINFO_INVALID` if unknown */
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 	/* Projection (source) file:
 	 * >> #define foo(x) 10+x+20
 	 * >> foo(15)
@@ -21703,21 +21746,21 @@ typedef struct tpp_lcinfo_ex {
 	 * thereof), the projection location might even be wrong. */
 	tpp_file       *tlcix_projfile; /* [0..1] Projection source file, or NULL if queried position wasn't projected */
 	tpp_char const *tlcix_projpos;  /* [1..1][valid_if(tlcix_fromfile)] Position in `tlcix_projfile` */
-#endif /* TPP_HAVE_CPP_MACROS */
+#endif /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 } tpp_lcinfo_ex;
 
 /* Same as `tpp_file_getlcinfo()`, but if the current file is an expanded macro, see if
  * the specified `pos` points into the expanded portion of a macro argument, in which
  * case this function also (tries to) include information on where that argument was
  * projected from. */
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 TPP_DECL TPP_NONNULL((1, 2, 3)) void TPPCALL
 tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
                       tpp_lcinfo_ex *tpp_restrict result);
-#else /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 #define tpp_file_getlcinfo_ex(self, pos, result) \
 	(void)((result)->tlcix_info = tpp_file_getlcinfo(self, pos))
-#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* !TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS */
 
 
 
@@ -28005,7 +28048,7 @@ tpp_lexer_readchar(tpp_lexer *tpp_restrict self,
                    tpp_char const **tpp_restrict p_pos,
                    tpp_char *tpp_restrict p_result);
 
-#if TPP_HAVE_UNICODE
+#if TPP_HAVE_LEXER_READUNICHAR
 /* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
  * character and return it. */
@@ -28013,7 +28056,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_char const **tpp_restrict p_pos,
                       tpp_unichar *tpp_restrict p_result);
-#endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_HAVE_LEXER_READUNICHAR */
 
 
 
@@ -28721,6 +28764,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
                         unsigned int flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 
+#if TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT
 /* Same as above, but always initializes *exactly* `argc` arguments,
  * and automatically emits `TPP_W_TOO_FEW_ARGUMENTS` when fewer were
  * parsed. */
@@ -28739,6 +28783,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
                               char const *opt_function_name_for_messages,
                               unsigned int flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
+#endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT */
 #endif /* TPP_HAVE_LEXER_SEEKPP_RPAREN */
 
 

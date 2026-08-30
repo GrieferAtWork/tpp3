@@ -24,6 +24,21 @@
 #define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions instead of features (so everything is configurable via `-f[no-]extension`) */
 #define TPP_USE_STATIC 1            /* Define everything with `static` linkage */
 
+#if 0 /* Developer test-area */
+#undef TPP_PROFILE
+#define TPP_PROFILE TPP_PROFILE_MINIMAL
+#define TPP_HAVE_CLI 1
+#define TPP_HAVE_CLI_HELP 1
+#define TPP_HAVE_STRERROR 1
+#define TPP_HAVE_CLI_SETINPUTS 1
+#define TPP_HAVE_USER_KEYWORDS 1
+#define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
+#define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
+
+//#define TPP_HAVE_CPP_DIRECTIVES 1
+#define TPP_HAVE_CPP_MACROS 1
+#endif
+
 /* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used.
  * These superfluous APIs can easily be discovered thanks to `-DTPP_USE_STATIC=1` */
 #define TPP_HAVE_LEXER_COPY             0
