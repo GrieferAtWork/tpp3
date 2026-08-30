@@ -9417,7 +9417,7 @@ TPP_DECL_END
 /************************************************************************/
 
 /* Possible values for "TPP_HAVE_*_HOOK" feature macros */
-#define TPP_HOOK_DISABLED      0    /* Hook is hard-disabled (same as a no-op implementation) */
+#define TPP_HOOK_DISABLED      0    /* Hook is hard-disabled (same as a no-op implementation) -- Guarantied to be `0` */
 #define TPP_HOOK_CONST_USER    1    /* Hook is hard-coded to call a user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
 #define TPP_HOOK_CONST_BUILTIN 2    /* Hook is hard-coded to call a builtin implementation (same as TPP_HOOK_DISABLED if there is no builtin) */
 #define TPP_HOOK_RT_USER       (-1) /* Hook is per-lexer configurable; defaults to user-supplied implementation "TPP_HOOK_FOO" (or no-op if "TPP_HOOK_FOO" isn't defined) */
@@ -9429,16 +9429,33 @@ TPP_DECL_END
 #define TPP_HOOK_RT_NOOP_C     (-7) /* Same as `TPP_HOOK_RT_NOOP`, but an custom `cookie`-argument can be registered alongside the hook */
 #define TPP_HOOK_RT_MANY_C     (-8) /* Same as `TPP_HOOK_RT_MANY`, but an custom `cookie`-argument can be registered alongside the hook */
 
+/* Helpers to query characteristics of hook configurations.
+ *
+ * To prevent explosions during the macro argument expansion, these
+ * have been carefully crafted to only expand their argument(s) once.
+ *
+ * | Function                  | Accepts                                                                                   |
+ * | ------------------------- | ----------------------------------------------------------------------------------------- |
+ * | `TPP_HOOK_USESBUILTIN(x)` | `TPP_HOOK_CONST_BUILTIN`, `TPP_HOOK_RT_BUILTIN[_C]`                                       |
+ * | `TPP_HOOK_USESUSER(x)`    | `TPP_HOOK_CONST_USER`, `TPP_HOOK_RT_USER[_C]`, `TPP_HOOK_RT_MANY[_C]`                     |
+ * | `TPP_HOOK_ISMANY(x)`      | `TPP_HOOK_RT_MANY[_C]`                                                                    |
+ * | `TPP_HOOK_ISCONST(x)`     | `TPP_HOOK_DISABLED`, `TPP_HOOK_CONST_USER`, `TPP_HOOK_CONST_BUILTIN`                      |
+ * | `TPP_HOOK_ISRT(x)`        | `TPP_HOOK_RT_*`                                                                           |
+ * | `TPP_HOOK_ISRTUSER(x)`    | `TPP_HOOK_RT_USER[_C]` (requires `TPP_HOOK_ISRT(x)`)                                      |
+ * | `TPP_HOOK_ISRTBULITIN(x)` | `TPP_HOOK_RT_BUILTIN[_C]` (requires `TPP_HOOK_ISRT(x)`)                                   |
+ * | `TPP_HOOK_ISRTNOOP(x)`    | `TPP_HOOK_RT_NOOP[_C]` (requires `TPP_HOOK_ISRT(x)`)                                      |
+ * | `TPP_HOOK_HASCOOKIE(x)`   | `TPP_HOOK_RT_USER_C`, `TPP_HOOK_RT_BUILTIN_C`, `TPP_HOOK_RT_NOOP_C`, `TPP_HOOK_RT_MANY_C` |
+ */
 #define TPP_HOOK_WITHCOOKIE(x)    ((x) & ~4) /* Convert `TPP_HOOK_RT_*` into `TPP_HOOK_RT_*_C` */
 #define TPP_HOOK_WITHOUTCOOKIE(x) ((x) | 4)  /* Convert `TPP_HOOK_RT_*_C` into `TPP_HOOK_RT_*` */
-#define TPP_HOOK_USESBUILTIN(x)   ((x) == TPP_HOOK_CONST_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN_C) /* Check if config "x" uses a *builtin* hook impl */
-#define TPP_HOOK_USESUSER(x)      ((x) == TPP_HOOK_CONST_USER || (x) == TPP_HOOK_RT_USER || (x) == TPP_HOOK_RT_USER_C || (x) == TPP_HOOK_RT_MANY || (x) == TPP_HOOK_RT_MANY_C) /* Check if config "x" can make use of `TPP_HOOK_FOO` */
-#define TPP_HOOK_ISMANY(x)        ((x) == TPP_HOOK_RT_MANY || (x) == TPP_HOOK_RT_MANY_C) /* Check if config "x" allows many hooks */
+#define TPP_HOOK_USESBUILTIN(x)   (((x) & 3) == 2) /* Check if config "x" uses a *builtin* hook impl */
+#define TPP_HOOK_USESUSER(x)      ((((((((x) | 4) ^ 1) + 1) ^ -3) * -3) >> 4) & 1) /* Check if config "x" can make use of `TPP_HOOK_FOO` */
+#define TPP_HOOK_ISMANY(x)        (TPP_HOOK_WITHOUTCOOKIE(x) == TPP_HOOK_RT_MANY) /* Check if config "x" allows many hooks */
 #define TPP_HOOK_ISCONST(x)       ((x) >= 0) /* Check if config "x" is hardcoded at compile-time */
 #define TPP_HOOK_ISRT(x)          ((x) < 0)  /* Check if config "x" can be overwritten at run-time */
-#define TPP_HOOK_ISRTUSER(x)      ((x) == TPP_HOOK_RT_USER || (x) == TPP_HOOK_RT_USER_C)
-#define TPP_HOOK_ISRTBULITIN(x)   ((x) == TPP_HOOK_RT_BUILTIN || (x) == TPP_HOOK_RT_BUILTIN_C)
-#define TPP_HOOK_ISRTNOOP(x)      ((x) == TPP_HOOK_RT_NOOP || (x) == TPP_HOOK_RT_NOOP_C)
+#define TPP_HOOK_ISRTUSER(x)      (TPP_HOOK_WITHOUTCOOKIE(x) == TPP_HOOK_RT_USER)
+#define TPP_HOOK_ISRTBULITIN(x)   (TPP_HOOK_WITHOUTCOOKIE(x) == TPP_HOOK_RT_BUILTIN)
+#define TPP_HOOK_ISRTNOOP(x)      (TPP_HOOK_WITHOUTCOOKIE(x) == TPP_HOOK_RT_NOOP)
 #define TPP_HOOK_HASCOOKIE(x)     ((x) < -4) /* Check if config "x" has a `void *cookie` argument */
 
 /* Default configuration specifying how required hooks should be linked. */

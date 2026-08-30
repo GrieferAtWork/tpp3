@@ -993,6 +993,10 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 /************************************************************************/
 
 /* Ensure that `TPP_HOOK_*` helper macros work */
+TPP_STATIC_ASSERT_MSG(TPP_HOOK_DISABLED == 0,
+                      "Hard requirement so `#if TPP_HAVE_WARNPRINTER_HOOK` "
+                      "can be used to check if the hook exists");
+
 TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_USER) == TPP_HOOK_RT_USER_C);
 TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_BUILTIN) == TPP_HOOK_RT_BUILTIN_C);
 TPP_STATIC_ASSERT(TPP_HOOK_WITHCOOKIE(TPP_HOOK_RT_NOOP) == TPP_HOOK_RT_NOOP_C);
