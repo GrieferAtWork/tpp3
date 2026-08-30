@@ -31,7 +31,7 @@ TPP_DECL_BEGIN
 
 #ifndef tpp_intvalue
 typedef struct tpp_intvalue {
-	tpp_intmax TPP_INTERNAL(teiv_value); /* Integer value */
+	tpp_intmax TPP_INTERNAL(tiv_value); /* Integer value */
 } tpp_intvalue;
 
 /* Finalize `self` */
@@ -40,46 +40,85 @@ typedef struct tpp_intvalue {
 /* @return: TPP_EOK:      Success
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_init_zero(self) \
-	((self)->TPP_INTERNAL(teiv_value) = 0, TPP_EOK)
+	((self)->TPP_INTERNAL(tiv_value) = 0, TPP_EOK)
 
 /* @return: TPP_EOK:      Success
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_init_copy(self, from) \
-	((self)->TPP_INTERNAL(teiv_value) =    \
-	 (from)->TPP_INTERNAL(teiv_value),     \
+	((self)->TPP_INTERNAL(tiv_value) =    \
+	 (from)->TPP_INTERNAL(tiv_value),     \
 	 TPP_EOK)
 
 /* @return: TPP_EOK:      Success
  * @return: TPP_ENOENT:   SOFT_ERROR: Out-of-range (only if `TPP_INTVALUE_ASINTMAX_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_asintmax(self, p_result) \
-	(*(p_result) = (self)->TPP_INTERNAL(teiv_value), TPP_EOK)
+	(*(p_result) = (self)->TPP_INTERNAL(tiv_value), TPP_EOK)
 
 #if TPP_HAVE_LEXER_DECODEINT
-/* >> [self] = ([self] * mul) + add;
- * Used to implement `tpp_lexer_decodeint()`
+/* Use a builder so user-overrides can:
+ * - Cache multiplication algorithms based on radix passed to constructor
+ * - Overallocate buffers of variable-length integers, and only flush those
+ *   buffers during an eventual call to `tpp_intvalue_builder_pack()`. */
+typedef struct tpp_intvalue_builder {
+	tpp_intmax   TPP_INTERNAL(tivb_value); /* Integer value */
+	unsigned int TPP_INTERNAL(tivb_radix); /* Digit radix */
+} tpp_intvalue_builder;
+
+/* Initialize builder
+ * @param: radix: Number radix. Some value in range [2,16]
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_intvalue_builder_init(self, radix)   \
+	((self)->TPP_INTERNAL(tivb_value) = 0,       \
+	 (self)->TPP_INTERNAL(tivb_radix) = (radix), \
+	 TPP_EOK)
+
+/* Finalize builder */
+#define tpp_intvalue_builder_fini(self) (void)0
+
+/* Flush buffers and package the built integer into a `tpp_intvalue` object.
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+#define tpp_intvalue_builder_pack(/*inherit(always)*/ self,                    \
+                                  /*initialize(on_success)*/ p_intvalue)       \
+	((p_intvalue)->TPP_INTERNAL(tiv_value) = (self)->TPP_INTERNAL(tivb_value), \
+	 TPP_EOK)
+
+/* >> [self] = ([self] * RADIX) + digit;
+ * Used to implement `tpp_lexer_decodeint()`.
+ * NOTES:
+ * - Allowed to assume that `digit < RADIX`
+ * - The `RADIX` is the value that was specified in `tpp_intvalue_builder_init()`
  * @return: TPP_EOK:      OK
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ *                        In this case, the state of `self` is weak undefined,
+ *                        meaning that further calls to this function should
+ *                        not be performed, and the caller should instead call
+ *                        `tpp_intvalue_builder_fini(self)` and handle the
+ *                        overflow error.
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
 TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
-                    unsigned int mul, unsigned int add) {
-	tpp_intmax const oldval = self->TPP_INTERNAL(teiv_value);
-	tpp_intmax const newval1 = oldval * mul;
-	tpp_intmax const newval2 = newval1 + add;
-	self->TPP_INTERNAL(teiv_value) = newval2;
-	if tpp_unlikely (newval1 < oldval || newval2 < newval1)
+tpp_intvalue_builder_adddigit(tpp_intvalue_builder *tpp_restrict self,
+                              unsigned int digit) {
+	tpp_intmax const oldval = self->TPP_INTERNAL(tivb_value);
+	tpp_intmax const newval1 = oldval * self->TPP_INTERNAL(tivb_radix);
+	tpp_intmax const newval2 = newval1 + digit;
+	tpp_assert(digit < self->TPP_INTERNAL(tivb_radix));
+	self->TPP_INTERNAL(tivb_value) = newval2;
+	if tpp_unlikely(newval1 < oldval || newval2 < newval1)
 		return TPP_ENOENT;
 	return TPP_EOK;
 }
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_muladd(self, mul, add)     \
-	((self)->TPP_INTERNAL(teiv_value) *= (mul), \
-	 (self)->TPP_INTERNAL(teiv_value) += (add), \
+#define tpp_intvalue_builder_adddigit(self, digit)                       \
+	((self)->TPP_INTERNAL(tivb_value) *= self->TPP_INTERNAL(tivb_radix), \
+	 (self)->TPP_INTERNAL(tivb_value) += (digit),                        \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 #endif /* TPP_HAVE_LEXER_DECODEINT */
+
 
 #undef _TPP_INTMAX_MIN
 #define _TPP_INTMAX_MIN ((tpp_intmax)((TPP_UINTMAX_MAX >> 1) + 1))
@@ -93,22 +132,22 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
 #define tpp_intvalue_init_uintmax(self, v)               \
-	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(v), \
+	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(v), \
 	 ((tpp_uintmax)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)  \
 	 ? TPP_EOK                                           \
 	 : TPP_ENOENT)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
 #define tpp_intvalue_init_uintmax(self, v)               \
-	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(v), \
+	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(v), \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
 
 #if TPP_HAVE_BUILTIN_EXPR_VALUE
 #define tpp_intvalue_init_one(self) \
-	((self)->TPP_INTERNAL(teiv_value) = 1, TPP_EOK)
+	((self)->TPP_INTERNAL(tiv_value) = 1, TPP_EOK)
 #define tpp_intvalue_init_bool(self, v) \
-	((self)->TPP_INTERNAL(teiv_value) = (v), TPP_EOK)
+	((self)->TPP_INTERNAL(tiv_value) = (v), TPP_EOK)
 
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS
 /* >> [self] = v;
@@ -116,21 +155,21 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW && TPP_SIZE_MAX >= TPP_UINTMAX_MAX
-#define tpp_intvalue_init_size(self, /*tpp_size*/ v)                \
-	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_ssize)(v), \
-	 ((tpp_size)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)                \
-	 ? TPP_EOK                                                      \
+#define tpp_intvalue_init_size(self, /*tpp_size*/ v)               \
+	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(tpp_ssize)(v), \
+	 ((tpp_size)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)               \
+	 ? TPP_EOK                                                     \
 	 : TPP_ENOENT)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW && TPP_SIZE_MAX >= TPP_UINTMAX_MAX */
 #define tpp_intvalue_init_size(self, /*tpp_size*/ v) \
-	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_ssize)(v), TPP_EOK)
+	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(tpp_ssize)(v), TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW || TPP_SIZE_MAX < TPP_UINTMAX_MAX */
 
 /* >> [self] = v;
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_init_char(self, /*tpp_char*/ v) \
-	((self)->TPP_INTERNAL(teiv_value) = (tpp_intmax)(tpp_char)(v), TPP_EOK)
+	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(tpp_char)(v), TPP_EOK)
 #endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
 
 
@@ -138,35 +177,35 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Zero
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_asbool(self) \
-	(((self)->TPP_INTERNAL(teiv_value) != 0) ? TPP_EOK : TPP_ENOENT)
+	(((self)->TPP_INTERNAL(tiv_value) != 0) ? TPP_EOK : TPP_ENOENT)
 
 /* @return: TPP_EOK:      Yes
  * @return: TPP_ENOENT:   No
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_isneg(self) \
-	(((self)->TPP_INTERNAL(teiv_value) < 0) ? TPP_EOK : TPP_ENOENT)
+	(((self)->TPP_INTERNAL(tiv_value) < 0) ? TPP_EOK : TPP_ENOENT)
 
 /* >> [p_result] = -[self];
  * @return: TPP_EOK:      OK
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_neg(self, p_result)                                       \
-	((p_result)->TPP_INTERNAL(teiv_value) = -(self)->TPP_INTERNAL(teiv_value), \
-	 (((p_result)->TPP_INTERNAL(teiv_value) < 0) ==                            \
-	  ((self)->TPP_INTERNAL(teiv_value) > 0))                                  \
-	 ? TPP_EOK                                                                 \
+#define tpp_intvalue_neg(self, p_result)                                     \
+	((p_result)->TPP_INTERNAL(tiv_value) = -(self)->TPP_INTERNAL(tiv_value), \
+	 (((p_result)->TPP_INTERNAL(tiv_value) < 0) ==                           \
+	  ((self)->TPP_INTERNAL(tiv_value) > 0))                                 \
+	 ? TPP_EOK                                                               \
 	 : TPP_ENOENT)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
 #define tpp_intvalue_neg(self, p_result) \
-	((p_result)->TPP_INTERNAL(teiv_value) = -(self)->TPP_INTERNAL(teiv_value), TPP_EOK)
+	((p_result)->TPP_INTERNAL(tiv_value) = -(self)->TPP_INTERNAL(tiv_value), TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
 /* >> [p_result] = ~[self];
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_inv(self, p_result)                                       \
-	((p_result)->TPP_INTERNAL(teiv_value) = ~(self)->TPP_INTERNAL(teiv_value), \
+#define tpp_intvalue_inv(self, p_result)                                     \
+	((p_result)->TPP_INTERNAL(tiv_value) = ~(self)->TPP_INTERNAL(tiv_value), \
 	 TPP_EOK)
 
 /* >> [p_result] = [lhs] + [rhs];
@@ -174,17 +213,17 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_add(lhs, rhs, p_result)                                                                                            \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) +                                                          \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)),                                                          \
-	 (((rhs)->TPP_INTERNAL(teiv_value) > 0 && (lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX - (rhs)->TPP_INTERNAL(teiv_value))) || \
-	  ((rhs)->TPP_INTERNAL(teiv_value) < 0 && (lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN - (rhs)->TPP_INTERNAL(teiv_value))))   \
-	 ? TPP_ENOENT                                                                                                                       \
+#define tpp_intvalue_add(lhs, rhs, p_result)                                                                                         \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) +                                                         \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)),                                                         \
+	 (((rhs)->TPP_INTERNAL(tiv_value) > 0 && (lhs)->TPP_INTERNAL(tiv_value) > (_TPP_INTMAX_MAX - (rhs)->TPP_INTERNAL(tiv_value))) || \
+	  ((rhs)->TPP_INTERNAL(tiv_value) < 0 && (lhs)->TPP_INTERNAL(tiv_value) < (_TPP_INTMAX_MIN - (rhs)->TPP_INTERNAL(tiv_value))))   \
+	 ? TPP_ENOENT                                                                                                                    \
 	 : TPP_EOK)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_add(lhs, rhs, p_result)                                   \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) + \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_add(lhs, rhs, p_result)                                 \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) + \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
@@ -193,17 +232,17 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_sub(lhs, rhs, p_result)                                                                                            \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) -                                                          \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)),                                                          \
-	 (((rhs)->TPP_INTERNAL(teiv_value) < 0 && (lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX + (rhs)->TPP_INTERNAL(teiv_value))) || \
-	  ((rhs)->TPP_INTERNAL(teiv_value) > 0 && (lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN + (rhs)->TPP_INTERNAL(teiv_value))))   \
-	 ? TPP_ENOENT                                                                                                                       \
+#define tpp_intvalue_sub(lhs, rhs, p_result)                                                                                         \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) -                                                         \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)),                                                         \
+	 (((rhs)->TPP_INTERNAL(tiv_value) < 0 && (lhs)->TPP_INTERNAL(tiv_value) > (_TPP_INTMAX_MAX + (rhs)->TPP_INTERNAL(tiv_value))) || \
+	  ((rhs)->TPP_INTERNAL(tiv_value) > 0 && (lhs)->TPP_INTERNAL(tiv_value) < (_TPP_INTMAX_MIN + (rhs)->TPP_INTERNAL(tiv_value))))   \
+	 ? TPP_ENOENT                                                                                                                    \
 	 : TPP_EOK)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_sub(lhs, rhs, p_result)                                   \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) - \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_sub(lhs, rhs, p_result)                                 \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) - \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
@@ -212,29 +251,29 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_mul(lhs, rhs, p_result)                                                       \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) *                     \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)),                     \
-	 (lhs)->TPP_INTERNAL(teiv_value) > 0                                                           \
-	 ? ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
-	    ? ((lhs)->TPP_INTERNAL(teiv_value) > (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* +lhs * +rhs */                                                          \
-	       : TPP_EOK)                                                                              \
-	    : ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN / (lhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* +lhs * -rhs */                                                          \
-	       : TPP_EOK))                                                                             \
-	 : ((rhs)->TPP_INTERNAL(teiv_value) > 0                                                        \
-	    ? ((lhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MIN / (rhs)->TPP_INTERNAL(teiv_value))   \
-	       ? TPP_ENOENT /* -lhs * +rhs */                                                          \
-	       : TPP_EOK)                                                                              \
-	    : ((lhs)->TPP_INTERNAL(teiv_value) &&                                                      \
-	       ((rhs)->TPP_INTERNAL(teiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(teiv_value))) \
-	       ? TPP_ENOENT /* -lhs * -rhs */                                                          \
+#define tpp_intvalue_mul(lhs, rhs, p_result)                                                     \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) *                     \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)),                     \
+	 (lhs)->TPP_INTERNAL(tiv_value) > 0                                                          \
+	 ? ((rhs)->TPP_INTERNAL(tiv_value) > 0                                                       \
+	    ? ((lhs)->TPP_INTERNAL(tiv_value) > (_TPP_INTMAX_MAX / (rhs)->TPP_INTERNAL(tiv_value))   \
+	       ? TPP_ENOENT /* +lhs * +rhs */                                                        \
+	       : TPP_EOK)                                                                            \
+	    : ((rhs)->TPP_INTERNAL(tiv_value) < (_TPP_INTMAX_MIN / (lhs)->TPP_INTERNAL(tiv_value))   \
+	       ? TPP_ENOENT /* +lhs * -rhs */                                                        \
+	       : TPP_EOK))                                                                           \
+	 : ((rhs)->TPP_INTERNAL(tiv_value) > 0                                                       \
+	    ? ((lhs)->TPP_INTERNAL(tiv_value) < (_TPP_INTMAX_MIN / (rhs)->TPP_INTERNAL(tiv_value))   \
+	       ? TPP_ENOENT /* -lhs * +rhs */                                                        \
+	       : TPP_EOK)                                                                            \
+	    : ((lhs)->TPP_INTERNAL(tiv_value) &&                                                     \
+	       ((rhs)->TPP_INTERNAL(tiv_value) < (_TPP_INTMAX_MAX / (lhs)->TPP_INTERNAL(tiv_value))) \
+	       ? TPP_ENOENT /* -lhs * -rhs */                                                        \
 	       : TPP_EOK)))
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_mul(lhs, rhs, p_result)                                   \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) * \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_mul(lhs, rhs, p_result)                                 \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) * \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
@@ -242,22 +281,22 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_EOK:      OK
  * @return: TPP_ENOENT:   Divide-by-zero
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_div(lhs, rhs, p_result)                                      \
-	((rhs)->TPP_INTERNAL(teiv_value)                                              \
-	 ? ((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) / \
-	                                            (rhs)->TPP_INTERNAL(teiv_value)), \
-	    TPP_EOK)                                                                  \
+#define tpp_intvalue_div(lhs, rhs, p_result)                                    \
+	((rhs)->TPP_INTERNAL(tiv_value)                                             \
+	 ? ((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) / \
+	                                           (rhs)->TPP_INTERNAL(tiv_value)), \
+	    TPP_EOK)                                                                \
 	 : TPP_ENOENT)
 
 /* >> [p_result] = [lhs] % [rhs];
  * @return: TPP_EOK:      OK
  * @return: TPP_ENOENT:   Divide-by-zero
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_mod(lhs, rhs, p_result)                                      \
-	((rhs)->TPP_INTERNAL(teiv_value)                                              \
-	 ? ((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) % \
-	                                            (rhs)->TPP_INTERNAL(teiv_value)), \
-	    TPP_EOK)                                                                  \
+#define tpp_intvalue_mod(lhs, rhs, p_result)                                    \
+	((rhs)->TPP_INTERNAL(tiv_value)                                             \
+	 ? ((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) % \
+	                                           (rhs)->TPP_INTERNAL(tiv_value)), \
+	    TPP_EOK)                                                                \
 	 : TPP_ENOENT)
 
 #undef _TPP_UINTMAX_BITS
@@ -278,60 +317,60 @@ tpp_intvalue_muladd(tpp_intvalue *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_shl(lhs, rhs, p_result)                                                                        \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value)),   \
-	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS ||                                                       \
-	  (lhs)->TPP_INTERNAL(teiv_value) != ((p_result)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value))) \
-	 ? TPP_ENOENT                                                                                                   \
+#define tpp_intvalue_shl(lhs, rhs, p_result)                                                                     \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) << (rhs)->TPP_INTERNAL(tiv_value)),   \
+	 ((rhs)->TPP_INTERNAL(tiv_value) >= _TPP_UINTMAX_BITS ||                                                     \
+	  (lhs)->TPP_INTERNAL(tiv_value) != ((p_result)->TPP_INTERNAL(tiv_value) >> (rhs)->TPP_INTERNAL(tiv_value))) \
+	 ? TPP_ENOENT                                                                                                \
 	 : TPP_EOK)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
 #define tpp_intvalue_shl(lhs, rhs, p_result) \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) << (rhs)->TPP_INTERNAL(teiv_value)), TPP_EOK)
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) << (rhs)->TPP_INTERNAL(tiv_value)), TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */
 
 /* >> [p_result] = [lhs] >> [rhs];
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_shr(lhs, rhs, p_result)                                                                      \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) >> (rhs)->TPP_INTERNAL(teiv_value)), \
-	 ((rhs)->TPP_INTERNAL(teiv_value) >= _TPP_UINTMAX_BITS                                                        \
-	  ? (void)((p_result)->TPP_INTERNAL(teiv_value) = 0)                                                          \
-	  : (void)0),                                                                                                 \
+#define tpp_intvalue_shr(lhs, rhs, p_result)                                                                   \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) >> (rhs)->TPP_INTERNAL(tiv_value)), \
+	 ((rhs)->TPP_INTERNAL(tiv_value) >= _TPP_UINTMAX_BITS                                                      \
+	  ? (void)((p_result)->TPP_INTERNAL(tiv_value) = 0)                                                        \
+	  : (void)0),                                                                                              \
 	 TPP_EOK)
 
 /* >> [p_result] = [lhs] & [rhs];
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_and(lhs, rhs, p_result)                                   \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) & \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_and(lhs, rhs, p_result)                                 \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) & \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 
 /* >> [p_result] = [lhs] ^ [rhs];
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_xor(lhs, rhs, p_result)                                   \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) ^ \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_xor(lhs, rhs, p_result)                                 \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) ^ \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 
 /* >> [p_result] = [lhs] | [rhs];
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_or(lhs, rhs, p_result)                                    \
-	((p_result)->TPP_INTERNAL(teiv_value) = ((lhs)->TPP_INTERNAL(teiv_value) | \
-	                                         (rhs)->TPP_INTERNAL(teiv_value)), \
+#define tpp_intvalue_or(lhs, rhs, p_result)                                  \
+	((p_result)->TPP_INTERNAL(tiv_value) = ((lhs)->TPP_INTERNAL(tiv_value) | \
+	                                        (rhs)->TPP_INTERNAL(tiv_value)), \
 	 TPP_EOK)
 
 /* Store `< 0`, `== 0` or `> 0` to `*(int *)p_delta`, based on result of `lhs <=> rhs`
  * @return: TPP_EOK:      OK
  * @return: TPP_ISERR(*): HARD_ERROR */
-#define tpp_intvalue_cmp(lhs, rhs, p_delta)                                            \
-	(*(p_delta) = ((lhs)->TPP_INTERNAL(teiv_value) < (rhs)->TPP_INTERNAL(teiv_value)   \
-	               ? -1                                                                \
-	               : (lhs)->TPP_INTERNAL(teiv_value) > (rhs)->TPP_INTERNAL(teiv_value) \
-	                 ? 1                                                               \
-	                 : 0),                                                             \
+#define tpp_intvalue_cmp(lhs, rhs, p_delta)                                          \
+	(*(p_delta) = ((lhs)->TPP_INTERNAL(tiv_value) < (rhs)->TPP_INTERNAL(tiv_value)   \
+	               ? -1                                                              \
+	               : (lhs)->TPP_INTERNAL(tiv_value) > (rhs)->TPP_INTERNAL(tiv_value) \
+	                 ? 1                                                             \
+	                 : 0),                                                           \
 	 TPP_EOK)
 
 /* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)

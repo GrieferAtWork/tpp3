@@ -45,7 +45,7 @@ tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
                        tpp_intvalue *tpp_restrict self,
                        tpp_formatprinter printer, void *arg) {
 	char value_buffer[TPP_ITOA_MAXLEN];
-	char const *value_ptr = tpp_itoa(value_buffer, self->teiv_value);
+	char const *value_ptr = tpp_itoa(value_buffer, self->tiv_value);
 	tpp_size value_len = (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr);
 	(void)lexer;
 	return tpp_formatprinter_print_cstr(printer, arg, value_ptr, value_len);

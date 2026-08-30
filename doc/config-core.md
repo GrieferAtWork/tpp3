@@ -29,10 +29,10 @@ Default:
 ## TPP_HAVE_FILE_NONBLOCK
 
 API support for non-blocking I/O. Must also be enabled on a per-file basis
-by setting the file's [`TPP_FILE_FLAGS_NONBLOCK`](../src/tpp-amalgamation.h#L20697) flag. Also: calls made to
-[`tpp_lexer_yield_blocking()`](../src/tpp-amalgamation.h#L28357) & friends can be used to force calls to become
+by setting the file's [`TPP_FILE_FLAGS_NONBLOCK`](../src/tpp-amalgamation.h#L20736) flag. Also: calls made to
+[`tpp_lexer_yield_blocking()`](../src/tpp-amalgamation.h#L28396) & friends can be used to force calls to become
 blocking, even when the associated file is confirmed as non-blocking (s.a.
-[`TPP_EWOULDBLOCK`](../src/tpp-amalgamation.h#L13481) and [`TPP_TOK_EWOULDBLOCK`](../src/tpp-amalgamation.h#L15831))
+[`TPP_EWOULDBLOCK`](../src/tpp-amalgamation.h#L13481) and [`TPP_TOK_EWOULDBLOCK`](../src/tpp-amalgamation.h#L15870))
 
 <details><summary>Details</summary>
 
@@ -117,7 +117,7 @@ Default:
 
 ## TPP_HAVE_STRTOKENID
 
-Provide a function [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17346) to get the API name of a (non-keyword) token ID
+Provide a function [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17385) to get the API name of a (non-keyword) token ID
 
 <details><summary>Details</summary>
 
@@ -132,8 +132,8 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 Enable support for storing custom user-data in keywords
 
-**Getter**: [`tpp_keyword_getuserdata(keyword)`](../src/tpp-amalgamation.h#L22673)<br/>
-**Setter**: [`tpp_keyword_setuserdata(keyword, v)`](../src/tpp-amalgamation.h#L22694)
+**Getter**: [`tpp_keyword_getuserdata(keyword)`](../src/tpp-amalgamation.h#L22712)<br/>
+**Setter**: [`tpp_keyword_setuserdata(keyword, v)`](../src/tpp-amalgamation.h#L22733)
 
 <details><summary>Details</summary>
 
@@ -146,10 +146,10 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_HAVE_KEYWORD_ASSTRING
 
-Provide support for [`tpp_keyword_asstring()`](../src/tpp-amalgamation.h#L22665) that allows
+Provide support for [`tpp_keyword_asstring()`](../src/tpp-amalgamation.h#L22704) that allows
 keywords to be binary-compatible with [`tpp_string`](../src/tpp-amalgamation.h#L14004), at the
 expense of adding an (otherwise unused) reference counter
-field to [`tpp_keyword`](../src/tpp-amalgamation.h#L22574).
+field to [`tpp_keyword`](../src/tpp-amalgamation.h#L22613).
 
 <details><summary>Details</summary>
 
@@ -239,7 +239,7 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_WARNING_NUMBERS
 
-Support for: [`tpp_warning_ofnumber()`](../src/tpp-amalgamation.h#L23454) and [`tpp_warning_getnumbers()`](../src/tpp-amalgamation.h#L23460)
+Support for: [`tpp_warning_ofnumber()`](../src/tpp-amalgamation.h#L23493) and [`tpp_warning_getnumbers()`](../src/tpp-amalgamation.h#L23499)
 
 When [`TPP_HAVE_PRAGMA_WARNING`](config-conf.md#tpp_have_pragma_warning) is also enabled, user-code will also
 be able to configure warnings based on their ID.
@@ -255,7 +255,7 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_WARNING_ERROR
 
-Support for: [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L23353) (else: only [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L23358) is available)
+Support for: [`TPP_WSTATE_ERROR`](../src/tpp-amalgamation.h#L23392) (else: only [`TPP_WSTATE_FATAL`](../src/tpp-amalgamation.h#L23397) is available)
 
 <details><summary>Details</summary>
 
@@ -268,7 +268,7 @@ TPP_HAVE_WARNINGS && TPP_ERROR_LIMIT != 0
 
 ## TPP_HAVE_WARNING_SUPPRESS
 
-Support for: [`TPP_WSTATE_SUPPRESS`](../src/tpp-amalgamation.h#L23362)
+Support for: [`TPP_WSTATE_SUPPRESS`](../src/tpp-amalgamation.h#L23401)
 
 <details><summary>Details</summary>
 
@@ -281,7 +281,7 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_WARNING_DEFAULT
 
-Support for: [`TPP_WSTATE_DEFAULT`](../src/tpp-amalgamation.h#L23367)
+Support for: [`TPP_WSTATE_DEFAULT`](../src/tpp-amalgamation.h#L23406)
 
 <details><summary>Details</summary>
 
@@ -294,7 +294,7 @@ TPP_HAVE_WARNINGS && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_FILE_NOCLOSE
 
-Enable support for [`TPP_FILE_FLAGS_NOCLOSE`](../src/tpp-amalgamation.h#L20700)
+Enable support for [`TPP_FILE_FLAGS_NOCLOSE`](../src/tpp-amalgamation.h#L20739)
 
 <details><summary>Details</summary>
 
@@ -307,7 +307,7 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_HAVE_FILE_NOKWD
 
-Enable support for [`TPP_FILE_FLAGS_NOKWD`](../src/tpp-amalgamation.h#L20703)
+Enable support for [`TPP_FILE_FLAGS_NOKWD`](../src/tpp-amalgamation.h#L20742)
 
 <details><summary>Details</summary>
 
@@ -320,7 +320,7 @@ TPP_PROFILE != TPP_PROFILE_MINIMAL
 
 ## TPP_HAVE_FILE_LC_CACHE
 
-Speed up calls to [`tpp_file_getlcinfo()`](../src/tpp-amalgamation.h#L21588) by caching the last-read
+Speed up calls to [`tpp_file_getlcinfo()`](../src/tpp-amalgamation.h#L21627) by caching the last-read
 position and determining line/column information as a delta from
 what was previously cached
 
@@ -348,7 +348,7 @@ Default:
 
 ## TPP_HAVE_LEXER_COPY
 
-Provide a function [`tpp_lexer_copy()`](../src/tpp-amalgamation.h#L26961) that can be used to duplicate a lexer.
+Provide a function [`tpp_lexer_copy()`](../src/tpp-amalgamation.h#L27000) that can be used to duplicate a lexer.
 
 <details><summary>Details</summary>
 
@@ -362,7 +362,7 @@ TPP_PROFILE == TPP_PROFILE_ALL
 ## TPP_HAVE_LEXER_WARNING_COUNT
 
 Lexers keep track of the # of warnings they've emitted over their lifetime. Not
-actually used for anything, but can be read using [`tpp_lexer_getwarningcount()`](../src/tpp-amalgamation.h#L26577)
+actually used for anything, but can be read using [`tpp_lexer_getwarningcount()`](../src/tpp-amalgamation.h#L26616)
 
 <details><summary>Details</summary>
 
@@ -385,8 +385,8 @@ when generating its debug information).
 
 The following API are provided when this config is enabled:
 
-- **Getter**: [`tpp_lexer_getuserpwd()`](../src/tpp-amalgamation.h#L26689)
-- **Setter**: [`tpp_lexer_setuserpwd()`](../src/tpp-amalgamation.h#L26699), [`tpp_lexer_setuserpwd_inherited()`](../src/tpp-amalgamation.h#L26694)
+- **Getter**: [`tpp_lexer_getuserpwd()`](../src/tpp-amalgamation.h#L26728)
+- **Setter**: [`tpp_lexer_setuserpwd()`](../src/tpp-amalgamation.h#L26738), [`tpp_lexer_setuserpwd_inherited()`](../src/tpp-amalgamation.h#L26733)
 
 <details><summary>Details</summary>
 
@@ -399,7 +399,7 @@ TPP_HAVE_CPP_DIGIT_LINE && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_ATTRIBUTE
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_attribute()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_attribute(keyword) = "expansion"`.
 
@@ -419,7 +419,7 @@ TPP_HAVE_CLANG_MACRO___has_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_BUILTIN
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_builtin()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_builtin(keyword) = "expansion"`.
 
@@ -439,7 +439,7 @@ TPP_HAVE_CLANG_MACRO___has_builtin && TPP_COMMON_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_CPP_ATTRIBUTE
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_cpp_attribute()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_cpp_attribute(keyword) = "expansion"`.
 
@@ -459,7 +459,7 @@ TPP_HAVE_CLANG_MACRO___has_cpp_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_DECLSPEC_ATTRIBUTE
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_declspec_attribute()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_declspec_attribute(keyword) = "expansion"`.
 
@@ -479,7 +479,7 @@ TPP_HAVE_CLANG_MACRO___has_declspec_attribute && TPP_COMMON_HAVE_KEYWORD_FEATURE
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_EXTENSION
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_extension()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_extension(keyword) = "expansion"`.
 
@@ -499,7 +499,7 @@ TPP_HAVE_CLANG_MACRO___has_extension && TPP_COMMON_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_FEATURE
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_feature()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_feature(keyword) = "expansion"`.
 
@@ -519,7 +519,7 @@ TPP_HAVE_CLANG_MACRO___has_feature && TPP_COMMON_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_KEYWORD_FEATURE_HAS_C_ATTRIBUTE
 
-Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) should have support for a runtime-override
+Controls if [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) should have support for a runtime-override
 of what `has_c_attribute()` should expand to when applied to that keyword.
 Needed to implement `#pragma TPP has_c_attribute(keyword) = "expansion"`.
 
@@ -647,7 +647,7 @@ TPP_HAVE_PRAGMA && TPP_HAVE_KEYWORD_FEATURES
 
 ## TPP_HAVE_LEXER_OPEN_INCLUDE_STRING
 
-Provide a function [`tpp_lexer_open_include_string()`](../src/tpp-amalgamation.h#L28569)
+Provide a function [`tpp_lexer_open_include_string()`](../src/tpp-amalgamation.h#L28608)
 to open the file associated with an `#include`-string.
 
 <details><summary>Details</summary>
@@ -661,7 +661,7 @@ TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_CPP_IMPORT || TPP_
 
 ## TPP_HAVE_LEXER_OPEN_EMBED_STRING
 
-Provide a function [`tpp_lexer_open_embed_string()`](../src/tpp-amalgamation.h#L28585)
+Provide a function [`tpp_lexer_open_embed_string()`](../src/tpp-amalgamation.h#L28624)
 to open the file associated with an `#embed`-string.
 
 <details><summary>Details</summary>
@@ -675,7 +675,7 @@ TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO___has_embed
 
 ## TPP_HAVE_LEXER_DECODE_INCLUDE_STRING
 
-Provide a function [`tpp_lexer_decode_include_string()`](../src/tpp-amalgamation.h#L28497)
+Provide a function [`tpp_lexer_decode_include_string()`](../src/tpp-amalgamation.h#L28536)
 to decode the actual contents of an `#include`-string.
 
 <details><summary>Details</summary>
@@ -689,7 +689,7 @@ Default:
 
 ## TPP_HAVE_LEXER_YIELD_INCLUDE_STRING
 
-Provide a function [`tpp_lexer_yield_include_string()`](../src/tpp-amalgamation.h#L28463) to
+Provide a function [`tpp_lexer_yield_include_string()`](../src/tpp-amalgamation.h#L28502) to
 do yield the next token with special handling if the next
 token's first character is `<` or `"`in which case the
 token is parsed as a `#include`-string
@@ -705,7 +705,7 @@ Default:
 
 ## TPP_HAVE_LEXER_OPENFILE
 
-Enable support for [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27082)
+Enable support for [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27121)
 
 <details><summary>Details</summary>
 
@@ -718,7 +718,7 @@ TPP_HAVE_LEXER_OPEN_INCLUDE_STRING || TPP_HAVE_CPP_INCLUDE || TPP_HAVE_CPP_INCLU
 
 ## TPP_HAVE_FILE_GETREALFILENAMEKWD
 
-Provide a function [`tpp_file_getrealfilenamekwd()`](../src/tpp-amalgamation.h#L21659)
+Provide a function [`tpp_file_getrealfilenamekwd()`](../src/tpp-amalgamation.h#L21698)
 
 <details><summary>Details</summary>
 
@@ -770,10 +770,10 @@ Default:
 
 ## TPP_HAVE_USER_KEYWORDS
 
-Enable support for TPP generating new [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) definitions
+Enable support for TPP generating new [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) definitions
 on-the-fly, as keywords are parsed (the first time any unique
-keyword is parsed, [`tpp_keywords_newkeyword()`](../src/tpp-amalgamation.h#L23106) is used to give
-it a unique ID and [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) structure). This is also needed
+keyword is parsed, [`tpp_keywords_newkeyword()`](../src/tpp-amalgamation.h#L23145) is used to give
+it a unique ID and [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) structure). This is also needed
 for macros and a number of other features that need to store some
 kind of state alongside keywords.
 
@@ -790,11 +790,11 @@ Default:
 
 Provide a couple of functions to decode the data contained within strings:
 
-- [`tpp_lexer_decodestring_config`](../src/tpp-amalgamation.h#L28952)
-- [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29042)
-- [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L29081)
-- [`tpp_lexer_parsestring()`](../src/tpp-amalgamation.h#L29097)
-- [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29121)
+- [`tpp_lexer_decodestring_config`](../src/tpp-amalgamation.h#L28991)
+- [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29081)
+- [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L29120)
+- [`tpp_lexer_parsestring()`](../src/tpp-amalgamation.h#L29136)
+- [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29160)
 
 <details><summary>Details</summary>
 
@@ -807,8 +807,8 @@ TPP_HAVE_TOK_STRINGLIKE
 
 ## TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS
 
-Provide an optional performance-optimization flag [`TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`](../src/tpp-amalgamation.h#L29052)
-that may be passed to [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29121) to speed up decoding of certain kinds
+Provide an optional performance-optimization flag [`TPP_LEXER_PARSESTRING_FLAG_ALLOWTEMPS`](../src/tpp-amalgamation.h#L29091)
+that may be passed to [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29160) to speed up decoding of certain kinds
 of strings (by slightly weakening what callbacks are allowed to do when this flag is set)
 
 <details><summary>Details</summary>
@@ -822,7 +822,7 @@ TPP_HAVE_LEXER_DECODESTRING && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_STRING_ESCAPE_BIGCHAR
 
-Enable support for large (> 1 byte) character constants in [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29042)
+Enable support for large (> 1 byte) character constants in [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29081)
 
 <details><summary>Details</summary>
 
@@ -999,7 +999,7 @@ TPP_HAVE_UNICODE_BYNAME_LOOKUP && !defined(__OPTIMIZE_SIZE__)
 
 ## TPP_HAVE_FILE_SUBTEXT
 
-Enable support for [`TPP_FILE_KIND_SUBTEXT`](../src/tpp-amalgamation.h#L20595)
+Enable support for [`TPP_FILE_KIND_SUBTEXT`](../src/tpp-amalgamation.h#L20634)
 
 <details><summary>Details</summary>
 
@@ -1012,7 +1012,7 @@ TPP_HAVE_CPP_MACROS || TPP_HAVE_CPP_EMBED || TPP_HAVE_MACRO__Pragma || TPP_HAVE_
 
 ## TPP_HAVE_FILE_DUMMY
 
-Enable support for [`TPP_FILE_KIND_DUMMY`](../src/tpp-amalgamation.h#L20601), which is
+Enable support for [`TPP_FILE_KIND_DUMMY`](../src/tpp-amalgamation.h#L20640), which is
 needed to support gcc's `# <linenum>` -> `1`/`2` flags
 
 These flags push so-called *dummy* files onto the
@@ -1049,8 +1049,8 @@ Allow the file-and-line format used by warning to be overwritten on a per-lexer 
 
 When this is disabled, [`TPP_CONFIG_FILE_AND_LINE_FORMAT`](config-value.md#tpp_config_file_and_line_format) is always used instead.
 
-**Getter**: [`tpp_lexer_getfileandlineformat(lexer)`](../src/tpp-amalgamation.h#L26676)<br/>
-**Setter**: [`tpp_lexer_setfileandlineformat(lexer, format)`](../src/tpp-amalgamation.h#L26677)
+**Getter**: [`tpp_lexer_getfileandlineformat(lexer)`](../src/tpp-amalgamation.h#L26715)<br/>
+**Setter**: [`tpp_lexer_setfileandlineformat(lexer, format)`](../src/tpp-amalgamation.h#L26716)
 
 <details><summary>Details</summary>
 
@@ -1122,7 +1122,7 @@ TPP_HAVE_TIME_API && TPP_COMMON_HAVE_ENVIRON
 
 ## TPP_HAVE_FILE_SYSHDR
 
-Enable support for [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20709)
+Enable support for [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20748)
 
 <details><summary>Details</summary>
 
@@ -1135,7 +1135,7 @@ TPP_HAVE_PRAGMA_GCC_SYSTEM_HEADER || TPP_HAVE_CPP_DIGIT_LINE
 
 ## TPP_HAVE_FILE_EXTERN_C
 
-Enable support for [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20712)
+Enable support for [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L20751)
 
 <details><summary>Details</summary>
 
@@ -1162,7 +1162,7 @@ TPP_HAVE_INCLUDE_STACK
 
 ## TPP_HAVE_INCLUDE_PATH_ENVIRON
 
-Ensure support for [`tpp_include_paths`](../src/tpp-amalgamation.h#L23835) containing an extra (hidden) path-list that
+Ensure support for [`tpp_include_paths`](../src/tpp-amalgamation.h#L23874) containing an extra (hidden) path-list that
 is lazily populated the first time paths are searched, using a set of environment
 variables configured by [`TPP_CONFIG_INCLUDE_PATH_ENVIRON`](../src/tpp-amalgamation.h#L11682).
 
@@ -1179,7 +1179,7 @@ TPP_HAVE_INCLUDE_STACK && TPP_COMMON_HAVE_ENVIRON
 
 ## TPP_HAVE_INCLUDE_PATH_QUOTE
 
-[`tpp_include_paths`](../src/tpp-amalgamation.h#L23835) contains a 2nd path-list that is only searched during `"`-strings
+[`tpp_include_paths`](../src/tpp-amalgamation.h#L23874) contains a 2nd path-list that is only searched during `"`-strings
 
 <details><summary>Details</summary>
 
@@ -1192,7 +1192,7 @@ TPP_HAVE_INCLUDE_PATH && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_INCLUDE_PATH_SYSHDR
 
-[`tpp_include_paths`](../src/tpp-amalgamation.h#L23835) contains a 3rd path-list whose files are treated as [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20709)
+[`tpp_include_paths`](../src/tpp-amalgamation.h#L23874) contains a 3rd path-list whose files are treated as [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L20748)
 
 <details><summary>Details</summary>
 
@@ -1205,7 +1205,7 @@ TPP_HAVE_INCLUDE_PATH && TPP_HAVE_FILE_SYSHDR && (TPP_PROFILE != TPP_PROFILE_MIN
 
 ## TPP_HAVE_INCLUDE_PATH_AFTER
 
-[`tpp_include_paths`](../src/tpp-amalgamation.h#L23835) contains a 4th path-list that is searched after all other paths
+[`tpp_include_paths`](../src/tpp-amalgamation.h#L23874) contains a 4th path-list that is searched after all other paths
 
 <details><summary>Details</summary>
 
@@ -1267,7 +1267,7 @@ TPP_HAVE_INCLUDE_PATH_PUSH_POP
 ## TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS
 
 Provide extra information `tlcix_projpos` and `tlcix_projfile`
-in [`tpp_lcinfo_ex`](../src/tpp-amalgamation.h#L21726), as returned by [`tpp_file_getlcinfo_ex()`](../src/tpp-amalgamation.h#L21758).
+in [`tpp_lcinfo_ex`](../src/tpp-amalgamation.h#L21765), as returned by [`tpp_file_getlcinfo_ex()`](../src/tpp-amalgamation.h#L21797).
 
 This information can be used to describe the projection origin
 of expanded arguments in macro invocations.
@@ -1283,7 +1283,7 @@ TPP_HAVE_CPP_MACROS && ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_BUILTIN_WAR
 
 ## TPP_HAVE_LEXER_READUNICHAR
 
-Provide a function [`tpp_lexer_readunichar()`](../src/tpp-amalgamation.h#L28056) that can be used
+Provide a function [`tpp_lexer_readunichar()`](../src/tpp-amalgamation.h#L28095) that can be used
 to easily read+decode a utf-8 character translated to UTF-32.
 
 <details><summary>Details</summary>
@@ -1297,7 +1297,7 @@ TPP_HAVE_UNICODE && ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_LEXER_YIELD_IN
 
 ## TPP_HAVE_LEXER_SEEKPP_RPAREN
 
-Provide a function [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28759) that can be used
+Provide a function [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28798) that can be used
 to find the position of a matching `)`-token for the purpose
 of macro argument lists.
 
@@ -1312,8 +1312,8 @@ TPP_HAVE_CPP_MACROS
 
 ## TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 
-Provide a function [`tpp_lexer_seekpp_rparen_ex()`](../src/tpp-amalgamation.h#L28750) that is pretty much
-the same as [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28759), but is also able to deal with
+Provide a function [`tpp_lexer_seekpp_rparen_ex()`](../src/tpp-amalgamation.h#L28789) that is pretty much
+the same as [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28798), but is also able to deal with
 alternate parenthesis pairs: `[ ]` `{ }` `< >` in addition to `( )`
 
 <details><summary>Details</summary>
@@ -1327,9 +1327,9 @@ TPP_HAVE_LEXER_SEEKPP_RPAREN && TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 
 ## TPP_HAVE_LEXER_SEEKPP_RPAREN_EXACT
 
-Provide a function [`tpp_lexer_seekpp_rparen_exact()`](../src/tpp-amalgamation.h#L28781) (and
-[`tpp_lexer_seekpp_rparen_exact_ex()`](../src/tpp-amalgamation.h#L28775) if [`TPP_HAVE_LEXER_SEEKPP_RPAREN_EX`](#tpp_have_lexer_seekpp_rparen_ex)
-is also enabled) that wraps [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28759) whilst ensuring that
+Provide a function [`tpp_lexer_seekpp_rparen_exact()`](../src/tpp-amalgamation.h#L28820) (and
+[`tpp_lexer_seekpp_rparen_exact_ex()`](../src/tpp-amalgamation.h#L28814) if [`TPP_HAVE_LEXER_SEEKPP_RPAREN_EX`](#tpp_have_lexer_seekpp_rparen_ex)
+is also enabled) that wraps [`tpp_lexer_seekpp_rparen()`](../src/tpp-amalgamation.h#L28798) whilst ensuring that
 the number of arguments given is as expected (raising [`TPP_W_EXPECTED_STRING`](../src/tpp-amalgamation.h#L4132)
 if a discrepancy is detected).
 
@@ -1344,8 +1344,8 @@ TPP_HAVE_LEXER_SEEKPP_RPAREN && ((TPP_PROFILE == TPP_PROFILE_ALL) || TPP_HAVE_MA
 
 ## TPP_HAVE_IFDEF_STACK
 
-Enable support for [`tpp_file`](../src/tpp-amalgamation.h#L20803) keeping track of the state of active `#ifdef` directives
-via an embedded [`tpp_ifdef_stack`](../src/tpp-amalgamation.h#L20746) strcture (accessible via [`tpp_file_getifdef()`](../src/tpp-amalgamation.h#L20983))
+Enable support for [`tpp_file`](../src/tpp-amalgamation.h#L20842) keeping track of the state of active `#ifdef` directives
+via an embedded [`tpp_ifdef_stack`](../src/tpp-amalgamation.h#L20785) strcture (accessible via [`tpp_file_getifdef()`](../src/tpp-amalgamation.h#L21022))
 
 <details><summary>Details</summary>
 
@@ -1358,7 +1358,7 @@ TPP_HAVE_CPP_IF_ELSE_ENDIF
 
 ## TPP_HAVE_FILE_SETFILENAME
 
-Enable support for [`tpp_file_setfilename()`](../src/tpp-amalgamation.h#L21686)
+Enable support for [`tpp_file_setfilename()`](../src/tpp-amalgamation.h#L21725)
 
 <details><summary>Details</summary>
 
@@ -1371,7 +1371,7 @@ Default:
 
 ## TPP_HAVE_FILE_SETLINE
 
-Enable support for [`tpp_file_setline()`](../src/tpp-amalgamation.h#L21700)
+Enable support for [`tpp_file_setline()`](../src/tpp-amalgamation.h#L21739)
 
 <details><summary>Details</summary>
 
@@ -1398,8 +1398,8 @@ Default:
 
 ## TPP_HAVE_FILE_MACRO_TRACKARGS
 
-Keep track of the original [`tpp_lexer_arginfo`](../src/tpp-amalgamation.h#L28677) used during macro invocation,
-in order to improve [`tpp_file_getlcinfo_ex()`](../src/tpp-amalgamation.h#L21758)'s `tlcix_proj*` return values,
+Keep track of the original [`tpp_lexer_arginfo`](../src/tpp-amalgamation.h#L28716) used during macro invocation,
+in order to improve [`tpp_file_getlcinfo_ex()`](../src/tpp-amalgamation.h#L21797)'s `tlcix_proj*` return values,
 by making them less error-prone.
 
 <details><summary>Details</summary>
@@ -1413,7 +1413,7 @@ TPP_HAVE_FILE_GETLCINFO_EX_PROJPOS && TPP_HAVE_LEXER_SEEKPP_RPAREN && (TPP_PROFI
 
 ## TPP_HAVE_FILE_ENCODING_EMBED
 
-Provide a special [`TPP_FILE_ENCODING_EMBED`](../src/tpp-amalgamation.h#L20617) file encoding
+Provide a special [`TPP_FILE_ENCODING_EMBED`](../src/tpp-amalgamation.h#L20656) file encoding
 to convert bytes into `,`-separated decimals on-the-fly.
 
 NOTE: Even when this is disabled, `#embed` directives work,
@@ -1432,7 +1432,7 @@ TPP_HAVE_UNICODE && TPP_HAVE_CPP_EMBED && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_LEXER_RAND
 
-Provide an API [`tpp_lexer_nextrand()`](../src/tpp-amalgamation.h#L28016) that can be used to generate random
+Provide an API [`tpp_lexer_nextrand()`](../src/tpp-amalgamation.h#L28055) that can be used to generate random
 numbers using the already-parsed contents of of I/O and TEXT files as seed.
 
 <details><summary>Details</summary>
@@ -1446,7 +1446,7 @@ Default:
 
 ## TPP_HAVE_FILE_GETHASH
 
-Provide an API [`tpp_file_gethash()`](../src/tpp-amalgamation.h#L21713) that can be used to calculate a hash
+Provide an API [`tpp_file_gethash()`](../src/tpp-amalgamation.h#L21752) that can be used to calculate a hash
 of all already-processed bytes within a file up to a given position.
 
 <details><summary>Details</summary>
@@ -1460,7 +1460,7 @@ Default:
 
 ## TPP_HAVE_FILE_GETFULLHASH
 
-Provide an API [`tpp_file_getfullhash()`](../src/tpp-amalgamation.h#L21723) that behaves similar to [`tpp_file_gethash()`](../src/tpp-amalgamation.h#L21713),
+Provide an API [`tpp_file_getfullhash()`](../src/tpp-amalgamation.h#L21762) that behaves similar to [`tpp_file_gethash()`](../src/tpp-amalgamation.h#L21752),
 but also traverses the `#include`-stack to include the hash values of all parent files
 found therein, such that the return values describes not only the current file leading
 up to a given position, but also all other files that came before.
@@ -1564,8 +1564,8 @@ Default:
 
 ## TPP_HAVE_JOINPATH
 
-Enable support for [`tpp_joinpath()`](../src/tpp-amalgamation.h#L23202), a wrapper around another internal function
-used to implement [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27082) (see [`TPP_HAVE_LEXER_OPENFILE`](#tpp_have_lexer_openfile)) and is also
+Enable support for [`tpp_joinpath()`](../src/tpp-amalgamation.h#L23241), a wrapper around another internal function
+used to implement [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27121) (see [`TPP_HAVE_LEXER_OPENFILE`](#tpp_have_lexer_openfile)) and is also
 needed to implement `#pragma GCC dependency` (see [`TPP_HAVE_PRAGMA_GCC_DEPENDENCY`](config-conf.md#tpp_have_pragma_gcc_dependency))
 
 This function takes 2 paths, resolves `.` and `..` path references between them,
@@ -1608,7 +1608,7 @@ Default:
 
 ## TPP_HAVE_LEXER_SKIP
 
-Enable support for [`tpp_lexer_skip()`](../src/tpp-amalgamation.h#L28609) and [`tpp_lexer_require()`](../src/tpp-amalgamation.h#L28623)
+Enable support for [`tpp_lexer_skip()`](../src/tpp-amalgamation.h#L28648) and [`tpp_lexer_require()`](../src/tpp-amalgamation.h#L28662)
 
 <details><summary>Details</summary>
 
@@ -1621,7 +1621,7 @@ Default:
 
 ## TPP_HAVE_LEXER_TIME
 
-Enable support for storing a time value in [`tpp_lexer`](../src/tpp-amalgamation.h#L26497)
+Enable support for storing a time value in [`tpp_lexer`](../src/tpp-amalgamation.h#L26536)
 
 <details><summary>Details</summary>
 
@@ -1634,11 +1634,11 @@ TPP_HAVE_TIME_API
 
 ## TPP_HAVE_LEXER_TRYSKIP_RAW
 
-Enable support for [`tpp_lexer_tryskip_raw()`](../src/tpp-amalgamation.h#L28656), a function that is used-
+Enable support for [`tpp_lexer_tryskip_raw()`](../src/tpp-amalgamation.h#L28695), a function that is used-
 and needed in order to seek- and skip-over the `(` token following a
 macro's name (with support for searching for tokens in parent files
 of the current one, but rolling back all changes if the next token isn't
-as expected). It also offers a flag [`TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV`](../src/tpp-amalgamation.h#L28632)
+as expected). It also offers a flag [`TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV`](../src/tpp-amalgamation.h#L28671)
 that will retain the `[tpp_file_getlastpos(),*)` regions of files as
 they are scanned, allowing it to keep the previous token (which is
 probably the name of a macro) loaded in memory.
@@ -1654,7 +1654,7 @@ Default:
 
 ## TPP_HAVE_LEXER_REPRTOKENID
 
-Provide a function [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L29330) to
+Provide a function [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L29369) to
 return the string-representation of a given token ID
 
 <details><summary>Details</summary>
@@ -1668,8 +1668,8 @@ TPP_HAVE_LEXER_SKIP
 
 ## TPP_HAVE_REPRTOKENID
 
-Provide a function [`tpp_reprtokenid()`](../src/tpp-amalgamation.h#L17355) that does the
-same as [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L29330) (and is also used to
+Provide a function [`tpp_reprtokenid()`](../src/tpp-amalgamation.h#L17394) that does the
+same as [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L29369) (and is also used to
 implement that function), but fails for user-defined
 keyword token IDs
 
@@ -1684,8 +1684,8 @@ TPP_HAVE_LEXER_REPRTOKENID
 
 ## TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS
 
-Provide a lexer state flag [`TPP_LEXER_STATE_FLAG_ALLTOKENS`](../src/tpp-amalgamation.h#L26478) that forces
-[`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28332) to always re-emit *all* tokens (rather than skip
+Provide a lexer state flag [`TPP_LEXER_STATE_FLAG_ALLTOKENS`](../src/tpp-amalgamation.h#L26517) that forces
+[`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28371) to always re-emit *all* tokens (rather than skip
 over space/lf/comment tokens based on [`TPP_HAVE_TOK_SPACE`](config-conf.md#tpp_have_tok_space),
 [`TPP_HAVE_TOK_LF`](config-conf.md#tpp_have_tok_lf) and [`TPP_HAVE_TOK_COMMENT`](config-conf.md#tpp_have_tok_comment))
 
@@ -1703,7 +1703,7 @@ TPP_HAVE_CPP_MACROS && (TPP_CONF_MAYBE_0(TPP_HAVE_TOK_SPACE) || TPP_CONF_MAYBE_0
 
 ## TPP_HAVE_LEXER_GETKEYWORDFEATURE
 
-Provide a function [`tpp_lexer_getkeywordfeature()`](../src/tpp-amalgamation.h#L28834) to determine
+Provide a function [`tpp_lexer_getkeywordfeature()`](../src/tpp-amalgamation.h#L28873) to determine
 what a given keyword should expand to within a `__has_*`-context.
 
 <details><summary>Details</summary>
@@ -1717,7 +1717,7 @@ TPP_HAVE_CLANG_MACRO___has_attribute || TPP_HAVE_CLANG_MACRO___has_builtin || TP
 
 ## TPP_HAVE_LEXER_GETKEYWORDDEFINED
 
-Provide a function [`tpp_lexer_getkeyworddefined()`](../src/tpp-amalgamation.h#L28858) to check
+Provide a function [`tpp_lexer_getkeyworddefined()`](../src/tpp-amalgamation.h#L28897) to check
 if a given keyword is `defined()` (meaning it can be expanded
 as a (potentially builtin) macro)
 
@@ -1732,7 +1732,7 @@ TPP_HAVE_CPP_IF_ELSE_ENDIF || TPP_HAVE_CPP_MACROS || TPP_HAVE_BUILTIN_EXPR_DEFIN
 
 ## TPP_HAVE_LEXER_ISIDENTIFIER
 
-Provide a function [`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28874) to check if
+Provide a function [`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28913) to check if
 a given keyword is considered to be an `__is_identifier()`
 
 When that is the case, `__is_identifier()` (s.a. [`TPP_HAVE_MACRO___is_identifier`](config-conf.md#tpp_have_macro___is_identifier))
@@ -1751,7 +1751,7 @@ Default:
 
 ## TPP_HAVE_LEXER_ISIDENTIFIER_DEFAULT
 
-Default return value for [`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28874) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](#tpp_have_lexer_isidentifier))
+Default return value for [`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28913) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](#tpp_have_lexer_isidentifier))
 for keywords where this property hasn't been explicitly defined by [`TPP_KWD_IS_IDENTIFIER()`](../src/tpp-amalgamation.h#L243),
 and also don't have macro expansions as per [`TPP_PREDEFINED_MACRO()`](../src/tpp-amalgamation.h#L272).
 
@@ -1778,15 +1778,15 @@ Provide a set of macros/functions `tpp_lexer_manualpopfile_*`
 that can be used to seek through the contents of files further
 up the `#include`-stack in a way that allows for rollback.
 
-- [`tpp_lexer_manualpopfile_start()`](../src/tpp-amalgamation.h#L28293)
-- [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L28295)
-- [`tpp_lexer_manualpopfile_canpopfile()`](../src/tpp-amalgamation.h#L28296)
-- [`tpp_lexer_manualpopfile_break_rollback()`](../src/tpp-amalgamation.h#L28299)
-- [`tpp_lexer_manualpopfile_break_commit()`](../src/tpp-amalgamation.h#L28300)
-- [`tpp_lexer_manualpopfile_break()`](../src/tpp-amalgamation.h#L28301)
-- [`tpp_lexer_manualpopfile_end_rollback()`](../src/tpp-amalgamation.h#L28305)
-- [`tpp_lexer_manualpopfile_end_commit()`](../src/tpp-amalgamation.h#L28308)
-- [`tpp_lexer_manualpopfile_end()`](../src/tpp-amalgamation.h#L28311)
+- [`tpp_lexer_manualpopfile_start()`](../src/tpp-amalgamation.h#L28332)
+- [`tpp_lexer_manualpopfile_popfile()`](../src/tpp-amalgamation.h#L28334)
+- [`tpp_lexer_manualpopfile_canpopfile()`](../src/tpp-amalgamation.h#L28335)
+- [`tpp_lexer_manualpopfile_break_rollback()`](../src/tpp-amalgamation.h#L28338)
+- [`tpp_lexer_manualpopfile_break_commit()`](../src/tpp-amalgamation.h#L28339)
+- [`tpp_lexer_manualpopfile_break()`](../src/tpp-amalgamation.h#L28340)
+- [`tpp_lexer_manualpopfile_end_rollback()`](../src/tpp-amalgamation.h#L28344)
+- [`tpp_lexer_manualpopfile_end_commit()`](../src/tpp-amalgamation.h#L28347)
+- [`tpp_lexer_manualpopfile_end()`](../src/tpp-amalgamation.h#L28350)
 
 <details><summary>Details</summary>
 
@@ -1799,7 +1799,7 @@ TPP_HAVE_INCLUDE_STACK && (TPP_HAVE_CPP_MACROS || TPP_HAVE_LEXER_TRYSKIP_RAW || 
 
 ## TPP_HAVE_MACRO_EQUALS
 
-Provide a function [`tpp_macro_equals()`](../src/tpp-amalgamation.h#L22029) to compare macro definitions.
+Provide a function [`tpp_macro_equals()`](../src/tpp-amalgamation.h#L22068) to compare macro definitions.
 Because the C standard specifies that re-defining a macro should only
 be worthy of a warning if its new definition differs from its old one,
 this function is used to only empty [`TPP_W_REDEFINE_MACRO`](../src/tpp-amalgamation.h#L5020) if exactly
@@ -1822,7 +1822,7 @@ TPP_HAVE_TPP_W_REDEFINE_MACRO
 
 ## TPP_HAVE_MACRO_NAME
 
-Add an extra field to [`tpp_macro`](../src/tpp-amalgamation.h#L21961) for the [`tpp_keyword`](../src/tpp-amalgamation.h#L22574) describing
+Add an extra field to [`tpp_macro`](../src/tpp-amalgamation.h#L22000) for the [`tpp_keyword`](../src/tpp-amalgamation.h#L22613) describing
 the macro's name. Other than allowing for some slight improvements
 to error messages (and allowing the *EMITTER* amalgamation to
 implement `TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`), this
@@ -1839,7 +1839,7 @@ TPP_PROFILE != TPP_PROFILE_MINIMAL
 
 ## TPP_HAVE_EXPR_VALUE_PRINTREPR
 
-Provide a function [`tpp_expr_value_printrepr()`](../src/tpp-amalgamation.h#L15000) to construct the result
+Provide a function [`tpp_expr_value_printrepr()`](../src/tpp-amalgamation.h#L15039) to construct the result
 of `__TPP_EVAL` (see [`TPP_HAVE_MACRO___TPP_EVAL`](config-conf.md#tpp_have_macro___tpp_eval))
 
 <details><summary>Details</summary>
@@ -1853,7 +1853,7 @@ TPP_HAVE_MACRO___TPP_EVAL
 
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS
 
-Provide a function [`tpp_lexer_dump_definitions()`](../src/tpp-amalgamation.h#L29341) that can be
+Provide a function [`tpp_lexer_dump_definitions()`](../src/tpp-amalgamation.h#L29380) that can be
 used to re-print all user-defined macro definitions and asserts.
 
 This can be used to implement GCC's CPP's `-dM` CLI flag.
@@ -1870,7 +1870,7 @@ TPP_PROFILE == TPP_PROFILE_ALL
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED
 
 Extension to [`TPP_HAVE_LEXER_DUMP_DEFINITIONS`](#tpp_have_lexer_dump_definitions): provide an
-additional flag [`TPP_LEXER_DUMP_DEFINITIONS_SORTED`](../src/tpp-amalgamation.h#L29382) that causes
+additional flag [`TPP_LEXER_DUMP_DEFINITIONS_SORTED`](../src/tpp-amalgamation.h#L29421) that causes
 macro ([`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros)) / assert ([`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert))
 definition to be sorted based on the ID of the associated keyword
 (which corresponds with the first time the associated keyword was
@@ -1889,7 +1889,7 @@ TPP_HAVE_LEXER_DUMP_DEFINITIONS
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 
 Extension to [`TPP_HAVE_LEXER_DUMP_DEFINITIONS`](#tpp_have_lexer_dump_definitions): provide an
-additional flag [`TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO`](../src/tpp-amalgamation.h#L29387) that causes every
+additional flag [`TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO`](../src/tpp-amalgamation.h#L29426) that causes every
 dumped macro definition to be preceded by a comment containing (among
 other things) the file/line/column where that definition comes from.
 
@@ -1904,8 +1904,8 @@ TPP_HAVE_LEXER_DUMP_DEFINITIONS
 
 ## TPP_HAVE_TOKEN_ENCODESTRING
 
-Provide a function [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L17431) to perform `\`-escaping of arbitrary
-data, such that [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L28137) and [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29042) will understand
+Provide a function [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L17470) to perform `\`-escaping of arbitrary
+data, such that [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L28176) and [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29081) will understand
 the encoded representation in such a way that the original data is reproducible.
 
 This is primarily needed to implement stuff like `#define STR(x) #x`
@@ -1921,7 +1921,7 @@ TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT || (TPP_HAV
 
 ## TPP_HAVE_LEXER_REQUIRE_WHITESPACE
 
-Provide a function [`tpp_lexer_require_whitespace()`](../src/tpp-amalgamation.h#L28030) to check if 2 tokens,
+Provide a function [`tpp_lexer_require_whitespace()`](../src/tpp-amalgamation.h#L28069) to check if 2 tokens,
 when written directly adjacent to each other, *might* produce a different
 (set of) token(s) when re-parsed.
 
@@ -1940,7 +1940,7 @@ Default:
 
 ## TPP_HAVE_LEXER_DECODEINT_EXPR
 
-Provide a function [`tpp_lexer_decodeint_expr()`](../src/tpp-amalgamation.h#L28916) to parse an integer into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14788)
+Provide a function [`tpp_lexer_decodeint_expr()`](../src/tpp-amalgamation.h#L28955) to parse an integer into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14827)
 
 <details><summary>Details</summary>
 
@@ -1953,7 +1953,7 @@ TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_TOK_C_INT
 
 ## TPP_HAVE_LEXER_PARSEEMBED
 
-Provide a function [`tpp_lexer_parseembed()`](../src/tpp-amalgamation.h#L28430) to quickly parse ,-separated sequences
+Provide a function [`tpp_lexer_parseembed()`](../src/tpp-amalgamation.h#L28469) to quickly parse ,-separated sequences
 of integer tokens with values in range [0,0xff]. Extra optimization is done if the
 current file turns out to be the result of a `#embed` directive, in which case the
 data doesn't need to be converted to decimals (if [`TPP_HAVE_FILE_ENCODING_EMBED`](#tpp_have_file_encoding_embed) is
@@ -1970,7 +1970,7 @@ Default:
 
 ## TPP_HAVE_LEXER_DECODEINT
 
-Provide a function [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28905) to parse an integer
+Provide a function [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28944) to parse an integer
 
 <details><summary>Details</summary>
 
@@ -1983,7 +1983,7 @@ TPP_HAVE_TOK_INT && (TPP_HAVE_LEXER_DECODEINT_EXPR || TPP_HAVE_LEXER_PARSEEMBED 
 
 ## TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 
-Provide a function [`tpp_lexer_decodefloat_expr()`](../src/tpp-amalgamation.h#L28943) to parse a float into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14788)
+Provide a function [`tpp_lexer_decodefloat_expr()`](../src/tpp-amalgamation.h#L28982) to parse a float into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14827)
 
 <details><summary>Details</summary>
 
@@ -1996,7 +1996,7 @@ TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_FLOATS && TPP_HAVE_TOK_
 
 ## TPP_HAVE_LEXER_DECODEFLOAT
 
-Provide a function [`tpp_lexer_decodefloat()`](../src/tpp-amalgamation.h#L28932) to parse a float
+Provide a function [`tpp_lexer_decodefloat()`](../src/tpp-amalgamation.h#L28971) to parse a float
 
 <details><summary>Details</summary>
 
@@ -2009,7 +2009,7 @@ TPP_HAVE_LEXER_DECODEFLOAT_EXPR
 
 ## TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
 
-Provide a function [`tpp_lexer_parsecharacter_literal()`](../src/tpp-amalgamation.h#L29139) to parse character literals
+Provide a function [`tpp_lexer_parsecharacter_literal()`](../src/tpp-amalgamation.h#L29178) to parse character literals
 
 <details><summary>Details</summary>
 
@@ -2022,7 +2022,7 @@ TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS
 
 ## TPP_HAVE_LEXER_PARSESTRING_EXPR
 
-Provide a function [`tpp_lexer_parsestring_expr()`](../src/tpp-amalgamation.h#L29158) to parse a string into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14788)
+Provide a function [`tpp_lexer_parsestring_expr()`](../src/tpp-amalgamation.h#L29197) to parse a string into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14827)
 
 <details><summary>Details</summary>
 
@@ -2035,7 +2035,7 @@ TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && TPP_HAVE_BUILTIN_EXPR_STRINGS && TPP_HAVE_LEX
 
 ## TPP_HAVE_LEXER_PARSECHARACTER_EXPR
 
-Provide a function [`tpp_lexer_parsecharacter_expr()`](../src/tpp-amalgamation.h#L29179) to parse a character literal into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14788)
+Provide a function [`tpp_lexer_parsecharacter_expr()`](../src/tpp-amalgamation.h#L29218) to parse a character literal into a [`tpp_expr_value`](../src/tpp-amalgamation.h#L14827)
 
 <details><summary>Details</summary>
 
@@ -2094,7 +2094,7 @@ TPP_HAVE_EXPR_VALUE_PRINTREPR
 
 ## TPP_HAVE_TPP_EXTENSION_NEAREST
 
-Provide a function [`tpp_extension_nearest()`](../src/tpp-amalgamation.h#L23320) that does fuzzy matching to find
+Provide a function [`tpp_extension_nearest()`](../src/tpp-amalgamation.h#L23359) that does fuzzy matching to find
 the closest match of a given extension name. Used in the warning message emitted
 when trying to set an unknown extension: [`TPP_HAVE_TPP_W_UNKNOWN_EXTENSION`](config-warn.md#tpp_have_tpp_w_unknown_extension)
 
@@ -2109,7 +2109,7 @@ TPP_HAVE_TPP_W_UNKNOWN_EXTENSION && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
 
 ## TPP_HAVE_TPP_WARNING_GROUP_NEAREST
 
-Provide a function [`tpp_warning_group_nearest()`](../src/tpp-amalgamation.h#L23422) that does fuzzy matching to find
+Provide a function [`tpp_warning_group_nearest()`](../src/tpp-amalgamation.h#L23461) that does fuzzy matching to find
 the closest match of a given warning name. Used in the warning message emitted
 when trying to set an unknown warning: [`TPP_HAVE_TPP_W_UNKNOWN_WARNING`](config-warn.md#tpp_have_tpp_w_unknown_warning)
 
@@ -2154,7 +2154,7 @@ Default:
 
 ## TPP_HAVE_KEYWORDS_UNDEFALLUSER
 
-Provide a function [`tpp_keywords_undefalluser()`](../src/tpp-amalgamation.h#L23146) + [`tpp_lexer_undefalluser()`](../src/tpp-amalgamation.h#L27965)
+Provide a function [`tpp_keywords_undefalluser()`](../src/tpp-amalgamation.h#L23185) + [`tpp_lexer_undefalluser()`](../src/tpp-amalgamation.h#L28004)
 that can be used to quickly delete *all* macro definitions.
 
 <details><summary>Details</summary>
@@ -2168,7 +2168,7 @@ Default:
 
 ## TPP_HAVE_KEYWORDS_UNASSERTALL
 
-Provide a function [`tpp_keywords_unassertall()`](../src/tpp-amalgamation.h#L23157) + [`tpp_lexer_unassertall2()`](../src/tpp-amalgamation.h#L27998)
+Provide a function [`tpp_keywords_unassertall()`](../src/tpp-amalgamation.h#L23196) + [`tpp_lexer_unassertall2()`](../src/tpp-amalgamation.h#L28037)
 that can be used to quickly delete *all* keyword assertions.
 
 <details><summary>Details</summary>
@@ -2182,7 +2182,7 @@ Default:
 
 ## TPP_HAVE_KEYWORDS_RESETFLAGS
 
-Provide a function [`tpp_keywords_resetflags()`](../src/tpp-amalgamation.h#L23168) + [`tpp_lexer_kwds_resetflags()`](../src/tpp-amalgamation.h#L26892)
+Provide a function [`tpp_keywords_resetflags()`](../src/tpp-amalgamation.h#L23207) + [`tpp_lexer_kwds_resetflags()`](../src/tpp-amalgamation.h#L26931)
 that can be used to delete the flags of all keywords.
 
 <details><summary>Details</summary>
@@ -2196,7 +2196,7 @@ Default:
 
 ## TPP_HAVE_KEYWORDS_RESETFEATURES
 
-Provide a function [`tpp_keywords_resetfeatures()`](../src/tpp-amalgamation.h#L23179) + [`tpp_lexer_kwds_resetfeatures()`](../src/tpp-amalgamation.h#L26897)
+Provide a function [`tpp_keywords_resetfeatures()`](../src/tpp-amalgamation.h#L23218) + [`tpp_lexer_kwds_resetfeatures()`](../src/tpp-amalgamation.h#L26936)
 that can be used to delete (restore defaults) of any custom keyword feature override.
 
 <details><summary>Details</summary>
@@ -2210,8 +2210,8 @@ Default:
 
 ## TPP_HAVE_KEYWORDS_RESETCOUNTERS
 
-Provide a function [`tpp_keywords_resetcounters()`](../src/tpp-amalgamation.h#L23190) +
-[`tpp_lexer_kwds_resetcounters()`](../src/tpp-amalgamation.h#L26903) that can be used to
+Provide a function [`tpp_keywords_resetcounters()`](../src/tpp-amalgamation.h#L23229) +
+[`tpp_lexer_kwds_resetcounters()`](../src/tpp-amalgamation.h#L26942) that can be used to
 reset the state of all `__TPP_COUNTER()` macro expansions.
 
 <details><summary>Details</summary>
@@ -2225,7 +2225,7 @@ Default:
 
 ## TPP_HAVE_LEXER_OPENFILE_EX
 
-Enable support for [`tpp_lexer_openfile_ex()`](../src/tpp-amalgamation.h#L27064)
+Enable support for [`tpp_lexer_openfile_ex()`](../src/tpp-amalgamation.h#L27103)
 
 <details><summary>Details</summary>
 
@@ -2238,7 +2238,7 @@ TPP_HAVE_LEXER_OPENFILE && (TPP_HAVE_CPP_IMPORT || (TPP_HAVE_CPP_INCLUDE_NEXT ||
 
 ## TPP_HAVE_PREPARSE_SKIPSPACE_FWD
 
-Provide an API [`tpp_preparse_skipspace_fwd()`](../src/tpp-amalgamation.h#L22138) that can be used to easily skip an arbitrary
+Provide an API [`tpp_preparse_skipspace_fwd()`](../src/tpp-amalgamation.h#L22177) that can be used to easily skip an arbitrary
 amount of whitespace (but not comments), as well as BSE sequences in a forward-direction.
 
 <details><summary>Details</summary>
@@ -2252,7 +2252,7 @@ Default:
 
 ## TPP_HAVE_PREPARSE_SKIPSPACE_BCK
 
-Provide an API [`tpp_preparse_skipspace_bck()`](../src/tpp-amalgamation.h#L22152) that can be used to easily skip an arbitrary
+Provide an API [`tpp_preparse_skipspace_bck()`](../src/tpp-amalgamation.h#L22191) that can be used to easily skip an arbitrary
 amount of whitespace (but not comments), as well as BSE sequences in a backwards-direction.
 
 <details><summary>Details</summary>
@@ -2332,7 +2332,7 @@ TPP_HAVE_TPP_EXTENSION_NEAREST || TPP_HAVE_TPP_WARNING_GROUP_NEAREST || TPP_HAVE
 
 ## TPP_HAVE_LEXER_INIT_OPEN
 
-Enable support for [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L27137), a function that lets you directly
+Enable support for [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L27176), a function that lets you directly
 initialize the lexer by passing in a filename that should be opened as input.
 
 <details><summary>Details</summary>
@@ -2346,7 +2346,7 @@ Default:
 
 ## TPP_HAVE_LEXER_PUSHFILE_IO
 
-Provide an API [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L27162) and [`tpp_lexer_pushfile_io()`](../src/tpp-amalgamation.h#L27164)
+Provide an API [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L27201) and [`tpp_lexer_pushfile_io()`](../src/tpp-amalgamation.h#L27203)
 that can be used to push [`tpp_io_handle`](../src/tpp-amalgamation.h#L14199) onto the lexer's `#include`-stack.
 
 <details><summary>Details</summary>
@@ -2360,7 +2360,7 @@ Default:
 
 ## TPP_HAVE_LEXER_PUSHFILE_OPEN
 
-Provide an API [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L27178) that can be used to quickly open
+Provide an API [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L27217) that can be used to quickly open
 a file, given its name, and push that file onto the lexer's `#include`-stack.
 
 <details><summary>Details</summary>
@@ -2374,8 +2374,8 @@ Default:
 
 ## TPP_HAVE_LEXER_PUSHFILE_OFR
 
-Provide an API [`tpp_lexer_pushfile_ofr()`](../src/tpp-amalgamation.h#L27190) that can be used to quickly push
-a [`tpp_lexer_openfile_result`](../src/tpp-amalgamation.h#L26966) object onto the lexer's `#include`-stack.
+Provide an API [`tpp_lexer_pushfile_ofr()`](../src/tpp-amalgamation.h#L27229) that can be used to quickly push
+a [`tpp_lexer_openfile_result`](../src/tpp-amalgamation.h#L27005) object onto the lexer's `#include`-stack.
 
 <details><summary>Details</summary>
 
@@ -2388,12 +2388,12 @@ Default:
 
 ## TPP_HAVE_LEXER_PUSHFILE_TEXT
 
-Provide an API [`tpp_lexer_pushfile_text_ex()`](../src/tpp-amalgamation.h#L27215) that can be used to
+Provide an API [`tpp_lexer_pushfile_text_ex()`](../src/tpp-amalgamation.h#L27254) that can be used to
 quickly push pre-loaded text files onto the lexer's `#include`-stack:
 
-- [`tpp_lexer_pushfile_text()`](../src/tpp-amalgamation.h#L27227)
-- [`tpp_lexer_pushfile_text_ascii()`](../src/tpp-amalgamation.h#L27229)
-- [`tpp_lexer_pushfile_text_utf8()`](../src/tpp-amalgamation.h#L27232)
+- [`tpp_lexer_pushfile_text()`](../src/tpp-amalgamation.h#L27266)
+- [`tpp_lexer_pushfile_text_ascii()`](../src/tpp-amalgamation.h#L27268)
+- [`tpp_lexer_pushfile_text_utf8()`](../src/tpp-amalgamation.h#L27271)
 
 <details><summary>Details</summary>
 
@@ -2406,7 +2406,7 @@ Default:
 
 ## TPP_HAVE_LEXER_CLI_DEFINE
 
-Provide a function [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L27946) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L27958)
+Provide a function [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L27985) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L27997)
 that can be used to define/undef commandline-defined macros.
 
 <details><summary>Details</summary>
@@ -2420,7 +2420,7 @@ Default:
 
 ## TPP_HAVE_LEXER_CLI_ASSERT
 
-Provide a function [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L27976) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L27985) + [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L27992)
+Provide a function [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L28015) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L28024) + [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L28031)
 that can be used to add/delete keyword assertions.
 
 <details><summary>Details</summary>

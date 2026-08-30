@@ -2120,13 +2120,37 @@ tpp_errno tpp_intvalue_asintmax(tpp_intvalue *self, tpp_intmax *p_result);
 
 
 #if TPP_HAVE_LEXER_DECODEINT
-/* >> [self] = ([self] * mul) + add;
- * Used to implement `tpp_lexer_decodeint()`
+typedef ... tpp_intvalue_builder;
+
+/* Initialize builder
+ * @param: radix: Number radix. Some value in range [2,16]
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_builder_init(tpp_intvalue_builder *self, unsigned int radix);
+
+/* Finalize builder */
+void tpp_intvalue_builder_fini(tpp_intvalue_builder *self);
+
+/* Flush buffers and package the built integer into a `tpp_intvalue` object.
+ * @return: TPP_EOK:      OK
+ * @return: TPP_ISERR(*): HARD_ERROR */
+tpp_errno tpp_intvalue_builder_pack(/*inherit(always)*/ tpp_intvalue_builder *self,
+                                    /*initialize(on_success)*/ tpp_intvalue *p_intvalue);
+
+/* >> [self] = ([self] * RADIX) + digit;
+ * Used to implement `tpp_lexer_decodeint()`.
+ * NOTES:
+ * - Allowed to assume that `digit < RADIX`
+ * - The `RADIX` is the value that was specified in `tpp_intvalue_builder_init()`
  * @return: TPP_EOK:      OK
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
+ *                        In this case, the state of `self` is weak undefined,
+ *                        meaning that further calls to this function should
+ *                        not be performed, and the caller should instead call
+ *                        `tpp_intvalue_builder_fini(self)` and handle the
+ *                        overflow error.
  * @return: TPP_ISERR(*): HARD_ERROR */
-#if TPP_INTVALUE_MATH_CANOVERFLOW
-tpp_errno tpp_intvalue_muladd(tpp_intvalue *self, unsigned int mul, unsigned int add);
+tpp_errno tpp_intvalue_builder_adddigit(tpp_intvalue_builder *self, unsigned int digit);
 #endif /* TPP_HAVE_LEXER_DECODEINT */
 
 

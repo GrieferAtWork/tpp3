@@ -332,7 +332,9 @@
 #define tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS        TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_BINARY_LITERALS)
 #define tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS         TPP_INTERNAL(tef_TPP_EXT_LEXER_DECODEINT_OCTAL_LITERALS)
 #define tef_TPP_EXT_CPP_FEATURE_MACROS                     TPP_INTERNAL(tef_TPP_EXT_CPP_FEATURE_MACROS)
-#define teiv_value                                         TPP_INTERNAL(teiv_value)
+#define tiv_value                                          TPP_INTERNAL(tiv_value)
+#define tivb_value                                         TPP_INTERNAL(tivb_value)
+#define tivb_radix                                         TPP_INTERNAL(tivb_radix)
 #define xv_kind                                            TPP_INTERNAL(xv_kind)
 #define xd_int                                             TPP_INTERNAL(xd_int)
 #define xv_data                                            TPP_INTERNAL(xv_data)
@@ -36381,7 +36383,7 @@ tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
                        tpp_intvalue *tpp_restrict self,
                        tpp_formatprinter printer, void *arg) {
 	char value_buffer[TPP_ITOA_MAXLEN];
-	char const *value_ptr = tpp_itoa(value_buffer, self->teiv_value);
+	char const *value_ptr = tpp_itoa(value_buffer, self->tiv_value);
 	tpp_size value_len = (tpp_size)((value_buffer + TPP_ITOA_MAXLEN) - value_ptr);
 	(void)lexer;
 	return tpp_formatprinter_print_cstr(printer, arg, value_ptr, value_len);
@@ -48381,22 +48383,22 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
                        /*out*/ tpp_intvalue *tpp_restrict result,
                        tpp_char const **p_suffix_start) {
 	tpp_errno error;
+	tpp_intvalue_builder builder;
 	unsigned int radix = 10;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char const *suffix_start = iter;
 	tpp_char ch;
-	error = tpp_intvalue_init_zero(result);
-	if (TPP_ISERR(error))
-		return error;
 	if (iter >= end)
 		goto handle_invalid;
 	ch   = *iter++;
 	iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	if (ch == '0') {
 		suffix_start = iter;
-		if (iter >= end)
+		if (iter >= end) {
+			error = tpp_intvalue_init_zero(result);
 			goto done;
+		}
 		radix = 8;
 		ch    = *iter++;
 		iter  = tpp_preparse_skipbse_fwd(self, iter, end);
@@ -48447,7 +48449,9 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 		if (!tpp_ascii_isdigit(ch))
 			goto handle_invalid;
 	}
-
+	error = tpp_intvalue_builder_init(&builder, radix);
+	if (TPP_ISERR(error))
+		goto err;
 	for (;;) {
 		unsigned int digit;
 		if (tpp_ascii_isdigit(ch)) {
@@ -48474,11 +48478,11 @@ tpp_lexer_decode_c_int(tpp_lexer *tpp_restrict self,
 		}
 		if (digit >= radix)
 			break;
-		error = tpp_intvalue_muladd(result, radix, digit);
+		error = tpp_intvalue_builder_adddigit(&builder, digit);
 		if (TPP_ISERR(error)) {
 			if (error == TPP_ENOENT)
-				goto handle_invalid;
-			goto err_r;
+				goto handle_invalid_builder;
+			goto err_builder;
 		}
 
 		suffix_start = iter;
@@ -48492,10 +48496,17 @@ continue_with_ch:
 		iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	}
 
+	error = tpp_intvalue_builder_pack(&builder, result);
 done:
 	if (p_suffix_start)
 		*p_suffix_start = suffix_start;
-	return TPP_EOK;
+	return error;
+err_builder:
+	tpp_intvalue_builder_fini(&builder);
+err:
+	return error;
+handle_invalid_builder:
+	tpp_intvalue_builder_fini(&builder);
 handle_invalid:
 	if (p_suffix_start)
 		*p_suffix_start = end;
@@ -48504,9 +48515,6 @@ handle_invalid:
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
 	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
-err_r:
-	if (TPP_ISERR(error))
-		tpp_intvalue_fini(result);
 	return error;
 }
 #endif /* TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_C_FLOAT */
@@ -48516,20 +48524,21 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
                             /*out*/ tpp_intvalue *tpp_restrict result) {
 	tpp_errno error;
+	tpp_intvalue_builder builder;
 	tpp_char const *iter = tpp_lexer_gettokenstart(self);
 	tpp_char const *const end = tpp_lexer_gettokenend(self);
 	tpp_char ch;
-	error = tpp_intvalue_init_zero(result);
+	error = tpp_intvalue_builder_init(&builder, 16);
 	if (TPP_ISERR(error))
 		return error;
 	if (iter >= end)
-		goto handle_invalid;
+		goto handle_invalid_builder;
 	ch   = *iter++;
 	iter = tpp_preparse_skipbse_fwd(self, iter, end);
 	if (ch != '$')
-		goto handle_invalid;
+		goto handle_invalid_builder;
 	if (iter >= end)
-		goto handle_invalid;
+		goto handle_invalid_builder;
 	do {
 		unsigned int digit;
 		ch   = *iter++;
@@ -48541,25 +48550,24 @@ tpp_lexer_decode_pascal_hex(tpp_lexer *tpp_restrict self,
 		} else if (tpp_ascii_isuprxdigit(ch)) {
 			digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
 		} else {
-			goto handle_invalid;
+			goto handle_invalid_builder;
 		}
-		error = tpp_intvalue_muladd(result, 16, digit);
+		error = tpp_intvalue_builder_adddigit(&builder, digit);
 		if (TPP_ISERR(error)) {
 			if (error == TPP_ENOENT)
-				goto handle_invalid;
-			goto err_r;
+				goto handle_invalid_builder;
+			goto err_builder;
 		}
 	} while (iter < end);
-	return TPP_EOK;
-handle_invalid:
+	return tpp_intvalue_builder_pack(&builder, result);
+handle_invalid_builder:
 #if TPP_HAVE_TPP_W_INVALID_INTEGER
 	error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
 #else /* TPP_HAVE_TPP_W_INVALID_INTEGER */
 	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
-err_r:
-	if (TPP_ISERR(error))
-		tpp_intvalue_fini(result);
+err_builder:
+	tpp_intvalue_builder_fini(&builder);
 	return error;
 }
 #endif /* TPP_HAVE_TOK_PASCAL_HEX */
