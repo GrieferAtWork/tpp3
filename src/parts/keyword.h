@@ -542,6 +542,11 @@ typedef struct tpp_keyword {
 #define tpp_keyword_hasmacro(self)  0
 #endif /* !TPP_HAVE_CPP_MACROS */
 
+/* Turn the return value of `tpp_keyword_getstr()` or `tpp_keyword_getcstr()` back into a keyword. */
+#define tpp_keyword_fromstr(str)   ((tpp_keyword const *)tpp_container_of(str, tpp_keyword, TPP_INTERNAL(tk_kwd)))
+#define tpp_keyword_fromcstr(cstr) tpp_keyword_fromstr((tpp_char const *)(cstr))
+
+
 /* Check if `self` matches the C, constant string literal `CONSTstr` */
 #define tpp_keyword_equals_conststr(self, CONSTstr)                       \
 	(tpp_keyword_getlen(self) == (sizeof(CONSTstr) / sizeof(char)) - 1 && \

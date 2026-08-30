@@ -630,6 +630,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
                                 tpp_include_path_kind kind,
                                 char const *path) {
+	(void)kind;
 #if TPP_HAVE_CLI_DASH_ISYSROOT
 	if (*path == '=' || tpp_memcmp(path, "$SYSROOT", 8 * sizeof(char)) == 0) {
 		/* XXX: Replace prefix with "system root" */

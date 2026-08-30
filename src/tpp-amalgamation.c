@@ -26438,6 +26438,7 @@ again:
 		goto again;
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
+#if TPP_HAVE_FILE_DUMMY || TPP_HAVE_CPP_MACROS
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -26445,6 +26446,7 @@ again:
 	case TPP_FILE_KIND_MACRO:
 #endif /* TPP_HAVE_CPP_MACROS */
 		return NULL;
+#endif /* TPP_HAVE_FILE_DUMMY || TPP_HAVE_CPP_MACROS */
 
 	default: tpp_unreachable();
 	}
@@ -26486,7 +26488,7 @@ TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (!tpp_file_haslcinfo(iter)) {
-		iter = iter->tf_tprev;
+		iter = tpp_file_getprev(iter);
 		if (iter == NULL) {
 			iter = tpp_file_gettextfile(self);
 			return iter ? iter : (tpp_file *)self;
@@ -29790,7 +29792,9 @@ got_result_kwd2:;
 		}
 #endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 	} else
-#endif /* TPP_HAVE_USER_KEYWORDS */
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "'TPP_HAVE_NEW_DEPENDENCY_HOOK' is enabled, but without 'TPP_HAVE_USER_KEYWORDS' it's impossible to to call that hook"
+#endif /* ... */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
 		if (mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT) {
@@ -30591,7 +30595,7 @@ TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD_BEGIN - TPP_
 #else /* TPP_HAVE_USER_KEYWORDS */
 TPP_STATIC_ASSERT(TPP_BUILTIN_KEYWORD_COUNT == (TPP_TOK_USERKEYWORD - TPP_TOK_KEYWORD_BEGIN));
 #endif /* !TPP_HAVE_USER_KEYWORDS */
-TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >= (TPP_BUILTIN_KEYWORD_COUNT + 1));
+TPP_STATIC_ASSERT((TPP_BUILTIN_KEYWORD_COUNT == 0) || TPP_BUILTIN_KEYWORD_MASK >= TPP_BUILTIN_KEYWORD_COUNT);
 TPP_STATIC_ASSERT(tpp_lengthof(tpp_builtin_keyword_table) == (TPP_BUILTIN_KEYWORD_MASK + 1));
 
 
@@ -34576,44 +34580,23 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_warnings_init(&self->tl_warn);
 #endif /* TPP_HAVE_WARNINGS */
 
-#if TPP_HAVE_WARNING_ERROR
-	self->tl_error_count = 0;
-#if TPP_ERROR_LIMIT < 0
-	self->tl_error_limit = (tpp_size)(-TPP_ERROR_LIMIT);
-#endif /* TPP_ERROR_LIMIT < 0 */
-#endif /* TPP_HAVE_WARNING_ERROR */
-
-#if TPP_HAVE_LEXER_WARNING_COUNT
-	self->tl_warning_count = 0;
-#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
-
-#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0
-	self->tl_inclusion_limit = -TPP_MAX_INCLUDE_DEPTH;
-#endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0 */
-
-#if TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
-	self->tl_recursive_macro_limit = -TPP_MAX_RECURSIVE_MACRO_DEPTH;
-#endif /* TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
-
-#if TPP_HAVE_MACRO___COUNTER__
-	self->tl_builtin_counter = 0;
-#endif /* TPP_HAVE_MACRO___COUNTER__ */
-
 #if TPP_HAVE_LEXER_TIME
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
 
-#if TPP_HAVE_LEXER_RAND
-	tpp_lexer_resetrngseed(self);
-#endif /* TPP_HAVE_LEXER_RAND */
-
-#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
-	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
-#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
-
 #if TPP_HAVE_LEXER_USERPWD
 	self->tl_userpwd = NULL;
 #endif /* TPP_HAVE_LEXER_USERPWD */
+
+	/* Reset counters/stats/configs... */
+	tpp_lexer_reseterrorcount(self);
+	tpp_lexer_reseterrorlimit(self);
+	tpp_lexer_resetwarningcount(self);
+	tpp_lexer_resetinclusionlimit(self);
+	tpp_lexer_resetrecursivemacrolimit(self);
+	tpp_lexer_resetnextcounter(self);
+	tpp_lexer_resetrngseed(self);
+	tpp_lexer_resetfileandlineformat(self);
 }
 
 
@@ -52828,8 +52811,8 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 					goto err_tok_macro_argbuf_rollback_arginfo;
 				}
 			}
-		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
+		}
 	}
 
 	/* Figure out how much space is needed for the resulting string-chunk */
@@ -53044,7 +53027,7 @@ next_op:
 #endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 	}
 
-	/* Release argument buffer back to macro */
+	/* Release argument buffer back to macro (unless it'll be saved in the file) */
 #if !TPP_HAVE_FILE_MACRO_TRACKARGS
 	tpp_macro_release_argbuf(macro, argbuf);
 #endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
@@ -53159,7 +53142,9 @@ err_tok_macro_argbuf_rollback_arginfo_expinfo_i:
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
 	}
+#if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 err_tok_macro_argbuf_rollback_arginfo:
+#endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 	while (macro_argc--)
 		tpp_lexer_arginfo_fini(&invoke_arginfo[macro_argc]);
 err_tok_macro_argbuf_rollback:
@@ -62357,6 +62342,7 @@ static TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
                                 tpp_include_path_kind kind,
                                 char const *path) {
+	(void)kind;
 #if TPP_HAVE_CLI_DASH_ISYSROOT
 	if (*path == '=' || tpp_memcmp(path, "$SYSROOT", 8 * sizeof(char)) == 0) {
 		/* XXX: Replace prefix with "system root" */

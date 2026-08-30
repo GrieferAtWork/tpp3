@@ -2957,7 +2957,9 @@ got_result_kwd2:;
 		}
 #endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 	} else
-#endif /* TPP_HAVE_USER_KEYWORDS */
+#elif TPP_HAVE_NEW_DEPENDENCY_HOOK && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "'TPP_HAVE_NEW_DEPENDENCY_HOOK' is enabled, but without 'TPP_HAVE_USER_KEYWORDS' it's impossible to to call that hook"
+#endif /* ... */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
 		if (mask_flags & TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT) {

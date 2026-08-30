@@ -198,44 +198,23 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	tpp_warnings_init(&self->tl_warn);
 #endif /* TPP_HAVE_WARNINGS */
 
-#if TPP_HAVE_WARNING_ERROR
-	self->tl_error_count = 0;
-#if TPP_ERROR_LIMIT < 0
-	self->tl_error_limit = (tpp_size)(-TPP_ERROR_LIMIT);
-#endif /* TPP_ERROR_LIMIT < 0 */
-#endif /* TPP_HAVE_WARNING_ERROR */
-
-#if TPP_HAVE_LEXER_WARNING_COUNT
-	self->tl_warning_count = 0;
-#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
-
-#if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0
-	self->tl_inclusion_limit = -TPP_MAX_INCLUDE_DEPTH;
-#endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED && TPP_MAX_INCLUDE_DEPTH < 0 */
-
-#if TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0
-	self->tl_recursive_macro_limit = -TPP_MAX_RECURSIVE_MACRO_DEPTH;
-#endif /* TPP_HAVE_MACRO_RECURSION && TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
-
-#if TPP_HAVE_MACRO___COUNTER__
-	self->tl_builtin_counter = 0;
-#endif /* TPP_HAVE_MACRO___COUNTER__ */
-
 #if TPP_HAVE_LEXER_TIME
 	tpp_time_empty(&self->tl_time);
 #endif /* TPP_HAVE_LEXER_TIME */
 
-#if TPP_HAVE_LEXER_RAND
-	tpp_lexer_resetrngseed(self);
-#endif /* TPP_HAVE_LEXER_RAND */
-
-#if TPP_HAVE_RT_FILE_AND_LINE_FORMAT
-	self->tl_file_and_line_format = TPP_CONFIG_FILE_AND_LINE_FORMAT;
-#endif /* TPP_HAVE_RT_FILE_AND_LINE_FORMAT */
-
 #if TPP_HAVE_LEXER_USERPWD
 	self->tl_userpwd = NULL;
 #endif /* TPP_HAVE_LEXER_USERPWD */
+
+	/* Reset counters/stats/configs... */
+	tpp_lexer_reseterrorcount(self);
+	tpp_lexer_reseterrorlimit(self);
+	tpp_lexer_resetwarningcount(self);
+	tpp_lexer_resetinclusionlimit(self);
+	tpp_lexer_resetrecursivemacrolimit(self);
+	tpp_lexer_resetnextcounter(self);
+	tpp_lexer_resetrngseed(self);
+	tpp_lexer_resetfileandlineformat(self);
 }
 
 

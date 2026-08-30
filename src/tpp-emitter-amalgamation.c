@@ -1665,7 +1665,7 @@ tpp_emitter_emitcurrent_emit(tpp_emitter *tpp_restrict self) {
 #if TPP_HAVE_LEXER_REQUIRE_WHITESPACE
 	bool const require_whitespace = tpp_lexer_require_whitespace(lexer, self->tem_state.tems_prevtok, tok);
 #elif !TPP_IGNORE_INVALID_CONFIGURATION
-#error "Use of 'TPP_EMITTER_HAVE_MODE_EMIT' requires `tpp_lexer_require_whitespace()`, but that function is disabled: `-DTPP_HAVE_LEXER_REQUIRE_WHITESPACE=0`"
+#error "Use of `TPP_EMITTER_HAVE_MODE_EMIT` requires `tpp_lexer_require_whitespace()`, but that function is disabled: `-DTPP_HAVE_LEXER_REQUIRE_WHITESPACE=0`"
 #endif /* ... */
 
 	if (tpp_emitter_has(self, NOLINE)) {

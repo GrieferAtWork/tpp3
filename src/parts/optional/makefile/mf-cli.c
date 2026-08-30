@@ -715,8 +715,16 @@ after_print_output_filename:
 		tpp_lexer *const lexer = tpp_makefile_getlexer(self->tmkfcl_mf);
 		tpp_file const *file = tpp_lexer_getfile(lexer);
 		do {
+#if TPP_HAVE_FILE_GETREALFILENAMEKWD
 			tpp_keyword const *kwd = tpp_file_getrealfilenamekwd(file);
-			if (kwd) {
+			if (kwd)
+#else /* TPP_HAVE_FILE_GETREALFILENAMEKWD */
+			tpp_keyword const *kwd;
+			char const *kwd_str = tpp_file_getrealfilename(file);
+			if (kwd_str && tpp_file_getrealfilenameiskwd(file) &&
+			    (kwd = tpp_keyword_fromcstr(kwd_str), 1))
+#endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
+			{
 				tpp_keyword *wkwd = tpp_lexer_kwds_copybuiltin(lexer, kwd);
 				if tpp_unlikely(!wkwd)
 					return TPP_ENOMEM;

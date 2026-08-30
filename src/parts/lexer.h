@@ -129,16 +129,22 @@ typedef struct tpp_lexer {
 	                                        * propagate an error. */
 #define tpp_lexer_geterrorcount(self)    (self)->TPP_INTERNAL(tl_error_count)
 #define tpp_lexer_seterrorcount(self, v) (void)((self)->TPP_INTERNAL(tl_error_count) = (v))
+#define tpp_lexer_reseterrorcount(self)  (void)((self)->TPP_INTERNAL(tl_error_count) = 0)
 #if TPP_ERROR_LIMIT < 0
 	tpp_size TPP_INTERNAL(tl_error_limit); /* Once `tl_error_count >= tl_error_limit`, `TPP_WSTATE_ERROR` is treated as `TPP_WSTATE_FATAL` */
 #define tpp_lexer_geterrorlimit(self)    ((self)->TPP_INTERNAL(tl_error_limit))
 #define tpp_lexer_seterrorlimit(self, v) (void)((self)->TPP_INTERNAL(tl_error_limit) = (v))
+#define tpp_lexer_reseterrorlimit(self)  (void)((self)->TPP_INTERNAL(tl_error_limit) = -TPP_ERROR_LIMIT)
 #else /* TPP_ERROR_LIMIT < 0 */
 #define tpp_lexer_geterrorlimit(self) TPP_ERROR_LIMIT
 #endif /* TPP_ERROR_LIMIT >= 0 */
 #else /* TPP_HAVE_WARNING_ERROR */
-#define tpp_lexer_geterrorcount(self) 0
+#define tpp_lexer_geterrorcount(self)   0
+#define tpp_lexer_reseterrorcount(self) (void)0
 #endif /* !TPP_HAVE_WARNING_ERROR */
+#ifndef tpp_lexer_reseterrorlimit
+#define tpp_lexer_reseterrorlimit(self) (void)0
+#endif /* !tpp_lexer_reseterrorlimit */
 
 
 	/* Lexer warning counter */
@@ -146,7 +152,11 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_warning_count); /* # of times `TPP_WSTATE_WARN` was emitted. */
 #define tpp_lexer_getwarningcount(self)    (self)->TPP_INTERNAL(tl_warning_count)
 #define tpp_lexer_setwarningcount(self, v) (void)((self)->TPP_INTERNAL(tl_warning_count) = (v))
-#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
+#define tpp_lexer_resetwarningcount(self)  (void)((self)->TPP_INTERNAL(tl_warning_count) = 0)
+#else /* TPP_HAVE_LEXER_WARNING_COUNT */
+/*#define tpp_lexer_getwarningcount(self) 0*/ /* Wouldn't be accurate: warnings still exist, even if we don't count them */
+#define tpp_lexer_resetwarningcount(self) (void)0
+#endif /* !TPP_HAVE_LEXER_WARNING_COUNT */
 
 
 	/* Lexer inclusion limit */
@@ -155,14 +165,18 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_inclusion_limit); /* How many times the same file can be `#include`-ed before `TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED` is emitted */
 #define tpp_lexer_getinclusionlimit(self)    ((self)->TPP_INTERNAL(tl_inclusion_limit))
 #define tpp_lexer_setinclusionlimit(self, v) (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = (v))
+#define tpp_lexer_resetinclusionlimit(self)  (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = -TPP_MAX_INCLUDE_DEPTH)
 #else /* TPP_MAX_INCLUDE_DEPTH < 0 */
-#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#define tpp_lexer_getinclusionlimit(self)   TPP_MAX_INCLUDE_DEPTH
 #endif /* TPP_MAX_INCLUDE_DEPTH >= 0 */
 #elif TPP_MAX_INCLUDE_DEPTH < 0
 #define tpp_lexer_getinclusionlimit(self) (-TPP_MAX_INCLUDE_DEPTH)
 #else /* ... */
 #define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
 #endif /* !... */
+#ifndef tpp_lexer_resetinclusionlimit
+#define tpp_lexer_resetinclusionlimit(self) (void)0
+#endif /* !tpp_lexer_resetinclusionlimit */
 
 
 	/* Lexer recursive macro limit */
@@ -171,6 +185,7 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_recursive_macro_limit); /* How many times the same recursive macro can exists on the `#include`-stack */
 #define tpp_lexer_getrecursivemacrolimit(self)    ((self)->TPP_INTERNAL(tl_recursive_macro_limit))
 #define tpp_lexer_setrecursivemacrolimit(self, v) (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = (v))
+#define tpp_lexer_resetrecursivemacrolimit(self)  (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = -TPP_MAX_RECURSIVE_MACRO_DEPTH)
 #else /* TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
 #define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
 #endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH >= 0 */
@@ -179,6 +194,9 @@ typedef struct tpp_lexer {
 #else /* ... */
 #define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
 #endif /* !... */
+#ifndef tpp_lexer_resetrecursivemacrolimit
+#define tpp_lexer_resetrecursivemacrolimit(self) (void)0
+#endif /* !tpp_lexer_resetrecursivemacrolimit */
 #if !TPP_IGNORE_INVALID_CONFIGURATION
 #if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 && !TPP_HAVE_MACRO_RECURSION
 #error "Invalid configuration: `TPP_MAX_RECURSIVE_MACRO_DEPTH` can only take effect when `TPP_HAVE_MACRO_RECURSION` is enabled"
@@ -193,7 +211,10 @@ typedef struct tpp_lexer {
 	tpp_counter TPP_INTERNAL(tl_builtin_counter); /* Next value for `__COUNTER__` */
 #define tpp_lexer_getnextcounter(self)    ((self)->TPP_INTERNAL(tl_builtin_counter))
 #define tpp_lexer_setnextcounter(self, v) (void)((self)->TPP_INTERNAL(tl_builtin_counter) = (v))
-#endif /* TPP_HAVE_MACRO___COUNTER__ */
+#define tpp_lexer_resetnextcounter(self)  (void)((self)->TPP_INTERNAL(tl_builtin_counter) = 0)
+#else /* TPP_HAVE_MACRO___COUNTER__ */
+#define tpp_lexer_resetnextcounter(self) (void)0
+#endif /* !TPP_HAVE_MACRO___COUNTER__ */
 
 
 	/* Value for current time (expansion of `__TIME__` can't change between multiple expansions) */
@@ -438,7 +459,9 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
-#endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#define tpp_lexer_kwds_copybuiltin(self, kwd) ((tpp_keyword *)(kwd))
+#endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_RESETFLAGS
 /* Modify the flags of all keywords as `flags = flags & keep_mask` */
@@ -1696,20 +1719,22 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #define _tpp_lexer_enablestate(self, state)     (void)0
 #define _tpp_lexer_disablestate(self, state)    (void)0
 #define _tpp_lexer_breakstate(self)             (void)0
-#define _tpp_lexer_popstate(self)               } while (0)
+#define _tpp_lexer_popstate(self)               (void)0; } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
 #define _tpp_lexer_pushstate_on(self, flags)  _tpp_lexer_pushstate(self, ~0, flags)
 #define _tpp_lexer_pushstate_off(self, flags) _tpp_lexer_pushstate(self, ~(flags), 0)
 
 /* Alter the lexer state such that no warning messages are produces. */
 #if TPP_HAVE_WARNINGS
+#define tpp_lexer_nowarnings_ison(self)   ((self)->TPP_INTERNAL(tl_state) & TPP_LEXER_STATE_FLAG_NOWARNINGS))
 #define tpp_lexer_nowarnings_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_NOWARNINGS)
 #define tpp_lexer_nowarnings_break(self)  _tpp_lexer_breakstate(self)
 #define tpp_lexer_nowarnings_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_WARNINGS */
+#define tpp_lexer_nowarnings_ison(self)   (!TPP_HAVE_WARNINGS)
 #define tpp_lexer_nowarnings_pushon(self) do {
 #define tpp_lexer_nowarnings_break(self)  (void)0
-#define tpp_lexer_nowarnings_pop(self)    } while (0)
+#define tpp_lexer_nowarnings_pop(self)    (void)0; } while (0)
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Alter the lexer state such that `tpp_lexer_yieldpp()` does not filter tokens. */
@@ -1718,23 +1743,15 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_alltokens_break(self)  _tpp_lexer_breakstate(self)
 #define tpp_lexer_alltokens_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#define tpp_lexer_alltokens_ison(self)   (tpp_lexer_has(self, TOK_SPACE) && tpp_lexer_has(self, TOK_LF) && tpp_lexer_has(self, TOK_COMMENT))
 #define tpp_lexer_alltokens_pushon(self) do {
 #define tpp_lexer_alltokens_break(self)  (void)0
-#define tpp_lexer_alltokens_pop(self)    } while (0)
+#define tpp_lexer_alltokens_pop(self)    (void)0; } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-#define tpp_lexer_popfilerlbk_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_POPFILERLBK)
-#define tpp_lexer_popfilerlbk_break(self)  _tpp_lexer_breakstate(self)
-#define tpp_lexer_popfilerlbk_pop(self)    _tpp_lexer_popstate(self)
-#else /* TPP_HAVE_LEXER_MANUALPOPFILE */
-#define tpp_lexer_popfilerlbk_pushon(self) do {
-#define tpp_lexer_popfilerlbk_break(self)  (void)0
-#define tpp_lexer_popfilerlbk_pop(self)    } while (0)
-#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
+#define tpp_lexer_autopopfile_isoff(self)   tpp_file_autopopfile_isoff(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_break(self)   tpp_file_autopopfile_break(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_pop(self)     tpp_file_autopopfile_pop(tpp_lexer_getfile(self))
@@ -1899,11 +1916,9 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
  *   - Use `tpp_file_setkeep()` on all popable files to prevent old data from being free'd
  *   - Save `tpp_file_getpos()` of popable files relative to their `tpp_file_getkeep()`
  *   - Use `tpp_lexer_manualpopfile_start()`
- *   - Set the `TPP_LEXER_STATE_FLAG_POPFILERLBK` state flag
  * - At this, functions like `tpp_lexer_yieldpp()` or `tpp_lexer_yield()`
  *   can be called like normal.
  * - Rollback can then Implement rollback as:
- *   - Restore the `TPP_LEXER_STATE_FLAG_POPFILERLBK` flag
  *   - `tpp_lexer_manualpopfile_end_rollback(self)`
  *   - Restore positions of popable files by doing `tpp_file_getkeep() + REL_POS`
  *   - Restore the old keep-positions of popable files

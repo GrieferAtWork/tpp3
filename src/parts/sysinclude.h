@@ -339,6 +339,12 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_mustcopy(self) ((self)->TPP_INTERNAL(tip_pushcnt) != 0)
 
 #else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+#define tpp_include_paths_addbykind(self, kind, path, path_maxlen)      tpp_include_path_list_pushtail(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_addbykind_head(self, kind, path, path_maxlen) tpp_include_path_list_pushhead(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_delbykind(self, kind, path, path_maxlen)      tpp_include_path_list_remove(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_clearbykind(self, kind)                       tpp_include_path_list_clear(_tpp_include_paths_bykind(self, kind))
+
 #define tpp_include_paths_addsystem(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_addsystem_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_delsystem(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)

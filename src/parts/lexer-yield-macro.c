@@ -509,8 +509,8 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 					goto err_tok_macro_argbuf_rollback_arginfo;
 				}
 			}
-		}
 #endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
+		}
 	}
 
 	/* Figure out how much space is needed for the resulting string-chunk */
@@ -725,7 +725,7 @@ next_op:
 #endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
 	}
 
-	/* Release argument buffer back to macro */
+	/* Release argument buffer back to macro (unless it'll be saved in the file) */
 #if !TPP_HAVE_FILE_MACRO_TRACKARGS
 	tpp_macro_release_argbuf(macro, argbuf);
 #endif /* !TPP_HAVE_FILE_MACRO_TRACKARGS */
@@ -840,7 +840,9 @@ err_tok_macro_argbuf_rollback_arginfo_expinfo_i:
 			tpp_macro_expinfo_fini(expand, arginfo);
 		}
 	}
+#if TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS
 err_tok_macro_argbuf_rollback_arginfo:
+#endif /* TPP_HAVE_TPP_W_TOO_FEW_ARGUMENTS */
 	while (macro_argc--)
 		tpp_lexer_arginfo_fini(&invoke_arginfo[macro_argc]);
 err_tok_macro_argbuf_rollback:

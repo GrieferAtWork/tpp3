@@ -8773,8 +8773,7 @@ TPP_DECL_END
 
 /* Provide a function `tpp_file_getrealfilenamekwd()` */
 #ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
-#if (TPP_HAVE_PROFILE_ALL || \
-     TPP_HAVE_PRAGMA_ONCE)
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE)
 #define TPP_HAVE_FILE_GETREALFILENAMEKWD 1
 #else /* ... */
 #define TPP_HAVE_FILE_GETREALFILENAMEKWD 0
@@ -13234,7 +13233,7 @@ TPP_DECL_END
  */
 #ifndef TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 #define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH \
-	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_PATH)
+	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
 #endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 
 /* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */
@@ -20752,7 +20751,6 @@ tpp_ifdef_stack_remove(tpp_ifdef_stack *tpp_restrict self);
 #endif /* TPP_HAVE_IFDEF_STACK */
 
 
-struct tpp_keyword;
 #if TPP_HAVE_CPP_MACROS
 struct tpp_macro;
 #endif /* TPP_HAVE_CPP_MACROS */
@@ -20899,7 +20897,8 @@ typedef struct tpp_file {
 			 * as its expansion (also holds a reference to `tm_expansions`) */
 			TPP_REF struct tpp_macro *TPP_INTERNAL(tfm_macro);
 #if TPP_HAVE_FILE_MACRO_TRACKARGS
-			/* [1..1][valid_if(tpp_macro_isfunction(tfm_macro))][owned][const]
+			/* [0..tfm_macro->tm_data.tmd_func.tmf_argc][owned]
+			 * [valid_if(tpp_macro_isfunction(tfm_macro))][const]
 			 * Arguments passed during macro invocation */
 			struct tpp_lexer_arginfo *TPP_INTERNAL(tfm_args);
 #endif /* TPP_HAVE_FILE_MACRO_TRACKARGS */
@@ -20942,7 +20941,8 @@ typedef struct tpp_file {
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
-/* Check if "self" includes L/C information */
+/* Check if "self" includes L/C information.
+ * Used by the implementation of `tpp_file_getlcfile()` */
 #define tpp_file_haslcinfo(self)                                                                                                 \
 	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                                              \
 	  (tpp_file_getchunk(self) == NULL ||                                                                                        \
@@ -20956,6 +20956,7 @@ typedef struct tpp_file {
 #define tpp_file_ismacro(self)  (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
 #define tpp_file_getmacro(self) ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro))
 #endif /* TPP_HAVE_CPP_MACROS */
+
 
 /* Returns a pointer to the start of the effectively relevant source.
  * - For the currently loaded file, this is the start of the current
@@ -20984,6 +20985,97 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_FILE_FLAGS */
 
 
+/* Enable/disable non-blocking I/O on a `TPP_FILE_KIND_IO` file.
+ * Behavior is undefined if `tpp_file_getkind(self) != TPP_FILE_KIND_IO`. */
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_file_getnonblock(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_NONBLOCK)
+#define tpp_file_setnonblock(self, v)    \
+	((v) ? tpp_file_enablenonblock(self) \
+	     : tpp_file_disablenonblock(self))
+#define tpp_file_enablenonblock(self)                              \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO), \
+	       (self)->TPP_INTERNAL(tf_flags) |= TPP_FILE_FLAGS_NONBLOCK)
+#define tpp_file_disablenonblock(self)                             \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO), \
+	       (self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_NONBLOCK)
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_file_getnonblock(self)     false
+#define tpp_file_disablenonblock(self) (void)0
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
+/* Modify the file's `TPP_FILE_FLAGS_NOCLOSE` flag to control if a
+ * `TPP_FILE_KIND_IO` file will close its associated `tpp_io_handle`
+ * during finalization.
+ * Behavior is undefined if `tpp_file_getkind(self) != TPP_FILE_KIND_IO`. */
+#if TPP_HAVE_FILE_NONBLOCK
+#define tpp_file_getnoclose(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_NOCLOSE)
+#define tpp_file_setnoclose(self, v)    \
+	((v) ? tpp_file_enablenoclose(self) \
+	     : tpp_file_disablenoclose(self))
+#define tpp_file_enablenoclose(self)                               \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO), \
+	       (self)->TPP_INTERNAL(tf_flags) |= TPP_FILE_FLAGS_NOCLOSE)
+#define tpp_file_disablenoclose(self)                              \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO), \
+	       (self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_NOCLOSE)
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define tpp_file_getnoclose(self)     false
+#define tpp_file_disablenoclose(self) (void)0
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+
+/* Modify the file's `TPP_FILE_FLAGS_SYSHDR` flag,
+ * which controls if warnings are emitted for this file.
+ *
+ * Behavior is undefined if `tpp_file_getkind(self)`
+ * isn't `TPP_FILE_KIND_IO` or `TPP_FILE_KIND_TEXT`. */
+#if TPP_HAVE_FILE_SYSHDR
+#define tpp_file_getsyshdr(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_SYSHDR)
+#define tpp_file_setsyshdr(self, v)    \
+	((v) ? tpp_file_enablesyshdr(self) \
+	     : tpp_file_disablesyshdr(self))
+#define tpp_file_enablesyshdr(self)                                  \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO ||  \
+	                  tpp_file_getkind(self) == TPP_FILE_KIND_TEXT), \
+	       (self)->TPP_INTERNAL(tf_flags) |= TPP_FILE_FLAGS_SYSHDR)
+#define tpp_file_disablesyshdr(self)                                 \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO ||  \
+	                  tpp_file_getkind(self) == TPP_FILE_KIND_TEXT), \
+	       (self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_SYSHDR)
+#else /* TPP_HAVE_FILE_SYSHDR */
+#define tpp_file_getsyshdr(self)     false
+#define tpp_file_disablesyshdr(self) (void)0
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+
+
+/* Check if the contents of `self` should be treated as being wrapped
+ * by an implicit `extern "C"` block in C++. This flag is set for the
+ * current *text-file* (tpp_file_gettextfile(tpp_lexer_getfile(self))),
+ * and is controlled using `# <lineno> <file> 4`
+ *
+ * Behavior is undefined if `tpp_file_getkind(self)`
+ * isn't `TPP_FILE_KIND_IO` or `TPP_FILE_KIND_TEXT`. */
+#if TPP_HAVE_FILE_EXTERN_C
+#define tpp_file_getextern_c(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_EXTERN_C)
+#define tpp_file_setextern_c(self, v)    \
+	((v) ? tpp_file_enableextern_c(self) \
+	     : tpp_file_disableextern_c(self))
+#define tpp_file_enableextern_c(self)                                \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO ||  \
+	                  tpp_file_getkind(self) == TPP_FILE_KIND_TEXT), \
+	       (self)->TPP_INTERNAL(tf_flags) |= TPP_FILE_FLAGS_EXTERN_C)
+#define tpp_file_disableextern_c(self)                               \
+	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO ||  \
+	                  tpp_file_getkind(self) == TPP_FILE_KIND_TEXT), \
+	       (self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_EXTERN_C)
+#else /* TPP_HAVE_FILE_EXTERN_C */
+#define tpp_file_getextern_c(self)     false
+#define tpp_file_disableextern_c(self) (void)0
+#endif /* !TPP_HAVE_FILE_EXTERN_C */
+
+
+
 /* Check if the next `tpp_lexer_yieldpp()` done in the context of this file is
  * allowed to parse directives. Since directives are only allowed to appear
  * directly following a line-feed within the same file, or at the start of some
@@ -21009,15 +21101,6 @@ typedef struct tpp_file {
 #define tpp_file_getsystemheader(self) 0
 #endif /* !TPP_HAVE_FILE_SYSHDR */
 
-
-/* Check if the contents of `self` should be treated as being wrapped
- * by an implicit `extern "C"` block in C++. This flag is set for the
- * current *text-file* (tpp_file_gettextfile(tpp_lexer_getfile(self))),
- * and is controlled using  */
-#if TPP_HAVE_FILE_EXTERN_C
-#define tpp_file_getextern_c(self) \
-	((self)->TPP_INTERNAL(tf_flags) & TPP_FILE_FLAGS_EXTERN_C)
-#endif /* TPP_HAVE_FILE_EXTERN_C */
 
 
 /* Return the predecessor of `self` for the purposes of #include tracebacks.
@@ -21046,6 +21129,7 @@ typedef struct tpp_file {
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #if TPP_HAVE_INCLUDE_STACK
+#define tpp_file_autopopfile_isoff(self) ((self)->TPP_INTERNAL(tf_prev) == NULL)
 #define tpp_file_autopopfile_pushoff(self)                            \
 	do {                                                              \
 		tpp_file *const _tfapfp_prev = (self)->TPP_INTERNAL(tf_prev); \
@@ -21057,21 +21141,22 @@ typedef struct tpp_file {
 		tpp_file_autopopfile_break(self); \
 	} while (0)
 #else /* TPP_HAVE_INCLUDE_STACK */
+#define tpp_file_autopopfile_isoff(self)   (!TPP_HAVE_INCLUDE_STACK)
 #define tpp_file_autopopfile_pushoff(self) do {
 #define tpp_file_autopopfile_break(self)   (void)0
-#define tpp_file_autopopfile_pop(self)     } while (0)
+#define tpp_file_autopopfile_pop(self)     (void)0; } while (0)
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
 
-#if TPP_HAVE_CPP_MACROS
+#if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT
 #define _tpp_file_io2text(self)                                   \
 	((self)->TPP_INTERNAL(tf_kind) == TPP_FILE_KIND_IO            \
 	 ? (void)((self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT) \
 	 : (void)0)
-#else /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT */
 #define _tpp_file_io2text(self) \
 	(void)((self)->TPP_INTERNAL(tf_kind) = TPP_FILE_KIND_TEXT)
-#endif /* !TPP_HAVE_CPP_MACROS */
+#endif /* !TPP_HAVE_CPP_MACROS && !TPP_HAVE_FILE_SUBTEXT */
 
 
 /* - Disable I/O expansion by reading additional data from the file
@@ -21134,7 +21219,7 @@ typedef struct tpp_file {
 #else /* TPP_HAVE_IFDEF_STACK */
 #define tpp_file_pushifdef(self)  do {
 #define tpp_file_breakifdef(self) (void)0
-#define tpp_file_popifdef(self)   } while (0)
+#define tpp_file_popifdef(self)   (void)0; } while (0)
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 /* Combination of `tpp_file_pusheof(self)` + `tpp_file_pushifdef(self)`.
@@ -21203,7 +21288,7 @@ typedef struct tpp_file {
  * text file.
  *
  * These functions are meant for:
- * - tpp_file_subtext_setchunk_fromarg / tpp_lexer_seekpp_rparen:
+ * - `tpp_file_subtext_setchunk_fromarg()` / `tpp_lexer_seekpp_rparen()`:
  *   Re-parsing text retrieved from `tpp_lexer_arginfo`, as is necessary
  *   when expanding the arguments of macros. Because macro arguments can
  *   span across multiple files, and may contain (at that point removed)
@@ -21213,14 +21298,14 @@ typedef struct tpp_file {
  *   >> bar 20)    // [10][ ][_][,][_][ ][20]
  *   The second argument `b` is `_ 20`, but those tokens are split across
  *   2 different text locations: `_` and ` 20`. As such, there will be no
- *   LC information for available within the sub-text of `b`. On the other
- *   hand, `a` is `10 _`, which appears consecutive thus continues to have
- *   LC information available
- * - tpp_file_subtext_setchunk_fromstring / tpp_lexer_parsestring_cb:
+ *   LC information available within the sub-text of `b`. On the other
+ *   hand, `a` is `10 _`, which appears consecutive and thus continues to
+ *   have LC information available
+ * - `tpp_file_subtext_setchunk_fromstring()` / `tpp_lexer_parsestring_cb()`:
  *   Re-parsing text from a decoded string literal, as is necessary for
  *   evaluation of the `_Pragma()` builtin, as well as `#pragma tpp_exec()`
  *   Here, the same restrictions apply: if the contained string is single-
- *   chunked (meaning it's decoded text can alias its source file), then
+ *   chunk'd (meaning it's decoded text can alias its source file), then
  *   LC information is available. Otherwise, it isn't:
  *   - LC information available in pragma:
  *     >> _Pragma("push_macro('foo')")
@@ -21501,7 +21586,31 @@ tpp_file_getendlcinfo(tpp_file *tpp_restrict self) {
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) /*utf-8*/ char const *TPPCALL
 tpp_file_getrealfilename(tpp_file const *tpp_restrict self);
 
+/* Return if the return value of `tpp_file_getrealfilename()` can
+ * be used with `tpp_keyword_fromcstr()` to turn it into a filename
+ * keyword object. Note however that cases exist where there is may
+ * be a keyword function (`tpp_file_getrealfilenamekwd()` would
+ * return non-NULL), but this returns `false`.
+ *
+ * As such, you should enable + use `tpp_file_getrealfilenamekwd()`
+ * if possible. */
+#if TPP_HAVE_FILE_NOKWD
+#define tpp_file_getrealfilenameiskwd(self)            \
+	((tpp_file_getkind(file) == TPP_FILE_KIND_IO ||    \
+	  tpp_file_getkind(file) == TPP_FILE_KIND_TEXT) && \
+	 !(tpp_file_getflags(self) & TPP_FILE_FLAGS_NOKWD))
+#elif TPP_HAVE_USER_KEYWORDS
+#define tpp_file_getrealfilenameiskwd(self)        \
+	(tpp_file_getkind(file) == TPP_FILE_KIND_IO || \
+	 tpp_file_getkind(file) == TPP_FILE_KIND_TEXT)
+#else /* ... */
+#define tpp_file_getrealfilenameiskwd(self) 0
+#endif /* !... */
+
+
 #if TPP_HAVE_FILE_GETREALFILENAMEKWD
+struct tpp_keyword;
+
 /* Returns the filename *keyword* (which may not always be available,
  * even when `tpp_file_getrealfilename()` returns non-NULL) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) struct tpp_keyword *TPPCALL
@@ -22490,6 +22599,11 @@ typedef struct tpp_keyword {
 #else /* TPP_HAVE_CPP_MACROS */
 #define tpp_keyword_hasmacro(self)  0
 #endif /* !TPP_HAVE_CPP_MACROS */
+
+/* Turn the return value of `tpp_keyword_getstr()` or `tpp_keyword_getcstr()` back into a keyword. */
+#define tpp_keyword_fromstr(str)   ((tpp_keyword const *)tpp_container_of(str, tpp_keyword, TPP_INTERNAL(tk_kwd)))
+#define tpp_keyword_fromcstr(cstr) tpp_keyword_fromstr((tpp_char const *)(cstr))
+
 
 /* Check if `self` matches the C, constant string literal `CONSTstr` */
 #define tpp_keyword_equals_conststr(self, CONSTstr)                       \
@@ -23902,6 +24016,12 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL tpp_include_paths_pop(tpp_include_paths *
 #define tpp_include_paths_mustcopy(self) ((self)->TPP_INTERNAL(tip_pushcnt) != 0)
 
 #else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+
+#define tpp_include_paths_addbykind(self, kind, path, path_maxlen)      tpp_include_path_list_pushtail(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_addbykind_head(self, kind, path, path_maxlen) tpp_include_path_list_pushhead(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_delbykind(self, kind, path, path_maxlen)      tpp_include_path_list_remove(_tpp_include_paths_bykind(self, kind), path, path_maxlen)
+#define tpp_include_paths_clearbykind(self, kind)                       tpp_include_path_list_clear(_tpp_include_paths_bykind(self, kind))
+
 #define tpp_include_paths_addsystem(self, path, path_maxlen)      tpp_include_path_list_pushtail(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_addsystem_head(self, path, path_maxlen) tpp_include_path_list_pushhead(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
 #define tpp_include_paths_delsystem(self, path, path_maxlen)      tpp_include_path_list_remove(&(self)->TPP_INTERNAL(tip_system_list), path, path_maxlen)
@@ -26394,16 +26514,22 @@ typedef struct tpp_lexer {
 	                                        * propagate an error. */
 #define tpp_lexer_geterrorcount(self)    (self)->TPP_INTERNAL(tl_error_count)
 #define tpp_lexer_seterrorcount(self, v) (void)((self)->TPP_INTERNAL(tl_error_count) = (v))
+#define tpp_lexer_reseterrorcount(self)  (void)((self)->TPP_INTERNAL(tl_error_count) = 0)
 #if TPP_ERROR_LIMIT < 0
 	tpp_size TPP_INTERNAL(tl_error_limit); /* Once `tl_error_count >= tl_error_limit`, `TPP_WSTATE_ERROR` is treated as `TPP_WSTATE_FATAL` */
 #define tpp_lexer_geterrorlimit(self)    ((self)->TPP_INTERNAL(tl_error_limit))
 #define tpp_lexer_seterrorlimit(self, v) (void)((self)->TPP_INTERNAL(tl_error_limit) = (v))
+#define tpp_lexer_reseterrorlimit(self)  (void)((self)->TPP_INTERNAL(tl_error_limit) = -TPP_ERROR_LIMIT)
 #else /* TPP_ERROR_LIMIT < 0 */
 #define tpp_lexer_geterrorlimit(self) TPP_ERROR_LIMIT
 #endif /* TPP_ERROR_LIMIT >= 0 */
 #else /* TPP_HAVE_WARNING_ERROR */
-#define tpp_lexer_geterrorcount(self) 0
+#define tpp_lexer_geterrorcount(self)   0
+#define tpp_lexer_reseterrorcount(self) (void)0
 #endif /* !TPP_HAVE_WARNING_ERROR */
+#ifndef tpp_lexer_reseterrorlimit
+#define tpp_lexer_reseterrorlimit(self) (void)0
+#endif /* !tpp_lexer_reseterrorlimit */
 
 
 	/* Lexer warning counter */
@@ -26411,7 +26537,11 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_warning_count); /* # of times `TPP_WSTATE_WARN` was emitted. */
 #define tpp_lexer_getwarningcount(self)    (self)->TPP_INTERNAL(tl_warning_count)
 #define tpp_lexer_setwarningcount(self, v) (void)((self)->TPP_INTERNAL(tl_warning_count) = (v))
-#endif /* TPP_HAVE_LEXER_WARNING_COUNT */
+#define tpp_lexer_resetwarningcount(self)  (void)((self)->TPP_INTERNAL(tl_warning_count) = 0)
+#else /* TPP_HAVE_LEXER_WARNING_COUNT */
+/*#define tpp_lexer_getwarningcount(self) 0*/ /* Wouldn't be accurate: warnings still exist, even if we don't count them */
+#define tpp_lexer_resetwarningcount(self) (void)0
+#endif /* !TPP_HAVE_LEXER_WARNING_COUNT */
 
 
 	/* Lexer inclusion limit */
@@ -26420,14 +26550,18 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_inclusion_limit); /* How many times the same file can be `#include`-ed before `TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED` is emitted */
 #define tpp_lexer_getinclusionlimit(self)    ((self)->TPP_INTERNAL(tl_inclusion_limit))
 #define tpp_lexer_setinclusionlimit(self, v) (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = (v))
+#define tpp_lexer_resetinclusionlimit(self)  (void)((self)->TPP_INTERNAL(tl_inclusion_limit) = -TPP_MAX_INCLUDE_DEPTH)
 #else /* TPP_MAX_INCLUDE_DEPTH < 0 */
-#define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
+#define tpp_lexer_getinclusionlimit(self)   TPP_MAX_INCLUDE_DEPTH
 #endif /* TPP_MAX_INCLUDE_DEPTH >= 0 */
 #elif TPP_MAX_INCLUDE_DEPTH < 0
 #define tpp_lexer_getinclusionlimit(self) (-TPP_MAX_INCLUDE_DEPTH)
 #else /* ... */
 #define tpp_lexer_getinclusionlimit(self) TPP_MAX_INCLUDE_DEPTH
 #endif /* !... */
+#ifndef tpp_lexer_resetinclusionlimit
+#define tpp_lexer_resetinclusionlimit(self) (void)0
+#endif /* !tpp_lexer_resetinclusionlimit */
 
 
 	/* Lexer recursive macro limit */
@@ -26436,6 +26570,7 @@ typedef struct tpp_lexer {
 	tpp_size TPP_INTERNAL(tl_recursive_macro_limit); /* How many times the same recursive macro can exists on the `#include`-stack */
 #define tpp_lexer_getrecursivemacrolimit(self)    ((self)->TPP_INTERNAL(tl_recursive_macro_limit))
 #define tpp_lexer_setrecursivemacrolimit(self, v) (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = (v))
+#define tpp_lexer_resetrecursivemacrolimit(self)  (void)((self)->TPP_INTERNAL(tl_recursive_macro_limit) = -TPP_MAX_RECURSIVE_MACRO_DEPTH)
 #else /* TPP_MAX_RECURSIVE_MACRO_DEPTH < 0 */
 #define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
 #endif /* TPP_MAX_RECURSIVE_MACRO_DEPTH >= 0 */
@@ -26444,6 +26579,9 @@ typedef struct tpp_lexer {
 #else /* ... */
 #define tpp_lexer_getrecursivemacrolimit(self) TPP_MAX_RECURSIVE_MACRO_DEPTH
 #endif /* !... */
+#ifndef tpp_lexer_resetrecursivemacrolimit
+#define tpp_lexer_resetrecursivemacrolimit(self) (void)0
+#endif /* !tpp_lexer_resetrecursivemacrolimit */
 #if !TPP_IGNORE_INVALID_CONFIGURATION
 #if TPP_MAX_RECURSIVE_MACRO_DEPTH != 0 && !TPP_HAVE_MACRO_RECURSION
 #error "Invalid configuration: `TPP_MAX_RECURSIVE_MACRO_DEPTH` can only take effect when `TPP_HAVE_MACRO_RECURSION` is enabled"
@@ -26458,7 +26596,10 @@ typedef struct tpp_lexer {
 	tpp_counter TPP_INTERNAL(tl_builtin_counter); /* Next value for `__COUNTER__` */
 #define tpp_lexer_getnextcounter(self)    ((self)->TPP_INTERNAL(tl_builtin_counter))
 #define tpp_lexer_setnextcounter(self, v) (void)((self)->TPP_INTERNAL(tl_builtin_counter) = (v))
-#endif /* TPP_HAVE_MACRO___COUNTER__ */
+#define tpp_lexer_resetnextcounter(self)  (void)((self)->TPP_INTERNAL(tl_builtin_counter) = 0)
+#else /* TPP_HAVE_MACRO___COUNTER__ */
+#define tpp_lexer_resetnextcounter(self) (void)0
+#endif /* !TPP_HAVE_MACRO___COUNTER__ */
 
 
 	/* Value for current time (expansion of `__TIME__` can't change between multiple expansions) */
@@ -26703,7 +26844,9 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
-#endif /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
+#define tpp_lexer_kwds_copybuiltin(self, kwd) ((tpp_keyword *)(kwd))
+#endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
 #if TPP_HAVE_KEYWORDS_RESETFLAGS
 /* Modify the flags of all keywords as `flags = flags & keep_mask` */
@@ -27896,20 +28039,22 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #define _tpp_lexer_enablestate(self, state)     (void)0
 #define _tpp_lexer_disablestate(self, state)    (void)0
 #define _tpp_lexer_breakstate(self)             (void)0
-#define _tpp_lexer_popstate(self)               } while (0)
+#define _tpp_lexer_popstate(self)               (void)0; } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAGS */
 #define _tpp_lexer_pushstate_on(self, flags)  _tpp_lexer_pushstate(self, ~0, flags)
 #define _tpp_lexer_pushstate_off(self, flags) _tpp_lexer_pushstate(self, ~(flags), 0)
 
 /* Alter the lexer state such that no warning messages are produces. */
 #if TPP_HAVE_WARNINGS
+#define tpp_lexer_nowarnings_ison(self)   ((self)->TPP_INTERNAL(tl_state) & TPP_LEXER_STATE_FLAG_NOWARNINGS))
 #define tpp_lexer_nowarnings_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_NOWARNINGS)
 #define tpp_lexer_nowarnings_break(self)  _tpp_lexer_breakstate(self)
 #define tpp_lexer_nowarnings_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_WARNINGS */
+#define tpp_lexer_nowarnings_ison(self)   (!TPP_HAVE_WARNINGS)
 #define tpp_lexer_nowarnings_pushon(self) do {
 #define tpp_lexer_nowarnings_break(self)  (void)0
-#define tpp_lexer_nowarnings_pop(self)    } while (0)
+#define tpp_lexer_nowarnings_pop(self)    (void)0; } while (0)
 #endif /* !TPP_HAVE_WARNINGS */
 
 /* Alter the lexer state such that `tpp_lexer_yieldpp()` does not filter tokens. */
@@ -27918,23 +28063,15 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
 #define tpp_lexer_alltokens_break(self)  _tpp_lexer_breakstate(self)
 #define tpp_lexer_alltokens_pop(self)    _tpp_lexer_popstate(self)
 #else /* TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
+#define tpp_lexer_alltokens_ison(self)   (tpp_lexer_has(self, TOK_SPACE) && tpp_lexer_has(self, TOK_LF) && tpp_lexer_has(self, TOK_COMMENT))
 #define tpp_lexer_alltokens_pushon(self) do {
 #define tpp_lexer_alltokens_break(self)  (void)0
-#define tpp_lexer_alltokens_pop(self)    } while (0)
+#define tpp_lexer_alltokens_pop(self)    (void)0; } while (0)
 #endif /* !TPP_HAVE_LEXER_STATE_FLAG_ALLTOKENS */
-
-#if TPP_HAVE_LEXER_MANUALPOPFILE
-#define tpp_lexer_popfilerlbk_pushon(self) _tpp_lexer_pushstate_on(self, TPP_LEXER_STATE_FLAG_POPFILERLBK)
-#define tpp_lexer_popfilerlbk_break(self)  _tpp_lexer_breakstate(self)
-#define tpp_lexer_popfilerlbk_pop(self)    _tpp_lexer_popstate(self)
-#else /* TPP_HAVE_LEXER_MANUALPOPFILE */
-#define tpp_lexer_popfilerlbk_pushon(self) do {
-#define tpp_lexer_popfilerlbk_break(self)  (void)0
-#define tpp_lexer_popfilerlbk_pop(self)    } while (0)
-#endif /* !TPP_HAVE_LEXER_MANUALPOPFILE */
 
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
+#define tpp_lexer_autopopfile_isoff(self)   tpp_file_autopopfile_isoff(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_pushoff(self) tpp_file_autopopfile_pushoff(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_break(self)   tpp_file_autopopfile_break(tpp_lexer_getfile(self))
 #define tpp_lexer_autopopfile_pop(self)     tpp_file_autopopfile_pop(tpp_lexer_getfile(self))
@@ -28099,11 +28236,9 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
  *   - Use `tpp_file_setkeep()` on all popable files to prevent old data from being free'd
  *   - Save `tpp_file_getpos()` of popable files relative to their `tpp_file_getkeep()`
  *   - Use `tpp_lexer_manualpopfile_start()`
- *   - Set the `TPP_LEXER_STATE_FLAG_POPFILERLBK` state flag
  * - At this, functions like `tpp_lexer_yieldpp()` or `tpp_lexer_yield()`
  *   can be called like normal.
  * - Rollback can then Implement rollback as:
- *   - Restore the `TPP_LEXER_STATE_FLAG_POPFILERLBK` flag
  *   - `tpp_lexer_manualpopfile_end_rollback(self)`
  *   - Restore positions of popable files by doing `tpp_file_getkeep() + REL_POS`
  *   - Restore the old keep-positions of popable files

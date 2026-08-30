@@ -31,16 +31,20 @@
 /* Multi-file TPP should be built using the "all" profile
  * -- Use the amalgamation if you want to use other profiles. */
 #undef TPP_PROFILE
-#if 0
+#if 0 /* Developer test-area */
 #define TPP_PROFILE TPP_PROFILE_MINIMAL
 #define TPP_HAVE_CLI 1
 #define TPP_HAVE_CLI_HELP 1
 #define TPP_HAVE_STRERROR 1
 #define TPP_HAVE_CLI_SETINPUTS 1
+#define TPP_HAVE_USER_KEYWORDS 1
 #define TPP_HAVE_NEW_DEPENDENCY_HOOK TPP_HOOK_RT_NOOP
 #define TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER  (sizeof(tpp_lexer))
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER (sizeof(tpp_lexer) + 56)
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
+
+#define TPP_HAVE_CPP_DIRECTIVES 1
+#define TPP_HAVE_CPP_MACROS 1
 #else
 #define TPP_PROFILE TPP_PROFILE_ALL
 #endif
@@ -2627,8 +2631,7 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a function `tpp_file_getrealfilenamekwd()` */
 #ifndef TPP_HAVE_FILE_GETREALFILENAMEKWD
-#if (TPP_HAVE_PROFILE_ALL || \
-     TPP_HAVE_PRAGMA_ONCE)
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_PRAGMA_ONCE)
 #define TPP_HAVE_FILE_GETREALFILENAMEKWD 1
 #else /* ... */
 #define TPP_HAVE_FILE_GETREALFILENAMEKWD 0
@@ -7702,7 +7705,7 @@ print("#endif /" "* !... *" "/");
  */
 #ifndef TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 #define TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH \
-	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_INCLUDE_PATH)
+	(TPP_HAVE_CLI && TPP_HAVE_CLI_SETINPUTS && TPP_HAVE_LEXER_OPEN_INCLUDE_STRING)
 #endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 
 /* XXX: CLI Option `-i` (or similar): take the next CLI argument and use it as the contents of an input file */

@@ -1605,6 +1605,7 @@ again:
 		goto again;
 #endif /* TPP_HAVE_FILE_SUBTEXT */
 
+#if TPP_HAVE_FILE_DUMMY || TPP_HAVE_CPP_MACROS
 #if TPP_HAVE_FILE_DUMMY
 	case TPP_FILE_KIND_DUMMY:
 #endif /* TPP_HAVE_FILE_DUMMY */
@@ -1612,6 +1613,7 @@ again:
 	case TPP_FILE_KIND_MACRO:
 #endif /* TPP_HAVE_CPP_MACROS */
 		return NULL;
+#endif /* TPP_HAVE_FILE_DUMMY || TPP_HAVE_CPP_MACROS */
 
 	default: tpp_unreachable();
 	}
@@ -1653,7 +1655,7 @@ TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getlcfile(tpp_file const *tpp_restrict self) {
 	tpp_file *iter = (tpp_file *)self;
 	while (!tpp_file_haslcinfo(iter)) {
-		iter = iter->tf_tprev;
+		iter = tpp_file_getprev(iter);
 		if (iter == NULL) {
 			iter = tpp_file_gettextfile(self);
 			return iter ? iter : (tpp_file *)self;
