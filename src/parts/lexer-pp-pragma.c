@@ -232,10 +232,10 @@ tpp_lexer_process_pragma_deprecated_cb(void *arg, tpp_string *chunk,
 	tpp_keyword_flags flags;
 	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
-	ro_keyword = tpp_lexer_kwds_newkeyword(lexer, str, length, hash);
+	ro_keyword = tpp_lexer_newkeyword(lexer, str, length, hash);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
-	keyword = tpp_lexer_kwds_copybuiltin(lexer, ro_keyword);
+	keyword = tpp_lexer_copybuiltinkwd(lexer, ro_keyword);
 	if tpp_unlikely(!keyword)
 		return TPP_ENOMEM;
 	flags = tpp_keyword_getflags(keyword);
@@ -1511,10 +1511,10 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags_cb(void *arg, tpp_string *chunk,
 	struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *data;
 	data = (struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *)arg;
 	(void)chunk;
-	ro_keyword = tpp_lexer_kwds_newkeyword(data->tlpptskfd_lexer, str, length, tpp_hashof(str, length));
+	ro_keyword = tpp_lexer_newkeyword(data->tlpptskfd_lexer, str, length, tpp_hashof(str, length));
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
-	rw_keyword = tpp_lexer_kwds_copybuiltin(data->tlpptskfd_lexer, ro_keyword);
+	rw_keyword = tpp_lexer_copybuiltinkwd(data->tlpptskfd_lexer, ro_keyword);
 	if tpp_unlikely(!rw_keyword)
 		return TPP_ENOMEM;
 	data->tlpptskfd_keyword = rw_keyword;
@@ -2017,10 +2017,10 @@ tpp_lexer_process_pragma_TPP_keyword_feature(tpp_lexer *tpp_restrict self) {
 		if (TPP_ISERR(error))
 			return error;
 #endif /* TPP_HAVE_TPP_W_EXPECTED_IDENTIFIER_AFTER_PRAGMA_TPP_KEYWORD_FEATURES */
-		ro_keyword = tpp_lexer_kwds_getkeyword_byid(self, TPP_KWD_TPP);
+		ro_keyword = tpp_lexer_getkeyword_byid(self, TPP_KWD_TPP);
 		tpp_assert(ro_keyword);
 	}
-	data.tlpptkfd_keyword = tpp_lexer_kwds_copybuiltin(self, ro_keyword);
+	data.tlpptkfd_keyword = tpp_lexer_copybuiltinkwd(self, ro_keyword);
 	if tpp_unlikely(!data.tlpptkfd_keyword)
 		return TPP_ENOMEM;
 	do {

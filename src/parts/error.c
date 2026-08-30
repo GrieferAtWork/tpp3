@@ -39,12 +39,12 @@ char const *TPPCALL tpp_strerror(tpp_errno error) {
 		return "Out of memory";
 	case TPP_EIO:
 		return "I/O operation failed";
+	case TPP_ENOENT:
+		return "No such file or directory";
 #if TPP_HAVE_FILE_NONBLOCK
 	case TPP_EWOULDBLOCK:
 		return "Operation would have blocked";
 #endif /* TPP_HAVE_FILE_NONBLOCK */
-	case TPP_ENOENT:
-		return "No such file or directory";
 #if TPP_HAVE_LEXER_OPENFILE_EX
 	case TPP_EMASKED:
 		return "File cannot be opened because it has been masked";

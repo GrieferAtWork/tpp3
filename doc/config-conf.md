@@ -960,7 +960,7 @@ to check if a given keyword is a builtin identifier:
 ```
 
 A keyword is considered to be an "identifier" based on
-[`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28913) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](config-core.md#tpp_have_lexer_isidentifier))
+[`tpp_lexer_isidentifier()`](../src/tpp-amalgamation.h#L28926) (see [`TPP_HAVE_LEXER_ISIDENTIFIER`](config-core.md#tpp_have_lexer_isidentifier))
 
 <details><summary>Details</summary>
 
@@ -2033,7 +2033,7 @@ __TPP_COUNT_TOKENS("#undef FOO") // 3 (or 4 if TPP_HAVE_TOK_SPACE) because direc
 
 Based on the numbers returned by this macro, it becomes possible
 to detect the state of pretty much all configuration options that
-affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L28176)
+affect the behavior of [`tpp_lexer_yieldraw()`](../src/tpp-amalgamation.h#L28189)
 
 <details><summary>Details</summary>
 
@@ -3145,7 +3145,7 @@ Detect:
 
 ## TPP_HAVE_TOK_LF
 
-Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28371)
+Configures if line-feed tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28384)
 
 <details><summary>Details</summary>
 
@@ -3172,7 +3172,7 @@ Detect:
 
 ## TPP_HAVE_TOK_SPACE
 
-Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28371)
+Configures if whitespace tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28384)
 
 <details><summary>Details</summary>
 
@@ -3199,7 +3199,7 @@ Detect:
 
 ## TPP_HAVE_TOK_COMMENT
 
-Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28371)
+Configures if comment tokens should be forwarded, or filtered by [`tpp_lexer_yieldpp()`](../src/tpp-amalgamation.h#L28384)
 
 <details><summary>Details</summary>
 
@@ -4275,7 +4275,7 @@ Detect:
 
 Support for remapping of `#include` files via `header.gcc` files.
 
-Whenenver [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27121) is called and this feature is enabled,
+Whenenver [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27133) is called and this feature is enabled,
 TPP will consult (and expand) a cache of known `header.gcc` files based
 on the `relative_to` argument passed. Checks for potential `header.gcc`
 files is done in a way that mirrors GCC's behavior, with the following
@@ -4332,7 +4332,7 @@ Example: a `header.gcc` file is then checked like this:
 
 - Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
 - `header.gcc` has a line `bar/foobar.h   real/fum.h`
-- [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27121) will open file `f"{headof(relative_to)}/foo/real/fum.h"`,
+- [`tpp_lexer_openfile()`](../src/tpp-amalgamation.h#L27133) will open file `f"{headof(relative_to)}/foo/real/fum.h"`,
   because *to-filename*s in `header.gcc` are always relative to the
   directory containing the `header.gcc` file
 
@@ -4749,8 +4749,8 @@ Detect:
 ## TPP_HAVE_STRING_AUTO_CONCAT
 
 Enable support for automatic concatenation of adjacent string tokens.
-This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L29120) and its
-companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29160), such that they will only yield
+This affects the behavior of [`tpp_lexer_parsestring_ex()`](../src/tpp-amalgamation.h#L29133) and its
+companion [`tpp_lexer_parsestring_cb()`](../src/tpp-amalgamation.h#L29173), such that they will only yield
 to the next token, but not check if that next token might be another
 string.
 
@@ -5234,7 +5234,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_HEX_LITERALS
 
-Enable support for `0x` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28944) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0x` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28957) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 
@@ -5253,7 +5253,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS
 
-Enable support for `0b` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28944) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0b` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28957) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 
@@ -5272,7 +5272,7 @@ Extension name:
 
 ## TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS
 
-Enable support for `0o` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28944) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
+Enable support for `0o` literals in [`tpp_lexer_decodeint()`](../src/tpp-amalgamation.h#L28957) when parsing [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16004) (see [`TPP_HAVE_TOK_C_INT`](#tpp_have_tok_c_int))
 
 <details><summary>Details</summary>
 

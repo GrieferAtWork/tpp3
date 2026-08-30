@@ -437,61 +437,70 @@ typedef struct tpp_lexer {
 
 
 
-/* Environment include path... */
+/* Environment include path... (paths loaded from `$CPATH` & friends) */
 #if TPP_HAVE_INCLUDE_PATH_ENVIRON
-#define tpp_lexer_envincludes_getpaths(self, p_result) \
+#define tpp_lexer_getenvincludepaths(self, p_result) \
 	tpp_envinclude_paths_getpaths(&(self)->TPP_INTERNAL(tl_envinclude_paths), p_result)
-#endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+#else /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
+#define tpp_lexer_getenvincludepaths(self, p_result) \
+	(*(p_result) = "", TPP_EOK)
+#endif /* !TPP_HAVE_INCLUDE_PATH_ENVIRON */
 
 
 
 /* Wrappers for keywords API */
 #if TPP_HAVE_USER_KEYWORDS
-#define _tpp_lexer_kwds_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#define _tpp_lexer_kwds_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
-#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
-#define tpp_lexer_kwds_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define _tpp_lexer_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define _tpp_lexer_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define tpp_lexer_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define tpp_lexer_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define tpp_lexer_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #if TPP_HAVE_ESCAPED_KEYWORDS
-#define _tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
-#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash) tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
-#define tpp_lexer_kwds_newkeyword_esc(self, kwd, len, hash) tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define _tpp_lexer_getkeyword_esc(self, kwd, len, hash) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_getkeyword_esc(self, kwd, len, hash)  tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_newkeyword_esc(self, kwd, len, hash)  tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
-#define tpp_lexer_kwds_copybuiltin(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
+#define tpp_lexer_copybuiltinkwd(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
 #else /* TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
-#define tpp_lexer_kwds_copybuiltin(self, kwd) ((tpp_keyword *)(kwd))
+#define tpp_lexer_copybuiltinkwd(self, kwd) ((tpp_keyword *)(kwd))
 #endif /* !TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS */
 
-#if TPP_HAVE_KEYWORDS_RESETFLAGS
 /* Modify the flags of all keywords as `flags = flags & keep_mask` */
-#define tpp_lexer_kwds_resetflags(self, keep_mask) tpp_keywords_resetflags(&(self)->TPP_INTERNAL(tl_kwds), keep_mask)
-#endif /* TPP_HAVE_KEYWORDS_RESETFLAGS */
+#if TPP_HAVE_KEYWORDS_RESETFLAGS
+#define tpp_lexer_resetallkwdflags(self, keep_mask) tpp_keywords_resetflags(&(self)->TPP_INTERNAL(tl_kwds), keep_mask)
+#elif !TPP_HAVE_KEYWORD_FLAGS
+#define tpp_lexer_resetallkwdflags(self, keep_mask) (void)0
+#endif /* ... */
 
-#if TPP_HAVE_KEYWORDS_RESETFEATURES
 /* Reset all uses of `tpp_keyword_setfeature()` */
-#define tpp_lexer_kwds_resetfeatures(self) tpp_keywords_resetfeatures(&(self)->TPP_INTERNAL(tl_kwds))
-#endif /* TPP_HAVE_KEYWORDS_RESETFEATURES */
+#if TPP_HAVE_KEYWORDS_RESETFEATURES
+#define tpp_lexer_resetallkwdfeatures(self) tpp_keywords_resetfeatures(&(self)->TPP_INTERNAL(tl_kwds))
+#elif !TPP_HAVE_KEYWORD_FEATURES
+#define tpp_lexer_resetallkwdfeatures(self) (void)0
+#endif /* ... */
 
-#if TPP_HAVE_KEYWORDS_RESETCOUNTERS
 /* Call `tpp_keyword_reset_builtin_counter()` on every keyword, thereby
  * resetting all side-effects of expansions of `__TPP_COUNTER` thus far. */
-#define tpp_lexer_kwds_resetcounters(self) tpp_keywords_resetcounters(&(self)->TPP_INTERNAL(tl_kwds))
-#endif /* TPP_HAVE_KEYWORDS_RESETCOUNTERS */
+#if TPP_HAVE_KEYWORDS_RESETCOUNTERS
+#define tpp_lexer_resetallkwdcounters(self) tpp_keywords_resetcounters(&(self)->TPP_INTERNAL(tl_kwds))
+#elif !TPP_HAVE_MACRO___TPP_COUNTER
+#define tpp_lexer_resetallkwdcounters(self) (void)0
+#endif /* ... */
 
 /* Reset (re-initialize) all user-defined keywords
  * WARNING: To use this function, you should first finalize the `#include`-stack (i.e.:
  *          call `tpp_lexer_finifile()`), since the `#include`-stack usually contains
  *          references to certain keywords that will become dangling after a call to
  *          this function */
-#define tpp_lexer_kwds_reset(self) tpp_keywords_reset(&(self)->TPP_INTERNAL(tl_kwds))
+#define tpp_lexer_resetallkwds(self) tpp_keywords_reset(&(self)->TPP_INTERNAL(tl_kwds))
 #else /* TPP_HAVE_USER_KEYWORDS */
-#define tpp_lexer_kwds_getkeyword(self, kwd, len, hash)  tpp_builtin_getkeyword(kwd, len, hash)
-#define tpp_lexer_kwds_getkeyword_byid(self, id)         tpp_builtin_getkeyword_byid(id)
+#define tpp_lexer_getkeyword(self, kwd, len, hash) tpp_builtin_getkeyword(kwd, len, hash)
+#define tpp_lexer_getkeyword_byid(self, id)        tpp_builtin_getkeyword_byid(id)
 #if TPP_HAVE_ESCAPED_KEYWORDS
-#define tpp_lexer_kwds_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
+#define tpp_lexer_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
-#define tpp_lexer_kwds_reset(self) (void)0
+#define tpp_lexer_resetallkwds(self) (void)0
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 
@@ -538,6 +547,8 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
                tpp_lexer const *tpp_restrict from);
 #endif /* TPP_HAVE_LEXER_COPY */
 
+
+
 #if TPP_HAVE_LEXER_OPENFILE
 typedef struct tpp_lexer_openfile_result {
 	tpp_io_handle  tlofr_handle;       /* [1..1][owned] I/O handle for requested file (must be inherited by caller) */
@@ -576,9 +587,8 @@ typedef struct tpp_lexer_openfile_result {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 #if TPP_HAVE_LEXER_OPENFILE_EX
-#define TPP_LEXER_OPENFILE_FLAG_NORMAL TPP_UINT_LEAST16_C(0) /* Normal flags */
-#ifdef tpp_keyword_flags
-#define tpp_lexer_openfile_flags tpp_keyword_flags /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
+#define TPP_LEXER_OPENFILE_FLAG_NORMAL       TPP_UINT_LEAST16_C(0) /* Normal flags */
+#define tpp_lexer_openfile_flags             tpp_uint_least16      /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED TPP_KEYWORD_FLAG_HDR_IMPORTED    /* Filter out files that were already `#import`-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */
@@ -588,21 +598,19 @@ typedef struct tpp_lexer_openfile_result {
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
 #define TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED  TPP_KEYWORD_FLAG_HDR_GUARD_VALID /* Filter out files with a confirmed `#ifndef`-block of a macro that is current defined */
 #endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
-#else /* tpp_keyword_flags */
-#define tpp_lexer_openfile_flags tpp_uint_least16 /* Set of `TPP_LEXER_OPENFILE_FLAG_*` */
-#endif /* !tpp_keyword_flags */
 #if TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next
 #define TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT TPP_UINT_LEAST16_C(0x0100) /* Reject files that are already on the `#include`-stack */
 #endif /* TPP_HAVE_CPP_INCLUDE_NEXT || TPP_HAVE_MACRO___has_include_next */
+
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT TPP_UINT_LEAST16_C(0x0200) /* Emit a warning if the file already appears too often on the `#include`-stack */
 #else /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
-#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT  TPP_UINT_LEAST16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_CHECK_LIMIT TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 #if TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING TPP_UINT_LEAST16_C(0x0400) /* Emit a warning `TPP_W_NONPORTABLE_FILENAME_CASING` if the file's casing is bad */
 #else /* TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
-#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING  TPP_UINT_LEAST16_C(0x0000) /* no-op */
+#define TPP_LEXER_OPENFILE_FLAG_WARN_CASING TPP_UINT_LEAST16_C(0x0000) /* no-op */
 #endif /* !TPP_HAVE_TPP_W_NONPORTABLE_FILENAME_CASING */
 
 /* Same as `tpp_lexer_openfile`, but return `TPP_EMASKED` if the file was already
@@ -610,8 +618,8 @@ typedef struct tpp_lexer_openfile_result {
  *
  * NOTES:
  * - A special case is made when `mask_flags & TPP_LEXER_OPENFILE_FLAG_HDR_GUARDED`,
- *   in which case, `TPP_EMASKED` is only returned if `tkm_file_guard` is a macro that
- *   is currently considered to be `#if defined()`.
+ *   in which case, `TPP_EMASKED` is only returned if `tpp_keyword_get_file_guard()`
+ *   is a macro that is currently considered to be `#if defined()`.
  * - Another special case is made for `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT`, which
  *   causes `TPP_EMASKED` to be returned if the file's keyword is already included
  *   somewhere on the `#include`-stack.
@@ -633,8 +641,7 @@ typedef struct tpp_lexer_openfile_result {
  *
  * @return: TPP_EOK:     Success
  * @return: TPP_ENOMEM:  Insufficient memory
- * @return: TPP_ENOENT:  No such file, or `TPP_LEXER_OPENFILE_FLAG_INCLUDE_NEXT` was
- *                       given, and the file is already located on the `#include`-stack.
+ * @return: TPP_ENOENT:  File not found (if you have more `relative_to`, try them)
  * @return: TPP_EMASKED: Flags specified by `mask_flags` were already set */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
@@ -642,21 +649,26 @@ tpp_lexer_openfile_ex(/*1..1*/ tpp_lexer *tpp_restrict self,
                       /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                       /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result,
                       tpp_lexer_openfile_flags mask_flags);
+#endif /* TPP_HAVE_LEXER_OPENFILE_EX */
+
+/* Construct the filename, open the file, and initialize `result` accordingly
+ * @param: relative_to: The `tpp_file_getrealfilename()` of another file. In case
+ *                      `filename` is a relative path, that filename will be opened
+ *                      relative to the directory of the file named by `relative_to`.
+ *                      Passing `NULL` has the same affect as passing any string that
+ *                      does not contain `TPP_FS_SEP`, meaning `filename` will be
+ *                      opened relative to the host process's PWD (aka. `"."`)
+ * @param: result:      Open file information (pass along to `tpp_file_init_io_from_ofr()`)
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Insufficient memory
+ * @return: TPP_ENOENT: File not found (if you have more `relative_to`, try them) */
+#if TPP_HAVE_LEXER_OPENFILE_EX
 #define tpp_lexer_openfile(self, relative_to, filename, filename_maxlen, result) \
 	tpp_lexer_openfile_ex(self, relative_to, filename, filename_maxlen, result, TPP_LEXER_OPENFILE_FLAG_NORMAL)
 #else /* TPP_HAVE_LEXER_OPENFILE_EX */
-/* Construct the filename, open the file, and initialize `result` accordingly
- * @param: relative_to: The `tpp_file::tf_data.td_io.tff_name` of another file,
- *                      in case `filename` is a relative path, in which case the
- *                      filename of the file to open should be relative to the
- *                      directory of `relative_to`
- * @param: result:      Open file information (pass along to `tpp_file_init_io()`)
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: Insufficient memory
- * @return: TPP_ENOENT: File not found (if you have additional `relative_to`, try them) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 3, 5)) tpp_errno TPPCALL
 tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
-                   /*0..1*/ char const *tpp_restrict relative_to,
+                   /*0..1*/ char const *relative_to,
                    /*1..1*/ /*utf-8*/ char const *filename, tpp_size filename_maxlen,
                    /*1..1*/ tpp_lexer_openfile_result *tpp_restrict result);
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
@@ -701,6 +713,7 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
 #define tpp_lexer_initfile_io(self, filename, handle) \
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* TPP_HAVE_FILE_NOKWD */
+
 
 #if TPP_HAVE_LEXER_INIT_OPEN
 /* Initialize a lexer such that it starts reading from `filename`
@@ -841,27 +854,27 @@ tpp_lexer_popfile(tpp_lexer *tpp_restrict self);
 /* Invocation of hooks */
 
 /* Common documentation:
- * >> tpp_errno tpp_lexer_addhook_*_ex(tpp_lexer *self, HOOK cb, void *cookie);
  * >> tpp_errno tpp_lexer_addhook_*(tpp_lexer *self, HOOK cb);
- *    Add an entry to this hook-list (emulated as a max-length=1-list when not `TPP_HOOK_RT_MANY[_C]`)
+ * >> tpp_errno tpp_lexer_addhook_*_ex(tpp_lexer *self, HOOK cb, void *cookie);
+ *    Add an entry to this hook-list (emulated as a max-length=1-list when not `!TPP_HOOK_ISMANY(CONFIG)`)
  *    @return: TPP_EOK:    Success (given `cb`[+`cookie`] was added to the back
  *                         of the list, meaning it will be invoked *first*)
  *    @return: TPP_EOK:    No-op (given `cb`[+`cookie`] was already registered)
- *                         [CONFIG == TPP_HOOK_RT_MANY[_C]] The entry is always moved to the back,
- *                                                          meaning it will be invoked *first*.
- *    @return: TPP_ENOENT: [CONFIG != TPP_HOOK_RT_MANY[_C]] Another (non-default) was already registered
- *    @return: TPP_ENOMEM: [CONFIG == TPP_HOOK_RT_MANY[_C]] Insufficient memory to register hook
+ *                         [TPP_HOOK_ISMANY(CONFIG)]  The entry is always moved to the back,
+ *                                                    meaning it will be invoked *first*.
+ *    @return: TPP_ENOENT: [!TPP_HOOK_ISMANY(CONFIG)] Another (non-default) was already registered
+ *    @return: TPP_ENOMEM: [TPP_HOOK_ISMANY(CONFIG)]  Insufficient memory to register hook
  * 
- * >> bool tpp_lexer_hashook_*_ex(tpp_lexer const *self, HOOK cb, void const *cookie);
  * >> bool tpp_lexer_hashook_*(tpp_lexer const *self, HOOK cb);
+ * >> bool tpp_lexer_hashook_*_ex(tpp_lexer const *self, HOOK cb, void const *cookie);
  *    Check if the specified `cb`[+`cookie`] is currently registered:
- *    - When configured as `TPP_HOOK_RT_MANY[_C]`, check if the hook-list contains `cb`[+`cookie`]
- *    - When not configured as `TPP_HOOK_RT_MANY[_C]`, check if the current hook is `cb`[+`cookie`]
+ *    - When configured as `TPP_HOOK_ISMANY(CONFIG)`, check if the hook-list contains `cb`[+`cookie`]
+ *    - When configured as `!TPP_HOOK_ISMANY(CONFIG)`, check if the current hook is `cb`[+`cookie`]
  *
- * >> bool tpp_lexer_delhook_*_ex(tpp_lexer *self, HOOK cb, void const *cookie);
  * >> bool tpp_lexer_delhook_*(tpp_lexer *self, HOOK cb);
+ * >> bool tpp_lexer_delhook_*_ex(tpp_lexer *self, HOOK cb, void const *cookie);
  *    Remove the specified `cb`[+`cookie`] from the list of registered hooks.
- *    @return: true:  Hook was removed (when `CONFIG != TPP_HOOK_RT_MANY[_C]`, the default
+ *    @return: true:  Hook was removed (when `!TPP_HOOK_ISMANY(CONFIG)`, the default
  *                    hook (`TPP_HOOK_FOO` or its builtin impl) is restored; otherwise,
  *                    the hook is simply removed from the internal hook-list)
  *    @return: false: Hook wasn't actually registered (nothing was changed)
@@ -1636,7 +1649,7 @@ tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
 
 #if TPP_HAVE_KEYWORDS_UNASSERTALL
 /* Delete all user-defined keyword assertions */
-#define tpp_lexer_unassertall2(self) tpp_keywords_unassertall(&(self)->TPP_INTERNAL(tl_kwds))
+#define tpp_lexer_unassertallkwds(self) tpp_keywords_unassertall(&(self)->TPP_INTERNAL(tl_kwds))
 #endif /* TPP_HAVE_KEYWORDS_UNASSERTALL */
 
 

@@ -725,7 +725,7 @@ after_print_output_filename:
 			    (kwd = tpp_keyword_fromcstr(kwd_str), 1))
 #endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
 			{
-				tpp_keyword *wkwd = tpp_lexer_kwds_copybuiltin(lexer, kwd);
+				tpp_keyword *wkwd = tpp_lexer_copybuiltinkwd(lexer, kwd);
 				if tpp_unlikely(!wkwd)
 					return TPP_ENOMEM;
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)

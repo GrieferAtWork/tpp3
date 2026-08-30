@@ -136,13 +136,13 @@ TPP_ASSERT_EXPANDS("1", __has_include("misc/bin.dat"))
 TPP_ASSERT_EXPANDS("1", __has_include("misc/blank.dat"))
 
 /* TPP also implements `__cpp_pp_embed` with correct expansions based on support-level */
-#pragma extension(push)
+#pragma TPP extension(push)
 TPP_ASSERT_EXPANDS("202606", __cpp_pp_embed)
-#pragma extension("-fno-embed-directives-offset")
+#pragma TPP extension("-fno-embed-directives-offset")
 TPP_ASSERT_EXPANDS("202502", __cpp_pp_embed)
-#pragma extension("-fno-embed-directives")
+#pragma TPP extension("-fno-embed-directives")
 TPP_ASSERT_EXPANDS("__cpp_pp_embed", __cpp_pp_embed)
-#pragma extension(pop)
+#pragma TPP extension(pop)
 
 
 

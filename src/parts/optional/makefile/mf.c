@@ -347,7 +347,7 @@ tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
 	tpp_makefile *const self = (tpp_makefile *)arg;
 	tpp_lexer *const lexer = tpp_makefile_getlexer(self);
 	tpp_hash const hash = tpp_hashof((tpp_char const *)str, length);
-	tpp_keyword const *ro_keyword = tpp_lexer_kwds_newkeyword(lexer, (tpp_char const *)str, length, hash);
+	tpp_keyword const *ro_keyword = tpp_lexer_newkeyword(lexer, (tpp_char const *)str, length, hash);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
 

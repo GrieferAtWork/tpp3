@@ -45,8 +45,8 @@ typedef struct tpp_intvalue {
 /* @return: TPP_EOK:      Success
  * @return: TPP_ISERR(*): HARD_ERROR */
 #define tpp_intvalue_init_copy(self, from) \
-	((self)->TPP_INTERNAL(tiv_value) =    \
-	 (from)->TPP_INTERNAL(tiv_value),     \
+	((self)->TPP_INTERNAL(tiv_value) =     \
+	 (from)->TPP_INTERNAL(tiv_value),      \
 	 TPP_EOK)
 
 /* @return: TPP_EOK:      Success
@@ -131,13 +131,13 @@ tpp_intvalue_builder_adddigit(tpp_intvalue_builder *tpp_restrict self,
  * @return: TPP_ENOENT:   Overflow (only if `TPP_INTVALUE_MATH_CANOVERFLOW`)
  * @return: TPP_ISERR(*): HARD_ERROR */
 #if TPP_INTVALUE_MATH_CANOVERFLOW
-#define tpp_intvalue_init_uintmax(self, v)               \
+#define tpp_intvalue_init_uintmax(self, v)              \
 	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(v), \
-	 ((tpp_uintmax)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX)  \
-	 ? TPP_EOK                                           \
+	 ((tpp_uintmax)(v) <= (tpp_uintmax)_TPP_INTMAX_MAX) \
+	 ? TPP_EOK                                          \
 	 : TPP_ENOENT)
 #else /* TPP_INTVALUE_MATH_CANOVERFLOW */
-#define tpp_intvalue_init_uintmax(self, v)               \
+#define tpp_intvalue_init_uintmax(self, v)              \
 	((self)->TPP_INTERNAL(tiv_value) = (tpp_intmax)(v), \
 	 TPP_EOK)
 #endif /* !TPP_INTVALUE_MATH_CANOVERFLOW */

@@ -199,7 +199,7 @@ is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16208) (or [`TPP
 (though only done if the desired target token is enabled).
 
 In order to do this normalization, the string is decoded and re-encoded via
-use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29081) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L17470), thereby
+use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29094) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L17470), thereby
 allowing a consumer of the preprocessor output to only have to support a
 greatly reduced set of string tokens (and escape sequences) in order to
 fully understand *any* kind of string token that may be produced by TPP.
@@ -677,7 +677,7 @@ TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0
 ## TPP_EMITTER_HAVE_TRACE_INCLUDES
 
 Trace includes (and the depth of the `#include`-stack in terms of IO files)
-by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L27402)
+by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L27415)
 whenever an I/O file is pushed to the `#include`-stack:
 
 ```deemon
@@ -830,7 +830,7 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
 CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1801) is called):
-[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L29380)
+[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L29393)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's
 mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose)).

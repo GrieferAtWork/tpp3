@@ -4444,7 +4444,7 @@ extern tpp_lexer *TPPLexer_Current;
 #define TPP_ISOK(id)                   (!TPP_TOK_ISERR(id))
 #define TPP_ISKEYWORD(id)              TPP_TOK_ISKEYWORD(id)
 #define TPP_ISUSERKEYWORD(id)          TPP_TOK_ISUSERKEYWORD(id)
-#define TPP_ISBUILTINMACRO_(lexer, id) tpp_lexer_getkeyworddefined(lexer, tpp_lexer_kwds_getkeyword_byid(self, id))
+#define TPP_ISBUILTINMACRO_(lexer, id) tpp_lexer_getkeyworddefined(lexer, tpp_lexer_getkeyword_byid(self, id))
 #define TPP_ISBUILTINMACRO(id)         TPP_ISBUILTINMACRO_(TPP2_LEXER, id)
 
 #define TPP_stream_t   tpp_io_handle
@@ -4520,8 +4520,8 @@ extern tpp_lexer *TPPLexer_Current;
 #if TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT
 #define ai_ins_str tma_ins_str /* Don't access */
 #endif /* TPP_HAVE_STRINGIZE_MACRO_ARGUMENT || TPP_HAVE_CHARIZE_MACRO_ARGUMENT */
-#undef ai_name      /* Use tpp_keyword_getcstr(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
-#undef ai_namesize  /* Use tpp_keyword_getlen(tpp_lexer_kwds_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+#undef ai_name      /* Use tpp_keyword_getcstr(tpp_lexer_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
+#undef ai_namesize  /* Use tpp_keyword_getlen(tpp_lexer_getkeyword_byid(lexer, tpp_macro_getfuncargtok(macro, i))) */
 /* }; */
 
 
@@ -5001,15 +5001,15 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 	tpp_keyword_flags result = tpp_keyword_getflags(self);
 	if (check_without_underscores) {
 		tpp_char const *without_underscore_start = tpp_keyword_getstr(self);
-		tpp_size without_underscore_len          = tpp_keyword_getlen(self);
+		tpp_size without_underscore_len = tpp_keyword_getlen(self);
 		while (without_underscore_len && *without_underscore_start == '_')
 			++without_underscore_start, --without_underscore_len;
 		while (without_underscore_len && without_underscore_start[without_underscore_len - 1] == '_')
 			--without_underscore_len;
 		if (without_underscore_len < tpp_keyword_getlen(self)) {
 			tpp_hash hash = tpp_hashof(without_underscore_start, without_underscore_len);
-			tpp_keyword const *without_underscore = tpp_lexer_kwds_getkeyword(lexer, without_underscore_start,
-			                                                                  without_underscore_len, hash);
+			tpp_keyword const *without_underscore = tpp_lexer_getkeyword(lexer, without_underscore_start,
+			                                                             without_underscore_len, hash);
 			if (without_underscore)
 				result |= tpp_keyword_getflags(without_underscore);
 		}
@@ -5222,19 +5222,19 @@ TPPLexer_Reset(tpp_lexer *tpp_restrict self, uint32_t flags) {
 	if (flags & TPPLEXER_RESET_SYSPATHS)
 		tpp_lexer_resetincludes(self);
 	if (flags & TPPLEXER_RESET_KEYWORDS) {
-		tpp_lexer_kwds_reset(self);
+		tpp_lexer_resetallkwds(self);
 	} else {
 		if (flags & TPPLEXER_RESET_MACRO)
 			tpp_lexer_undefalluser(self);
 		if (flags & TPPLEXER_RESET_ASSERT)
-			tpp_lexer_unassertall2(self);
+			tpp_lexer_unassertallkwds(self);
 		if (flags & TPPLEXER_RESET_COUNTER)
-			tpp_lexer_kwds_resetcounters(self);
+			tpp_lexer_resetallkwdcounters(self);
 		if (flags & TPPLEXER_RESET_KWDFLAGS) {
-			tpp_lexer_kwds_resetflags(self, 0);
-			tpp_lexer_kwds_resetfeatures(self);
+			tpp_lexer_resetallkwdflags(self, 0);
+			tpp_lexer_resetallkwdfeatures(self);
 		} else if (flags & TPPLEXER_RESET_FONCE) {
-			tpp_lexer_kwds_resetflags(self, ~TPP_KEYWORD_FLAG_HDR_ONCE);
+			tpp_lexer_resetallkwdflags(self, ~TPP_KEYWORD_FLAG_HDR_ONCE);
 		}
 	}
 }
@@ -5298,20 +5298,20 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 #define TPPLexer_PopFile_(self) tpp_lexer_popfile(self)
 #define TPPLexer_PopFile()      TPPLexer_PopFile_(TPP2_LEXER)
 
-#define TPPLexer_LookupKeyword_(self, name, namelen, create_missing)                              \
-	((create_missing) ? tpp_lexer_kwds_newkeyword(self, name, namelen, tpp_hashof(name, namelen)) \
-	                  : tpp_lexer_kwds_getkeyword(self, name, namelen, tpp_hashof(name, namelen)))
-#define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing)                           \
-	((create_missing) ? tpp_lexer_kwds_newkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)) \
-	                  : tpp_lexer_kwds_getkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)))
+#define TPPLexer_LookupKeyword_(self, name, namelen, create_missing)                         \
+	((create_missing) ? tpp_lexer_newkeyword(self, name, namelen, tpp_hashof(name, namelen)) \
+	                  : tpp_lexer_getkeyword(self, name, namelen, tpp_hashof(name, namelen)))
+#define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing)                      \
+	((create_missing) ? tpp_lexer_newkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)) \
+	                  : tpp_lexer_getkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)))
 #define TPPLexer_LookupKeyword(name, namelen, create_missing) \
 	TPPLexer_LookupKeyword_(TPP2_LEXER, name, namelen, create_missing)
 #define TPPLexer_LookupEscapedKeyword(name, namelen, create_missing) \
 	TPPLexer_LookupEscapedKeyword_(TPP2_LEXER, name, namelen, create_missing)
 
 /* Looks up a keyword, given its ID */
-#define TPPLexer_LookupKeywordID_(self, id) tpp_lexer_kwds_getkeyword_byid(self, id)
-#define TPPLexer_LookupKeywordID(id)        tpp_lexer_kwds_getkeyword_byid(TPP2_LEXER, id)
+#define TPPLexer_LookupKeywordID_(self, id) tpp_lexer_getkeyword_byid(self, id)
+#define TPPLexer_LookupKeywordID(id)        tpp_lexer_getkeyword_byid(TPP2_LEXER, id)
 
 /* Define a regular, keyword-style macro `name` as `value`.
  * @param: flags: A set of `TPPLEXER_DEFINE_FLAG_*`

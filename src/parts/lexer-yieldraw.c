@@ -5364,18 +5364,18 @@ handle_keyword_with_esc:
 			if (uses_esc) {
 				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, self);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_kwds_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_kwds_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
 				kwd_hash = tpp_hashof(kwd_start, kwd_len);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_kwds_newkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword(self, kwd_start, kwd_len, kwd_hash);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_kwds_getkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword(self, kwd_start, kwd_len, kwd_hash);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			}
 #if TPP_HAVE_USER_KEYWORDS

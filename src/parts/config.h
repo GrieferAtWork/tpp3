@@ -7073,7 +7073,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_KEYWORDS_UNDEFALLUSER */
 
-/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertall2()`
+/* Provide a function `tpp_keywords_unassertall()` + `tpp_lexer_unassertallkwds()`
  * that can be used to quickly delete *all* keyword assertions. */
 #ifndef TPP_HAVE_KEYWORDS_UNASSERTALL
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_CPP_ASSERT)
@@ -7083,7 +7083,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_KEYWORDS_UNASSERTALL */
 
-/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_kwds_resetflags()`
+/* Provide a function `tpp_keywords_resetflags()` + `tpp_lexer_resetallkwdflags()`
  * that can be used to delete the flags of all keywords. */
 #ifndef TPP_HAVE_KEYWORDS_RESETFLAGS
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FLAGS)
@@ -7093,7 +7093,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_KEYWORDS_RESETFLAGS */
 
-/* Provide a function `tpp_keywords_resetfeatures()` + `tpp_lexer_kwds_resetfeatures()`
+/* Provide a function `tpp_keywords_resetfeatures()` + `tpp_lexer_resetallkwdfeatures()`
  * that can be used to delete (restore defaults) of any custom keyword feature override. */
 #ifndef TPP_HAVE_KEYWORDS_RESETFEATURES
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_KEYWORD_FEATURES)
@@ -7104,7 +7104,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_KEYWORDS_RESETFEATURES */
 
 /* Provide a function `tpp_keywords_resetcounters()` +
- * `tpp_lexer_kwds_resetcounters()` that can be used to
+ * `tpp_lexer_resetallkwdcounters()` that can be used to
  * reset the state of all `__TPP_COUNTER()` macro expansions. */
 #ifndef TPP_HAVE_KEYWORDS_RESETCOUNTERS
 #if (TPP_HAVE_PROFILE_ALL && TPP_HAVE_MACRO___TPP_COUNTER)

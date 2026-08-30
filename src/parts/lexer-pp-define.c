@@ -1716,15 +1716,15 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		tpp_size token_len = tpp_lexer_gettokenlen(self);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 		tpp_hash hash = tpp_hashof_esc(token_start, token_len, self);
-		ro_macro_keyword = tpp_lexer_kwds_newkeyword_esc(self, token_start, token_len, hash);
+		ro_macro_keyword = tpp_lexer_newkeyword_esc(self, token_start, token_len, hash);
 #else /* TPP_HAVE_ESCAPED_KEYWORDS */
 		tpp_hash hash = tpp_hashof(token_start, token_len);
-		ro_macro_keyword = tpp_lexer_kwds_newkeyword(self, token_start, token_len, hash);
+		ro_macro_keyword = tpp_lexer_newkeyword(self, token_start, token_len, hash);
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 		if tpp_unlikely(!ro_macro_keyword)
 			goto err_nomem;
 	}
-	macro_keyword = tpp_lexer_kwds_copybuiltin(self, ro_macro_keyword);
+	macro_keyword = tpp_lexer_copybuiltinkwd(self, ro_macro_keyword);
 	if tpp_unlikely(!macro_keyword)
 		goto err_nomem;
 
@@ -1820,7 +1820,7 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 tpp_size macro_name_maxlen) {
 	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
 	tpp_hash hash = tpp_hashof((tpp_char const *)macro_name, macro_name_len);
-	tpp_keyword *macro_keyword = _tpp_lexer_kwds_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
+	tpp_keyword *macro_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
 	if (macro_keyword) {
 		tpp_keyword_undef(macro_keyword);
 		return true;

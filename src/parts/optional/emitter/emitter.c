@@ -1592,7 +1592,7 @@ tpp_emitter_dump_define(tpp_emitter *tpp_restrict self,
 				if ((i == argc - 1) && arg == TPP_KWD___VA_ARGS__)
 					break;
 #endif /* TPP_HAVE_VA_ARGS_IN_MACROS */
-				kwd = tpp_lexer_kwds_getkeyword_byid(tpp_emitter_getlexer(self), arg);
+				kwd = tpp_lexer_getkeyword_byid(tpp_emitter_getlexer(self), arg);
 				if (kwd) {
 					temp = tpp_emitter_print_keyword(self,
 					                                 tpp_keyword_getstr(kwd),

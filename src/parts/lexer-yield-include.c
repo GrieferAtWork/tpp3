@@ -515,7 +515,7 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 	{
 		/* Search `$CPATH` */
 		char const *envpath;
-		error = tpp_lexer_envincludes_getpaths(self, &envpath);
+		error = tpp_lexer_getenvincludepaths(self, &envpath);
 		if (TPP_ISERR(error))
 			return error;
 		while (*envpath) {
