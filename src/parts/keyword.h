@@ -680,6 +680,8 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
 
 
 #if TPP_HAVE_INCLUDE_REMAP
+struct tpp_lexer;
+
 /* Find the replacement for `filename` within a `header.gcc`-style
  * file whose filename is `tpp_keyword_getcstr(self)` (yes: `self`
  * is the *actual* `header.gcc` filename -- not a string describing
@@ -696,11 +698,12 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
  *                      an entry for `filename...+=filename_maxlen`
  * @return: TPP_ENOMEM: Out of memory
  * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4, 5)) tpp_errno TPPCALL
 tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
                                /*utf-8*/ char const *filename,
                                tpp_size filename_maxlen,
-                               char const **p_replacement);
+                               char const **tpp_restrict p_replacement,
+                               struct tpp_lexer *tpp_restrict lexer);
 #endif /* !TPP_HAVE_INCLUDE_REMAP */
 
 

@@ -8826,7 +8826,7 @@ TPP_DECL_END
  * directories checked (in this order) until there are no more unchecked
  * files, or the queried file was found:
  *
- * ```deemon
+ * ```c
  * // Check the folder described by `relative_to`, or the current working
  * // directory, as also used by `tpp_lexer_openfile()` when opening a
  * // file without an explicit `relative_to` path.
@@ -8848,7 +8848,7 @@ TPP_DECL_END
  * 2. Search for entry `"bar/foobar.h"` in `f"{headof(relative_to)}/foo/header.gcc"`
  * 3. Search for entry `"foobar.h"` in `f"{headof(relative_to)}/foo/bar/header.gcc"`
  * 4. If none of those files contains a matching entry, no remapping happens
- *    and f"{headof(relative_to)}/foo/bar/foobar.h" is opened as usual.
+ *    and `f"{headof(relative_to)}/foo/bar/foobar.h"` is opened as usual.
  *
  * The filename `header.gcc` can be (re-)configured by `TPP_CONFIG_INCLUDE_REMAP_FILENAME`
  *
@@ -8860,11 +8860,12 @@ TPP_DECL_END
  *     such by GCC, those few examples of `header.gcc` files I could
  *     find in the wild often contain `#`-comments, which GCC would
  *     then (usually) treat as the filename `#` being mapped to the
- *     whatever
+ *     comment's text.
  * - All other lines are truncated to everything preceding their first
  *   `#`-character, and then split at their first whitespace character:
  *   - The first part is *from-filename* (this is the key of the entry)
  *   - The second part is *to-filename* (this is the value of the entry)
+ *
  *   NOTE: in GCC, the *to-filename* also ends on the first whitespace,
  *         with GCC then silently ignoring the remainder of the line
  *         thereafter. Instead of that, TPP simply allows whitespace in
@@ -9250,7 +9251,8 @@ TPP_DECL_END
  * - [emoji-sequences.txt](https://ftp.unicode.org/Public/UCD/latest/emoji/emoji-sequences.txt)
  *   - `\N{FLAG: GERMANY}`: emoji sequence
  *   - Like with `emoji-zwj-sequences.txt`, `TPP_HAVE_UNICODE_BYNAME_LOOKUP_ICASE`
- *     needs to be enabled for TPP to under casings other than all-uppercase here
+ *     needs to be enabled for TPP to understand casings other than all-uppercase
+ *     here
  *
  * A few notes on the internal implementation:
  * - All space characters, as well as `_` are treated identically,
@@ -11756,8 +11758,8 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
-/* Config option to specify if `#include "foo"` should be searched
- * for relative to the file containing the `#include`-directive.
+/* Config option to specify if the file `foo.h` in `#include "foo.h"` should
+ * be searched for relative to the file containing the `#include`-directive.
  *
  * Needed to implement GCC's `--include-barrier` (aka. `-I-`) CLI option. */
 #ifndef TPP_HAVE_INCLUDE_RELATIVE_TO_CURRENT_FILE
@@ -22836,6 +22838,8 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
 
 
 #if TPP_HAVE_INCLUDE_REMAP
+struct tpp_lexer;
+
 /* Find the replacement for `filename` within a `header.gcc`-style
  * file whose filename is `tpp_keyword_getcstr(self)` (yes: `self`
  * is the *actual* `header.gcc` filename -- not a string describing
@@ -22852,11 +22856,12 @@ tpp_keyword_set_file_guard(tpp_keyword *self, tpp_keyword const *guard);
  *                      an entry for `filename...+=filename_maxlen`
  * @return: TPP_ENOMEM: Out of memory
  * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 4, 5)) tpp_errno TPPCALL
 tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
                                /*utf-8*/ char const *filename,
                                tpp_size filename_maxlen,
-                               char const **p_replacement);
+                               char const **tpp_restrict p_replacement,
+                               struct tpp_lexer *tpp_restrict lexer);
 #endif /* !TPP_HAVE_INCLUDE_REMAP */
 
 

@@ -998,8 +998,12 @@ tpp_keyword_load_remap(tpp_keyword *tpp_restrict self,
 	tpp_file file;
 	tpp_io_handle handle;
 	error = tpp_io_open(tpp_keyword_getcstr(self), &handle);
-	if (TPP_ISERR(error))
+	if (TPP_ISERR(error)) {
+		/* Remember that file doesn't exist */
+		if (error == TPP_ENOENT)
+			*p_remap = (tpp_keyword_include_remap *)&_tpp_keyword_include_remap_empty;
 		return error;
+	}
 	tpp_file_init_io_ex(&file, tpp_keyword_getcstr(self),
 	                    handle, TPP_FILE_FLAGS_NORMAL);
 	error = tpp_keyword_include_remap_new(p_remap, &file);
@@ -1023,20 +1027,26 @@ tpp_keyword_load_remap(tpp_keyword *tpp_restrict self,
  *                      an entry for `filename...+=filename_maxlen`
  * @return: TPP_ENOMEM: Out of memory
  * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4, 5)) tpp_errno TPPCALL
 tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
                                /*utf-8*/ char const *filename,
                                tpp_size filename_maxlen,
-                               char const **p_replacement) {
+                               char const **tpp_restrict p_replacement,
+                               struct tpp_lexer *tpp_restrict lexer) {
 	tpp_keyword_include_remap_entry const *replacement;
 	tpp_keyword_include_remap *remap;
 	tpp_keyword_misc *misc = tpp_keyword_requiremisc(self);
 	if tpp_unlikely(!misc)
 		return TPP_ENOMEM;
+	(void)lexer;
 	remap = misc->tkm_include_remap;
 	if (remap == NULL) {
 		/* Lazily load on first access */
 		tpp_errno error = tpp_keyword_load_remap(self, &misc->tkm_include_remap);
+		if (TPP_ISERR(error))
+			return error;
+		/* Emit `self` as a dependency via `TPP_HAVE_NEW_DEPENDENCY_HOOK` */
+		error = tpp_lexer_callhook_new_dependency(lexer, self);
 		if (TPP_ISERR(error))
 			return error;
 		remap = misc->tkm_include_remap;
@@ -2626,7 +2636,7 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 		remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds, relative_to, NULL, 0);
 		if tpp_unlikely(!remap_kwd)
 			return TPP_ENOMEM;
-		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement);
+		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement, self);
 		if (error != TPP_ENOENT) {
 use_replacement:
 			if (TPP_ISERR(error))
@@ -2660,7 +2670,7 @@ use_replacement:
 					error = tpp_keyword_find_include_remap(remap_kwd,
 					                                       filename + sep_end,
 					                                       filename_len - sep_end,
-					                                       &replacement);
+					                                       &replacement, self);
 					if (error != TPP_ENOENT)
 						goto use_replacement;
 					i = sep_end;

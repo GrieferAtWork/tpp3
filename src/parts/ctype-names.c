@@ -1045,7 +1045,7 @@ tpp_unicode_byname_enumerate_repr_tokenid(tpp_unam_tokenid id,
 	for (;;) {
 		tpp_unam_tokenid iter_id;
 		tpp_char const *before_text = db_iter;
-		tpp_assert(db_iter < (tpp_unam_tokens + sizeof(tpp_unam_tokens)));
+		tpp_assert(db_iter < (tpp_unam_tokens + tpp_lengthof(tpp_unam_tokens)));
 		db_iter = tpp_unam_skiptext(db_iter);
 		if (db_iter[-1])
 			++db_iter; /* Skip extra NUL byte */
@@ -1123,13 +1123,12 @@ tpp_unicode_byname_enumerate_impl(tpp_unicode_byname_enumerate_data *tpp_restric
                                   tpp_unam_node const *tpp_restrict db_iter,
                                   tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
 	tpp_ssize temp, result = 0;
-	tpp_char feat;
 	tpp_size basesize = data->tubned_size;
 	do {
 		tpp_unam_node const *next_node = NULL;
 		bool has_ord;
 		char *write_dst;
-		feat = *db_iter++;
+		tpp_char feat = *db_iter++;
 		data->tubned_flags = feat;
 		if (feat & TPP_UNAM_NODE_FEAT_HAS_SIBLING) {
 			tpp_size node_size = tpp_decode_uleb128_size((tpp_char const **)&db_iter);
@@ -1285,7 +1284,7 @@ tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
 	{
 		tpp_char const *iter = start;
 		char *dst, *dst_end;
-		dst_end = (dst = data.tubnpnd_usr_name) + sizeof(data.tubnpnd_usr_name);
+		dst_end = (dst = data.tubnpnd_usr_name) + tpp_lengthof(data.tubnpnd_usr_name);
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 			while (iter < end) {

@@ -18948,7 +18948,7 @@ tpp_unicode_byname_enumerate_repr_tokenid(tpp_unam_tokenid id,
 	for (;;) {
 		tpp_unam_tokenid iter_id;
 		tpp_char const *before_text = db_iter;
-		tpp_assert(db_iter < (tpp_unam_tokens + sizeof(tpp_unam_tokens)));
+		tpp_assert(db_iter < (tpp_unam_tokens + tpp_lengthof(tpp_unam_tokens)));
 		db_iter = tpp_unam_skiptext(db_iter);
 		if (db_iter[-1])
 			++db_iter; /* Skip extra NUL byte */
@@ -19026,13 +19026,12 @@ tpp_unicode_byname_enumerate_impl(tpp_unicode_byname_enumerate_data *tpp_restric
                                   tpp_unam_node const *tpp_restrict db_iter,
                                   tpp_ssize (TPPCALL *cb)(tpp_unicode_byname_enumerate_data *data)) {
 	tpp_ssize temp, result = 0;
-	tpp_char feat;
 	tpp_size basesize = data->tubned_size;
 	do {
 		tpp_unam_node const *next_node = NULL;
 		bool has_ord;
 		char *write_dst;
-		feat = *db_iter++;
+		tpp_char feat = *db_iter++;
 		data->tubned_flags = feat;
 		if (feat & TPP_UNAM_NODE_FEAT_HAS_SIBLING) {
 			tpp_size node_size = tpp_decode_uleb128_size((tpp_char const **)&db_iter);
@@ -19188,7 +19187,7 @@ tpp_unicode_byname_printnearest(tpp_char const *start, tpp_char const *end,
 	{
 		tpp_char const *iter = start;
 		char *dst, *dst_end;
-		dst_end = (dst = data.tubnpnd_usr_name) + sizeof(data.tubnpnd_usr_name);
+		dst_end = (dst = data.tubnpnd_usr_name) + tpp_lengthof(data.tubnpnd_usr_name);
 #if TPP_HAVE_UNICODE
 		if (tpp_file_isutf8(tpp_lexer_getfile(lexer))) {
 			while (iter < end) {
@@ -28008,8 +28007,12 @@ tpp_keyword_load_remap(tpp_keyword *tpp_restrict self,
 	tpp_file file;
 	tpp_io_handle handle;
 	error = tpp_io_open(tpp_keyword_getcstr(self), &handle);
-	if (TPP_ISERR(error))
+	if (TPP_ISERR(error)) {
+		/* Remember that file doesn't exist */
+		if (error == TPP_ENOENT)
+			*p_remap = (tpp_keyword_include_remap *)&_tpp_keyword_include_remap_empty;
 		return error;
+	}
 	tpp_file_init_io_ex(&file, tpp_keyword_getcstr(self),
 	                    handle, TPP_FILE_FLAGS_NORMAL);
 	error = tpp_keyword_include_remap_new(p_remap, &file);
@@ -28033,20 +28036,26 @@ tpp_keyword_load_remap(tpp_keyword *tpp_restrict self,
  *                      an entry for `filename...+=filename_maxlen`
  * @return: TPP_ENOMEM: Out of memory
  * @return: TPP_EIO:    I/O error while parsing the `header.gcc`-file */
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4)) tpp_errno TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 4, 5)) tpp_errno TPPCALL
 tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
                                /*utf-8*/ char const *filename,
                                tpp_size filename_maxlen,
-                               char const **p_replacement) {
+                               char const **tpp_restrict p_replacement,
+                               struct tpp_lexer *tpp_restrict lexer) {
 	tpp_keyword_include_remap_entry const *replacement;
 	tpp_keyword_include_remap *remap;
 	tpp_keyword_misc *misc = tpp_keyword_requiremisc(self);
 	if tpp_unlikely(!misc)
 		return TPP_ENOMEM;
+	(void)lexer;
 	remap = misc->tkm_include_remap;
 	if (remap == NULL) {
 		/* Lazily load on first access */
 		tpp_errno error = tpp_keyword_load_remap(self, &misc->tkm_include_remap);
+		if (TPP_ISERR(error))
+			return error;
+		/* Emit `self` as a dependency via `TPP_HAVE_NEW_DEPENDENCY_HOOK` */
+		error = tpp_lexer_callhook_new_dependency(lexer, self);
 		if (TPP_ISERR(error))
 			return error;
 		remap = misc->tkm_include_remap;
@@ -29636,7 +29645,7 @@ tpp_lexer_openfile(/*1..1*/ tpp_lexer *tpp_restrict self,
 		remap_kwd = tpp_keywords_require_remap_file_kwd(&self->tl_kwds, relative_to, NULL, 0);
 		if tpp_unlikely(!remap_kwd)
 			return TPP_ENOMEM;
-		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement);
+		error = tpp_keyword_find_include_remap(remap_kwd, filename, filename_len, &replacement, self);
 		if (error != TPP_ENOENT) {
 use_replacement:
 			if (TPP_ISERR(error))
@@ -29670,7 +29679,7 @@ use_replacement:
 					error = tpp_keyword_find_include_remap(remap_kwd,
 					                                       filename + sep_end,
 					                                       filename_len - sep_end,
-					                                       &replacement);
+					                                       &replacement, self);
 					if (error != TPP_ENOENT)
 						goto use_replacement;
 					i = sep_end;
