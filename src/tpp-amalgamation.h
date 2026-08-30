@@ -9449,7 +9449,7 @@ TPP_DECL_END
 #define TPP_HOOK_WITHCOOKIE(x)    ((x) & ~4) /* Convert `TPP_HOOK_RT_*` into `TPP_HOOK_RT_*_C` */
 #define TPP_HOOK_WITHOUTCOOKIE(x) ((x) | 4)  /* Convert `TPP_HOOK_RT_*_C` into `TPP_HOOK_RT_*` */
 #define TPP_HOOK_USESBUILTIN(x)   (((x) & 3) == 2) /* Check if config "x" uses a *builtin* hook impl */
-#define TPP_HOOK_USESUSER(x)      ((((((((x) | 4) ^ 1) + 1) ^ -3) * -3) >> 4) & 1) /* Check if config "x" can make use of `TPP_HOOK_FOO` */
+#define TPP_HOOK_USESUSER(x)      (((((((x) | 4) ^ -3) * -3) >> 3) & 3) == 3) /* Check if config "x" can make use of `TPP_HOOK_FOO` */
 #define TPP_HOOK_ISMANY(x)        (TPP_HOOK_WITHOUTCOOKIE(x) == TPP_HOOK_RT_MANY) /* Check if config "x" allows many hooks */
 #define TPP_HOOK_ISCONST(x)       ((x) >= 0) /* Check if config "x" is hardcoded at compile-time */
 #define TPP_HOOK_ISRT(x)          ((x) < 0)  /* Check if config "x" can be overwritten at run-time */
