@@ -12525,7 +12525,6 @@ TPP_DECL_END
 #undef TPP_HAVE_KEYWORD_FLAGS
 #if (TPP_HAVE_PRAGMA_ONCE ||           \
      TPP_HAVE_CPP_IMPORT ||            \
-     TPP_HAVE_CPP_PREDEFINED_MACROS || \
      TPP_HAVE_MACRO___is_deprecated || \
      TPP_HAVE_MACRO___is_poisoned ||   \
      TPP_HAVE_PRAGMA_DEPRECATED ||     \
@@ -22167,14 +22166,11 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
 #if TPP_HAVE_KEYWORD_FLAGS
 #define tpp_keyword_flags tpp_uint_least16 /* Set of `TPP_KEYWORD_FLAG_*` */
 #define TPP_KEYWORD_FLAG_NORMAL           TPP_UINT_LEAST16_C(0x0000) /* Normal flags */
-#if TPP_HAVE_CPP_PREDEFINED_MACROS
-#define TPP_KEYWORD_FLAG_UNDEF_PREDEFINED TPP_UINT_LEAST16_C(0x0001) /* Do not expand  */
-#endif /* TPP_HAVE_CPP_PREDEFINED_MACROS */
 #if TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated
-#define TPP_KEYWORD_FLAG_IS_DEPRECATED    TPP_UINT_LEAST16_C(0x0002) /* Warn when the keyword appears as the result of lexical processing. */
+#define TPP_KEYWORD_FLAG_IS_DEPRECATED    TPP_UINT_LEAST16_C(0x0001) /* Warn when the keyword appears as the result of lexical processing. */
 #endif /* TPP_HAVE_PRAGMA_DEPRECATED || TPP_HAVE_MACRO___is_deprecated */
 #if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
-#define TPP_KEYWORD_FLAG_IS_POISONED      TPP_UINT_LEAST16_C(0x0004) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
+#define TPP_KEYWORD_FLAG_IS_POISONED      TPP_UINT_LEAST16_C(0x0002) /* Extension for `TPP_KEYWORD_FLAG_IS_DEPRECATED`:
                                                                       * Don't emit a warning if the keyword is used inside of a macro.
                                                                       * -> Only warn if it is used from a text file. */
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */

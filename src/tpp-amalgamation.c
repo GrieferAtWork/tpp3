@@ -43484,6 +43484,9 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 #define tpp_get_curarg_rel_rend()  curarg_rel_end
 #define tpp_set_curarg_nonspace(v) (void)0
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
+	(void)opt_function_name_for_messages;
+	(void)flags;
+
 	saved_lexer_state = self->tl_state;
 	self->tl_state |= TPP_LEXER_STATE_FLAG_ALLTOKENS;
 	tpp_seek_rparen_state_init(&state, lparen_kind);

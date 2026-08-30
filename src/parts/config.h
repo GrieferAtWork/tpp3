@@ -43,7 +43,7 @@
 #define TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER (sizeof(tpp_lexer) + 56)
 #define TPP_HAVE_LEXER_REQUIRE_WHITESPACE 1
 
-#define TPP_HAVE_CPP_DIRECTIVES 1
+//#define TPP_HAVE_CPP_DIRECTIVES 1
 #define TPP_HAVE_CPP_MACROS 1
 #else
 #define TPP_PROFILE TPP_PROFILE_ALL
@@ -6997,7 +6997,6 @@ print("#endif /" "* !... *" "/");
 #undef TPP_HAVE_KEYWORD_FLAGS
 #if (TPP_HAVE_PRAGMA_ONCE ||           \
      TPP_HAVE_CPP_IMPORT ||            \
-     TPP_HAVE_CPP_PREDEFINED_MACROS || \
      TPP_HAVE_MACRO___is_deprecated || \
      TPP_HAVE_MACRO___is_poisoned ||   \
      TPP_HAVE_PRAGMA_DEPRECATED ||     \
