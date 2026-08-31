@@ -7316,7 +7316,9 @@ print("#endif /" "* !... *" "/");
 /* TODO: Lexer functionality to automatically give custom names to files as they are
  *       `#include`-ded, by assigning them custom `tpp_file_setfilename()` immediately
  *       after being initialized. The way names are assigned here is by replacing
- *       directory prefixes, which should be configurable via `-fmacro-prefix-map`. */
+ *       directory prefixes, which should be configurable via `-fmacro-prefix-map`.
+ * XXX: That's not what `-fmacro-prefix-map` does -- s.a. GCC's `-fdebug-prefix-map`,
+ *      `-fprofile-prefix-map`, and `-ffile-prefix-map`. */
 
 /* TODO: Check what GCC's `-fcanonical-system-headers` actually does and see if it
  *       might make sense for TPP to also implement that one (but keep in mind that

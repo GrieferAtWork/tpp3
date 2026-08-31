@@ -164,7 +164,7 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
  * NOTES:
  *  - This function is used to parse the argument list for user-defined
  *    macros, as well as a couple of built-in macros.
- *  - This function preserves the effective `tf_tpos` (aka. tpp_token_getstart())
+ *  - This function preserves the effective `tpp_file_getlastpos()` (aka. tpp_token_getstart())
  *    of the final output file (and when using `tpp_lexer_manualpopfile_start()`:
  *    all intermediate popped files also)
  *

@@ -725,16 +725,22 @@ after_print_output_filename:
 			    (kwd = tpp_keyword_fromcstr(kwd_str), 1))
 #endif /* !TPP_HAVE_FILE_GETREALFILENAMEKWD */
 			{
-				tpp_keyword *wkwd = tpp_lexer_copybuiltinkwd(lexer, kwd);
-				if tpp_unlikely(!wkwd)
-					return TPP_ENOMEM;
+				tpp_keyword_flags kwd_flags = tpp_keyword_getflags(kwd);
+				if (!(kwd_flags & TPP_KEYWORD_FLAG_HAS_DEPENDENCY)) {
+					tpp_keyword *wkwd = tpp_lexer_copybuiltinkwd(lexer, kwd);
+					if tpp_unlikely(!wkwd)
+						return TPP_ENOMEM;
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-				error = _tpp_makefile_new_dependency_hook(self->tmkfcl_mf, wkwd);
+					error = _tpp_makefile_new_dependency_hook(self->tmkfcl_mf, wkwd);
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
-				error = _tpp_makefile_new_dependency_hook(lexer, wkwd);
+					error = _tpp_makefile_new_dependency_hook(lexer, wkwd);
 #endif /* !TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
-				if (TPP_ISERR(error))
-					return error;
+					if (TPP_ISERR(error))
+						return error;
+					error = tpp_keyword_setflags(wkwd, kwd_flags | TPP_KEYWORD_FLAG_HAS_DEPENDENCY);
+					if (TPP_ISERR(error))
+						return error;
+				}
 			}
 		} while ((file = tpp_file_getprev(file)) != NULL);
 	}

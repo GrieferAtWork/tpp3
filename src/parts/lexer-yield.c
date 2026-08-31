@@ -1078,17 +1078,17 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___has_include_impl(tpp_lexer *tpp_restrict self
 #if TPP_HAVE_LEXER_OPENFILE_EX
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle___has_include(tpp_lexer *tpp_restrict self,
-                                     tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
+                                          , tpp_lexer_openfile_flags mask_flags
 #define tpp_lexer_yield_handle___has_include(self, mask_flags) \
-	tpp_lexer_yield_handle_simple___has_include(self)
+	tpp_lexer_yield_handle___has_include_impl(self, mask_flags)
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
+#define tpp_lexer_yield_handle___has_include(self, mask_flags) \
+	tpp_lexer_yield_handle___has_include_impl(self)
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
+                                          ) {
 	tpp_errno ofr_error;
 	tpp_token_id tok;
 	char const *expansion_result;
@@ -2644,16 +2644,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
  * @return: * : The new expansion token after keywords were handled */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_keyword const *const keyword = tpp_token_getkwd(token);
-	(void)keyword;
+	tpp_keyword const *const keyword = tpp_lexer_gettokenkwd(self);
 	tpp_assert(TPP_TOK_ISKEYWORD(tok));
+	tpp_assert(tpp_lexer_hastokenkwd(self));
+	(void)keyword;
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
 	if (keyword->tk_misc) {
 		tpp_keyword_misc const *misc = keyword->tk_misc;
-		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
+		if tpp_unlikely(misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
 #if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
 			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
 			    (tpp_lexer_getfilekind(self) == TPP_FILE_KIND_MACRO)) {
@@ -2687,7 +2687,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 		{
 #if TPP_HAVE_CPP_BUILTIN_MACROS
-			if (macro == _TPP_KEYWORD_MACRO_UNDEFINED)
+			if tpp_likely(macro == _TPP_KEYWORD_MACRO_UNDEFINED)
 				return tok;
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 			/* Check if expansion of the macro is allowed. */
@@ -2708,7 +2708,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	/* Check if this keyword should be expanded as a macro.
 	 * This also does the is-enabled checks for builtin macros. */
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-	if (!tpp_lexer_getkeyworddefined(self, keyword))
+	if tpp_likely(!tpp_lexer_getkeyworddefined(self, keyword))
 		return tok;
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 

@@ -1662,19 +1662,19 @@ tpp_lexer_process_pragma_TPP_include_path_cb_impl(struct tpp_lexer_process_pragm
 	switch (data->tlpptipd_mode) {
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT:
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL:
-		result = tpp_lexer_includes_addbykind(data->tlpptipd_lexer,
-		                                      tpp_local_pragma_include_path_kind,
-		                                      str, TPP_SIZE_MAX);
+		result = tpp_lexer_addincludepath_by_kind(data->tlpptipd_lexer,
+		                                          tpp_local_pragma_include_path_kind,
+		                                          str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD:
-		result = tpp_lexer_includes_addbykind_head(data->tlpptipd_lexer,
-		                                           tpp_local_pragma_include_path_kind,
-		                                           str, TPP_SIZE_MAX);
+		result = tpp_lexer_addincludepath_by_kind_head(data->tlpptipd_lexer,
+		                                               tpp_local_pragma_include_path_kind,
+		                                               str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE:
-		result = tpp_lexer_includes_delbykind(data->tlpptipd_lexer,
-		                                      tpp_local_pragma_include_path_kind,
-		                                      str, TPP_SIZE_MAX);
+		result = tpp_lexer_delincludepath_by_kind(data->tlpptipd_lexer,
+		                                          tpp_local_pragma_include_path_kind,
+		                                          str, TPP_SIZE_MAX);
 		if (result == TPP_ENOENT) {
 			/* XXX: Warning? */
 			result = TPP_EOK;
@@ -1745,13 +1745,13 @@ again_yield:
 
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	case TPP_KWD_push:
-		tpp_lexer_pushincludes(self);
+		tpp_lexer_pushincludepaths(self);
 		tok = tpp_lexer_yield_blocking(self);
 		break;
 
 	case TPP_KWD_pop:
-		if (tpp_lexer_canpopincludes(self)) {
-			tpp_lexer_popincludes(self);
+		if (tpp_lexer_canpopincludepaths(self)) {
+			tpp_lexer_popincludepaths(self);
 		} else {
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 			error = tpp_lexer_warnf(self, TPP_W_CANNOT_POP_INCLUDE_PATHS);
@@ -1851,7 +1851,7 @@ skip_colon_and_andle_for_pathlist:
 		if (data.tlpptipd_mode == TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT &&
 			tpp_lexer_gettok(self) == TPP_KWD_clear) {
 	case TPP_KWD_clear:
-			error = tpp_lexer_includes_clearbykind(self, data.tlpptipd_kind);
+			error = tpp_lexer_clearincludepaths_by_kind(self, data.tlpptipd_kind);
 			if (TPP_ISERR(error))
 				return error;
 			tok = tpp_lexer_yield_blocking(self);

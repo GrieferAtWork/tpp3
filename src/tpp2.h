@@ -4894,17 +4894,17 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
 
 /* struct TPPIncludeList { */
 #define TPPIncludeList tpp_include_paths
-#define il_prev  TPP_INTERNAL(tip_prev)                                /* Use tpp_lexer_canpopincludes() */
-#define il_pathc TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_size) /* Use tpp_lexer_includes_numsystem() */
-#define il_pathv TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_list) /* Use tpp_lexer_includes_getsystem() */
+#define il_prev  TPP_INTERNAL(tip_prev)                                /* Use tpp_lexer_canpopincludepaths() */
+#define il_pathc TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_size) /* Use tpp_lexer_numsystemincludepaths() */
+#define il_pathv TPP_INTERNAL(tip_system_list).TPP_INTERNAL(tipl_list) /* Use tpp_lexer_getsystemincludepath() */
 /* }; */
 
 /* Push/Pop the current system `#include`-path list.
  * @return: 0: [TPPLexer_PushInclude] Not enough available memory. (TPP_CONFIG_SET_API_ERROR)
  * @return: 0: [TPPLexer_PopInclude] No older `#include`-path list was available to restore.
  * @return: 1: Successfully pushed/popped the system `#include`-path list. */
-#define TPPLexer_PushInclude_(self) (tpp_lexer_pushincludes(self), 1)
-#define TPPLexer_PopInclude_(self)  (tpp_lexer_canpopincludes(self) ? (tpp_lexer_popincludes(self), 1) : 0)
+#define TPPLexer_PushInclude_(self) (tpp_lexer_pushincludepaths(self), 1)
+#define TPPLexer_PopInclude_(self)  (tpp_lexer_canpopincludepaths(self) ? (tpp_lexer_popincludepaths(self), 1) : 0)
 #define TPPLexer_PushInclude()      TPPLexer_PushInclude_(TPP2_LEXER)
 #define TPPLexer_PopInclude()       TPPLexer_PopInclude_(TPP2_LEXER)
 
@@ -4921,8 +4921,8 @@ TPP_INLINE int TPPCALL TPPFile_NextChunk_impl(tpp_file *tpp_restrict self) {
  * @return: 2: [TPPLexer_AddIncludePath] The given path had already been added before.
  * @return: 0: [TPPLexer_DelIncludePath] The given path was not found.
  * @return: 1: [TPPLexer_DelIncludePath] The given path was successfully removed. */
-#define TPPLexer_AddIncludePath_(self, path, pathsize) (tpp_lexer_includes_addsystem(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
-#define TPPLexer_DelIncludePath_(self, path, pathsize) (tpp_lexer_includes_delsystem(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
+#define TPPLexer_AddIncludePath_(self, path, pathsize) (tpp_lexer_addsystemincludepath(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
+#define TPPLexer_DelIncludePath_(self, path, pathsize) (tpp_lexer_delsystemincludepath(self, path, pathsize) == TPP_ENOMEM ? 0 : 1)
 #define TPPLexer_AddIncludePath(path, pathsize)        TPPLexer_AddIncludePath_(TPP2_LEXER, path, pathsize)
 #define TPPLexer_DelIncludePath(path, pathsize)        TPPLexer_DelIncludePath_(TPP2_LEXER, path, pathsize)
 

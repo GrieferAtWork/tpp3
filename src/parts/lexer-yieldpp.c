@@ -3163,9 +3163,9 @@ return_result:
 /* Wrapper around `tpp_lexer_yieldraw()` that filters certain tokens (based on
  * configured features), and implements handling for preprocessor directives,
  * like `#define`, `#include`, etc:
- * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TOK_LF` / `TPP_FEAT_TPP_TOK_LF`
- * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TOK_SPACE` / `TPP_FEAT_TPP_TOK_SPACE`
- * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TOK_COMMENT` / `TPP_FEAT_TPP_TOK_COMMENT`
+ * - `TPP_TOK_LF`:      Filtered based on `TPP_HAVE_TOK_LF` / `TPP_FEAT_TPP_TOK_LF`
+ * - `TPP_TOK_SPACE`:   Filtered based on `TPP_HAVE_TOK_SPACE` / `TPP_FEAT_TPP_TOK_SPACE`
+ * - `TPP_TOK_COMMENT`: Filtered based on `TPP_HAVE_TOK_COMMENT` / `TPP_FEAT_TPP_TOK_COMMENT`
  *
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory

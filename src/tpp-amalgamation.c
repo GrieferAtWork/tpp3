@@ -38554,7 +38554,7 @@ return_error:
  * and automatically extending the current file if EOF is reached.
  * On true EOF:
  * - *p_result = '\0'
- * - *p_pos = tpp_lexer_getfile(self)->tf_end
+ * - *p_pos = tpp_file_getend(tpp_lexer_getfile(self))
  * - return TPP_EOK;
  *
  * @return: TPP_EOK:    Character was read
@@ -38707,7 +38707,11 @@ not_a_trigraph:
 #if TPP_HAVE_LEXER_READUNICHAR
 /* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
- * character and return it. */
+ * character and return it.
+ *
+ * @return: TPP_EOK:    Character was read
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    Failed to read from underlying file */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_char const **tpp_restrict p_pos,
@@ -39837,8 +39841,9 @@ again:
 
 
 
-/* Do a raw yield and update `self->tl_tok` in the process, then return `tl_tok.tt_id`.
- * - On EOF, automatically pop `tl_file->tf_prev` and continue reading from there
+/* Do a raw yield and update `tpp_lexer_gettokend(self)`
+ * in the process, then return `tpp_lexer_gettok(self)`.
+ * - On EOF, automatically pop files off the `#include`-stack and continue reading from there
  * - On error, return one of `TPP_TOK_E*` (e.g. `TPP_TOK_EIO`).
  *   Such error codes will NOT be stored in `tl_tok.tt_id`!
  *
@@ -40100,8 +40105,9 @@ return_error:
 
 
 /* Same as `tpp_lexer_yieldraw()`, but populate the token from a custom `*p_pos`,
- * and don't pop files from the current `#include`-stack (unless `p_pos` is the top-
- * most file's `tf_pos`)
+ * and don't pop files from the current `#include`-stack (unless `p_pos` is a
+ * pointer to the top-most file's `tpp_file_getpos()`, which is something that
+ * cannot be expressed without using `TPP_INTERNAL()`, which you should do)
  *
  * NOTES:
  *  - This function will *NOT* update `tpp_lexer_gettokenend(self)`, however
@@ -40112,10 +40118,10 @@ return_error:
  *    the current file when `*p_pos` would go beyond its end. (in this case,
  *    `*p_pos` is updated such that it always remains valid)
  *  - Unlike `tpp_lexer_yieldraw()`, this function will *not* modify the
- *    currently loaded file's `tf_pos` (unless `p_pos == &file->tf_pos`),
+ *    loaded file's `tpp_file_getpos()` (unless `p_pos == &file->tf_pos`),
  *    meaning that if EOF is reached, the file's chunk will only ever be
- *    expanded, but no old data (that would appear before `tf_pos`) will
- *    be deallocated
+ *    expanded, but no old data (that would appear before `tpp_file_getpos()`)
+ *    will be deallocated.
  *  - This function will also not automatically move on to the next file
  *    in line when the current one has been fully exhausted (unless the
  *    given `p_pos == &file->tf_pos`), meaning that `TPP_TOK_EOF` will be
@@ -43487,7 +43493,7 @@ tpp_seek_rparen_state_rstr_curfile(tpp_seek_rparen_state *tpp_restrict self,
  * NOTES:
  *  - This function is used to parse the argument list for user-defined
  *    macros, as well as a couple of built-in macros.
- *  - This function preserves the effective `tf_tpos` (aka. tpp_token_getstart())
+ *  - This function preserves the effective `tpp_file_getlastpos()` (aka. tpp_token_getstart())
  *    of the final output file (and when using `tpp_lexer_manualpopfile_start()`:
  *    all intermediate popped files also)
  *
@@ -47592,19 +47598,19 @@ tpp_lexer_process_pragma_TPP_include_path_cb_impl(struct tpp_lexer_process_pragm
 	switch (data->tlpptipd_mode) {
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT:
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_TAIL:
-		result = tpp_lexer_includes_addbykind(data->tlpptipd_lexer,
-		                                      tpp_local_pragma_include_path_kind,
-		                                      str, TPP_SIZE_MAX);
+		result = tpp_lexer_addincludepath_by_kind(data->tlpptipd_lexer,
+		                                          tpp_local_pragma_include_path_kind,
+		                                          str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_ADD_HEAD:
-		result = tpp_lexer_includes_addbykind_head(data->tlpptipd_lexer,
-		                                           tpp_local_pragma_include_path_kind,
-		                                           str, TPP_SIZE_MAX);
+		result = tpp_lexer_addincludepath_by_kind_head(data->tlpptipd_lexer,
+		                                               tpp_local_pragma_include_path_kind,
+		                                               str, TPP_SIZE_MAX);
 		break;
 	case TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_REMOVE:
-		result = tpp_lexer_includes_delbykind(data->tlpptipd_lexer,
-		                                      tpp_local_pragma_include_path_kind,
-		                                      str, TPP_SIZE_MAX);
+		result = tpp_lexer_delincludepath_by_kind(data->tlpptipd_lexer,
+		                                          tpp_local_pragma_include_path_kind,
+		                                          str, TPP_SIZE_MAX);
 		if (result == TPP_ENOENT) {
 			/* XXX: Warning? */
 			result = TPP_EOK;
@@ -47675,13 +47681,13 @@ again_yield:
 
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	case TPP_KWD_push:
-		tpp_lexer_pushincludes(self);
+		tpp_lexer_pushincludepaths(self);
 		tok = tpp_lexer_yield_blocking(self);
 		break;
 
 	case TPP_KWD_pop:
-		if (tpp_lexer_canpopincludes(self)) {
-			tpp_lexer_popincludes(self);
+		if (tpp_lexer_canpopincludepaths(self)) {
+			tpp_lexer_popincludepaths(self);
 		} else {
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 			error = tpp_lexer_warnf(self, TPP_W_CANNOT_POP_INCLUDE_PATHS);
@@ -47781,7 +47787,7 @@ skip_colon_and_andle_for_pathlist:
 		if (data.tlpptipd_mode == TPP_LEXER_PROCESS_PRAGMA_TPP_INCLUDE_PATH_MODE_DEFAULT &&
 			tpp_lexer_gettok(self) == TPP_KWD_clear) {
 	case TPP_KWD_clear:
-			error = tpp_lexer_includes_clearbykind(self, data.tlpptipd_kind);
+			error = tpp_lexer_clearincludepaths_by_kind(self, data.tlpptipd_kind);
 			if (TPP_ISERR(error))
 				return error;
 			tok = tpp_lexer_yield_blocking(self);
@@ -52179,9 +52185,9 @@ return_result:
 /* Wrapper around `tpp_lexer_yieldraw()` that filters certain tokens (based on
  * configured features), and implements handling for preprocessor directives,
  * like `#define`, `#include`, etc:
- * - TPP_TOK_LF:      Filtered based on `TPP_HAVE_TOK_LF` / `TPP_FEAT_TPP_TOK_LF`
- * - TPP_TOK_SPACE:   Filtered based on `TPP_HAVE_TOK_SPACE` / `TPP_FEAT_TPP_TOK_SPACE`
- * - TPP_TOK_COMMENT: Filtered based on `TPP_HAVE_TOK_COMMENT` / `TPP_FEAT_TPP_TOK_COMMENT`
+ * - `TPP_TOK_LF`:      Filtered based on `TPP_HAVE_TOK_LF` / `TPP_FEAT_TPP_TOK_LF`
+ * - `TPP_TOK_SPACE`:   Filtered based on `TPP_HAVE_TOK_SPACE` / `TPP_FEAT_TPP_TOK_SPACE`
+ * - `TPP_TOK_COMMENT`: Filtered based on `TPP_HAVE_TOK_COMMENT` / `TPP_FEAT_TPP_TOK_COMMENT`
  *
  * @return: * :                  The newly read token (after accounting for preprocessor directives)
  * @return: TPP_TOK_ENOMEM:      Out of memory
@@ -54304,17 +54310,17 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 
 #if TPP_HAVE_MACRO___has_include || TPP_HAVE_MACRO___has_include_next
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_yield_handle___has_include_impl(tpp_lexer *tpp_restrict self
 #if TPP_HAVE_LEXER_OPENFILE_EX
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle___has_include(tpp_lexer *tpp_restrict self,
-                                     tpp_lexer_openfile_flags mask_flags)
-#else /* TPP_HAVE_LEXER_OPENFILE_EX */
-static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
-tpp_lexer_yield_handle_simple___has_include(tpp_lexer *tpp_restrict self)
+                                          , tpp_lexer_openfile_flags mask_flags
 #define tpp_lexer_yield_handle___has_include(self, mask_flags) \
-	tpp_lexer_yield_handle_simple___has_include(self)
+	tpp_lexer_yield_handle___has_include_impl(self, mask_flags)
+#else /* TPP_HAVE_LEXER_OPENFILE_EX */
+#define tpp_lexer_yield_handle___has_include(self, mask_flags) \
+	tpp_lexer_yield_handle___has_include_impl(self)
 #endif /* !TPP_HAVE_LEXER_OPENFILE_EX */
-{
+                                          ) {
 	tpp_errno ofr_error;
 	tpp_token_id tok;
 	char const *expansion_result;
@@ -55862,16 +55868,16 @@ tpp_lexer_yield_handle_builtin_macro(tpp_lexer *tpp_restrict self, tpp_token_id 
  * @return: * : The new expansion token after keywords were handled */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_keyword const *const keyword = tpp_token_getkwd(token);
-	(void)keyword;
+	tpp_keyword const *const keyword = tpp_lexer_gettokenkwd(self);
 	tpp_assert(TPP_TOK_ISKEYWORD(tok));
+	tpp_assert(tpp_lexer_hastokenkwd(self));
+	(void)keyword;
 
 	/* Emit warnings for "deprecated" keywords. */
 #if TPP_HAVE_TPP_W_DEPRECATED_KEYWORD && TPP_HAVE_PRAGMA_DEPRECATED
 	if (keyword->tk_misc) {
 		tpp_keyword_misc const *misc = keyword->tk_misc;
-		if (misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
+		if tpp_unlikely(misc->tkm_flags & TPP_KEYWORD_FLAG_IS_DEPRECATED) {
 #if TPP_HAVE_PRAGMA_GCC_POISON && TPP_HAVE_CPP_MACROS
 			if ((misc->tkm_flags & TPP_KEYWORD_FLAG_IS_POISONED) &&
 			    (tpp_lexer_getfilekind(self) == TPP_FILE_KIND_MACRO)) {
@@ -55905,7 +55911,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 #endif /* !TPP_HAVE_CPP_BUILTIN_MACROS */
 		{
 #if TPP_HAVE_CPP_BUILTIN_MACROS
-			if (macro == _TPP_KEYWORD_MACRO_UNDEFINED)
+			if tpp_likely(macro == _TPP_KEYWORD_MACRO_UNDEFINED)
 				return tok;
 #endif /* TPP_HAVE_CPP_BUILTIN_MACROS */
 			/* Check if expansion of the macro is allowed. */
@@ -55926,7 +55932,7 @@ tpp_lexer_yield_handle_keyword(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	/* Check if this keyword should be expanded as a macro.
 	 * This also does the is-enabled checks for builtin macros. */
 #if TPP_HAVE_LEXER_GETKEYWORDDEFINED
-	if (!tpp_lexer_getkeyworddefined(self, keyword))
+	if tpp_likely(!tpp_lexer_getkeyworddefined(self, keyword))
 		return tok;
 #endif /* TPP_HAVE_LEXER_GETKEYWORDDEFINED */
 
@@ -62453,13 +62459,13 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
 			dst = (char *)tpp_mempcpy(whole, self->tcl_sysroot, sysroot_len);
 			dst = (char *)tpp_mempcpy(dst, path, path_len);
 			*dst = '\0';
-			result = tpp_lexer_includes_addbykind(self->tcl_lexer, kind, whole, whole_len);
+			result = tpp_lexer_addincludepath_by_kind(self->tcl_lexer, kind, whole, whole_len);
 			tpp_free(whole);
 			return result;
 		}
 	}
 #endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
-	return tpp_lexer_includes_addbykind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
+	return tpp_lexer_addincludepath_by_kind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
 }
 #endif /* TPP_HAVE_CLI_ADD_INCLUDE */
 

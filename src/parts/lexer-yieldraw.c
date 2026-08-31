@@ -630,7 +630,7 @@ return_error:
  * and automatically extending the current file if EOF is reached.
  * On true EOF:
  * - *p_result = '\0'
- * - *p_pos = tpp_lexer_getfile(self)->tf_end
+ * - *p_pos = tpp_file_getend(tpp_lexer_getfile(self))
  * - return TPP_EOK;
  *
  * @return: TPP_EOK:    Character was read
@@ -783,7 +783,11 @@ not_a_trigraph:
 #if TPP_HAVE_LEXER_READUNICHAR
 /* Same as `tpp_lexer_readchar()`, but (if the current file's encoding allows
  * it, and IN(*p_pos) points at a multi-byte character), decode a multi-byte
- * character and return it. */
+ * character and return it.
+ *
+ * @return: TPP_EOK:    Character was read
+ * @return: TPP_ENOMEM: Out of memory
+ * @return: TPP_EIO:    Failed to read from underlying file */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_char const **tpp_restrict p_pos,
@@ -1924,8 +1928,9 @@ again:
 
 
 
-/* Do a raw yield and update `self->tl_tok` in the process, then return `tl_tok.tt_id`.
- * - On EOF, automatically pop `tl_file->tf_prev` and continue reading from there
+/* Do a raw yield and update `tpp_lexer_gettokend(self)`
+ * in the process, then return `tpp_lexer_gettok(self)`.
+ * - On EOF, automatically pop files off the `#include`-stack and continue reading from there
  * - On error, return one of `TPP_TOK_E*` (e.g. `TPP_TOK_EIO`).
  *   Such error codes will NOT be stored in `tl_tok.tt_id`!
  *
@@ -2257,8 +2262,9 @@ return_error:
 
 
 /* Same as `tpp_lexer_yieldraw()`, but populate the token from a custom `*p_pos`,
- * and don't pop files from the current `#include`-stack (unless `p_pos` is the top-
- * most file's `tf_pos`)
+ * and don't pop files from the current `#include`-stack (unless `p_pos` is a
+ * pointer to the top-most file's `tpp_file_getpos()`, which is something that
+ * cannot be expressed without using `TPP_INTERNAL()`, which you should do)
  *
  * NOTES:
  *  - This function will *NOT* update `tpp_lexer_gettokenend(self)`, however
@@ -2269,10 +2275,10 @@ return_error:
  *    the current file when `*p_pos` would go beyond its end. (in this case,
  *    `*p_pos` is updated such that it always remains valid)
  *  - Unlike `tpp_lexer_yieldraw()`, this function will *not* modify the
- *    currently loaded file's `tf_pos` (unless `p_pos == &file->tf_pos`),
+ *    loaded file's `tpp_file_getpos()` (unless `p_pos == &file->tf_pos`),
  *    meaning that if EOF is reached, the file's chunk will only ever be
- *    expanded, but no old data (that would appear before `tf_pos`) will
- *    be deallocated
+ *    expanded, but no old data (that would appear before `tpp_file_getpos()`)
+ *    will be deallocated.
  *  - This function will also not automatically move on to the next file
  *    in line when the current one has been fully exhausted (unless the
  *    given `p_pos == &file->tf_pos`), meaning that `TPP_TOK_EOF` will be

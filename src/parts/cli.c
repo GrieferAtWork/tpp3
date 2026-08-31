@@ -648,13 +648,13 @@ tpp_cli_loader_parse_addinclude(tpp_cli_loader *tpp_restrict self,
 			dst = (char *)tpp_mempcpy(whole, self->tcl_sysroot, sysroot_len);
 			dst = (char *)tpp_mempcpy(dst, path, path_len);
 			*dst = '\0';
-			result = tpp_lexer_includes_addbykind(self->tcl_lexer, kind, whole, whole_len);
+			result = tpp_lexer_addincludepath_by_kind(self->tcl_lexer, kind, whole, whole_len);
 			tpp_free(whole);
 			return result;
 		}
 	}
 #endif /* TPP_HAVE_CLI_DASH_ISYSROOT */
-	return tpp_lexer_includes_addbykind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
+	return tpp_lexer_addincludepath_by_kind(self->tcl_lexer, kind, path, TPP_SIZE_MAX);
 }
 #endif /* TPP_HAVE_CLI_ADD_INCLUDE */
 
