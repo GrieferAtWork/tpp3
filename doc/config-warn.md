@@ -1,6 +1,6 @@
 # Warning configuration
 
-Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) by pre-defining one of the following macros during compilation:
+Builtin warnings can be hard-disabled, or force-enabled (even when not needed) by pre-defining one of the following macros during compilation:
 
 <!--BEGIN:warn-->
 - <a name="tpp_have_tpp_w_slashstar_inside_of_comment"></a>`TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT`

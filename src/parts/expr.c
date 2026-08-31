@@ -36,7 +36,7 @@ TPP_DECL_BEGIN
 
 
 #ifndef tpp_intvalue
-/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+/* Print the representation of `self` to `printer`
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_INTVALUE_PRINTREPR

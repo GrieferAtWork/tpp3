@@ -6681,16 +6681,16 @@ TPP_DECL_END
 #define TPP_COMMON_HAVE_FEATURES 1
 #endif /* !TPP_COMMON_HAVE_FEATURES */
 
-/* All TPP_HAVE_* options (with "-f*"-style comments) can be configured as:
- * - TPP_CONF_1     : Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available)
+/* All `TPP_HAVE_*` options (with `"-f*"`-style comments) can be configured as:
+ * - TPP_CONF_1     : Compile-time enabled  (always on; no `#pragma extension("-f...")` / `TPP_FEAT_*` available)
  * - TPP_CONF_0     : Compile-time disabled
- * - TPP_CONF_EXT1  : Runtime-configurable (via #pragma extension("-f...") / TPP_EXT_*, default = true)
- * - TPP_CONF_EXT0  : Runtime-configurable (via #pragma extension("-f...") / TPP_EXT_*, default = false)
- * - TPP_CONF_FEAT1 : Runtime-configurable (via TPP_FEAT_*, default = true)
- * - TPP_CONF_FEAT0 : Runtime-configurable (via TPP_FEAT_*, default = false)
+ * - TPP_CONF_EXT1  : Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `true`)
+ * - TPP_CONF_EXT0  : Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `false`)
+ * - TPP_CONF_FEAT1 : Runtime-configurable (via `TPP_FEAT_*`, default = `true`)
+ * - TPP_CONF_FEAT0 : Runtime-configurable (via `TPP_FEAT_*`, default = `false`)
  *
  * In the case of `TPP_CONF_EXT1` / `TPP_CONF_EXT0`, the extension's name will be the
- * "-f..." comment, but can be overwritten via #define TPP_EXTNAME_<name> "my-name":
+ * `"-f..."` comment, but can be overwritten via `#define TPP_EXTNAME_<name> "my-name"`:
  * ```c
  * #define TPP_HAVE_TRIGRAPHS    TPP_CONF_EXT1
  * #define TPP_EXTNAME_TRIGRAPHS "the-cool-trigraphs"
@@ -6701,16 +6701,16 @@ TPP_DECL_END
  * #pragma extension("-fthe-cool-trigraphs")
  * ```
  *
- * WARNING: Use of `TPP_CONF_EXT1` / `TPP_CONF_EXT0` requires "#define TPP_HAVE_EXTENSIONS 1"
+ * WARNING: Use of `TPP_CONF_EXT1` / `TPP_CONF_EXT0` requires `#define TPP_HAVE_EXTENSIONS 1`
  */
 
 /* Possible values for configs */
-#define TPP_CONF_1     1    /* Compile-time enabled  (always on; no #pragma extension("-f...") / TPP_FEAT_* available) */
+#define TPP_CONF_1     1    /* Compile-time enabled  (always on; no `#pragma extension("-f...")` / `TPP_FEAT_*` available) */
 #define TPP_CONF_0     0    /* Compile-time disabled */
-#define TPP_CONF_EXT1  (-1) /* Runtime-configurable (via #pragma extension("-f...") / TPP_EXT_*, default = true) */
-#define TPP_CONF_EXT0  (-2) /* Runtime-configurable (via #pragma extension("-f...") / TPP_EXT_*, default = false) */
-#define TPP_CONF_FEAT1 (-3) /* Runtime-configurable (via TPP_FEAT_*, default = true) */
-#define TPP_CONF_FEAT0 (-4) /* Runtime-configurable (via TPP_FEAT_*, default = false) */
+#define TPP_CONF_EXT1  (-1) /* Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `true`) */
+#define TPP_CONF_EXT0  (-2) /* Runtime-configurable (via `#pragma extension("-f...")` / `TPP_EXT_*`, default = `false`) */
+#define TPP_CONF_FEAT1 (-3) /* Runtime-configurable (via `TPP_FEAT_*`, default = `true`) */
+#define TPP_CONF_FEAT0 (-4) /* Runtime-configurable (via `TPP_FEAT_*`, default = `false`) */
 
 /* Commonly used TPP_CONF_* feature macros */
 #undef TPP_COMMON_CONF_EXT0
@@ -6731,7 +6731,7 @@ TPP_DECL_END
 #endif /* !TPP_COMMON_HAVE_FEATURES */
 
 
-#define TPP_CONF_MAYBE_1(cfg)      cfg                  /* Config may be enabled (guarantied to just be "cfg [!= 0]") */
+#define TPP_CONF_MAYBE_1(cfg)      cfg                  /* Config may be enabled (guarantied to just be `cfg [!= 0]`) */
 #define TPP_CONF_MAYBE_0(cfg)      ((cfg) <= 0)         /* Config may be disabled */
 #define TPP_CONF_ISFEAT(cfg)       ((cfg) <= -3)        /* Should config be runtime-configurable as a feature? */
 #define TPP_CONF_ISEXT(cfg)        (((cfg) & ~1) == -2) /* Should config be runtime-configurable as an extension? */
@@ -8651,36 +8651,62 @@ TPP_DECL_END
 #define TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL TPP_COMMON_HAVE_TPP_TOK_CXX_STRING /* "-ftok-cxx-utf32-char-literal" */
 #endif /* !TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL */
 
-/* Support for deemon/python-style raw string literals: `r"foo"`
+/* Support for deemon/python-style raw string literals:
+ * ```python
+ * r"bar"
+ * ```
+ *
  * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
 #ifndef TPP_HAVE_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TOK_RAW_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-string-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 
-/* Support for deemon/python-style raw string literals: `r'bar'`
+/* Support for deemon/python-style raw string literals:
+ * ```python
+ * r'bar'
+ * ```
+ *
  * @detect: #if __TPP_COUNT_TOKENS("R'foo'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
 #ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
 #define TPP_HAVE_TOK_RAW_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-char-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
 
-/* Support for java-style block string literals: `"""foo"""`
+/* Support for java/python-style block string literals:
+ * ```python
+ * """
+ * foo
+ * """
+ * ```
+ *
  * @detect: #if __TPP_COUNT_TOKENS('"""\n a\n b"""') == 1 */
 #ifndef TPP_HAVE_TOK_BLOCK_STRING_LITERAL
 #define TPP_HAVE_TOK_BLOCK_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-block-string-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_STRING_LITERAL */
 
-/* Support for java-style block string literals (but with single-ticks): `'''foo'''`
+/* Support for java/python-style block string literals (but with single-ticks):
+ * ```python
+ * '''
+ * foo
+ * '''
+ * ```
+ *
  * @detect: #if __TPP_COUNT_TOKENS("'''\n a\n b'''") == 1 */
 #ifndef TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 #define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-block-char-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
 
-/* Support for deemon/python-style format string literals: `f"foo: {foo}, bar: {42}"` */
+/* Support for deemon/python-style format string literals:
+ * ```python
+ * f"foo: {foo}, bar: {42}"
+ * ``` */
 #ifndef TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL
 #define TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-format-string-literal" */
 #endif /* !TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL */
 
-/* Support for deemon/python-style format string literals (with `'` instead of `"`): `f'foo: {foo}, bar: {42}'` */
+/* Support for deemon/python-style format string literals (with `'` instead of `"`):
+ * ```python
+ * f'foo: {foo}, bar: {42}'
+ * ``` */
 #ifndef TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
 #define TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-format-char-literal" */
 #endif /* !TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
@@ -9090,7 +9116,7 @@ TPP_DECL_END
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 /* Support for [D](https://en.wikipedia.org/wiki/D_(programming_language))-like
- * escape sequences in strings:
+ * XML escape sequences in strings (s.a. `TPP_HAVE_ESCAPE_NAMED_XML`):
  * ```c
  * char const *tpp1 = "Tiny\&nbsp;PreProcessor";
  * char const *tpp2 = "Tiny\u0080PreProcessor"; // Same as this
@@ -9170,7 +9196,7 @@ TPP_DECL_END
 
 /* Support for `\N{FOO, BAR}` as alias for `\N{FOO}\N{BAR}`.
  * This is an extension to `TPP_HAVE_STRING_ESCAPE_NAMED` and `TPP_HAVE_STRING_ESCAPE_NAMED`,
- * meaning it takes no effect if neither of those extensions is enabled. */
+ * meaning it has no effect if neither of those extensions is enabled. */
 #ifndef TPP_HAVE_STRING_ESCAPE_NAMED_MANY
 #define TPP_HAVE_STRING_ESCAPE_NAMED_MANY (TPP_HAVE_STRING_ESCAPE_NAMED ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_EXT1 : TPP_HAVE_PROFILE_DEFAULT) : 0) /* "-fstring-escape-named-many" */
 #endif /* !TPP_HAVE_STRING_ESCAPE_NAMED_MANY */
@@ -14994,7 +15020,7 @@ tpp_intvalue_builder_adddigit(tpp_intvalue_builder *tpp_restrict self,
 	                 : 0),                                                           \
 	 TPP_EOK)
 
-/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+/* Print the representation of `self` to `printer`
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_INTVALUE_PRINTREPR

@@ -36192,14 +36192,6 @@ _tpp_lexer_builtin_warnhandler(
 	}
 	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
 		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
-	/* TODO: Most places that we're printing `tpp_lexer_getfileandlineformat()` should be followed
-	 *       by an additional 2 lines showing like this (or something similar):
-	 * >> 42 |    foo(bar, foobar, barfoo);
-	 * >>    |                     ^~~~~~
-	 *
-	 * Whether or not that is done should be its own config
-	 * like -fwarn-source-location (or some other name)
-	 */
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
 		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
 		                                        tpp_lexer_getfileandlineformat(self));
@@ -36256,6 +36248,22 @@ _tpp_lexer_builtin_warnhandler(
 	print_status = tpp_lexer_vwarnf_mesg(self, info, printer, printer_arg, id, args);
 	if (print_status < 0)
 		goto err_printer;
+
+	if (info->tlpfi_file && info->tlpfi_pos &&
+	    info->tlpfi_pos == tpp_file_getlastpos(info->tlpfi_file)) {
+		/* TODO: Show information about relevant line in source file
+		 * >> 42 |    foo(bar, foobar, barfoo);
+		 * >>    |                     ^~~~~~
+		 *
+		 * The indicated (non-inclusive) range is:
+		 * - file:  `info->tlpfi_file`
+		 * - start: `tpp_file_getlastpos(info->tlpfi_file)`
+		 * - end:   `tpp_file_getpos(info->tlpfi_file)`
+		 *
+		 * Whether or not that is done should be its own config
+		 * like -fwarn-source-location (or some other name)
+		 */
+	}
 
 	/* Print projection origin */
 #if TPP_HAVE_CPP_MACROS
@@ -36519,7 +36527,7 @@ tpp_lexer_warn_nonempty_ifdef(tpp_lexer *tpp_restrict self) {
 
 
 #ifndef tpp_intvalue
-/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+/* Print the representation of `self` to `printer`
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_INTVALUE_PRINTREPR

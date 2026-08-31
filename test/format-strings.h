@@ -81,8 +81,11 @@ ASSERT_STRING(f"foo: {`H${""}` + VALUE + `${"xT"[1:]}`}, after")
 ASSERT_STRING(f'foo: {`H${""}` + VALUE + `${"xT"[1:]}`}, after')
 ASSERT_STRING(`foo: ${`H${""}` + VALUE + `${"xT"[1:]}`}, after`)
 
-/* Format expressions are even allowed to contain linefeeds! */
+/* Format expressions are even allowed to contain linefeeds and directives! */
 ASSERT_STRING("foo: \(
+#if 0
+	IGNORE ME
+#endif
 	f"H{
 		""
 	}" +
