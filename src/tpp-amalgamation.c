@@ -44701,8 +44701,6 @@ err_result:
 		argc = argv_bufsize;
 	if (TPP_TOK_ISERR(result)) {
 		tpp_size i;
-		if (argc)
-			--argc; /* Last argument is initialized at the very end */
 		for (i = 0; i < argc; ++i) {
 			tpp_lexer_arginfo *arg = &p_argv[i];
 			if (!tpp_lexer_arginfo_isrelative(arg))
@@ -44763,7 +44761,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 	                                    opt_function_name_for_messages, flags,
 	                                    lparen_kind);
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
-	result = tpp_lexer_seekpp_rparen(self, p_pos, p_argv, &argc_actual, &rollback_pos,
+	result = tpp_lexer_seekpp_rparen(self, p_argv, &argc_actual, &rollback_pos,
 	                                 opt_function_name_for_messages, flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
@@ -44906,6 +44904,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
                           tpp_char const **tpp_restrict p_pos,
                           tpp_token_id lparen_token) {
+	(void)p_pos;
 	(void)lparen_token;
 	switch (tpp_lexer_gettoken(self)->tt_id) {
 	case ')':
@@ -46087,9 +46086,11 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
                        tpp_lexer *tpp_restrict lexer,
                        tpp_char const *body_start,
                        tpp_char const *body_end,
-                       tpp_lcinfo deflc, tpp_token_id lparen_token) {
+                       tpp_lcinfo deflc,
+                       tpp_token_id lparen_token) {
 	TPP_REF tpp_macro *result = self->mab_macro;
 	tpp_file *const file = tpp_lexer_getfile(lexer);
+	(void)lparen_token;
 	if tpp_unlikely(result == NULL) {
 		tpp_assert(self->mab_tmf_expandc == 0);
 		tpp_assert(self->mab_tmf_expanda == 0);
@@ -53047,11 +53048,11 @@ again:
 
 #if TPP_HAVE_CPP_MACROS
 
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_PAREN) == TPP_TOK_LPAREN);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_PAREN) == TPP_TOK_LPAREN);
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACKET) == TPP_TOK_LBRACKET);
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACE) == TPP_TOK_LBRACE);
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_ANGLE) == TPP_TOK_LANGLE);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_BRACKET) == TPP_TOK_LBRACKET);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_BRACE) == TPP_TOK_LBRACE);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_ANGLE) == TPP_TOK_LANGLE);
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 typedef struct tpp_string_buffer {
@@ -53436,7 +53437,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Skip the initial macro-argument-start '('-token */
-	lparen_kind = TPP_MACRO_KIND_ASTOK(macro->tm_kind);
+	lparen_kind = TPP_MACRO_KIND_ASTOK_LPAREN(macro->tm_kind);
 	tok = tpp_lexer_tryskip_raw(self, lparen_kind,
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
 	if (tok != lparen_kind) {
@@ -53469,7 +53470,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	                                 (char const *)macro_keyword->tk_kwd,
 	                                 tpp_lexer_seek_rparen_flags_frommacro(macro) |
 	                                 TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK,
-	                                 TPP_MACRO_KIND_ASTOK(macro->tm_kind));
+	                                 TPP_MACRO_KIND_ASTOK_LPAREN(macro->tm_kind));
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	tok = tpp_lexer_seekpp_rparen(self, invoke_arginfo, &argc, &rollback_pos,
 	                              (char const *)macro_keyword->tk_kwd,

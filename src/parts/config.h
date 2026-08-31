@@ -6141,12 +6141,18 @@ print("#endif /" "* !... *" "/");
 /* IMPLICIT API FEATURES (PART 2)                                       */
 /************************************************************************/
 
-/* Extension to `TPP_HAVE_STRING_FORMAT`: when no format-expression handler is specified
- * in `tpp_lexer_decodestring_config`, and one ends up being needed, rather than raising
- * a `TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE` warning (see `TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE`),
- * the expression will be evaluated as though `__TPP_EVAL` was used. */
+/* Extension to `TPP_HAVE_STRING_FORMAT`: when enabled and no format-
+ * expression handler is specified in `tpp_lexer_decodestring_config`,
+ * and one ends up being needed (for one reason or another), use
+ * `tpp_lexer_callhook_parseexpr()` (s.a. `TPP_HAVE_PARSEEXPR_HOOK`)
+ * to parse an expression, and `tpp_expr_value_printstr()` (s.a.
+ * `TPP_HAVE_EXPR_VALUE_PRINTSTR`) to turn that expression into a string.
+ *
+ * When this feature is disabled, a `TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE`
+ * warning (see `TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE`), will be
+ * raised instead. */
 #ifndef TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR
-#define TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR (TPP_HAVE_STRING_FORMAT && TPP_HAVE_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fstring-escape-format-builtin" */
+#define TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR ((TPP_HAVE_STRING_FORMAT && TPP_HAVE_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL) ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fstring-escape-format-builtin" */
 #endif /* !TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR */
 
 /* Provide an API function `tpp_unicode_writeutf8()` */
@@ -6872,7 +6878,7 @@ print("#endif /" "* !... *" "/");
  * #define foo 11  // But *do* warn here!
  * ``` */
 #ifndef TPP_HAVE_MACRO_EQUALS
-#if (TPP_HAVE_TPP_W_REDEFINE_MACRO)
+#if (TPP_HAVE_PROFILE_ALL || TPP_HAVE_TPP_W_REDEFINE_MACRO)
 #define TPP_HAVE_MACRO_EQUALS 1
 #else /* ... */
 #define TPP_HAVE_MACRO_EQUALS 0

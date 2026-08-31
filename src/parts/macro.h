@@ -35,17 +35,19 @@ TPP_DECL_BEGIN
 
 #define tpp_macro_kind tpp_uint_least8
 #define TPP_MACRO_KIND_KEYWORD      TPP_UINT_LEAST8_C(0)
-#define TPP_MACRO_KIND_FUNC_PAREN   '('
 #define TPP_MACRO_KIND_ISFUNC(kind) ((kind) != TPP_MACRO_KIND_KEYWORD)
-#define TPP_MACRO_KIND_ASTOK(kind)  TPP_TOK_OFCHAR(kind)
-#define TPP_MACRO_KIND_OFTOK(tok)   ((tpp_macro_kind)(unsigned int)(tok))
+#define TPP_MACRO_KIND_FUNC_PAREN   '('
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
 #define TPP_MACRO_KIND_FUNC_BRACKET '['
 #define TPP_MACRO_KIND_FUNC_BRACE   '{'
 #define TPP_MACRO_KIND_FUNC_ANGLE   '<'
-#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) ((kind) == '(' ? ')' : ((kind) == '[' ? ']' : ((kind) == '{' ? '}' : '>')))
+#define TPP_MACRO_KIND_OFTOK(tok)         ((tpp_macro_kind)(unsigned int)(tok))
+#define TPP_MACRO_KIND_ASTOK_LPAREN(kind) TPP_TOK_OFCHAR(kind)
+#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) ((kind) == '(' ? TPP_TOK_RPAREN : ((kind) == '[' ? TPP_TOK_RBRACKET : ((kind) == '{' ? '}' : TPP_TOK_RANGLE)))
 #else /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
-#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) ')'
+#define TPP_MACRO_KIND_OFTOK(tok)         '('
+#define TPP_MACRO_KIND_ASTOK_LPAREN(kind) TPP_TOK_LPAREN
+#define TPP_MACRO_KIND_ASTOK_RPAREN(kind) TPP_TOK_RPAREN
 #endif /* !TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 #undef TPP_HAVE_MACRO_FLAGS
@@ -234,7 +236,7 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs);
 /* The following all require the caller to ensure that `tpp_macro_isfunction(self)` */
 #define tpp_macro_getfuncargc(self)      ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argc))
 #define tpp_macro_getfuncargtok(self, i) ((self)->TPP_INTERNAL(tm_data).TPP_INTERNAL(tmd_func).TPP_INTERNAL(tmf_argv)[i].TPP_INTERNAL(tma_id))
-#define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK((self)->TPP_INTERNAL(tm_kind))
+#define tpp_macro_getfunclparen(self)    TPP_MACRO_KIND_ASTOK_LPAREN((self)->TPP_INTERNAL(tm_kind))
 #define tpp_macro_getfuncrparen(self)    TPP_MACRO_KIND_ASTOK_RPAREN((self)->TPP_INTERNAL(tm_kind))
 #if TPP_HAVE_NAMED_VARARGS_IN_MACROS || TPP_HAVE_VA_ARGS_IN_MACROS
 #define tpp_macro_isvarargs(self) ((self)->TPP_INTERNAL(tm_flags) & TPP_MACRO_FLAG_VARIADIC)

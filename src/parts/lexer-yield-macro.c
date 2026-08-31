@@ -37,11 +37,11 @@ TPP_DECL_BEGIN
 
 #if TPP_HAVE_CPP_MACROS
 
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_PAREN) == TPP_TOK_LPAREN);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_PAREN) == TPP_TOK_LPAREN);
 #if TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACKET) == TPP_TOK_LBRACKET);
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_BRACE) == TPP_TOK_LBRACE);
-TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK(TPP_MACRO_KIND_FUNC_ANGLE) == TPP_TOK_LANGLE);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_BRACKET) == TPP_TOK_LBRACKET);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_BRACE) == TPP_TOK_LBRACE);
+TPP_STATIC_ASSERT(TPP_MACRO_KIND_ASTOK_LPAREN(TPP_MACRO_KIND_FUNC_ANGLE) == TPP_TOK_LANGLE);
 #endif /* TPP_HAVE_ALTERNATIVE_MACRO_PARENTHESIS */
 
 typedef struct tpp_string_buffer {
@@ -426,7 +426,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	tpp_assert(TPP_MACRO_KIND_ISFUNC(macro->tm_kind));
 
 	/* Skip the initial macro-argument-start '('-token */
-	lparen_kind = TPP_MACRO_KIND_ASTOK(macro->tm_kind);
+	lparen_kind = TPP_MACRO_KIND_ASTOK_LPAREN(macro->tm_kind);
 	tok = tpp_lexer_tryskip_raw(self, lparen_kind,
 	                            TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV);
 	if (tok != lparen_kind) {
@@ -459,7 +459,7 @@ tpp_lexer_expand_macro_function(tpp_lexer *tpp_restrict self,
 	                                 (char const *)macro_keyword->tk_kwd,
 	                                 tpp_lexer_seek_rparen_flags_frommacro(macro) |
 	                                 TPP_LEXER_SEEK_RPAREN_FLAG_POPRLBK,
-	                                 TPP_MACRO_KIND_ASTOK(macro->tm_kind));
+	                                 TPP_MACRO_KIND_ASTOK_LPAREN(macro->tm_kind));
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	tok = tpp_lexer_seekpp_rparen(self, invoke_arginfo, &argc, &rollback_pos,
 	                              (char const *)macro_keyword->tk_kwd,

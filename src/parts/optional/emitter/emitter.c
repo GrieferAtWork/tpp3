@@ -1578,8 +1578,8 @@ tpp_emitter_dump_define(tpp_emitter *tpp_restrict self,
 		/* Print function-like argument list. */
 		if (tpp_macro_isfunction(macro)) {
 			tpp_size i, argc = tpp_macro_getfuncargc(macro);
-			tpp_char lparen = tpp_macro_getfunclparen(macro);
-			tpp_char rparen = tpp_macro_getfuncrparen(macro);
+			tpp_char lparen = (tpp_char)tpp_macro_getfunclparen(macro);
+			tpp_char rparen = (tpp_char)tpp_macro_getfuncrparen(macro);
 			temp = tpp_emitter_print(self, &lparen, 1);
 			if (temp < 0)
 				goto err_temp;

@@ -143,6 +143,7 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) bool TPPCALL
 tpp_lexer_is_rparen_token(tpp_lexer *tpp_restrict self,
                           tpp_char const **tpp_restrict p_pos,
                           tpp_token_id lparen_token) {
+	(void)p_pos;
 	(void)lparen_token;
 	switch (tpp_lexer_gettoken(self)->tt_id) {
 	case ')':
@@ -1324,9 +1325,11 @@ tpp_macro_builder_pack(/*inherit(on_success)*/ tpp_macro_builder *tpp_restrict s
                        tpp_lexer *tpp_restrict lexer,
                        tpp_char const *body_start,
                        tpp_char const *body_end,
-                       tpp_lcinfo deflc, tpp_token_id lparen_token) {
+                       tpp_lcinfo deflc,
+                       tpp_token_id lparen_token) {
 	TPP_REF tpp_macro *result = self->mab_macro;
 	tpp_file *const file = tpp_lexer_getfile(lexer);
+	(void)lparen_token;
 	if tpp_unlikely(result == NULL) {
 		tpp_assert(self->mab_tmf_expandc == 0);
 		tpp_assert(self->mab_tmf_expanda == 0);

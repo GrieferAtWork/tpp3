@@ -810,8 +810,6 @@ err_result:
 		argc = argv_bufsize;
 	if (TPP_TOK_ISERR(result)) {
 		tpp_size i;
-		if (argc)
-			--argc; /* Last argument is initialized at the very end */
 		for (i = 0; i < argc; ++i) {
 			tpp_lexer_arginfo *arg = &p_argv[i];
 			if (!tpp_lexer_arginfo_isrelative(arg))
@@ -872,7 +870,7 @@ tpp_lexer_seekpp_rparen_exact(tpp_lexer *tpp_restrict self,
 	                                    opt_function_name_for_messages, flags,
 	                                    lparen_kind);
 #else /* TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
-	result = tpp_lexer_seekpp_rparen(self, p_pos, p_argv, &argc_actual, &rollback_pos,
+	result = tpp_lexer_seekpp_rparen(self, p_argv, &argc_actual, &rollback_pos,
 	                                 opt_function_name_for_messages, flags);
 #endif /* !TPP_HAVE_LEXER_SEEKPP_RPAREN_EX */
 	if (!TPP_TOK_ISERR(result) && argc_actual < argc) {
