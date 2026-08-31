@@ -7062,7 +7062,8 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_MACRO___is_deprecated || \
      TPP_HAVE_MACRO___is_poisoned ||   \
      TPP_HAVE_PRAGMA_DEPRECATED ||     \
-     TPP_HAVE_PRAGMA_GCC_POISON)
+     TPP_HAVE_PRAGMA_GCC_POISON ||     \
+     TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #define TPP_HAVE_KEYWORD_FLAGS 1
 #else /* ... */
 #define TPP_HAVE_KEYWORD_FLAGS 0

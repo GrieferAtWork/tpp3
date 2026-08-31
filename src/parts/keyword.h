@@ -92,6 +92,9 @@ tpp_macro_pushstack_append(tpp_macro_pushstack *tpp_restrict self);
                                                                    * Don't emit a warning if the keyword is used inside of a macro.
                                                                    * -> Only warn if it is used from a text file. */
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+#define TPP_KEYWORD_FLAG_HAS_DEPENDENCY   TPP_UINT_LEAST8_C(0x04) /* The keyword was emitted via `tpp_lexer_callhook_new_dependency()` */
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 #if TPP_HAVE_CPP_IMPORT
 #define TPP_KEYWORD_FLAG_HDR_IMPORTED     TPP_UINT_LEAST8_C(0x10) /* Set after this header was `#import`-ed */
 #endif /* TPP_HAVE_CPP_IMPORT */

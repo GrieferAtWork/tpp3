@@ -1046,9 +1046,14 @@ tpp_keyword_find_include_remap(tpp_keyword *tpp_restrict self,
 		if (TPP_ISERR(error))
 			return error;
 		/* Emit `self` as a dependency via `TPP_HAVE_NEW_DEPENDENCY_HOOK` */
-		error = tpp_lexer_callhook_new_dependency(lexer, self);
-		if (TPP_ISERR(error))
-			return error;
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+		if (!(misc->tkm_flags & TPP_KEYWORD_FLAG_HAS_DEPENDENCY)) {
+			error = tpp_lexer_callhook_new_dependency(lexer, self);
+			if (TPP_ISERR(error))
+				return error;
+			misc->tkm_flags |= TPP_KEYWORD_FLAG_HAS_DEPENDENCY;
+		}
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 		remap = misc->tkm_include_remap;
 		tpp_assert(remap != NULL);
 	}
@@ -2307,6 +2312,9 @@ TPP_STATIC_ASSERT((_TPP_LEXER_OPENFILE_EXTRA_FLAGS & TPP_KEYWORD_FLAG_IS_DEPRECA
 #if TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned
 TPP_STATIC_ASSERT((_TPP_LEXER_OPENFILE_EXTRA_FLAGS & TPP_KEYWORD_FLAG_IS_POISONED) == 0);
 #endif /* TPP_HAVE_PRAGMA_GCC_POISON || TPP_HAVE_MACRO___is_poisoned */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+TPP_STATIC_ASSERT((_TPP_LEXER_OPENFILE_EXTRA_FLAGS & TPP_KEYWORD_FLAG_HAS_DEPENDENCY) == 0);
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 #if TPP_HAVE_CPP_IMPORT
 TPP_STATIC_ASSERT((_TPP_LEXER_OPENFILE_EXTRA_FLAGS & TPP_KEYWORD_FLAG_HDR_IMPORTED) == 0);
 TPP_STATIC_ASSERT(TPP_LEXER_OPENFILE_FLAG_HDR_IMPORTED == TPP_KEYWORD_FLAG_HDR_IMPORTED);
@@ -2996,30 +3004,7 @@ got_result_kwd2:;
 			tpp_io_close(handle);
 			goto err_nomem;
 		}
-
-		/* Call a user-defined callback to keep track of dependencies (for -MF) */
-		/* FIXME: this doesn't work properly in code like this:
-		 * >> __TPP_IDENTIFER("my/file.h") // This creates a keyword of that name prematurely...
-		 * >> #include "my/file.h"         // ... because of which this sees `is_known_keyword=true`
-		 *
-		 * Solution: instead of checking if the keyword is known, there needs to be some sort
-		 *           of flag-bit within the keyword that is used to indicate that the file of
-		 *           the keyword was already emitted as a dependency. However, this flag also
-		 *           needs to be set in the MAKEFILE source extension as it emits entires for
-		 *           the preprocessor's *main* files.
-		 */
-#if TPP_HAVE_NEW_DEPENDENCY_HOOK
-		{
-			tpp_errno error = tpp_lexer_callhook_new_dependency(self, result_kwd);
-			if (TPP_ISERR(error)) {
-				tpp_io_close(handle);
-				return error;
-			}
-		}
-#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 	} else
-#elif TPP_HAVE_NEW_DEPENDENCY_HOOK && !TPP_IGNORE_INVALID_CONFIGURATION
-#error "'TPP_HAVE_NEW_DEPENDENCY_HOOK' is enabled, but without 'TPP_HAVE_USER_KEYWORDS' it's impossible to to call that hook"
 #endif /* ... */
 	{
 #if TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED
@@ -3081,6 +3066,30 @@ got_result_kwd2:;
 		}
 #endif /* TPP_HAVE_TPP_W_INCLUDE_RECURSION_LIMIT_EXCEEDED */
 	}
+
+	/* Call a user-defined callback to keep track of dependencies (for -MF) */
+#if TPP_HAVE_NEW_DEPENDENCY_HOOK
+#if TPP_HAVE_USER_KEYWORDS
+	{
+		tpp_keyword_misc *misc = tpp_keyword_requiremisc(result_kwd);
+		if tpp_unlikely(!misc) {
+			tpp_io_close(handle);
+			goto err_nomem;
+		}
+		if (!(misc->tkm_flags & TPP_KEYWORD_FLAG_HAS_DEPENDENCY)) {
+			tpp_errno error = tpp_lexer_callhook_new_dependency(self, result_kwd);
+			if (TPP_ISERR(error)) {
+				tpp_io_close(handle);
+				return error;
+			}
+			tpp_assume(result_kwd->tk_misc == misc);
+			misc->tkm_flags |= TPP_KEYWORD_FLAG_HAS_DEPENDENCY;
+		}
+	}
+#elif !TPP_IGNORE_INVALID_CONFIGURATION
+#error "'TPP_HAVE_NEW_DEPENDENCY_HOOK' is enabled, but without 'TPP_HAVE_USER_KEYWORDS' it's impossible to to call that hook"
+#endif /* ... */
+#endif /* TPP_HAVE_NEW_DEPENDENCY_HOOK */
 
 	/* Initialize "result" */
 #if TPP_HAVE_USER_KEYWORDS
