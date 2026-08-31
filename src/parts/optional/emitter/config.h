@@ -24,6 +24,11 @@
 
 /*[[[tpp-begin]]]*/
 
+/* Profile configuration for `TPP_EMITTER_*` defaults. */
+#ifndef TPP_EMITTER_PROFILE
+#define TPP_EMITTER_PROFILE TPP_PROFILE
+#endif /* !TPP_EMITTER_PROFILE */
+
 /* Provide support for `TPP_EMITTER_MODE_EMIT`, which emits tokens
  *
  * Configure as one of:
@@ -39,7 +44,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_MODE_DISPOSE
-#define TPP_EMITTER_HAVE_MODE_DISPOSE (TPP_HAVE_PROFILE_ALL)
+#define TPP_EMITTER_HAVE_MODE_DISPOSE (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_DISPOSE */
 
 /* Provide support for `TPP_EMITTER_MODE_BRACKET`, where
@@ -49,7 +54,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_MODE_BRACKET
-#define TPP_EMITTER_HAVE_MODE_BRACKET (TPP_HAVE_PROFILE_ALL)
+#define TPP_EMITTER_HAVE_MODE_BRACKET (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_BRACKET */
 
 /* Provide support for `TPP_EMITTER_MODE_TYPED`, where tokens are
@@ -60,7 +65,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_MODE_TYPED
-#define TPP_EMITTER_HAVE_MODE_TYPED (TPP_HAVE_STRTOKENID && TPP_HAVE_PROFILE_ALL)
+#define TPP_EMITTER_HAVE_MODE_TYPED (TPP_HAVE_STRTOKENID && (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL))
 #endif /* !TPP_EMITTER_HAVE_MODE_TYPED */
 
 /* Provide support for `TPP_EMITTER_MODE_ZERO`, where tokens are
@@ -74,7 +79,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_MODE_ZERO
-#define TPP_EMITTER_HAVE_MODE_ZERO (TPP_HAVE_PROFILE_ALL)
+#define TPP_EMITTER_HAVE_MODE_ZERO (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_EMITTER_HAVE_MODE_ZERO */
 
 #undef TPP_EMITTER_HAVE_EMIT_TOKEN
@@ -498,7 +503,7 @@
  * **Getter**: `tpp_emitter_getlinethreshold(emitter)`<br/>
  * **Setter**: `tpp_emitter_setlinethreshold(emitter, v)` */
 #ifndef TPP_EMITTER_CONFIG_LINE_THRESHOLD
-#define TPP_EMITTER_CONFIG_LINE_THRESHOLD (TPP_HAVE_PROFILE_NOT_MINIMAL ? -4 : 4)
+#define TPP_EMITTER_CONFIG_LINE_THRESHOLD ((TPP_EMITTER_PROFILE != TPP_PROFILE_MINIMAL) ? -4 : 4)
 #endif /* !TPP_EMITTER_CONFIG_LINE_THRESHOLD */
 
 /* Provide an API `tpp_io_printpwd()` that can be used to print the hosting
@@ -544,7 +549,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS
-#define TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_EMITTER_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_EMITTER_HAVE_CLI_HELP && (TPP_EMITTER_PROFILE != TPP_PROFILE_MINIMAL))
 #endif /* !TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS */
 
 /* `-P`, `--no-line-commands`:

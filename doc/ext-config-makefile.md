@@ -1,6 +1,6 @@
 # Makefile
 
-The **MAKEFILE** is a [*Source extension*](./config.md#source_extensions) for TPP that allows you to generate `Makefile`-compatible dependency descriptions for the input that is being preprocessed (listing dependencies triggered as a result of `#include` (or similar) directives).
+The **MAKEFILE** is a [*Source extension*](./config.md#source-extensions) for TPP that allows you to generate `Makefile`-compatible dependency descriptions for the input that is being preprocessed (listing dependencies triggered as a result of `#include` (or similar) directives).
 
 Input:
 
@@ -32,6 +32,19 @@ input.c:
 The following configuration options are available and can be used to customize the behavior of makefile generation.
 
 <!--BEGIN:all-->
+## TPP_MAKEFILE_PROFILE
+
+Profile configuration for `TPP_MAKEFILE_*` defaults.
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_PROFILE
+```
+</details>
+
 ## TPP_MAKEFILE_HAVE_USER_DEPENDENCIES
 
 When enabled, only include dependencies if
@@ -65,14 +78,16 @@ Used to implement `-MG` (aka. `--print-missing-file-dependencies`).
 
 When enabled, the following APIs become available:
 
-- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L905)
-- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L907)
-- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L906)
-- [`tpp_makefile_set_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L924)
+- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L912)
+- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L914)
+- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L913)
+- [`tpp_makefile_set_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L931)
 
-Note that even when this is enabled, printing of missing file
-dependencies is disabled by default (enable it by making a
-call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L905)).
+Note that this config only controls if the APIs for enabling printing of
+missing file dependencies is available. There is no config to have this
+enabled by default. If you always want it enabled, you still have to make
+a call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L912)) right after
+initializing your [`tpp_makefile`](../src/tpp-makefile-amalgamation.h#L630).
 
 Configure as one of:
 
@@ -137,7 +152,7 @@ Default:
 
 ## TPP_MAKEFILE_HAVE_IO_HANDLE
 
-Provide an API surrounding [`tpp_makefile_io_handle`](../src/tpp-makefile-amalgamation.h#L468) that can be used to
+Provide an API surrounding [`tpp_makefile_io_handle`](../src/tpp-makefile-amalgamation.h#L475) that can be used to
 open/create files for writing, and then write to those files. This in
 turn is necessary to implement stuff like the `-MF` CLI switch.
 
@@ -151,15 +166,15 @@ Configure as one of:
 Default:
 
 ```c
-TPP_PROFILE == TPP_PROFILE_ALL
+TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL
 ```
 </details>
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 
-Provide an API [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L758) that can be used to override
+Provide an API [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L765) that can be used to override
 the makefile's output printer with one that prints data into a linked I/O
-handle of type [`tpp_makefile_io_handle`](../src/tpp-makefile-amalgamation.h#L468).
+handle of type [`tpp_makefile_io_handle`](../src/tpp-makefile-amalgamation.h#L475).
 
 Configure as one of:
 
@@ -171,13 +186,13 @@ Configure as one of:
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_IO_HANDLE
+(TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_IO_HANDLE
 ```
 </details>
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
 
-Provide an API [`tpp_makefile_setoutput_io_ex()`](../src/tpp-makefile-amalgamation.h#L790) that can also be used to
+Provide an API [`tpp_makefile_setoutput_io_ex()`](../src/tpp-makefile-amalgamation.h#L797) that can also be used to
 set a flag specifying that the specified I/O handle should *not* be closed
 when the makefile is finalized (or a different output is assigned)
 
@@ -191,14 +206,14 @@ Configure as one of:
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
+(TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 ```
 </details>
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE
 
-Provide an API [`tpp_makefile_setoutput_file()`](../src/tpp-makefile-amalgamation.h#L822) that is a concenience
-wrapper around [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L758) by automatically opening
+Provide an API [`tpp_makefile_setoutput_file()`](../src/tpp-makefile-amalgamation.h#L829) that is a convenience
+wrapper around [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L765) by automatically opening
 the file in question and assigning its output.
 
 Configure as one of:
@@ -211,13 +226,13 @@ Configure as one of:
 Default:
 
 ```c
-(TPP_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
+(TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 ```
 </details>
 
 ## TPP_MAKEFILE_HAVE_CLI
 
-Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L988)
+Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L995)
 
 Configure as one of:
 
@@ -267,7 +282,7 @@ Configure as one of:
 Default:
 
 ```c
-TPP_MAKEFILE_HAVE_CLI_HELP && (TPP_PROFILE != TPP_PROFILE_MINIMAL)
+TPP_MAKEFILE_HAVE_CLI_HELP && (TPP_MAKEFILE_PROFILE != TPP_PROFILE_MINIMAL)
 ```
 </details>
 
@@ -408,7 +423,7 @@ TPP_MAKEFILE_HAVE_CLI
 
 `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
 output filename (unless specified by `-MF FILE`) based on the `output_filename`
-argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1210) or `__FILE__`:
+argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1217) or `__FILE__`:
 
 - If `output_filename` is given, then the makefile output is
   `output_filename.rpartition(".").first + ".d"` (unless that
@@ -555,12 +570,12 @@ Default:
 Controls whether [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m)
 and [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) will cause the
 lexer's entire input to be consumed during a call
-to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1210).
+to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1217).
 
 s.a.:
 
-- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1112)
-- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1114)
+- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1119)
+- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1121)
 
 Configure as one of:
 
@@ -621,5 +636,5 @@ Default:
 # Glossary
 
 <!--BEGIN:glossary-->
-[`TPP_MAKEFILE_HAVE_USER_DEPENDENCIES`](#tpp_makefile_have_user_dependencies) [`TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES`](#tpp_makefile_have_missing_file_dependencies) [`TPP_MAKEFILE_HAVE_PHONY`](#tpp_makefile_have_phony) [`TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH`](#tpp_makefile_config_max_line_length) [`TPP_MAKEFILE_HAVE_IO_HANDLE`](#tpp_makefile_have_io_handle) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO`](#tpp_makefile_have_output_file_io) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE`](#tpp_makefile_have_output_file_io_noclose) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE`](#tpp_makefile_have_output_file) [`TPP_MAKEFILE_HAVE_CLI`](#tpp_makefile_have_cli) [`TPP_MAKEFILE_HAVE_CLI_HELP`](#tpp_makefile_have_cli_help) [`TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS`](#tpp_makefile_have_cli_help_all_spellings) [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m) [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) [`TPP_MAKEFILE_HAVE_CLI_DASH_MF`](#tpp_makefile_have_cli_dash_mf) [`TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH`](#tpp_makefile_have_cli_dash_mf_dash) [`TPP_MAKEFILE_HAVE_CLI_DASH_MG`](#tpp_makefile_have_cli_dash_mg) [`TPP_MAKEFILE_HAVE_CLI_DASH_MT`](#tpp_makefile_have_cli_dash_mt) [`TPP_MAKEFILE_HAVE_CLI_DASH_MQ`](#tpp_makefile_have_cli_dash_mq) [`TPP_MAKEFILE_HAVE_CLI_DASH_MD`](#tpp_makefile_have_cli_dash_md) [`TPP_MAKEFILE_HAVE_CLI_DASH_MMD`](#tpp_makefile_have_cli_dash_mmd) [`TPP_MAKEFILE_HAVE_CLI_DASH_MP`](#tpp_makefile_have_cli_dash_mp) [`TPP_MAKEFILE_HAVE_CLI_ENV_MD`](#tpp_makefile_have_cli_env_md) [`TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE`](#tpp_makefile_have_cli_env_md_omits_main_file) [`TPP_MAKEFILE_CONFIG_CLI_ENV_MD`](#tpp_makefile_config_cli_env_md) [`TPP_MAKEFILE_HAVE_CLI_ENV_MMD`](#tpp_makefile_have_cli_env_mmd) [`TPP_MAKEFILE_CONFIG_CLI_ENV_MMD`](#tpp_makefile_config_cli_env_mmd) [`TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE`](#tpp_makefile_have_cli_onlymakefile) [`TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION`](#tpp_makefile_config_default_extension) [`TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY`](#tpp_makefile_default_target_path_prefix_is_empty) [`TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY`](#tpp_makefile_default_target_filename_prefix_is_empty)
+[`TPP_MAKEFILE_PROFILE`](#tpp_makefile_profile) [`TPP_MAKEFILE_HAVE_USER_DEPENDENCIES`](#tpp_makefile_have_user_dependencies) [`TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES`](#tpp_makefile_have_missing_file_dependencies) [`TPP_MAKEFILE_HAVE_PHONY`](#tpp_makefile_have_phony) [`TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH`](#tpp_makefile_config_max_line_length) [`TPP_MAKEFILE_HAVE_IO_HANDLE`](#tpp_makefile_have_io_handle) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO`](#tpp_makefile_have_output_file_io) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE`](#tpp_makefile_have_output_file_io_noclose) [`TPP_MAKEFILE_HAVE_OUTPUT_FILE`](#tpp_makefile_have_output_file) [`TPP_MAKEFILE_HAVE_CLI`](#tpp_makefile_have_cli) [`TPP_MAKEFILE_HAVE_CLI_HELP`](#tpp_makefile_have_cli_help) [`TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS`](#tpp_makefile_have_cli_help_all_spellings) [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m) [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) [`TPP_MAKEFILE_HAVE_CLI_DASH_MF`](#tpp_makefile_have_cli_dash_mf) [`TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH`](#tpp_makefile_have_cli_dash_mf_dash) [`TPP_MAKEFILE_HAVE_CLI_DASH_MG`](#tpp_makefile_have_cli_dash_mg) [`TPP_MAKEFILE_HAVE_CLI_DASH_MT`](#tpp_makefile_have_cli_dash_mt) [`TPP_MAKEFILE_HAVE_CLI_DASH_MQ`](#tpp_makefile_have_cli_dash_mq) [`TPP_MAKEFILE_HAVE_CLI_DASH_MD`](#tpp_makefile_have_cli_dash_md) [`TPP_MAKEFILE_HAVE_CLI_DASH_MMD`](#tpp_makefile_have_cli_dash_mmd) [`TPP_MAKEFILE_HAVE_CLI_DASH_MP`](#tpp_makefile_have_cli_dash_mp) [`TPP_MAKEFILE_HAVE_CLI_ENV_MD`](#tpp_makefile_have_cli_env_md) [`TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE`](#tpp_makefile_have_cli_env_md_omits_main_file) [`TPP_MAKEFILE_CONFIG_CLI_ENV_MD`](#tpp_makefile_config_cli_env_md) [`TPP_MAKEFILE_HAVE_CLI_ENV_MMD`](#tpp_makefile_have_cli_env_mmd) [`TPP_MAKEFILE_CONFIG_CLI_ENV_MMD`](#tpp_makefile_config_cli_env_mmd) [`TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE`](#tpp_makefile_have_cli_onlymakefile) [`TPP_MAKEFILE_CONFIG_DEFAULT_EXTENSION`](#tpp_makefile_config_default_extension) [`TPP_MAKEFILE_DEFAULT_TARGET_PATH_PREFIX_IS_EMPTY`](#tpp_makefile_default_target_path_prefix_is_empty) [`TPP_MAKEFILE_DEFAULT_TARGET_FILENAME_PREFIX_IS_EMPTY`](#tpp_makefile_default_target_filename_prefix_is_empty)
 <!--END:glossary-->

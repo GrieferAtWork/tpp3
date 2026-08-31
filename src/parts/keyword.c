@@ -2998,6 +2998,16 @@ got_result_kwd2:;
 		}
 
 		/* Call a user-defined callback to keep track of dependencies (for -MF) */
+		/* FIXME: this doesn't work properly in code like this:
+		 * >> __TPP_IDENTIFER("my/file.h") // This creates a keyword of that name prematurely...
+		 * >> #include "my/file.h"         // ... because of which this sees `is_known_keyword=true`
+		 *
+		 * Solution: instead of checking if the keyword is known, there needs to be some sort
+		 *           of flag-bit within the keyword that is used to indicate that the file of
+		 *           the keyword was already emitted as a dependency. However, this flag also
+		 *           needs to be set in the MAKEFILE source extension as it emits entires for
+		 *           the preprocessor's *main* files.
+		 */
 #if TPP_HAVE_NEW_DEPENDENCY_HOOK
 		{
 			tpp_errno error = tpp_lexer_callhook_new_dependency(self, result_kwd);

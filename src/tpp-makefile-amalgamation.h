@@ -66,6 +66,11 @@
 #error "Sorry: In order to use TPP's MAKEFILE source extension, `TPP_HAVE_NEW_DEPENDENCY_HOOK` must be configured to allow runtime overrides"
 #endif /* !TPP_IGNORE_INVALID_CONFIGURATION && !TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
 
+/* Profile configuration for `TPP_MAKEFILE_*` defaults. */
+#ifndef TPP_MAKEFILE_PROFILE
+#define TPP_MAKEFILE_PROFILE TPP_PROFILE
+#endif /* !TPP_MAKEFILE_PROFILE */
+
 /* When enabled, only include dependencies if
  * `#include`-stack doesn't contain any system
  * headers
@@ -92,9 +97,11 @@
  * - `tpp_makefile_get_missing_file_dependencies_enabled()`
  * - `tpp_makefile_set_missing_file_dependencies_enabled()`
  *
- * Note that even when this is enabled, printing of missing file
- * dependencies is disabled by default (enable it by making a
- * call to `tpp_makefile_enable_missing_file_dependencies()`).
+ * Note that this config only controls if the APIs for enabling printing of
+ * missing file dependencies is available. There is no config to have this
+ * enabled by default. If you always want it enabled, you still have to make
+ * a call to `tpp_makefile_enable_missing_file_dependencies()`) right after
+ * initializing your `tpp_makefile`.
  *
  * Configure as one of:
  * - `0`: Disabled
@@ -142,7 +149,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_IO_HANDLE
-#define TPP_MAKEFILE_HAVE_IO_HANDLE (TPP_HAVE_PROFILE_ALL)
+#define TPP_MAKEFILE_HAVE_IO_HANDLE (TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL)
 #endif /* !TPP_MAKEFILE_HAVE_IO_HANDLE */
 
 /* Provide an API `tpp_makefile_setoutput_io()` that can be used to override
@@ -153,7 +160,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
-#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_IO_HANDLE)
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO ((TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_IO_HANDLE)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
 
 /* Provide an API `tpp_makefile_setoutput_io_ex()` that can also be used to
@@ -164,10 +171,10 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
-#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE ((TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 
-/* Provide an API `tpp_makefile_setoutput_file()` that is a concenience
+/* Provide an API `tpp_makefile_setoutput_file()` that is a convenience
  * wrapper around `tpp_makefile_setoutput_io()` by automatically opening
  * the file in question and assigning its output.
  *
@@ -175,7 +182,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_OUTPUT_FILE
-#define TPP_MAKEFILE_HAVE_OUTPUT_FILE (TPP_HAVE_PROFILE_ALL && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
+#define TPP_MAKEFILE_HAVE_OUTPUT_FILE ((TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) && TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO)
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE */
 
 
@@ -209,7 +216,7 @@
  * - `0`: Disabled
  * - `1`: Enabled */
 #ifndef TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS
-#define TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_MAKEFILE_HAVE_CLI_HELP && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#define TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS (TPP_MAKEFILE_HAVE_CLI_HELP && (TPP_MAKEFILE_PROFILE != TPP_PROFILE_MINIMAL))
 #endif /* !TPP_MAKEFILE_HAVE_CLI_HELP_ALL_SPELLINGS */
 
 /* `-M`, `--dependencies`: Turn on makefile generator, and
