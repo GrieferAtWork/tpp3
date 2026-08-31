@@ -388,6 +388,7 @@ tpp_file_seekeol(tpp_file *tpp_restrict self,
 			if (pos >= self->tf_end)
 				goto done;
 		}
+		tpp_assert(pos);
 		ch = *pos++;
 		if (tpp_ascii_islf(ch))
 			goto done;
@@ -2755,7 +2756,7 @@ without_relative_to:
 			is_known_keyword = true;
 			result_kwd = bucket;
 
-			/* Check if the file should be marked out. */
+			/* Check if the file should be masked out. */
 #if TPP_HAVE_LEXER_OPENFILE_EX
 			{
 				tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);
@@ -2955,7 +2956,7 @@ done_normalize:
 					is_known_keyword = true;
 					result_kwd       = bucket;
 
-					/* Check if the file should be marked out. */
+					/* Check if the file should be masked out. */
 #if TPP_HAVE_LEXER_OPENFILE_EX
 					{
 						tpp_errno mask_error = tpp_lexer_openfile_ex_check_mask_flags(self, result_kwd, mask_flags);

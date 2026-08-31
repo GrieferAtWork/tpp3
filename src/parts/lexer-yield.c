@@ -2761,12 +2761,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
-		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_assert(tpp_file_getnonblock(file));
+		tpp_file_disablenonblock(file);
 		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yield(self);
 		tpp_file_autopopfile_pop(file);
-		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_enablenonblock(file);
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -2784,12 +2784,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
-		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_assert(tpp_file_getnonblock(file));
+		tpp_file_disablenonblock(file);
 		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldpp(self);
 		tpp_file_autopopfile_pop(file);
-		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_enablenonblock(file);
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);
@@ -2807,12 +2807,12 @@ again:
 	if (result == TPP_TOK_EWOULDBLOCK) {
 		tpp_file *const file = tpp_lexer_getfile(self);
 		tpp_assert(file->tf_kind == TPP_FILE_KIND_IO);
-		tpp_assert(file->tf_flags & TPP_FILE_FLAGS_NONBLOCK);
-		file->tf_flags &= ~TPP_FILE_FLAGS_NONBLOCK;
+		tpp_assert(tpp_file_getnonblock(file));
+		tpp_file_disablenonblock(file);
 		tpp_file_autopopfile_pushoff(file);
 		result = tpp_lexer_yieldraw_at(self, p_pos);
 		tpp_file_autopopfile_pop(file);
-		file->tf_flags |= TPP_FILE_FLAGS_NONBLOCK;
+		tpp_file_enablenonblock(file);
 		if (result == TPP_TOK_EOF)
 			goto again; /* EOF was encountered after blocking... */
 		tpp_assert(result != TPP_TOK_EWOULDBLOCK);

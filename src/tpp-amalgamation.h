@@ -20750,34 +20750,96 @@ tpp_lcstate_account(tpp_lcstate *tpp_restrict self,
 #endif /* !... */
 
 #if TPP_HAVE_FILE_FLAGS
-#define tpp_file_flags tpp_uint_least8 /* Set of `TPP_FILE_FLAGS_*` */
-#define TPP_FILE_FLAGS_NORMAL       TPP_UINT_LEAST8_C(0x00) /* Normal flags */
+/* Normal flags */
+#define TPP_FILE_FLAGS_NORMAL 0
+
+/* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
 #if TPP_HAVE_FILE_NONBLOCK
-#define TPP_FILE_FLAGS_NONBLOCK     TPP_UINT_LEAST8_C(0x01) /* `TPP_FILE_KIND_IO`: Do non-blocking I/O */
-#endif /* TPP_HAVE_FILE_NONBLOCK */
+#define TPP_FILE_FLAGS_NONBLOCK       1
+#define _TPP_FILE_FLAG_COUNT_NONBLOCK +1
+#else /* TPP_HAVE_FILE_NONBLOCK */
+#define _TPP_FILE_FLAG_COUNT_NONBLOCK /* nothing */
+#endif /* !TPP_HAVE_FILE_NONBLOCK */
+
+/* `TPP_FILE_KIND_IO`:
+ * Don't `tpp_io_close(tff_file)` on destruction */
 #if TPP_HAVE_FILE_NOCLOSE
-#define TPP_FILE_FLAGS_NOCLOSE      TPP_UINT_LEAST8_C(0x02) /* `TPP_FILE_KIND_IO`: Don't `tpp_io_close(tff_file)` on destruction */
-#endif /* TPP_HAVE_FILE_NOCLOSE */
+#define TPP_FILE_FLAGS_NOCLOSE (1 << (0 _TPP_FILE_FLAG_COUNT_NONBLOCK))
+#define _TPP_FILE_FLAG_COUNT_NOCLOSE _TPP_FILE_FLAG_COUNT_NONBLOCK+1
+#else /* TPP_HAVE_FILE_NOCLOSE */
+#define _TPP_FILE_FLAG_COUNT_NOCLOSE _TPP_FILE_FLAG_COUNT_NONBLOCK
+#endif /* !TPP_HAVE_FILE_NOCLOSE */
+
+/* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`:
+ * The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but
+ * rather a raw `\0`-terminated C string (meaning `tpp_keyword_fromcstr()`
+ * can't be used to retrieve the associated keyword). */
 #if TPP_HAVE_FILE_NOKWD
-#define TPP_FILE_FLAGS_NOKWD        TPP_UINT_LEAST8_C(0x04) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: The file's `tff_name` field isn't actually a `tpp_keyword::tk_kwd`, but rather a raw `\0`-terminated C string. */
-#endif /* TPP_HAVE_FILE_NOKWD */
+#define TPP_FILE_FLAGS_NOKWD (1 << (0 _TPP_FILE_FLAG_COUNT_NOCLOSE))
+#define _TPP_FILE_FLAG_COUNT_NOKWD _TPP_FILE_FLAG_COUNT_NOCLOSE+1
+#else /* TPP_HAVE_FILE_NOKWD */
+#define _TPP_FILE_FLAG_COUNT_NOKWD _TPP_FILE_FLAG_COUNT_NOCLOSE
+#endif /* !TPP_HAVE_FILE_NOKWD */
+
+/* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
 #if !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE
-#define TPP_FILE_FLAGS_FREENAME     TPP_UINT_LEAST8_C(0x08) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Must tpp_free(tff_name) when the file is finalized */
-#endif /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
+#define TPP_FILE_FLAGS_FREENAME (1 << (0 _TPP_FILE_FLAG_COUNT_NOKWD))
+#define _TPP_FILE_FLAG_COUNT_FREENAME _TPP_FILE_FLAG_COUNT_NOKWD+1
+#else /* !TPP_HAVE_USER_KEYWORDS && TPP_HAVE_LEXER_OPENFILE */
+#define _TPP_FILE_FLAG_COUNT_FREENAME _TPP_FILE_FLAG_COUNT_NOKWD
+#endif /* TPP_HAVE_USER_KEYWORDS || !TPP_HAVE_LEXER_OPENFILE */
+
+/* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`:
+ * Suppress all warnings triggered within this file */
 #if TPP_HAVE_FILE_SYSHDR
-#define TPP_FILE_FLAGS_SYSHDR       TPP_UINT_LEAST8_C(0x10) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Suppress all warnings produced in the context of this file */
-#endif /* TPP_HAVE_FILE_SYSHDR */
+#define TPP_FILE_FLAGS_SYSHDR (1 << (0 _TPP_FILE_FLAG_COUNT_FREENAME))
+#define _TPP_FILE_FLAG_COUNT_SYSHDR _TPP_FILE_FLAG_COUNT_FREENAME+1
+#else /* TPP_HAVE_FILE_SYSHDR */
+#define _TPP_FILE_FLAG_COUNT_SYSHDR _TPP_FILE_FLAG_COUNT_FREENAME
+#endif /* !TPP_HAVE_FILE_SYSHDR */
+
+/* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`:
+ * Treat everything within the file as being wrapped by an implicit `extern "C"` */
 #if TPP_HAVE_FILE_EXTERN_C
-#define TPP_FILE_FLAGS_EXTERN_C     TPP_UINT_LEAST8_C(0x20) /* `TPP_FILE_KIND_IO` + `TPP_FILE_KIND_TEXT`: Treat everything within the file as being wrapped by an implicit `extern "C"` */
-#endif /* TPP_HAVE_FILE_EXTERN_C */
+#define TPP_FILE_FLAGS_EXTERN_C (1 << (0 _TPP_FILE_FLAG_COUNT_SYSHDR))
+#define _TPP_FILE_FLAG_COUNT_EXTERN_C _TPP_FILE_FLAG_COUNT_SYSHDR+1
+#else /* TPP_HAVE_FILE_EXTERN_C */
+#define _TPP_FILE_FLAG_COUNT_EXTERN_C _TPP_FILE_FLAG_COUNT_SYSHDR
+#endif /* !TPP_HAVE_FILE_EXTERN_C */
+
+/* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
+ * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
 #if TPP_HAVE_IFNDEF_INCLUDE_GUARDS
-#define TPP_FILE_FLAGS_NOGUARD      TPP_UINT_LEAST8_C(0x40) /* A non-COMMENT/SPACE/LF (or blank/comment directive) was encountered since the start of the
-                                                             * file. A `#ifndef`-directive encountered at this point can never count as a `#include`-guard. */
-#endif /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define TPP_FILE_FLAGS_NOGUARD (1 << (0 _TPP_FILE_FLAG_COUNT_EXTERN_C))
+#define _TPP_FILE_FLAG_COUNT_NOGUARD _TPP_FILE_FLAG_COUNT_EXTERN_C+1
+#else /* TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+#define _TPP_FILE_FLAG_COUNT_NOGUARD _TPP_FILE_FLAG_COUNT_EXTERN_C
+#endif /* !TPP_HAVE_IFNDEF_INCLUDE_GUARDS */
+
+/* A non-COMMENT/SPACE token was encountered since the last
+ * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
 #if TPP_HAVE_CPP_DIRECTIVES
-#define TPP_FILE_FLAGS_NODIRECTIVES TPP_UINT_LEAST8_C(0x80) /* A non-COMMENT/SPACE token was encountered since the last
-                                                             * `TPP_TOK_LF`, meaning PP-directives may not be parsed. */
-#endif /* TPP_HAVE_CPP_DIRECTIVES */
+#define TPP_FILE_FLAGS_NODIRECTIVES (1 << (0 _TPP_FILE_FLAG_COUNT_NOGUARD))
+#define _TPP_FILE_FLAG_COUNT_NODIRECTIVES _TPP_FILE_FLAG_COUNT_NOGUARD+1
+#else /* TPP_HAVE_CPP_DIRECTIVES */
+#define _TPP_FILE_FLAG_COUNT_NODIRECTIVES _TPP_FILE_FLAG_COUNT_NOGUARD
+#endif /* !TPP_HAVE_CPP_DIRECTIVES */
+
+/* `TPP_FILE_KIND_IO`: `TPP_W_FILE_HAS_NO_TRAILING_LINEFEED` was emitted. */
+#if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
+#define TPP_FILE_FLAGS_W_NO_TRAILING_LINEFEED (1 << (0 _TPP_FILE_FLAG_COUNT_NODIRECTIVES))
+#define _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED _TPP_FILE_FLAG_COUNT_NODIRECTIVES+1
+#else /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
+#define _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED _TPP_FILE_FLAG_COUNT_NODIRECTIVES
+#endif /* !TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
+
+#if (0 _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED) <= 8
+#define tpp_file_flags tpp_uint_least8 /* Set of `TPP_FILE_FLAGS_*` */
+#elif (0 _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED) <= 16
+#define tpp_file_flags tpp_uint_least16 /* Set of `TPP_FILE_FLAGS_*` */
+#else /* (0 _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED) <= ... */
+#error "Too many file flags (this shouldn't happen')"
+#endif /* (0 _TPP_FILE_FLAG_COUNT_W_NO_TRAILING_LINEFEED) > ... */
 #endif /* TPP_HAVE_FILE_FLAGS */
 
 
@@ -20836,8 +20898,8 @@ typedef struct tpp_ifdef_stack {
 	((self)->TPP_INTERNAL(tids_vec)[(self)->TPP_INTERNAL(tids_cnt) - 1].TPP_INTERNAL(tidse_mode) == TPP_IFDEF_MODE_ELSE)
 
 /* Allocate an additional `#ifdef`-stack entry, and return a pointer to it.
- * This function will increment `self->tids_cnt`, but it is up to the
- * caller to initialize the returned `#ifdef`-stack entry
+ * This function will increment the stack's size, but it is up to the caller
+ * to initialize the returned `#ifdef`-stack entry
  *
  * @return: * :   The (uninitialized) `#ifdef`-stack entry
  * @return: NULL: Out of memory (`TPP_ENOMEM`) */
@@ -21033,13 +21095,13 @@ typedef struct tpp_file {
 #define tpp_file_isascii(self) 1
 #endif /* !TPP_HAVE_UNICODE */
 
-/* Public API for accessing internal components of `tpp_file` */
+/* Public API for accessing components of `tpp_file` */
 #define tpp_file_getkind(self)  ((self)->TPP_INTERNAL(tf_kind))
 #define tpp_file_getpos(self)   ((self)->TPP_INTERNAL(tf_pos))
 #define tpp_file_getend(self)   ((self)->TPP_INTERNAL(tf_end))
 #define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk))
 #if TPP_HAVE_IFDEF_STACK
-#define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef))
+#define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef)) /* XXX: This should not be exposed */
 #endif /* !TPP_HAVE_IFDEF_STACK */
 
 /* Check if "self" includes L/C information.
@@ -21056,7 +21118,9 @@ typedef struct tpp_file {
 #if TPP_HAVE_CPP_MACROS
 #define tpp_file_ismacro(self)  (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
 #define tpp_file_getmacro(self) ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro))
-#endif /* TPP_HAVE_CPP_MACROS */
+#else /* TPP_HAVE_CPP_MACROS */
+#define tpp_file_ismacro(self) 0
+#endif /* !TPP_HAVE_CPP_MACROS */
 
 
 /* Returns a pointer to the start of the effectively relevant source.
@@ -21078,7 +21142,8 @@ typedef struct tpp_file {
 #define tpp_file_getlastpos(self) ((self)->TPP_INTERNAL(tf_tpos))
 
 
-/* Retrieve file flags of `self` */
+/* Retrieve file flags of `self`.
+ * NOTE: If possible, use flag-specific functions below instead. */
 #if TPP_HAVE_FILE_FLAGS
 #define tpp_file_getflags(self) (self)->TPP_INTERNAL(tf_flags)
 #else /* TPP_HAVE_FILE_FLAGS */
@@ -21109,7 +21174,7 @@ typedef struct tpp_file {
  * `TPP_FILE_KIND_IO` file will close its associated `tpp_io_handle`
  * during finalization.
  * Behavior is undefined if `tpp_file_getkind(self) != TPP_FILE_KIND_IO`. */
-#if TPP_HAVE_FILE_NONBLOCK
+#if TPP_HAVE_FILE_NOCLOSE
 #define tpp_file_getnoclose(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_NOCLOSE)
 #define tpp_file_setnoclose(self, v)    \
 	((v) ? tpp_file_enablenoclose(self) \
@@ -21120,10 +21185,10 @@ typedef struct tpp_file {
 #define tpp_file_disablenoclose(self)                              \
 	(void)(tpp_assert(tpp_file_getkind(self) == TPP_FILE_KIND_IO), \
 	       (self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_NOCLOSE)
-#else /* TPP_HAVE_FILE_NONBLOCK */
+#else /* TPP_HAVE_FILE_NOCLOSE */
 #define tpp_file_getnoclose(self)     false
 #define tpp_file_disablenoclose(self) (void)0
-#endif /* !TPP_HAVE_FILE_NONBLOCK */
+#endif /* !TPP_HAVE_FILE_NOCLOSE */
 
 
 /* Modify the file's `TPP_FILE_FLAGS_SYSHDR` flag,
@@ -21222,11 +21287,6 @@ typedef struct tpp_file {
 #define tpp_file_isbasefile(self) 1
 #endif /* !TPP_HAVE_INCLUDE_STACK */
 
-
-/* Initialize common fields of `self` */
-#define _tpp_file_init_common(self) \
-	_tpp_file_init_lcpos(self)      \
-	_tpp_file_init_ifdef(self)
 
 /* Temporarily disable automatic pop-to-prev-file on EOF */
 #if TPP_HAVE_INCLUDE_STACK
@@ -21474,6 +21534,11 @@ typedef struct tpp_file {
 
 
 
+/* Initialize common fields of `self` */
+#define _tpp_file_init_common(self) \
+	_tpp_file_init_lcpos(self)      \
+	_tpp_file_init_ifdef(self)
+
 /* Tell an I/O file that it has been initialized, causing its associated
  * keyword's `tkm_file_inclcount` to be updated if necessary. */
 #if TPP_HAVE_KEYWORD_INCLCOUNT
@@ -21579,58 +21644,53 @@ TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_file_fini(tpp_file *tpp_restrict self);
 
 
-/* Try to expand the currently loaded `self->tf_chunk`:
- * - If the file's kind isn't `TPP_FILE_KIND_IO`, return `TPP_EOK`
- * - Allocate a new `tpp_string` suitable for holding both
- *   [tf_pos,tf_end), as well as at least 1 additional byte.
- *   HINT: When `!tpp_string_isshared(self->tf_chunk)`, the old
- *         chunk string may simply be re-used (since it'd be free'd
- *         during the re-assignment below anyways). If this isn't
- *         intended (iow: you want to keep the contents of the previous
- *         chunk loaded into memory), you can simply `tpp_string_incref`
- *         it before calling this function.
- * - Copy [tf_pos,tf_end) into this new string
- * - Read from the underlying file into the tail of the new string
- * #if TPP_HAVE_UNICODE
- *   - If the underlying file's encoding is TPP_FILE_ENCODING_UTF(16|32)_(LE|BE),
- *     the read data is converted to utf-8 at this point.
- * #endif // TPP_HAVE_UNICODE
- *   - If the underlying file could not be read, return `TPP_EIO`
- *   - If nothing could be read, free the new string and return `TPP_EOK`
- *   - Else:
- *     - adjust `tf_pos` to point into the new string, and
- *       set `tf_end` to point at the end of the new string.
- *     - replace `tf_chunk` with the new string
- *     - return `TPP_EOK`
+/* Try to expand the currently loaded `tpp_file_getchunk()`:
+ * - If the file's kind isn't `TPP_FILE_KIND_IO`, that is
+ *   impossible and this function return `TPP_EOK`
+ * - If the reference count of `tpp_file_getchunk()` indicates
+ *   that the chunk is shared, this function will always allocate
+ *   an entirely new chunk, and copy the contents of the old one
+ *   into the new one
+ * - This function is also allowed to deallocate all file contents
+ *   between the start of the file's old chunk, as well as the
+ *   lower bound between `tpp_file_getpos()` and `tpp_file_getkeep()`
+ *   WARNING: `tpp_file_getlastpos()` is *NOT* retained here. Assuming
+ *            that it points before `tpp_file_getpos()` (as is the
+ *            usual case), a call to this function means that the
+ *            `tpp_file_getlastpos()`-pointer becomes INVALID!
+ * - This function also performs codec detection of the underlying
+ *   I/O file, as well as decoding of that file's contents into a
+ *   unified utf-8 representation.
+ *
  * @return: TPP_EOK:         Either the current chunk was expanded (the delta
- *                           between `tf_pos` and `tf_end` has increased), or
- *                           no further data can be read from `self`.
+ *                           between `tpp_file_getpos()` and `tpp_file_getend()`
+ *                           has increased), or no further data can be read
+ *                           from `self`.
  * @return: TPP_EIO:         I/O error
  * @return: TPP_ENOMEM:      Out of memory
- * #if TPP_HAVE_FILE_NONBLOCK
- * @return: TPP_EWOULDBLOCK: Operation would block.
- * #endif // TPP_HAVE_FILE_NONBLOCK */
+ * @return: TPP_EWOULDBLOCK: Operation would block (only if `TPP_HAVE_FILE_NONBLOCK`
+ *                           and `tpp_file_getnonblock()` are both enabled) */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_file_expandchunk(tpp_file *tpp_restrict self);
 
 /* Encode/decode pointer<=>text-offset such that effective positions
  * are retained across calls to `tpp_file_expandchunk()`.
  *
- * WARNING: Any calls that modify `tf_pos`, or `tpp_token::tt_end`,
- *          including `tpp_lexer_yieldraw()` will CLOBBER all relative
- *          offsets within the current file. `tpp_lexer_yieldraw_at()`
- *          however will not (since that one doesn't modify the file's
- *          position as it uses the one given as argument instead).
+ * WARNING: Any calls that modify `tpp_file_getpos()` (or `tpp_token_getend()`,
+ *          with is actually just a alias for `tpp_file_getpos()`), including
+ *          `tpp_lexer_yieldraw()` will CLOBBER all relative offsets within
+ *          the current file. `tpp_lexer_yieldraw_at()` however will not (since
+ *          that one doesn't modify the file's position as it uses the one given
+ *          as argument instead).
  *
  * NOTES:
- *  - This needs to use `tf_pos` as relative base, since the start
- *    of the currently loaded chunk can change if another chunk is
- *    allocated that doesn't include the already-read buffer area
- *    located in `[tf_chunk->ts_str,tf_pos)`
+ *  - This needs to use `tpp_file_getpos()` as relative base, since the start
+ *    of the currently loaded chunk can change if another chunk is allocated
+ *    that doesn't include the already-read buffer area located in
+ *    `[tpp_string_str(tpp_file_getchunk(self)), tpp_file_getpos(self))`
  *  - Use these functions to support memory relocation across calls
  *    to `tpp_file_expandchunk()` (which may relocate the current
- *    text chunk)
- */
+ *    text chunk) */
 #define tpp_file_ptr2rel(self, ptr) (tpp_size)((ptr) - tpp_file_getpos(self))
 #define tpp_file_rel2ptr(self, rel) (tpp_file_getpos(self) + (rel))
 
@@ -21737,8 +21797,8 @@ tpp_file_getfilenamestr(tpp_file const *tpp_restrict self);
 /* Sets the user-filename override of `self` to `filename`
  *
  * NOTE: The caller must ensure that:
- *       >> self->tf_kind == TPP_FILE_KIND_IO ||
- *       >> self->tf_kind == TPP_FILE_KIND_TEXT;
+ *       >> tpp_file_getkind(self) == TPP_FILE_KIND_IO ||
+ *       >> tpp_file_getkind(self) == TPP_FILE_KIND_TEXT;
  *
  * You may also pass `NULL` for `filename` to disable the override */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
@@ -21752,8 +21812,8 @@ tpp_file_setfilename(tpp_file *tpp_restrict self, tpp_string *filename);
  * (as returned by `tpp_file_getlcinfo()`) in `self`
  *
  * NOTE: The caller must ensure that:
- *       >> self->tf_kind == TPP_FILE_KIND_IO ||
- *       >> self->tf_kind == TPP_FILE_KIND_TEXT; */
+ *       >> tpp_file_getkind(self) == TPP_FILE_KIND_IO ||
+ *       >> tpp_file_getkind(self) == TPP_FILE_KIND_TEXT; */
 #if TPP_HAVE_FILE_SETLINE
 TPP_DECL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_file_setline(tpp_file *tpp_restrict self,
@@ -21825,13 +21885,15 @@ tpp_file_getlcinfo_ex(tpp_file *tpp_restrict self, tpp_char const *pos,
 
 
 #if TPP_HAVE_INCLUDE_STACK
-/* Returns the last file in the `#include`-stack (using `tf_tprev`) */
+/* Returns the last file in the `#include`-stack (using `tpp_file_getprev()`) */
 TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_getbasefile(tpp_file const *tpp_restrict self);
 
 #if TPP_HAVE_CPP_MACROS || TPP_HAVE_FILE_SUBTEXT || TPP_HAVE_FILE_DUMMY
-/* Returns the first `tf_kind==TPP_FILE_KIND_IO || tf_kind==TPP_FILE_KIND_TEXT` file
- * in the `#include`-stack (using `tf_tprev`). If no such file exists, returns `NULL` */
+/* Returns the first `TPP_FILE_KIND_IO || TPP_FILE_KIND_TEXT`
+ * file in the `#include`-stack (using `tpp_file_getprev()`).
+ *
+ * If no such file exists, returns `NULL` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_file *TPPCALL
 tpp_file_gettextfile(tpp_file const *tpp_restrict self);
 
@@ -21856,7 +21918,8 @@ tpp_file_getlcfile(tpp_file const *tpp_restrict self);
  * - `tpp_file_getlcinfo(self, pos)`   (returned by `tpp_file_getlcinfo()` for any pointer)
  *
  * NOTES:
- * - The caller must ensure that `self->tf_kind == TPP_FILE_KIND_IO || self->tf_kind == TPP_FILE_KIND_TEXT`
+ * - The caller must ensure that `tpp_file_getkind(self)`
+ *   is `TPP_FILE_KIND_IO` or `TPP_FILE_KIND_TEXT`.
  * - Used to implement gcc's `# <linenum> <filename> 1` directive
  *
  * @return: TPP_EOK:    Success
@@ -21869,7 +21932,8 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos);
  * stack and free it. Otherwise, do nothing
  *
  * NOTES:
- * - The caller must ensure that `self->tf_kind == TPP_FILE_KIND_IO || self->tf_kind == TPP_FILE_KIND_TEXT`
+ * - The caller must ensure that `tpp_file_getkind(self)`
+ *   is `TPP_FILE_KIND_IO` or `TPP_FILE_KIND_TEXT`.
  * - Used to implement gcc's `# <linenum> <filename> 2` directive
  *
  * @return: true:  Success (a dummy file was popped)

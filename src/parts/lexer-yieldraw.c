@@ -5484,27 +5484,23 @@ eof:
 			goto again_read_from_pos;
 
 #if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED
-		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol
+		/* Warning if current file is an IO file and doesn't end with a trailing linefeed */
+		if (tpp_file_getkind(file) == TPP_FILE_KIND_IO && !curtoken_is_at_sol &&
 #if TPP_HAVE_FILE_ENCODING_EMBED
-		    && file->tf_enc != TPP_FILE_ENCODING_EMBED
+		    file->tf_enc != TPP_FILE_ENCODING_EMBED &&
 #endif /* TPP_HAVE_FILE_ENCODING_EMBED */
-		    ) {
-			/* Warning if current file is an IO file and doesn't end with a trailing linefeed */
+		    !(file->tf_flags & TPP_FILE_FLAGS_W_NO_TRAILING_LINEFEED)) {
 			error = tpp_lexer_warnf_at(self, file, pos, TPP_W_FILE_HAS_NO_TRAILING_LINEFEED);
 			if (TPP_ISERR(error))
 				goto return_error;
 
-			/* XXX: Manipulate the file such that the warning won't be triggered a second
-			 *      time if someone tries to call `tpp_lexer_yieldraw()` once again (which
-			 *      can easily happen in the most likely case of us getting here due to
-			 *      the last line containing a `#endif` without a subsequent linefeed, in
-			 *      which case we get here once during the directive-prescan, and once again
-			 *      when the directive tries to yield its follow-up token.
-			 * XXX: How:
-			 * - Can't append actual line-feed to tf_chunk (don't invent tokens)
-			 * - Can't replace tf_chunk with an empty string (conflicts with tpp_file_setkeep)
-			 * - Can't define a new file flag (all bits are already assigned)
-			 */
+			/* Manipulate the file such that the warning won't be triggered a second
+			 * time if someone tries to call `tpp_lexer_yieldraw()` once again (which
+			 * can easily happen in the most likely case of us getting here due to
+			 * the last line containing a `#endif` without a subsequent linefeed, in
+			 * which case we get here once during the directive-prescan, and once again
+			 * when the directive tries to yield its follow-up token. */
+			file->tf_flags |= TPP_FILE_FLAGS_W_NO_TRAILING_LINEFEED;
 		}
 #endif /* TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED */
 	}
