@@ -2344,8 +2344,6 @@ print("#endif /" "* !... *" "/");
 /* XXX: Support for sql-style "-string literals ("" is escape for ", and line-feeds are allowed) */
 /* XXX: Support for sql-style E'foo'-string literals (line-feeds are allowed, and `\`-escape sequences are handled) */
 /* XXX: Support for sql-style E"foo"-string literals (line-feeds are allowed, and `\`-escape sequences are handled) */
-/* XXX: Support for javascript-style `foo` format string literals (use a hook for implementing `${expr}`) */
-/* XXX: Support for deemon-style f"foo" / F"foo" format string literals (use a hook for implementing `{expr}`) */
 /* XXX: Support for raw block-strings: r"""foo"\"""  -- same as R"(foo"\)" */
 /* XXX: Support for raw block-strings: r'''foo'\'''  -- same as R'(foo'\)' */
 /* XXX: Support for python bytes-string: b"foo" */
@@ -2438,7 +2436,7 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
 
 /* Support for deemon/python-style raw string literals: `r'bar'`
- * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
+ * @detect: #if __TPP_COUNT_TOKENS("R'foo'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
 #ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
 #define TPP_HAVE_TOK_RAW_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-char-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_CHAR_LITERAL */
@@ -2454,6 +2452,24 @@ print("#endif /" "* !... *" "/");
 #ifndef TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 #define TPP_HAVE_TOK_BLOCK_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-block-char-literal" */
 #endif /* !TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
+
+/* Support for deemon/python-style format string literals: `f"foo: {foo}, bar: {42}"` */
+#ifndef TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL
+#define TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-format-string-literal" */
+#endif /* !TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL */
+
+/* Support for deemon/python-style format string literals (with `'` instead of `"`): `f'foo: {foo}, bar: {42}'` */
+#ifndef TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+#define TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-format-char-literal" */
+#endif /* !TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
+
+/* Support for javascript-style format string literals:
+ * ```javascript
+ * `foo: ${foo}, bar: ${42}`
+ * ``` */
+#ifndef TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL
+#define TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-format-backtick-literal" */
+#endif /* !TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL */
 
 #undef TPP_HAVE_TOK_INT
 #if TPP_HAVE_TOK_C_INT || TPP_HAVE_TOK_PASCAL_HEX
@@ -2509,20 +2525,23 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL || \
      TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL || \
      TPP_HAVE_TOK_RAW_CHAR_LITERAL ||       \
-     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||     \
+     TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL)
 #define TPP_HAVE_TOK_STRINGLIKE_SQUOTE 1
 #else /* ... */
 #define TPP_HAVE_TOK_STRINGLIKE_SQUOTE 0
 #endif /* !... */
 #undef TPP_HAVE_TOK_STRINGLIKE_DQUOTE
-#if (TPP_HAVE_TOK_C_STRING ||                 \
-     TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL ||   \
-     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TOK_RAW_STRING_LITERAL ||       \
-     TPP_HAVE_TOK_BLOCK_STRING_LITERAL)
+#if (TPP_HAVE_TOK_C_STRING ||                     \
+     TPP_HAVE_TOK_CXX_RAW_STRING_LITERAL ||       \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||      \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||      \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_RAW_STRING_LITERAL ||           \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||         \
+     TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || \
+     TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL)
 #define TPP_HAVE_TOK_STRINGLIKE_DQUOTE 1
 #else /* ... */
 #define TPP_HAVE_TOK_STRINGLIKE_DQUOTE 0
@@ -2535,18 +2554,20 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TOK_STRINGLIKE 0
 #endif /* !... */
 #undef TPP_HAVE_STRING_ESCAPE
-#if (TPP_HAVE_TOK_C_STRING ||                 \
-     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||  \
-     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL || \
-     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL || \
-     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||     \
-     TPP_HAVE_TOK_C_CHAR ||                   \
-     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||    \
-     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||    \
-     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||   \
-     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||   \
-     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL)
+#if (TPP_HAVE_TOK_C_STRING ||                     \
+     TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||      \
+     TPP_HAVE_TOK_CXX_UTF8_STRING_LITERAL ||      \
+     TPP_HAVE_TOK_CXX_UTF16_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_CXX_UTF32_STRING_LITERAL ||     \
+     TPP_HAVE_TOK_BLOCK_STRING_LITERAL ||         \
+     TPP_HAVE_TOK_C_CHAR ||                       \
+     TPP_HAVE_TOK_CXX_WIDE_CHAR_LITERAL ||        \
+     TPP_HAVE_TOK_CXX_UTF8_CHAR_LITERAL ||        \
+     TPP_HAVE_TOK_CXX_UTF16_CHAR_LITERAL ||       \
+     TPP_HAVE_TOK_CXX_UTF32_CHAR_LITERAL ||       \
+     TPP_HAVE_TOK_BLOCK_CHAR_LITERAL ||           \
+     TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || \
+     TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL)
 #define TPP_HAVE_STRING_ESCAPE 1
 #else /* ... */
 #define TPP_HAVE_STRING_ESCAPE 0
@@ -2935,6 +2956,37 @@ print("#endif /" "* !... *" "/");
 /* XXX: Support for `\c[...]` as alias for `\N{...}` (`TPP_HAVE_STRING_ESCAPE_NAMED`)
  *      This is something that "Raku" has. */
 
+/* Support for `\(...)` expression escapes: `"foo: \(foo)"` (same as
+ * `f"foo: {foo}"` when using `TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL`) */
+#ifndef TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 0) /* "-fstring-escape-format-paren" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+/* Support for `\[...]` expression escapes: `"foo: \[foo]"` (same as
+ * `f"foo: {foo}"` when using `TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL`) */
+#ifndef TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 0) /* "-fstring-escape-format-bracket" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+/* Support for `\{...}` expression escapes: `"foo: \{foo}"` (same as
+ * `f"foo: {foo}"` when using `TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL`) */
+#ifndef TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+#define TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 0) /* "-fstring-escape-format-brace" */
+#endif /* !TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
+
+/* Indicates that `tpp_lexer_decodestring_config` needs handling for format-expressions */
+#undef TPP_HAVE_STRING_FORMAT
+#if (TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL ||       \
+     TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL ||         \
+     TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL || \
+     TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN ||             \
+     TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET ||           \
+     TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE)
+#define TPP_HAVE_STRING_FORMAT 1
+#else /* ... */
+#define TPP_HAVE_STRING_FORMAT 0
+#endif /* !... */
+
 /* Enable support for large (> 1 byte) character constants in `tpp_lexer_decodestring()` */
 #ifndef TPP_HAVE_STRING_ESCAPE_BIGCHAR
 #if (TPP_HAVE_PROFILE_NOT_MINIMAL &&      \
@@ -3211,7 +3263,8 @@ print("#endif /" "* !... *" "/");
      TPP_HAVE_MACRO___TPP_STR_PACK ||             \
      TPP_HAVE_MACRO___TPP_COUNT_TOKENS ||         \
      TPP_HAVE_PRAGMA_TPP_EXEC ||                  \
-     TPP_HAVE_PRAGMA_TPP_TPP_EXEC)
+     TPP_HAVE_PRAGMA_TPP_TPP_EXEC ||              \
+     TPP_HAVE_STRING_FORMAT)
 #define TPP_HAVE_FILE_SUBTEXT 1
 #else /* ... */
 #define TPP_HAVE_FILE_SUBTEXT 0
@@ -5736,6 +5789,22 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_ESCAPE)
 #endif /* !TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
+#ifndef TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE
+#define TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_FORMAT && TPP_CONF_MAYBE_0(TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR))
+#endif /* !TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE */
+#ifndef TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF
+#define TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_FORMAT)
+#endif /* !TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF */
+#ifndef TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE
+#define TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_STRING_FORMAT)
+#endif /* !TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE */
+#ifndef TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING
+#define TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING \
+	(TPP_HAVE_WARNINGS && (TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL))
+#endif /* !TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING */
 #ifndef TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE
 #define TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE \
 	(TPP_HAVE_WARNINGS && (TPP_HAVE_IDENTIFIER_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_NAMED || TPP_HAVE_STRING_ESCAPE_XML))
@@ -6045,6 +6114,14 @@ print("#endif /" "* !... *" "/");
 /************************************************************************/
 /* IMPLICIT API FEATURES (PART 2)                                       */
 /************************************************************************/
+
+/* Extension to `TPP_HAVE_STRING_FORMAT`: when no format-expression handler is specified
+ * in `tpp_lexer_decodestring_config`, and one ends up being needed, rather than raising
+ * a `TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE` warning (see `TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE`),
+ * the expression will be evaluated as though `__TPP_EVAL` was used. */
+#ifndef TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR
+#define TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR (TPP_HAVE_STRING_FORMAT && TPP_HAVE_PARSEEXPR_HOOK && TPP_HAVE_PROFILE_NOT_MINIMAL ? (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT1 : 1) : 0) /* "-fstring-escape-format-builtin" */
+#endif /* !TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR */
 
 /* Provide an API function `tpp_unicode_writeutf8()` */
 #ifndef TPP_HAVE_TPP_UNICODE_WRITEUTF8
@@ -6799,6 +6876,28 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_EXPR_VALUE_PRINTREPR */
 
+/* Provide a function `tpp_expr_value_printstr()` to construct what
+ * should be inserted in format-string expressions when the builtin
+ * `TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR` is used. */
+#ifndef TPP_HAVE_EXPR_VALUE_PRINTSTR
+#if TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR
+#define TPP_HAVE_EXPR_VALUE_PRINTSTR 1
+#else /* ... */
+#define TPP_HAVE_EXPR_VALUE_PRINTSTR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_EXPR_VALUE_PRINTSTR */
+
+/* Provide a function `tpp_intvalue_printrepr()` used to implement:
+ * - `tpp_expr_value_printrepr()` (see `TPP_HAVE_EXPR_VALUE_PRINTREPR`)
+ * - `tpp_expr_value_printstr()` (see `TPP_HAVE_EXPR_VALUE_PRINTSTR`) */
+#ifndef TPP_HAVE_INTVALUE_PRINTREPR
+#if TPP_HAVE_EXPR_VALUE_PRINTREPR || TPP_HAVE_EXPR_VALUE_PRINTSTR
+#define TPP_HAVE_INTVALUE_PRINTREPR 1
+#else /* ... */
+#define TPP_HAVE_INTVALUE_PRINTREPR 0
+#endif /* !... */
+#endif /* !TPP_HAVE_INTVALUE_PRINTREPR */
+
 /* Provide a function `tpp_lexer_dump_definitions()` that can be
  * used to re-print all user-defined macro definitions and asserts.
  *
@@ -7005,7 +7104,8 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a function `tpp_ftoa()` to convert a float into a string */
 #ifndef TPP_HAVE_FTOA
-#if (TPP_HAVE_EXPR_VALUE_PRINTREPR)
+#if (TPP_HAVE_BUILTIN_EXPR_FLOATS && (TPP_HAVE_EXPR_VALUE_PRINTREPR || \
+                                      TPP_HAVE_EXPR_VALUE_PRINTSTR))
 #define TPP_HAVE_FTOA 1
 #else /* ... */
 #define TPP_HAVE_FTOA 0

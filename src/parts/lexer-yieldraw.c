@@ -604,6 +604,21 @@ return_error:
 #define NEED_tpp_lexer_seek_end_of_string 0
 #endif /* !... */
 
+#undef NEED_tpp_lexer_seek_end_of_format_string
+#if (TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || \
+     TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL)
+#define NEED_tpp_lexer_seek_end_of_format_string 1
+#else /* ... */
+#define NEED_tpp_lexer_seek_end_of_format_string 0
+#endif /* !... */
+
+#undef NEED_tpp_lexer_seek_end_of_backtick_string
+#if TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL
+#define NEED_tpp_lexer_seek_end_of_backtick_string 1
+#else /* ... */
+#define NEED_tpp_lexer_seek_end_of_backtick_string 0
+#endif /* !... */
+
 #undef NEED_tpp_lexer_seek_end_of_block_string
 #if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 #define NEED_tpp_lexer_seek_end_of_block_string 1
@@ -1139,9 +1154,69 @@ done:
 #endif /* NEED_tpp_lexer_seek_eol || ... */
 
 
+#if TPP_HAVE_STRING_FORMAT
+/* Find the end of format-string expression:
+ * >> f"foo: {expr} bar"
+ *            ^    ^
+ *            |    OUT(*p_pos)
+ *            IN(*p_pos)
+ * @param: lparen: left-parenthesis token ID (in above example: `{`)
+ * @param: rparen: right-parenthesis token ID (in above example: `}`) */
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_format_expr(tpp_lexer *tpp_restrict self,
+                                  tpp_char const **tpp_restrict p_pos,
+                                  tpp_token_id lparen, tpp_token_id rparen) {
+	tpp_errno result = TPP_EOK;
+	unsigned int recursion = 0;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_token_id const saved_token_id        = token->tt_id;
+	tpp_keyword const *const saved_token_kwd = token->tt_kwd;
+	tpp_char const *const saved_token_start  = token->tt_start;
+	tpp_char const *const saved_token_end    = token->tt_end;
+
+	/* Seek the end of the expression */
+	tpp_lexer_autopopfile_pushoff(self); /* Stay within the current file */
+	tpp_lexer_nowarnings_pushon(self);   /* Don't emit warnings (those will be emitted later) */
+	for (;;) {
+		tpp_token_id tok;
+		tok = tpp_lexer_yieldraw_at(self, p_pos);
+		if (TPP_TOK_ISERR(tok)) {
+			result = TPP_TOK_ASERR(tok);
+			break;
+		} else if (tok == TPP_TOK_EOF) {
+			break;
+		} else if (tok == lparen) {
+			++recursion;
+		} else if (tok == rparen) {
+			if (recursion == 0)
+				break;
+			--recursion;
+		}
+	}
+	tpp_lexer_nowarnings_pop(self);
+	tpp_lexer_autopopfile_pop(self);
+
+	/* At this point, the current token *should* be the closing }-token
+	 * of the format-expression (or it's EOF, but that doesn't matter
+	 * since that case needs to be handled the same)
+	 *
+	 * Our use of `tpp_lexer_yieldraw_at()` above will have already
+	 * updated `*p_pos` such that it points *after* the closing },
+	 * so we don't even have to do anything extra here! */
+
+	/* Restore token config */
+	token->tt_id    = saved_token_id;
+	token->tt_kwd   = saved_token_kwd;
+	token->tt_start = saved_token_start;
+	token->tt_end   = saved_token_end;
+	return result;
+}
+#endif /* TPP_HAVE_STRING_FORMAT */
+
+
+#if NEED_tpp_lexer_seek_end_of_string
 /* Find the end of a "foo" or 'foo' string
  *      IN(*p_pos) == ^   ^ == OUT(*p_pos) */
-#if NEED_tpp_lexer_seek_end_of_string
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
                              tpp_char const **tpp_restrict p_pos,
@@ -1167,8 +1242,50 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
 			error = tpp_lexer_readchar(self, p_pos, &ch);
 			if (TPP_ISERR(error))
 				return error;
-			if (ch == 0 && (*p_pos) >= file->tf_end)
-				goto warn_premature_eof;
+			switch (ch) {
+			case 0:
+				if ((*p_pos) >= file->tf_end)
+					goto warn_premature_eof;
+				break;
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+			case '(':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_PAREN))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('('),
+				                                          TPP_TOK_OFCHAR(')'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+			case '{':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACE))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+			case '[':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACKET))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('['),
+				                                          TPP_TOK_OFCHAR(']'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+			default: break;
+			}
 		} else
 #if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
 		if (tpp_ascii_islf(ch)) {
@@ -1221,6 +1338,281 @@ warn_premature_eof:
 #endif /* NEED_tpp_lexer_seek_end_of_string */
 
 
+#if NEED_tpp_lexer_seek_end_of_format_string
+/* Find the end of a f"foo: {expr}" format string
+ *       IN(*p_pos) == ^           ^ == OUT(*p_pos) */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_format_string(tpp_lexer *tpp_restrict self,
+                                    tpp_char const **tpp_restrict p_pos,
+                                    tpp_char quote_char) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+	for (;;) {
+		tpp_char ch;
+		tpp_errno error;
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
+		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
+		error = tpp_lexer_readchar(self, p_pos, &ch);
+		if (TPP_ISERR(error))
+			return error;
+		if (ch == quote_char)
+			break;
+		if (ch == 0 && (*p_pos) >= file->tf_end)
+			goto warn_premature_eof;
+		if (ch == '\\') {
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				return error;
+			switch (ch) {
+			case 0:
+				if ((*p_pos) >= file->tf_end)
+					goto warn_premature_eof;
+				break;
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+			case '(':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_PAREN))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('('),
+				                                          TPP_TOK_OFCHAR(')'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+			case '{':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACE))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+			case '[':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACKET))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('['),
+				                                          TPP_TOK_OFCHAR(']'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+			default: break;
+			}
+		} else if (ch == '{') {
+			tpp_size rel_expr_start = tpp_file_ptr2rel(file, *p_pos);
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				return error;
+			if (ch == 0 && (*p_pos) >= file->tf_end)
+				goto warn_premature_eof;
+			if (ch != '{') {
+				*p_pos = tpp_file_rel2ptr(file, rel_expr_start);
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+			}
+		} else
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
+		if (tpp_ascii_islf(ch)) {
+#if TPP_HAVE_UNICODE
+handle_linefeed:
+#endif /* TPP_HAVE_UNICODE */
+			if (!tpp_lexer_has(self, STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+				return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+#else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+				break;
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
+			/* Check for unicode linefeed */
+			tpp_unichar uc;
+			--*p_pos;
+			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			if (TPP_ISERR(error))
+				return error;
+			if (tpp_unicode_islf(uc))
+				goto handle_linefeed;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
+		{
+		}
+	}
+	return TPP_EOK;
+warn_premature_eof:
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+	                          TPP_W_STRING_TERMINATED_BY_EOF);
+#else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+	return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+}
+#endif /* NEED_tpp_lexer_seek_end_of_format_string */
+
+
+#if NEED_tpp_lexer_seek_end_of_backtick_string
+/* Find the end of a `foo: ${expr}` format string
+ *      IN(*p_pos) == ^            ^ == OUT(*p_pos) */
+static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_seek_end_of_backtick_string(tpp_lexer *tpp_restrict self,
+                                      tpp_char const **tpp_restrict p_pos) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+	for (;;) {
+		tpp_char ch;
+		tpp_errno error;
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
+		tpp_size old_pos = tpp_file_ptr2rel(file, *p_pos);
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
+		error = tpp_lexer_readchar(self, p_pos, &ch);
+		if (TPP_ISERR(error))
+			return error;
+		if (ch == '`')
+			break;
+		if (ch == 0 && (*p_pos) >= file->tf_end)
+			goto warn_premature_eof;
+		if (ch == '\\') {
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				return error;
+			switch (ch) {
+			case 0:
+				if ((*p_pos) >= file->tf_end)
+					goto warn_premature_eof;
+				break;
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+			case '(':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_PAREN))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('('),
+				                                          TPP_TOK_OFCHAR(')'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+			case '{':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACE))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+			case '[':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACKET))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('['),
+				                                          TPP_TOK_OFCHAR(']'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+			default: break;
+			}
+		} else if (ch == '$') {
+			error = tpp_lexer_readchar(self, p_pos, &ch);
+			if (TPP_ISERR(error))
+				return error;
+			if (ch == 0 && (*p_pos) >= file->tf_end)
+				goto warn_premature_eof;
+			if (ch == '{') {
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+			}
+		} else
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE)
+		if (tpp_ascii_islf(ch)) {
+#if TPP_HAVE_UNICODE
+handle_linefeed:
+#endif /* TPP_HAVE_UNICODE */
+			if (!tpp_lexer_has(self, STRING_ALLOW_MULTILINE)) {
+				*p_pos = tpp_file_rel2ptr(file, old_pos);
+				/* Warning if a line-feed is encountered */
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
+				return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+				                          TPP_W_STRING_TERMINATED_BY_LINEFEED);
+#else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+				break;
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
+			} else {
+#if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+				if (TPP_ISERR(error))
+					return error;
+#endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
+			}
+		} else
+#if TPP_HAVE_UNICODE
+		if (tpp_ascii_ismb(ch) && tpp_file_isutf8(file)) {
+			/* Check for unicode linefeed */
+			tpp_unichar uc;
+			--*p_pos;
+			error = tpp_lexer_readutf8(self, p_pos, &uc);
+			if (TPP_ISERR(error))
+				return error;
+			if (tpp_unicode_islf(uc))
+				goto handle_linefeed;
+		} else
+#endif /* TPP_HAVE_UNICODE */
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) */
+		{
+		}
+	}
+	return TPP_EOK;
+warn_premature_eof:
+#if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF
+	return tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+	                          TPP_W_STRING_TERMINATED_BY_EOF);
+#else /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+	return TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF */
+}
+#endif /* NEED_tpp_lexer_seek_end_of_backtick_string */
+
+
 /* Find the end of a """foo""" or '''foo''' string
  *        IN(*p_pos) == ^     ^ == OUT(*p_pos) */
 #if NEED_tpp_lexer_seek_end_of_block_string
@@ -1258,8 +1650,50 @@ tpp_lexer_seek_end_of_block_string(tpp_lexer *tpp_restrict self,
 			error = tpp_lexer_readchar(self, p_pos, &ch);
 			if (TPP_ISERR(error))
 				return error;
-			if (ch == 0 && (*p_pos) >= file->tf_end)
-				goto warn_premature_eof;
+			switch (ch) {
+			case 0:
+				if ((*p_pos) >= file->tf_end)
+					goto warn_premature_eof;
+				break;
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+			case '(':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_PAREN))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('('),
+				                                          TPP_TOK_OFCHAR(')'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+			case '{':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACE))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('{'),
+				                                          TPP_TOK_OFCHAR('}'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+			case '[':
+				if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACKET))
+					break;
+				error = tpp_lexer_seek_end_of_format_expr(self, p_pos,
+				                                          TPP_TOK_OFCHAR('['),
+				                                          TPP_TOK_OFCHAR(']'));
+				if (TPP_ISERR(error))
+					return error;
+				break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+			default: break;
+			}
 		}
 	}
 	return TPP_EOK;
@@ -2296,6 +2730,7 @@ tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos) {
      NEED_tpp_lexer_seek_end_of_block_string ||   \
      NEED_tpp_lexer_seek_end_of_cxx_raw_string || \
      NEED_tpp_lexer_seek_end_of_raw_string ||     \
+     NEED_tpp_lexer_seek_end_of_format_string ||  \
      TPP_HAVE_TOK_MC || TPP_HAVE_TOK_PASCAL_HEX)
 #define NEED_read_ch2 1
 #else /* ... */
@@ -4874,6 +5309,59 @@ continue_pascal_comment_with_ch2:
 
 
 /************************************************************************/
+#if TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+	case 'f': {
+		if (tpp_lexer_has(self, TOK_PYTHON_FORMAT_STRING_LITERAL) ||
+		    tpp_lexer_has(self, TOK_PYTHON_FORMAT_CHAR_LITERAL)) {
+			read_ch2();
+			if (0
+#if TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL
+			    || (ch2 == '"' && tpp_lexer_has(self, TOK_PYTHON_FORMAT_STRING_LITERAL))
+#endif /* TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL */
+#if TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+			    || (ch2 == '\'' && tpp_lexer_has(self, TOK_PYTHON_FORMAT_CHAR_LITERAL))
+#endif /* TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
+			    ) {
+				error = tpp_lexer_seek_end_of_format_string(self, &pos, ch2);
+				if (TPP_ISERR(error))
+					goto return_error;
+#if TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL && TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+				result = ch2 == '"' ? TPP_TOK_PYTHON_FORMAT_STRING_LITERAL /* f"foo" */
+				                    : TPP_TOK_PYTHON_FORMAT_CHAR_LITERAL;  /* f'foo' */
+#elif TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL
+				result = TPP_TOK_PYTHON_FORMAT_STRING_LITERAL; /* f"foo" */
+#else /* ... */
+				result = TPP_TOK_PYTHON_FORMAT_CHAR_LITERAL; /* f'foo' */
+#endif /* !... */
+				goto set_result;
+			}
+			pos = tpp_file_rel2ptr(file, rel_start + 1);
+		}
+		goto handle_keyword;
+#define WANT_handle_keyword
+	}
+#endif /* ... */
+/************************************************************************/
+
+
+
+/************************************************************************/
+#if TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL
+	case '`': {
+		if (!tpp_lexer_has(self, TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL))
+			break;
+		error = tpp_lexer_seek_end_of_backtick_string(self, &pos);
+		if (TPP_ISERR(error))
+			goto return_error;
+		result = TPP_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL; /* `foo` */
+		goto set_result;
+	}	break;
+#endif /* !TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL */
+/************************************************************************/
+
+
+
+/************************************************************************/
 #if TPP_HAVE_TOK_DOLLAR || TPP_HAVE_TOK_PASCAL_HEX
 	case '$': {
 #if TPP_HAVE_TOK_PASCAL_HEX
@@ -5209,7 +5697,10 @@ handle_space:
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_ASSUME_ASCII_CTYPE
 		case 'a': case 'b': case 'c': case 'd': case 'e':
-		case 'f': case 'g': case 'h': case 'i': case 'j':
+#if !TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL && !TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+		case 'f':
+#endif /* !TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL && !TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
+		case 'g': case 'h': case 'i': case 'j':
 		case 'k': case 'l': case 'm': case 'n': case 'o':
 		case 'p': case 'q':
 #if !TPP_HAVE_TOK_RAW_STRING_LITERAL && !TPP_HAVE_TOK_RAW_CHAR_LITERAL

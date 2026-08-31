@@ -28,6 +28,10 @@ Builtin warnings can be hard-disabled, or force-enabled (even when not-needed) b
 - <a name="tpp_have_tpp_w_deprecated_keyword"></a>`TPP_HAVE_TPP_W_DEPRECATED_KEYWORD`
 - <a name="tpp_have_tpp_w_pop_macro_empty_stack"></a>`TPP_HAVE_TPP_W_POP_MACRO_EMPTY_STACK`
 - <a name="tpp_have_tpp_w_unknown_string_escape_sequence"></a>`TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE`
+- <a name="tpp_have_tpp_w_unsupported_format_string_escape"></a>`TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE`
+- <a name="tpp_have_tpp_w_format_string_escape_terminated_by_eof"></a>`TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF`
+- <a name="tpp_have_tpp_w_unexpected_text_after_format_string_escape"></a>`TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE`
+- <a name="tpp_have_tpp_w_unescaped_rbrace_in_python_format_string"></a>`TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING`
 - <a name="tpp_have_tpp_w_unknown_named_escape_sequence"></a>`TPP_HAVE_TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE`
 - <a name="tpp_have_tpp_w_eof_in_argument_list"></a>`TPP_HAVE_TPP_W_EOF_IN_ARGUMENT_LIST`
 - <a name="tpp_have_tpp_w_too_many_arguments"></a>`TPP_HAVE_TPP_W_TOO_MANY_ARGUMENTS`

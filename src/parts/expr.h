@@ -376,12 +376,12 @@ tpp_intvalue_builder_adddigit(tpp_intvalue_builder *tpp_restrict self,
 /* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
-#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#if TPP_HAVE_INTVALUE_PRINTREPR
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
                        tpp_intvalue *tpp_restrict self,
                        tpp_formatprinter printer, void *arg);
-#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_INTVALUE_PRINTREPR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 #endif /* !tpp_intvalue */
 
@@ -612,7 +612,7 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_div(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_errno TPPCALL tpp_expr_value_mod(struct tpp_lexer *tpp_restrict lexer, /*in*/ tpp_expr_value *tpp_restrict lhs, /*in*/ tpp_expr_value *tpp_restrict rhs, /*out*/ tpp_expr_value *tpp_restrict result);
 
-/* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
+/* Print the representation of `self` to `printer` (used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
 #if TPP_HAVE_EXPR_VALUE_PRINTREPR
@@ -621,6 +621,16 @@ tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
                          tpp_expr_value *tpp_restrict self,
                          tpp_formatprinter printer, void *arg);
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+
+/* Print the string-contents of `self` to `printer` (used to implement `TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR`)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTSTR
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_expr_value_printstr(struct tpp_lexer *tpp_restrict lexer,
+                        tpp_expr_value *tpp_restrict self,
+                        tpp_formatprinter printer, void *arg);
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTSTR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 
 TPP_DECL_END

@@ -51,6 +51,139 @@ TPP_DECL_BEGIN
 
 
 
+#if TPP_HAVE_STRING_FORMAT
+/* Decode the contents of a format-string expression (as well as seek the expression's end):
+ * >> f"foo: {expr} bar"
+ *            ^    ^   ^
+ *            |    |   end
+ *            |    OUT(*p_iter)
+ *            IN(*p_iter)
+ *
+ * @param: lparen: left parenthesis character (in above example: `{`)
+ * @param: rparen: right parenthesis character (in above example: `}`) */
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_formatexpr(tpp_lexer *tpp_restrict self,
+                                  tpp_char const **tpp_restrict p_iter, tpp_char const *end,
+                                  tpp_lexer_decodestring_config const *tpp_restrict config,
+                                  tpp_token_id lparen, tpp_token_id rparen) {
+	unsigned int recursion = 0;
+	tpp_token *const token = tpp_lexer_gettoken(self);
+	tpp_token_id const saved_token_id        = token->tt_id;
+//	tpp_keyword const *const saved_token_kwd = token->tt_kwd; /* Not necessary -- `saved_token_id` is a string literal token */
+	tpp_char const *const saved_token_start  = token->tt_start;
+	tpp_char const *const saved_token_end    = token->tt_end;
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_ssize result;
+	tpp_char const *expr_start = *p_iter;
+	tpp_char const *after_expr = expr_start;
+	tpp_char const *expr_end;
+	after_expr = tpp_preparse_skipbse_fwd(self, after_expr, end);
+	tpp_file_subtext_push(file);
+	tpp_file_subtext_setchunk_fromsubstring(file, after_expr, end);
+
+	/* Find the end of the expression */
+	result = 0;
+	tpp_lexer_nowarnings_pushon(self);
+	for (;;) {
+		tpp_token_id tok;
+		expr_end = after_expr;
+		tok = tpp_lexer_yieldraw_at(self, &after_expr);
+		if (TPP_TOK_ISERR(tok)) {
+			result = TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+			break;
+		} else if (tok == TPP_TOK_EOF) {
+			/* Warning: format expression terminated by end-of-string */
+#if TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF
+			tpp_errno error;
+			token->tt_start = expr_start;
+			token->tt_end   = end;
+			error  = tpp_lexer_warnf(self, TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF);
+			result = TPP_SSIZE_OFERR_OR_EOK(error);
+#endif /* TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF */
+			break;
+		} else if (tok == lparen) {
+			++recursion;
+		} else if (tok == rparen) {
+			if (recursion == 0)
+				break;
+			--recursion;
+		}
+	}
+	tpp_lexer_nowarnings_pop(self);
+	if (result < 0)
+		goto done;
+
+	/* Setup file to (re-)parse the expression itself. */
+	tpp_file_subtext_setchunk_fromsubstring(file, expr_start, expr_end);
+	token->tt_id = TPP_TOK_SPACE;
+	token->tt_start = expr_start;
+
+	/* Invoke format expression handler. */
+	if (config->tldsc_formatexpr) {
+		result = (*config->tldsc_formatexpr)(config->tldsc_arg, self);
+		tpp_lexer_popallfiles(self);
+#if TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR
+check_eof_after_expression:;
+#endif /* TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR */
+
+		/* Emit warning if there is more (unused) text after the expression. */
+#if TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE
+		if (result >= 0 && token->tt_start < expr_end) {
+			tpp_token_id tok = tpp_lexer_gettok(self);
+			while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
+				tok = tpp_lexer_yieldraw(self);
+			if (TPP_TOK_ISERR(tok)) {
+				result = TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
+			} else if (tok != TPP_TOK_EOF) {
+				tpp_errno error;
+				token->tt_end = expr_end;
+				error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE);
+				if (TPP_ISERR(error))
+					result = TPP_SSIZE_OFERR(error);
+			}
+		}
+#endif /* TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE */
+	} else
+#if TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR
+	if (tpp_lexer_has(self, FORMAT_STRING_BUILTIN_EXPR)) {
+		/* Make use of the preprocessor expression parser. */
+		tpp_expr_value expr_value;
+		tpp_errno error = tpp_lexer_callhook_parseexpr(self, &expr_value);
+		if (TPP_ISERR(error)) {
+			result = TPP_SSIZE_OFERR(error);
+		} else {
+			/* Print representation of expression value */
+			result = tpp_expr_value_printstr(self, &expr_value,
+			                                 tpp_lexer_decodestring_config_getutf8(config),
+			                                 config->tldsc_arg);
+			tpp_expr_value_fini(&expr_value);
+			goto check_eof_after_expression;
+		}
+	} else
+#endif /* TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR */
+	{
+#if TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE
+		tpp_errno error;
+		token->tt_start = expr_start;
+		token->tt_end   = expr_end;
+		error  = tpp_lexer_warnf(self, TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE);
+		result = TPP_SSIZE_OFERR_OR_EOK(error);
+#else /* TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE */
+		result = 0;
+#endif /* !TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE */
+	}
+
+done:
+	tpp_file_subtext_pop(file);
+	token->tt_id    = saved_token_id;
+//	token->tt_kwd   = saved_token_kwd; /* Not necessary -- `saved_token_id` is a string literal token */
+	token->tt_start = saved_token_start;
+	token->tt_end   = saved_token_end;
+	*p_iter = after_expr;  /* Tell caller where the expression ends */
+	return result;
+}
+#endif /* TPP_HAVE_STRING_FORMAT */
+
 
 #if TPP_HAVE_STRING_ESCAPE
 
@@ -476,84 +609,26 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
 /*[[[tpp-begin]]]*/
 
 
-/* Decode string: "foobar fdasudfad"
- *                 ^start          ^end
- */
-static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
-tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
-                             tpp_lexer_decodestring_config const *tpp_restrict config) {
-	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
-	void *const arg = config->tldsc_arg;
-	tpp_char ch;
+/* Decode \-escape: "foo\nbar barfoo"
+ *                      ^^^         ^
+ *                      |||         end
+ *                      ||OUT(*p_iter), OUT(*p_flush_start)
+ *                      |IN(*p_iter)
+ *                      esc_start
+ *
+ * @param: esc_start:     [in] Pointer to start of \-escape sequence (for error messages)
+ * @param: p_flush_start: [out(on_success)] Set to start of string-flush area after \-escape sequence
+ * @param: p_iter:        [in] First character of \-escape sequence
+ *                        [out(on_success)] First character after \-escape sequence
+ * @param: end:           Pointer to end of string */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4, 5, 6)) tpp_ssize TPPCALL
+tpp_token_decodestring_escape(tpp_lexer *tpp_restrict self, tpp_char const *esc_start,
+                              tpp_char const **p_flush_start,
+                              tpp_char const **p_iter, tpp_char const *end,
+                              tpp_lexer_decodestring_config const *tpp_restrict config) {
 	tpp_ssize temp, result = 0;
-	tpp_char const *iter = start;
-	tpp_char const *esc_start;
-	tpp_assert(start <= end);
-
-again:
-	if (iter >= end)
-		goto done;
-	ch = *iter++;
-
-	/* Decode trigraphs... */
-#if TPP_HAVE_TRIGRAPHS
-	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
-	    tpp_lexer_has(self, TRIGRAPHS)) {
-		switch (iter[1]) {
-		case '=': ch = '#'; break;
-		case '(': ch = '['; break;
-		case ')': ch = ']'; break;
-		case '\'': ch = '^'; break;
-		case '<': ch = '{'; break;
-		case '!': ch = '|'; break;
-		case '>': ch = '}'; break;
-		case '-': ch = '~'; break;
-		case '/': ch = '\\'; break;
-		default: goto not_trigraph; /* Not actually a trigraph escape sequence */
-		}
-		--iter;
-
-		/* Warn about trigraph, because `tpp_lexer_yieldraw()` hadn't done so already */
-#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
-		{
-			tpp_file *const file = tpp_lexer_getfile(self);
-			tpp_errno error = tpp_lexer_warnf_at(self, file, iter, TPP_W_ENCOUNTERED_TRIGRAPH);
-			if (TPP_ISERR(error))
-				return TPP_SSIZE_OFERR(error);
-		}
-#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
-
-		/* Print trigraph character (but also handle case where "??/" was encoded) */
-		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(iter - start));
-		if (temp < 0)
-			goto err_temp;
-		result += temp;
-		esc_start = iter;
-		iter += 3;
-		start = iter;
-		if (ch != '\\') {
-			temp = tpp_formatprinter_print(default_printer, arg, &ch, 1);
-			if (temp < 0)
-				goto err_temp;
-			result += temp;
-			goto again;
-		}
-	} else
-#endif /* TPP_HAVE_TRIGRAPHS */
-	{
-#if TPP_HAVE_TRIGRAPHS
-not_trigraph:
-#endif /* TPP_HAVE_TRIGRAPHS */
-		if (ch != '\\')
-			goto again;
-
-		/* Print everything up until the \-character */
-		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)((iter - 1) - start));
-		if (temp < 0)
-			goto err_temp;
-		result += temp;
-		esc_start = iter - 1;
-	}
+	tpp_char const *iter = *p_iter;
+	tpp_char ch;
 
 	/* Deal with \-escape sequence */
 	if (iter >= end) {
@@ -574,8 +649,9 @@ not_trigraph:
 escape_self_sequence:
 #endif /* !TPP_HAVE_TRIGRAPHS */
 		/* Escape sequences that escape to themselves. */
-		start = iter - 1;
-		goto again;
+		*p_flush_start = iter - 1;
+		*p_iter = iter;
+		return result;
 
 #if TPP_HAVE_TRIGRAPHS
 	case '?':
@@ -592,11 +668,11 @@ escape_self_sequence:
 		if (!tpp_lexer_has(self, TRIGRAPHS))
 			goto escape_self_sequence;
 		iter += 2;
-		temp = tpp_formatprinter_print(default_printer, arg, (tpp_char const *)"\\", 1);
+		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
+		                               config->tldsc_arg, (tpp_char const *)"\\", 1);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
-		start = iter;
 		break;
 #endif /* TPP_HAVE_TRIGRAPHS */
 
@@ -626,7 +702,8 @@ escape_self_sequence:
 #endif /* !TPP_HAVE_STRING_ESCAPE_S */
 
 print_ch_as_byte:
-		temp = tpp_formatprinter_print(config->tldsc_dataprinter, arg, &ch, 1);
+		temp = tpp_formatprinter_print(config->tldsc_dataprinter,
+		                               config->tldsc_arg, &ch, 1);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
@@ -718,7 +795,7 @@ print_ch_as_byte:
 			if (tpp_lexer_has(self, STRING_ESCAPE_HEX)) {
 				temp = tpp_token_decodestring_hex_sequence(self, &iter, end, config);
 				if (temp < 0)
-					return temp;
+					goto err_temp;
 				result += temp;
 			}
 		} else
@@ -757,7 +834,7 @@ print_ch_as_byte:
 					if (tpp_ascii_isxdigit(ch)) {
 						temp = tpp_token_decodestring_hex_sequence_ex(self, &iter, end, config, true);
 						if (temp < 0)
-							return temp;
+							goto err_temp;
 						result += temp;
 					} else {
 						goto handle_unknown_hex_brace_sequence;
@@ -771,7 +848,7 @@ print_ch_as_byte:
 					goto handle_unknown_hex_brace_sequence;
 				temp = tpp_token_decodestring_hex_sequence_ex(self, &iter, end, config, true);
 				if (temp < 0)
-					return temp;
+					goto err_temp;
 				result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_HEX_BRACE_MANY) */
 			}
@@ -834,7 +911,7 @@ handle_unknown_hex_brace_sequence:
 				if (tpp_ascii_isoctdigit(ch)) {
 					temp = tpp_token_decodestring_oct_sequence(self, &iter, end, config);
 					if (temp < 0)
-						return temp;
+						goto err_temp;
 					result += temp;
 				} else {
 					goto handle_unknown_oct_brace_sequence;
@@ -848,7 +925,7 @@ handle_unknown_hex_brace_sequence:
 				goto handle_unknown_oct_brace_sequence;
 			temp = tpp_token_decodestring_oct_sequence(self, &iter, end, config);
 			if (temp < 0)
-				return temp;
+				goto err_temp;
 			result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_OCT_BRACE_MANY) */
 		}
@@ -898,7 +975,7 @@ handle_unknown_oct_brace_sequence:
 					if (tpp_ascii_isxdigit(ch)) {
 						temp = tpp_token_decodestring_uni_sequence(self, &iter, end, config);
 						if (temp < 0)
-							return temp;
+							goto err_temp;
 						result += temp;
 					} else {
 						goto handle_unknown_uni_brace_sequence;
@@ -914,7 +991,7 @@ handle_unknown_oct_brace_sequence:
 					goto handle_unknown_uni_brace_sequence;
 				temp = tpp_token_decodestring_uni_sequence(self, &iter, end, config);
 				if (temp < 0)
-					return temp;
+					goto err_temp;
 				result += temp;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ESCAPE_UNI_BRACE_MANY) */
 			}
@@ -997,7 +1074,7 @@ handle_unknown_uni_brace_sequence:
 			/* Write data as utf-8 */
 			utf8_len = (tpp_size)(utf8_dst - utf8_buf);
 			temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
-			                               arg, utf8_buf, utf8_len);
+			                               config->tldsc_arg, utf8_buf, utf8_len);
 			if (temp < 0)
 				goto err_temp;
 			result += temp;
@@ -1069,13 +1146,52 @@ handle_escape_uni:
 		/* Encode as utf-8 */
 		utf8_len = (tpp_size)(tpp_unicode_writeutf8(utf8_buf, uc) - utf8_buf);
 		temp = tpp_formatprinter_print(tpp_lexer_decodestring_config_getutf8(config),
-		                               arg, utf8_buf, utf8_len);
+		                               config->tldsc_arg, utf8_buf, utf8_len);
 		if (temp < 0)
 			goto err_temp;
 		result += temp;
 	}	break;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN
+	case '(': {
+		if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_PAREN))
+			goto handle_unknown_escape_sequence;
+		temp = tpp_token_decodestring_formatexpr(self, &iter, end, config,
+		                                         TPP_TOK_OFCHAR('('),
+		                                         TPP_TOK_OFCHAR(')'));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_PAREN */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET
+	case '[': {
+		if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACKET))
+			goto handle_unknown_escape_sequence;
+		temp = tpp_token_decodestring_formatexpr(self, &iter, end, config,
+		                                         TPP_TOK_OFCHAR('['),
+		                                         TPP_TOK_OFCHAR(']'));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACKET */
+
+#if TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE
+	case '{': {
+		if (!tpp_lexer_has(self, STRING_ESCAPE_FORMAT_BRACE))
+			goto handle_unknown_escape_sequence;
+		temp = tpp_token_decodestring_formatexpr(self, &iter, end, config,
+		                                         TPP_TOK_OFCHAR('{'),
+		                                         TPP_TOK_OFCHAR('}'));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}	break;
+#endif /* TPP_HAVE_STRING_ESCAPE_FORMAT_BRACE */
 
 	default: {
 		tpp_char const *esc_first;
@@ -1176,8 +1292,8 @@ handle_unknown_escape_sequence:
 		if (temp >= 0) {
 			/* Successfully handled via hook. */
 			result += temp;
-			start = iter = esc_first;
-			goto again;
+			iter = esc_first;
+			goto done;
 		}
 		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
 			goto err_temp; /* Error/abort from printer callback */
@@ -1198,17 +1314,105 @@ handle_unknown_escape_sequence:
 		}
 #endif /* TPP_HAVE_TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE */
 		/* Setup flushing such that the \-character is removed */
-#if TPP_HAVE_TRIGRAPHS
-		if (*esc_start == '?')
-			esc_start += 2;
-#endif /* TPP_HAVE_TRIGRAPHS */
-		start = esc_first;
-		goto again;
+		*p_flush_start = esc_first;
+		*p_iter = iter;
+		return result;
 	}	break;
 
 	}
+done:
+	*p_flush_start = iter;
+	*p_iter = iter;
+	return result;
+err_temp:
+	tpp_assert(TPP_SSIZE_ISERR(temp));
+	return temp;
+}
 
-	start = iter;
+/* Decode string: "foobar fdasudfad"
+ *                 ^start          ^end
+ */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_basic(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
+                             tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
+	void *const arg = config->tldsc_arg;
+	tpp_char ch;
+	tpp_ssize temp, result = 0;
+	tpp_char const *iter = start;
+	tpp_char const *esc_start;
+	tpp_assert(start <= end);
+
+again:
+	if (iter >= end)
+		goto done;
+	ch = *iter++;
+
+	/* Decode trigraphs... */
+#if TPP_HAVE_TRIGRAPHS
+	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
+	    tpp_lexer_has(self, TRIGRAPHS)) {
+		switch (iter[1]) {
+		case '=': ch = '#'; break;
+		case '(': ch = '['; break;
+		case ')': ch = ']'; break;
+		case '\'': ch = '^'; break;
+		case '<': ch = '{'; break;
+		case '!': ch = '|'; break;
+		case '>': ch = '}'; break;
+		case '-': ch = '~'; break;
+		case '/': ch = '\\'; break;
+		default: goto not_trigraph; /* Not actually a trigraph escape sequence */
+		}
+		--iter;
+
+		/* Warn about trigraph, because `tpp_lexer_yieldraw()` hadn't done so already */
+#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+		{
+			tpp_file *const file = tpp_lexer_getfile(self);
+			tpp_errno error = tpp_lexer_warnf_at(self, file, iter, TPP_W_ENCOUNTERED_TRIGRAPH);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+
+		/* Print trigraph character (but also handle case where "??/" was encoded) */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(iter - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter;
+		iter += 3;
+		start = iter;
+		if (ch != '\\') {
+			temp = tpp_formatprinter_print(default_printer, arg, &ch, 1);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			goto again;
+		}
+	} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+	{
+#if TPP_HAVE_TRIGRAPHS
+not_trigraph:
+#endif /* TPP_HAVE_TRIGRAPHS */
+		if (ch != '\\')
+			goto again;
+
+		/* Print everything up until the \-character */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)((iter - 1) - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter - 1;
+	}
+
+	/* Perform \-escape handling */
+	temp = tpp_token_decodestring_escape(self, esc_start, &start, &iter, end, config);
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
 	goto again;
 done:
 	if (start < end) {
@@ -1224,10 +1428,321 @@ err_temp:
 #endif /* TPP_HAVE_STRING_ESCAPE */
 
 
+#if TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+/* Decode string: f"foo: {expr}"
+ *                  ^start     ^end
+ */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_format(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
+                              tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
+	void *const arg = config->tldsc_arg;
+	tpp_char ch;
+	tpp_ssize temp, result = 0;
+	tpp_char const *iter = start;
+	tpp_char const *esc_start;
+	tpp_assert(start <= end);
+
+again:
+	if (iter >= end)
+		goto done;
+	ch = *iter++;
+
+	/* Decode trigraphs... */
+#if TPP_HAVE_TRIGRAPHS
+	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
+	    tpp_lexer_has(self, TRIGRAPHS)) {
+		switch (iter[1]) {
+		case '=': ch = '#'; break;
+		case '(': ch = '['; break;
+		case ')': ch = ']'; break;
+		case '\'': ch = '^'; break;
+		case '<': ch = '{'; break;
+		case '!': ch = '|'; break;
+		case '>': ch = '}'; break;
+		case '-': ch = '~'; break;
+		case '/': ch = '\\'; break;
+		default: goto not_trigraph; /* Not actually a trigraph escape sequence */
+		}
+		--iter;
+
+		/* Warn about trigraph, because `tpp_lexer_yieldraw()` hadn't done so already */
+#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+		{
+			tpp_file *const file = tpp_lexer_getfile(self);
+			tpp_errno error = tpp_lexer_warnf_at(self, file, iter, TPP_W_ENCOUNTERED_TRIGRAPH);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+
+		/* Print trigraph character (but also handle case where "??/" was encoded) */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(iter - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter;
+		iter += 3;
+		start = iter;
+		if (ch != '\\' && ch != '{' && ch != '}') {
+			temp = tpp_formatprinter_print(default_printer, arg, &ch, 1);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			goto again;
+		}
+	} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+	{
+#if TPP_HAVE_TRIGRAPHS
+not_trigraph:
+#endif /* TPP_HAVE_TRIGRAPHS */
+		if (ch != '\\' && ch != '{' && ch != '}')
+			goto again;
+
+		/* Print everything up until the \ { or } character */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)((iter - 1) - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter - 1;
+	}
+
+	/* Perform \-escape handling */
+	switch (ch) {
+
+	case '{':
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
+		if (iter < end && *iter == '{') {
+			/* Special case: `{{` is an escape sequence for `{` */
+			temp = 0;
+			start = iter;
+			++iter;
+		} else
+#if TPP_HAVE_TRIGRAPHS
+		if ((iter + 2) < end && (iter[0] == '?' && iter[1] == '?' && iter[2] == '<') &&
+		    tpp_lexer_has(self, TRIGRAPHS)) {
+			temp = tpp_formatprinter_print_conststr(default_printer, arg, "{");
+			iter += 3;
+			start = iter;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+		{
+			temp = tpp_token_decodestring_formatexpr(self, &iter, end, config,
+			                                         TPP_TOK_OFCHAR('{'),
+			                                         TPP_TOK_OFCHAR('}'));
+			start = iter;
+		}
+		break;
+
+	case '}':
+		temp = 0;
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
+		if (iter < end && *iter == '}') {
+			/* Special case: `}}` is an escape sequence for `}` */
+			start = iter;
+			++iter;
+		} else
+#if TPP_HAVE_TRIGRAPHS
+		if ((iter + 2) < end && (iter[0] == '?' && iter[1] == '?' && iter[2] == '>') &&
+		    tpp_lexer_has(self, TRIGRAPHS)) {
+			temp = tpp_formatprinter_print_conststr(default_printer, arg, "}");
+			iter += 3;
+			start = iter;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+		{
+#if TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING
+			tpp_errno error;
+			tpp_token *const token = tpp_lexer_gettoken(self);
+			tpp_char const *const saved_start = token->tt_start;
+			tpp_char const *const saved_end = token->tt_end;
+			token->tt_start = esc_start;
+			token->tt_end   = iter;
+			error = tpp_lexer_warnf(self, TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING);
+			token->tt_start = saved_start;
+			token->tt_end   = saved_end;
+			temp = TPP_SSIZE_OFERR_OR_EOK(error);
+#endif /* TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING */
+		}
+		break;
+
+	case '\\':
+		/* In addition to everything related to { and }: also support \-escape sequences. */
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
+		if (iter < end && (*iter == '{' || *iter == '}')) {
+			/* Special case: extra escape-self sequence */
+			start = iter;
+			++iter;
+			temp = 0;
+		} else {
+			temp = tpp_token_decodestring_escape(self, esc_start, &start, &iter, end, config);
+		}
+		break;
+
+	default: tpp_unreachable();
+	}
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	goto again;
+done:
+	if (start < end) {
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(end - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
+
+
+#if TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL
+/* Decode string: `foo: ${expr}`
+ *                 ^start      ^end
+ */
+static TPP_WUNUSED TPP_NONNULL((1, 2, 3, 4)) tpp_ssize TPPCALL
+tpp_token_decodestring_backtick(tpp_lexer *tpp_restrict self, tpp_char const *start, tpp_char const *end,
+                                tpp_lexer_decodestring_config const *tpp_restrict config) {
+	tpp_formatprinter const default_printer = tpp_lexer_decodestring_config_getdefl(config, self);
+	void *const arg = config->tldsc_arg;
+	tpp_char ch;
+	tpp_ssize temp, result = 0;
+	tpp_char const *iter = start;
+	tpp_char const *esc_start;
+	tpp_assert(start <= end);
+
+again:
+	if (iter >= end)
+		goto done;
+	ch = *iter++;
+
+	/* Decode trigraphs... */
+#if TPP_HAVE_TRIGRAPHS
+	if (ch == '?' && ((iter + 1) < end && iter[0] == '?') &&
+	    tpp_lexer_has(self, TRIGRAPHS)) {
+		switch (iter[1]) {
+		case '=': ch = '#'; break;
+		case '(': ch = '['; break;
+		case ')': ch = ']'; break;
+		case '\'': ch = '^'; break;
+		case '<': ch = '{'; break;
+		case '!': ch = '|'; break;
+		case '>': ch = '}'; break;
+		case '-': ch = '~'; break;
+		case '/': ch = '\\'; break;
+		default: goto not_trigraph; /* Not actually a trigraph escape sequence */
+		}
+		--iter;
+
+		/* Warn about trigraph, because `tpp_lexer_yieldraw()` hadn't done so already */
+#if TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH
+		{
+			tpp_file *const file = tpp_lexer_getfile(self);
+			tpp_errno error = tpp_lexer_warnf_at(self, file, iter, TPP_W_ENCOUNTERED_TRIGRAPH);
+			if (TPP_ISERR(error))
+				return TPP_SSIZE_OFERR(error);
+		}
+#endif /* TPP_HAVE_TPP_W_ENCOUNTERED_TRIGRAPH */
+
+		/* Print trigraph character (but also handle case where "??/" was encoded) */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(iter - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter;
+		iter += 3;
+		start = iter;
+		if (ch != '\\' /*&& ch != '$'*/) {
+			temp = tpp_formatprinter_print(default_printer, arg, &ch, 1);
+			if (temp < 0)
+				goto err_temp;
+			result += temp;
+			goto again;
+		}
+	} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+	{
+#if TPP_HAVE_TRIGRAPHS
+not_trigraph:
+#endif /* TPP_HAVE_TRIGRAPHS */
+		if (ch != '\\' && ch != '$')
+			goto again;
+
+		/* Print everything up until the \ or $ character */
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)((iter - 1) - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+		esc_start = iter - 1;
+	}
+
+	/* Perform \-escape handling */
+	switch (ch) {
+
+	case '$':
+		iter = tpp_preparse_skipbse_fwd(self, iter, end);
+		if (iter < end && *iter == '{') {
+			/* Special case: `{{` is an escape sequence for `{` */
+			++iter;
+#if TPP_HAVE_TRIGRAPHS
+handle_format_expr:
+#endif /* TPP_HAVE_TRIGRAPHS */
+			temp = tpp_token_decodestring_formatexpr(self, &iter, end, config,
+			                                         TPP_TOK_OFCHAR('{'),
+			                                         TPP_TOK_OFCHAR('}'));
+			start = iter;
+		} else
+#if TPP_HAVE_TRIGRAPHS
+		if ((iter + 2) < end && (iter[0] == '?' && iter[1] == '?' && iter[2] == '<') &&
+		    tpp_lexer_has(self, TRIGRAPHS)) {
+			iter += 3;
+			goto handle_format_expr;
+		} else
+#endif /* TPP_HAVE_TRIGRAPHS */
+		{
+		}
+		break;
+
+	case '\\':
+		/* In addition to everything related to { and }: also support \-escape sequences. */
+		if (iter < end && *iter == '$') {
+			/* Special case: extra escape-self sequence */
+			start = iter;
+			++iter;
+			temp = 0;
+		} else {
+			temp = tpp_token_decodestring_escape(self, esc_start, &start, &iter, end, config);
+		}
+		break;
+
+	default: tpp_unreachable();
+	}
+	if (temp < 0)
+		goto err_temp;
+	result += temp;
+	goto again;
+done:
+	if (start < end) {
+		temp = tpp_formatprinter_print(default_printer, arg, start, (tpp_size)(end - start));
+		if (temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+#endif /* TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL */
+
+
 #if TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL
 struct tpp_block_string_prefix {
-	tpp_char const *tbsp_start;  /* [1..1] Prefix start */
-	tpp_char const *tbsp_end;    /* [1..1] Prefix end */
+	tpp_char const *tbsp_start; /* [1..1] Prefix start */
+	tpp_char const *tbsp_end;   /* [1..1] Prefix end */
 };
 
 #define tpp_block_string_prefix_isempty(self) \
@@ -1707,6 +2222,42 @@ do_decode_basic:
 		return tpp_token_decodestring_block(self, start, end, config);
 	}	break;
 #endif /* TPP_HAVE_TOK_BLOCK_STRING_LITERAL || TPP_HAVE_TOK_BLOCK_CHAR_LITERAL */
+
+#if TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL
+	_TPP_CASE_TPP_TOK_PYTHON_FORMAT_STRING_LITERAL
+	_TPP_CASE_TPP_TOK_PYTHON_FORMAT_CHAR_LITERAL {
+		tpp_char quote_ch;
+		tpp_assert(start < end);
+		++start; /* Skip leading 'f' */
+		tpp_assert(start < end);
+		start = tpp_preparse_skipbse_fwd(self, start, end);
+		tpp_assert(start <= end);
+		quote_ch = *start++;
+		tpp_assert(quote_ch == '"' || quote_ch == '\'');
+		if (start < end && end[-1] == quote_ch)
+			--end;
+		tpp_assert(start <= end);
+		start = tpp_preparse_skipbse_fwd(self, start, end);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
+		tpp_assert(start <= end);
+		return tpp_token_decodestring_format(self, start, end, config);
+	}	break;
+#endif /* TPP_HAVE_TOK_PYTHON_FORMAT_STRING_LITERAL || TPP_HAVE_TOK_PYTHON_FORMAT_CHAR_LITERAL */
+
+#if TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL
+	_TPP_CASE_TPP_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL {
+		tpp_assert(start < end);
+		++start; /* Skip leading 'f' */
+		tpp_assert(start <= end);
+		if (start < end && end[-1] == '`')
+			--end;
+		tpp_assert(start <= end);
+		start = tpp_preparse_skipbse_fwd(self, start, end);
+		end   = tpp_preparse_skipbse_bck(self, start, end);
+		tpp_assert(start <= end);
+		return tpp_token_decodestring_backtick(self, start, end, config);
+	}	break;
+#endif /* TPP_HAVE_TOK_JAVASCRIPT_FORMAT_BACKTICK_LITERAL */
 
 	default: tpp_unreachable();
 	}
@@ -2406,6 +2957,10 @@ tpp_lexer_parsecharacter_literal(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
 	config.tldsc_bigprinter = &tpp_lexer_decodecharacter_big_cb;
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+
+#if TPP_HAVE_STRING_FORMAT
+	config.tldsc_formatexpr = NULL;
+#endif /* TPP_HAVE_STRING_FORMAT */
 
 	status = tpp_lexer_parsestring_ex(self, &config, flags);
 	*p_result = data.tldcd_value;

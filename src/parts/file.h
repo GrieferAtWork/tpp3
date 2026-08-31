@@ -902,6 +902,9 @@ typedef struct tpp_file {
 		tpp_file_subtext_setchunk(self, (arg)->tlai_chunk, (arg)->tlai_start, (arg)->tlai_end)
 #define tpp_file_subtext_setchunk_fromstring(self, chunk, start, len) \
 		tpp_file_subtext_setchunk(self, chunk, start, (start) + (len))
+#define tpp_file_subtext_setchunk_fromsubstring(self, start, end) \
+		(void)((self)->TPP_INTERNAL(tf_pos) = (start),            \
+		       (self)->TPP_INTERNAL(tf_end) = (end))
 #define _tpp_file_subtext_break_common(self)                \
 		tpp_assert((self)->TPP_INTERNAL(tf_prev) == NULL && \
 		           "Extra files were pushed"),              \

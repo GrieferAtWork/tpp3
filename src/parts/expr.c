@@ -39,7 +39,7 @@ TPP_DECL_BEGIN
 /* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
-#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#if TPP_HAVE_INTVALUE_PRINTREPR
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
 tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
                        tpp_intvalue *tpp_restrict self,
@@ -50,7 +50,7 @@ tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
 	(void)lexer;
 	return tpp_formatprinter_print_cstr(printer, arg, value_ptr, value_len);
 }
-#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_INTVALUE_PRINTREPR */
 #endif /* !tpp_intvalue */
 
 
@@ -1543,6 +1543,45 @@ tpp_expr_value_printrepr(struct tpp_lexer *tpp_restrict lexer,
 	                              printer, arg);
 }
 #endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+
+/* Print the string-contents of `self` to `printer` (used to implement `TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR`)
+ * @return: *  : Sum of positive return value of `printer`
+ * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
+#if TPP_HAVE_EXPR_VALUE_PRINTSTR
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_ssize TPPCALL
+tpp_expr_value_printstr(struct tpp_lexer *tpp_restrict lexer,
+                        tpp_expr_value *tpp_restrict self,
+                        tpp_formatprinter printer, void *arg) {
+	(void)lexer;
+#if _TPP_EXPR_VALUE_KIND_MULTIPLE
+	switch (_tpp_expr_value_getkind(self)) {
+
+	case _TPP_EXPR_VALUE_KIND_INT:
+		break;
+
+#if TPP_HAVE_BUILTIN_EXPR_FLOATS
+	case _TPP_EXPR_VALUE_KIND_FLOAT: {
+		char value_buffer[TPP_FTOA_MAXLEN];
+		tpp_float value = _tpp_expr_value_getfloat(self);
+		tpp_size value_len = tpp_ftoa(value_buffer, value);
+		return tpp_formatprinter_print_cstr(printer, arg, value_buffer, value_len);
+	}	break;
+#endif /* TPP_HAVE_BUILTIN_EXPR_FLOATS */
+
+#if TPP_HAVE_BUILTIN_EXPR_STRINGS
+	case _TPP_EXPR_VALUE_KIND_STRING: {
+		tpp_string const *const str = _tpp_expr_value_getstring(self);
+		return tpp_formatprinter_print(printer, arg, tpp_string_str(str), tpp_string_len(str));
+	}	break;
+#endif /* TPP_HAVE_BUILTIN_EXPR_STRINGS */
+
+	default: tpp_unreachable();
+	}
+#endif /* _TPP_EXPR_VALUE_KIND_MULTIPLE */
+	return tpp_intvalue_printrepr(lexer, _tpp_expr_value_getint(self),
+	                              printer, arg);
+}
+#endif /* TPP_HAVE_EXPR_VALUE_PRINTSTR */
 
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 

@@ -2271,9 +2271,9 @@ tpp_errno tpp_intvalue_cmp(tpp_intvalue *lhs, tpp_intvalue *rhs, int *p_delta);
 /* Print the representation of `self` to `printer` (in target encoding; used to implement `__TPP_EVAL`)
  * @return: *  : Sum of positive return value of `printer`
  * @return: < 0: An error was thrown (`TPP_SSIZE_ISERR`), or `printer` returned this value */
-#if TPP_HAVE_EXPR_VALUE_PRINTREPR
+#if TPP_HAVE_INTVALUE_PRINTREPR
 tpp_ssize tpp_intvalue_printrepr(tpp_lexer *lexer, tpp_intvalue *self, tpp_formatprinter printer, void *arg);
-#endif /* TPP_HAVE_EXPR_VALUE_PRINTREPR */
+#endif /* TPP_HAVE_INTVALUE_PRINTREPR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
 ```
 

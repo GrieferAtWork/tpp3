@@ -2693,13 +2693,34 @@ typedef struct tpp_lexer_decodestring_config {
 	                                      * >> tpp_errno error = tpp_lexer_warnf(lexer, TPP_W_CHARACTER_TOO_LARGE);
 	                                      * >> return TPP_SSIZE_ASERR_OR_EOK(error); */
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+#if TPP_HAVE_STRING_FORMAT
+	tpp_ssize (TPPCALL *tldsc_formatexpr)(void *arg, tpp_lexer *tpp_restrict lexer);
+	                                     /* [0..1] Callback used to evaluate `expr` in one of:
+	                                      * - `f"foo: {expr}"`
+	                                      * - `"foo: \(expr)`
+	                                      * - `"foo: \[expr]`
+	                                      * - `"foo: \{expr}`
+	                                      * - ```javascript
+	                                      *   `foo: ${expr}`
+	                                      *   ```
+	                                      *
+	                                      * The caller will have already set-up `lexer` such that
+	                                      * the next next call to `tpp_lexer_yield()` (or one of
+	                                      * the other yield-function) will yield the first token
+	                                      * of `expr`, and that `TPP_TOK_EOF` will be returned
+	                                      * once the entirety of `expr` has been consumed.
+	                                      *
+	                                      * When this callback isn't defined, behavior of format
+	                                      * expressions depends on `TPP_HAVE_FORMAT_STRING_BUILTIN_EXPR` */
+#endif /* TPP_HAVE_STRING_FORMAT */
 	void               *tldsc_arg;       /* [?..?] Cookie argument for other printers */
 } tpp_lexer_decodestring_config;
 
 /* Initialize a simple decodestring configuration (suitable for emitting utf-8 data) */
 #define tpp_lexer_decodestring_config_init_simple(self, printer, arg)    \
 	(_tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
-	 _tpp_lexer_decodestring_config_init_simple_big(self))
+	 _tpp_lexer_decodestring_config_init_simple_big(self)                \
+	 _tpp_lexer_decodestring_config_init_simple_format(self))
 #if TPP_HAVE_UNICODE
 #define _tpp_lexer_decodestring_config_init_simple_base(self, printer, arg) \
 	(self)->tldsc_dataprinter = (self)->tldsc_utf8printer = (printer),      \
@@ -2714,6 +2735,11 @@ typedef struct tpp_lexer_decodestring_config {
 #else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 #define _tpp_lexer_decodestring_config_init_simple_big(self) /* nothing */
 #endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
+#if TPP_HAVE_STRING_FORMAT
+#define _tpp_lexer_decodestring_config_init_simple_format(self) , (self)->tldsc_formatexpr = NULL
+#else /* TPP_HAVE_STRING_FORMAT */
+#define _tpp_lexer_decodestring_config_init_simple_format(self) /* nothing */
+#endif /* !TPP_HAVE_STRING_FORMAT */
 
 /* Print the unescaped representation of the string-token described by `self`
  * The caller must ensure that `TPP_TOK_ISSTRING(tpp_lexer_gettoken(self)->tt_id)`

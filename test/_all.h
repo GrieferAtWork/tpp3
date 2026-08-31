@@ -34,6 +34,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "directives-start-of-line.h"
 #include "double-counter.h"
 #include "embed.h"
+#include "format-strings.h"
 #include "glue.h"
 #include "has-include.h"
 #include "has-keyword-feature.h"

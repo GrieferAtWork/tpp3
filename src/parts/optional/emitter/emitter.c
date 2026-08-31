@@ -1234,6 +1234,9 @@ tpp_emitter_print_current_token(tpp_emitter *tpp_restrict self) {
 			config.tldsc_utf8printer = tpp_formatprinter_of(tpp_emitter_printbig_normal);
 #endif /* TPP_HAVE_UNICODE */
 			config.tldsc_bigprinter = &tpp_emitter_printbig_big;
+#if TPP_HAVE_STRING_FORMAT
+			config.tldsc_formatexpr = NULL;
+#endif /* TPP_HAVE_STRING_FORMAT */
 			temp = tpp_lexer_decodestring(lexer, &config);
 		}
 #else /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
