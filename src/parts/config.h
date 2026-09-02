@@ -280,7 +280,7 @@
  * expense of adding an (otherwise unused) reference counter
  * field to `tpp_keyword`. */
 #ifndef TPP_HAVE_KEYWORD_ASSTRING
-#define TPP_HAVE_KEYWORD_ASSTRING TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_KEYWORD_ASSTRING (TPP_HAVE_PROFILE_ALL && TPP_REFCNT_ATOMIC_IS_ATOMIC)
 #endif /* !TPP_HAVE_KEYWORD_ASSTRING */
 
 /* Include a counter for how often a specific I/O-file appears on the
@@ -7994,6 +7994,23 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_LEXER_CLI_ASSERT 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
+
+/* `tpp_string_newempty()` is implemented in terms of a single, global "empty" string object.
+ *
+ * You might say that there's no point in disabling this, especially since the alternative
+ * is to always heap-allocate a new object every time you need an empty string. However:
+ * - When this (and `TPP_HAVE_KEYWORD_ASSTRING`) is disabled, then `tpp_refcnt` can be used
+ *   by the implementation of `tpp_string`, rather than `tpp_refcnt_atomic`.
+ * - If you intend to use TPP in a heavily parallelized environment, you should be aware
+ *   that *global* + *atomic* don't go together very well (so you can turn off this and
+ *   `TPP_HAVE_KEYWORD_ASSTRING` if you have bus locking problems) */
+#ifndef TPP_HAVE_STATIC_EMPTY_STRING
+#if TPP_HAVE_KEYWORD_ASSTRING || !TPP_REFCNT_ATOMIC_IS_ATOMIC || TPP_SINGLE_THREADED
+#define TPP_HAVE_STATIC_EMPTY_STRING 1
+#else /* ... */
+#define TPP_HAVE_STATIC_EMPTY_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 /************************************************************************/
 /************************************************************************/

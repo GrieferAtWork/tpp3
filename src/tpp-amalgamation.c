@@ -39,6 +39,8 @@
  * `TPP_INTERNAL()` identifers to their unescaped names. */
 #define lci_line                                           TPP_INTERNAL(lci_line)
 #define lci_col                                            TPP_INTERNAL(lci_col)
+#define trc_count                                          TPP_INTERNAL(trc_count)
+#define trca_count                                         TPP_INTERNAL(trca_count)
 #define tcl_lexer                                          TPP_INTERNAL(tcl_lexer)
 #define tcl_state                                          TPP_INTERNAL(tcl_state)
 #define tcl_prefix                                         TPP_INTERNAL(tcl_prefix)
@@ -1879,7 +1881,7 @@ TPP_IMPL TPP_WUNUSED tpp_string *TPPCALL
 tpp_string_trymalloc(tpp_size len) {
 	tpp_string *result = _tpp_string_trymalloc(len);
 	if tpp_likely(result) {
-		tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+		_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 		result->ts_len      = len;
 		result->ts_str[len] = '\0';
 	}
@@ -1890,18 +1892,23 @@ TPP_IMPL TPP_WUNUSED tpp_string *TPPCALL
 tpp_string_malloc(tpp_size len) {
 	tpp_string *result = _tpp_string_malloc(len);
 	if tpp_likely(result) {
-		tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+		_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 		result->ts_len      = len;
 		result->ts_str[len] = '\0';
 	}
 	return result;
 }
 
+#if TPP_HAVE_STATIC_EMPTY_STRING
+#if !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0` and atomic reference are needed because of `-DTPP_HAVE_STATIC_EMPTY_STRING=1`, but aren't supported (`-DTPP_REFCNT_ATOMIC_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
-	/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),
+	/* .ts_refcnt = */ _TPP_STRING_REFCNT_INIT(1),
 	/* .ts_len    = */ 0,
 	/* .ts_nul    = */ 0,
 };
+#endif /* TPP_HAVE_STATIC_EMPTY_STRING */
 
 
 /************************************************************************/
@@ -1913,7 +1920,8 @@ TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
  * This function never fails, but it *DOES* finalize `self`
  * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
- * @return: * : The string that was written to this builder */
+ * @return: * : The string that was written to this builder
+ * @return: NULL: Out-of-memory (only if `!TPP_HAVE_STATIC_EMPTY_STRING`) */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self) {
 	TPP_REF tpp_string *result;
@@ -1935,7 +1943,7 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 		result->ts_len = self->tsb_len;
 		result->ts_str[result->ts_len] = (tpp_char)'\0';
 	}
-	tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+	_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 	return result;
 }
 
@@ -26589,12 +26597,13 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * This *includes* the bytes of any already-unloaded chunk of `self`, though `pos` must
  * point into the current chunk (past hash values from previous chunks cannot be determined)
  *
- * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL`.
+ * Also note that the hash can *only* be determined when `tpp_file_haschunk(self)`.
+ *
  * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
  * then this function always returns the same value. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
 tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	if (self->tf_chunk != NULL &&
 	    pos >= tpp_string_str(self->tf_chunk) &&
 	    pos <= tpp_string_end(self->tf_chunk)) {
@@ -30389,8 +30398,11 @@ tpp_keywords_resetcounters(tpp_keywords *tpp_restrict self) {
 #define _TPP_BUILTIN_KEYWORD_tk_misc_INIT /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_MISC */
 #if TPP_HAVE_KEYWORD_ASSTRING
-#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  tpp_refcnt_atomic tk_refcnt;
-#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT TPP_REFCNT_ATOMIC_INIT(1),
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  _tpp_string_refcnt tk_refcnt;
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT _TPP_STRING_REFCNT_INIT(1),
+#if !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0` and atomic reference are needed because of `-DTPP_HAVE_KEYWORD_ASSTRING=1`, but aren't supported (`-DTPP_REFCNT_ATOMIC_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 #else /* TPP_HAVE_KEYWORD_ASSTRING */
 #define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  /* nothing */
 #define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT /* nothing */
@@ -30749,6 +30761,9 @@ static void tpp_init_extension_name_offsets_byname_impl(void) {
 }
 
 static void tpp_init_extension_name_offsets_byname(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_extension_name_offsets_byname_impl();
 	});
@@ -30775,6 +30790,9 @@ static void tpp_init_warning_group_name_offsets_byname_impl(void) {
 }
 
 static void tpp_init_warning_group_name_offsets_byname(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_warning_group_name_offsets_byname_impl();
 	});
@@ -30877,6 +30895,9 @@ static void tpp_init_builtin_keywords_impl(void) {
 }
 
 static void tpp_init_builtin_keywords(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_builtin_keywords_impl();
 	});
@@ -44605,6 +44626,12 @@ handle_rangle:
 				}
 
 				arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+				if tpp_unlikely(!arg->tlai_chunk) {
+					tpp_string_builder_init(&state.tsrps_curarg_prefix);
+					goto err_nomem;
+				}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 				arg->tlai_start = tpp_string_str(arg->tlai_chunk);
 				arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
 				tpp_seek_rparen_state_init_curarg(&state);
@@ -44673,6 +44700,12 @@ done:
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 			}
 			arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+			if tpp_unlikely(!arg->tlai_chunk) {
+				tpp_string_builder_init(&state.tsrps_curarg_prefix);
+				goto err_nomem;
+			}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 			arg->tlai_start = tpp_string_str(arg->tlai_chunk);
 			arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
 			tpp_seek_rparen_state_init_curarg(&state);
@@ -51679,6 +51712,13 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	tpp_lcstate_init_invalid(&file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!file->tf_chunk) {
+		tpp_file_free(prev_file);
+		result = TPP_TOK_ENOMEM;
+		goto return_result_and_fini;
+	}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	file->tf_pos   = tpp_string_str(file->tf_chunk);
 	file->tf_end   = tpp_string_end(file->tf_chunk);
 	file->tf_prev  = prev_file;
@@ -51690,6 +51730,13 @@ done_inherit_io_handle:
 #else /* TPP_HAVE_FILE_ENCODING_EMBED */
 	{
 		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+		if tpp_unlikely(!chunk) {
+			tpp_file_free(prev_file);
+			result = TPP_TOK_ENOMEM;
+			goto return_result_and_fini;
+		}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 		tpp_file_init_text_ascii(file, tpp_lexer_openfile_result_getfilename(&self->teb_ofr),
 		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
 		                         tpp_lexer_openfile_result_getfileflags(&self->teb_ofr),
@@ -54039,6 +54086,10 @@ tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
 	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_builder;
 	chunk = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!chunk)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
 err_builder:
 	tpp_string_builder_fini(&builder);
@@ -54910,6 +54961,10 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 	/* Pack representation into a string... */
 	eval_repr = tpp_string_builder_pack(&eval_repr_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!eval_repr)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* ... and push that string as a text file. */
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(eval_repr),
@@ -55355,13 +55410,17 @@ done_inner_loop:
 		goto err_nomem_builder;
 
 	/* Push a sub-text file describing the decoded contents of the string */
+	string = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!string)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_string_builder_fini(&builder);
+		tpp_string_decref(string);
 		return TPP_TOK_ENOMEM;
 	}
 	tpp_file_move(prev_file, file);
-	string = tpp_string_builder_pack(&builder);
 	tpp_file_init_text_ex(file, NULL, string,
 	                      tpp_string_str(string),
 	                      tpp_string_len(string),
@@ -55657,13 +55716,17 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	}
 
 	/* Push a sub-text file describing the decoded contents of the string */
+	exec_result = tpp_string_builder_pack(&data.tlhed_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!exec_result)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_string_builder_fini(&data.tlhed_builder);
+		tpp_string_decref(exec_result);
 		return TPP_TOK_ENOMEM;
 	}
 	*prev_file = *file;
-	exec_result = tpp_string_builder_pack(&data.tlhed_builder);
 	tpp_file_init_text_ex(file, NULL, exec_result,
 	                      tpp_string_str(exec_result),
 	                      tpp_string_len(exec_result),
@@ -55871,6 +55934,10 @@ tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
 	result_str = tpp_string_builder_pack(&result_builder);
 	if (data.tlhsdsd_chunk)
 		tpp_string_decref(data.tlhsdsd_chunk);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!result_str)
+		goto err_nomem_result_str; /* Handles "result_str == NULL" just fine... */
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* Push the substring as a new file */
 	prev_file = tpp_file_alloc();
@@ -56098,6 +56165,12 @@ err_tok_ofr_result_builder:
 	if (tpp_string_builder_doprint(&result_builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_nomem_ofr_result_builder;
 	result_str = tpp_string_builder_pack(&result_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!result_str) {
+		tok = TPP_TOK_ENOMEM;
+		goto err_tok_ofr;
+	}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* Push the substring as a new file */
 	prev_file = tpp_file_alloc();
@@ -57431,6 +57504,10 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 			return TPP_SSIZE_ASERR(status);
 		}
 		string = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+		if tpp_unlikely(!string)
+			return TPP_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 		result = (*cb)(arg, tpp_string_cstr(string), tpp_string_len(string));
 		tpp_string_decref(string);
 		return result;
@@ -60153,6 +60230,10 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
 	if (TPP_SSIZE_ISERR(status))
 		goto err_builder;
 	*p_result = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!*p_result)
+		return TPP_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	return TPP_EOK;
 err_builder:
 	tpp_string_builder_fini(&builder);

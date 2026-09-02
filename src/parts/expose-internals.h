@@ -50,6 +50,8 @@ for (local ident: identifiers)
 ]]]*/
 #define lci_line                                           TPP_INTERNAL(lci_line)
 #define lci_col                                            TPP_INTERNAL(lci_col)
+#define trc_count                                          TPP_INTERNAL(trc_count)
+#define trca_count                                         TPP_INTERNAL(trca_count)
 #define tcl_lexer                                          TPP_INTERNAL(tcl_lexer)
 #define tcl_state                                          TPP_INTERNAL(tcl_state)
 #define tcl_prefix                                         TPP_INTERNAL(tcl_prefix)

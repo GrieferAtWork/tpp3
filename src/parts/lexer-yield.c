@@ -178,6 +178,10 @@ tpp_lexer_push_textfile_string_esc(tpp_lexer *tpp_restrict self,
 	if (tpp_string_builder_doprint(&builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_builder;
 	chunk = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!chunk)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(chunk), tpp_string_len(chunk), chunk);
 err_builder:
 	tpp_string_builder_fini(&builder);
@@ -1068,6 +1072,10 @@ tpp_lexer_yield_handle___TPP_EVAL(tpp_lexer *tpp_restrict self) {
 
 	/* Pack representation into a string... */
 	eval_repr = tpp_string_builder_pack(&eval_repr_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!eval_repr)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* ... and push that string as a text file. */
 	return tpp_lexer_push_textfile_inherited(self, tpp_string_str(eval_repr),
@@ -1521,13 +1529,17 @@ done_inner_loop:
 		goto err_nomem_builder;
 
 	/* Push a sub-text file describing the decoded contents of the string */
+	string = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!string)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_string_builder_fini(&builder);
+		tpp_string_decref(string);
 		return TPP_TOK_ENOMEM;
 	}
 	tpp_file_move(prev_file, file);
-	string = tpp_string_builder_pack(&builder);
 	tpp_file_init_text_ex(file, NULL, string,
 	                      tpp_string_str(string),
 	                      tpp_string_len(string),
@@ -1823,13 +1835,17 @@ tpp_lexer_yield_handle___TPP_EXEC(tpp_lexer *tpp_restrict self) {
 	}
 
 	/* Push a sub-text file describing the decoded contents of the string */
+	exec_result = tpp_string_builder_pack(&data.tlhed_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!exec_result)
+		return TPP_TOK_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file) {
-		tpp_string_builder_fini(&data.tlhed_builder);
+		tpp_string_decref(exec_result);
 		return TPP_TOK_ENOMEM;
 	}
 	*prev_file = *file;
-	exec_result = tpp_string_builder_pack(&data.tlhed_builder);
 	tpp_file_init_text_ex(file, NULL, exec_result,
 	                      tpp_string_str(exec_result),
 	                      tpp_string_len(exec_result),
@@ -2037,6 +2053,10 @@ tpp_lexer_yield_handle___TPP_STR_SUBSTR(tpp_lexer *tpp_restrict self,
 	result_str = tpp_string_builder_pack(&result_builder);
 	if (data.tlhsdsd_chunk)
 		tpp_string_decref(data.tlhsdsd_chunk);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!result_str)
+		goto err_nomem_result_str; /* Handles "result_str == NULL" just fine... */
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* Push the substring as a new file */
 	prev_file = tpp_file_alloc();
@@ -2264,6 +2284,12 @@ err_tok_ofr_result_builder:
 	if (tpp_string_builder_doprint(&result_builder, (tpp_char const *)"\"", 1) < 0)
 		goto err_nomem_ofr_result_builder;
 	result_str = tpp_string_builder_pack(&result_builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!result_str) {
+		tok = TPP_TOK_ENOMEM;
+		goto err_tok_ofr;
+	}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 	/* Push the substring as a new file */
 	prev_file = tpp_file_alloc();

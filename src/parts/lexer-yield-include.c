@@ -371,6 +371,10 @@ tpp_lexer_decode_include_string_cb(tpp_lexer const *tpp_restrict self,
 			return TPP_SSIZE_ASERR(status);
 		}
 		string = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+		if tpp_unlikely(!string)
+			return TPP_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 		result = (*cb)(arg, tpp_string_cstr(string), tpp_string_len(string));
 		tpp_string_decref(string);
 		return result;

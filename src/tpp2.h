@@ -1538,6 +1538,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *   + if (tpp_lexer_decodestring(TPPLexer_Current, &config) < 0)
  *   +     return NULL;
  *   + TPP_REF tpp_string *string = tpp_string_builder_pack(&builder);
+ *   + if (!string)
+ *   +     return NULL;
  *   + char *buf = (char *)tpp_string_str(string);
  *   + tpp_size size = tpp_string_len(string);
  *   + ...
@@ -1621,8 +1623,9 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
  *     If you need to retain access to data that is already loaded into memory,
  *     you can simply increment the file's chunk's reference counter. When TPP3
  *     needs to load more file data into memory, it will no re-use the file's old
- *     chunk, but will instead allocate a new chunk, allowing you to keep using
- *     data form the original chunk without even needing to relocate pointers.
+ *     chunk (if that chunk's reference counter is `>= 2`), but will instead
+ *     allocate a new chunk, allowing you to keep using data form the original
+ *     chunk without even needing to relocate pointers.
  * - Implementation notes:
  *   Whenever tpp_file_expandchunk() is called, all file data between the current
  *   file's current chunk's start, and the file's position (tpp_file_getpos()) [or

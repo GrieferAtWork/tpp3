@@ -53,10 +53,10 @@ headers
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6709), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6708), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6713): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6712): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6855), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6854), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6859): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6858): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -115,10 +115,10 @@ Used to implement the `-MP` CLI switch
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6709), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6708), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6713): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6712): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6855), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6854), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6859): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6858): Available (enabled by default)
 
 <details><summary>Details</summary>
 

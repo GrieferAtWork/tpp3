@@ -714,6 +714,12 @@ handle_rangle:
 				}
 
 				arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+				if tpp_unlikely(!arg->tlai_chunk) {
+					tpp_string_builder_init(&state.tsrps_curarg_prefix);
+					goto err_nomem;
+				}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 				arg->tlai_start = tpp_string_str(arg->tlai_chunk);
 				arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
 				tpp_seek_rparen_state_init_curarg(&state);
@@ -782,6 +788,12 @@ done:
 #endif /* !TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 			}
 			arg->tlai_chunk = tpp_string_builder_pack(&state.tsrps_curarg_prefix);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+			if tpp_unlikely(!arg->tlai_chunk) {
+				tpp_string_builder_init(&state.tsrps_curarg_prefix);
+				goto err_nomem;
+			}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 			arg->tlai_start = tpp_string_str(arg->tlai_chunk);
 			arg->tlai_end   = tpp_string_end(arg->tlai_chunk);
 			tpp_seek_rparen_state_init_curarg(&state);

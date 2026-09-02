@@ -2369,6 +2369,10 @@ tpp_lexer_parsestring(tpp_lexer *tpp_restrict self,
 	if (TPP_SSIZE_ISERR(status))
 		goto err_builder;
 	*p_result = tpp_string_builder_pack(&builder);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!*p_result)
+		return TPP_ENOMEM;
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	return TPP_EOK;
 err_builder:
 	tpp_string_builder_fini(&builder);

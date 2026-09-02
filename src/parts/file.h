@@ -481,7 +481,8 @@ typedef struct tpp_file {
 #define tpp_file_getkind(self)  ((self)->TPP_INTERNAL(tf_kind))
 #define tpp_file_getpos(self)   ((self)->TPP_INTERNAL(tf_pos))
 #define tpp_file_getend(self)   ((self)->TPP_INTERNAL(tf_end))
-#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk))
+#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk)) /* XXX: This should not be exposed like that -- instead, there should be a function like `struct { tpp_char const *start, *end; TPP_REF tpp_string *str; } tpp_file_getchunkof(tpp_file *self, tpp_char const *start, tpp_char const *end);` that returns the chunk-ref+start+end for a given sub-range (in case the way file chunks work ever changes) */
+#define tpp_file_haschunk(self) ((self)->TPP_INTERNAL(tf_chunk) != NULL)
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef)) /* XXX: This should not be exposed */
 #endif /* !TPP_HAVE_IFDEF_STACK */
@@ -490,9 +491,9 @@ typedef struct tpp_file {
  * Used by the implementation of `tpp_file_getlcfile()` */
 #define tpp_file_haslcinfo(self)                                                                                                 \
 	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                                              \
-	  (tpp_file_getchunk(self) == NULL ||                                                                                        \
+	  (!tpp_file_haschunk(self) ||                                                                                               \
 	   tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))) || \
-	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                                         \
+	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_haschunk(self) &&                                                 \
 	  tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)))))
 
 
@@ -1210,7 +1211,8 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * This *includes* the bytes of any already-unloaded chunk of `self`, though `pos` must
  * point into the current chunk (past hash values from previous chunks cannot be determined)
  *
- * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL`.
+ * Also note that the hash can *only* be determined when `tpp_file_haschunk(self)`.
+ *
  * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
  * then this function always returns the same value. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL

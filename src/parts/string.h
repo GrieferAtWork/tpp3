@@ -26,23 +26,47 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
+#if TPP_HAVE_KEYWORD_ASSTRING || TPP_HAVE_STATIC_EMPTY_STRING
+/* Need to use atomic reference counters because:
+ * - `TPP_HAVE_KEYWORD_ASSTRING`: keywords are effectively strings,
+ *   and builtin keywords (`tpp_builtin_getkeyword()`) are global.
+ * - `TPP_HAVE_STATIC_EMPTY_STRING`: `tpp_string_newempty()` returns
+ *   a global singleton. */
+#define _tpp_string_refcnt          tpp_refcnt_atomic
+#define _TPP_STRING_REFCNT_INIT     TPP_REFCNT_ATOMIC_INIT
+#define _tpp_string_refcnt_init     tpp_refcnt_atomic_init
+#define _tpp_string_refcnt_inc      tpp_refcnt_atomic_inc
+#define _tpp_string_refcnt_decfetch tpp_refcnt_atomic_decfetch
+#define _tpp_string_refcnt_isshared tpp_refcnt_atomic_isshared
+#define _tpp_string_refcnt_dec      tpp_refcnt_atomic_dec
+#else /* TPP_HAVE_KEYWORD_ASSTRING || TPP_HAVE_STATIC_EMPTY_STRING */
+/* Can use non-atomic reference counters in `tpp_string` in this configuration */
+#define _tpp_string_refcnt          tpp_refcnt
+#define _TPP_STRING_REFCNT_INIT     TPP_REFCNT_INIT
+#define _tpp_string_refcnt_init     tpp_refcnt_init
+#define _tpp_string_refcnt_inc      tpp_refcnt_inc
+#define _tpp_string_refcnt_decfetch tpp_refcnt_decfetch
+#define _tpp_string_refcnt_isshared tpp_refcnt_isshared
+#define _tpp_string_refcnt_dec      tpp_refcnt_dec
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING && !TPP_HAVE_STATIC_EMPTY_STRING */
+
 typedef struct tpp_string {
-	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
-	tpp_size          TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
-	tpp_char          TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
-/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing `\0`-character */
+	_tpp_string_refcnt TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic in this configuration) */
+	tpp_size           TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
+	tpp_char           TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
+/*	tpp_char           TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing `\0`-character */
 } tpp_string;
 
 /* Helper macro to statically define a string. */
-#define TPP_STRING_DEFINE(name, value)                         \
-	struct {                                                   \
-		tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);             \
-		tpp_size          TPP_INTERNAL(ts_len);                \
-		tpp_char          TPP_INTERNAL(ts_str)[sizeof(value)]; \
-	} name = {                                                 \
-		/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),          \
-		/* .ts_len    = */ sizeof(value) - sizeof(char),       \
-		/* .ts_str    = */ value                               \
+#define TPP_STRING_DEFINE(name, value)                          \
+	struct {                                                    \
+		_tpp_string_refcnt TPP_INTERNAL(ts_refcnt);             \
+		tpp_size           TPP_INTERNAL(ts_len);                \
+		tpp_char           TPP_INTERNAL(ts_str)[sizeof(value)]; \
+	} name = {                                                  \
+		/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),           \
+		/* .ts_len    = */ sizeof(value) - sizeof(char),        \
+		/* .ts_str    = */ value                                \
 	}
 
 /* Internal allocation API */
@@ -69,11 +93,11 @@ typedef struct tpp_string {
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)
-#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->TPP_INTERNAL(ts_refcnt))
-#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_incref(self)   _tpp_string_refcnt_inc(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_isshared(self) _tpp_string_refcnt_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
 #define tpp_string_decref(self) \
-	(void)(tpp_refcnt_atomic_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
-#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->TPP_INTERNAL(ts_refcnt))
+	(void)(_tpp_string_refcnt_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
+#define tpp_string_decref_nokill(self) _tpp_string_refcnt_dec(&(self)->TPP_INTERNAL(ts_refcnt))
 
 /* Allocate new (uninitialized) string buffers
  * @return: NULL: Propagate TPP_ENOMEM */
@@ -81,10 +105,11 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_trymalloc(tpp_size len);
 TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
+#if TPP_HAVE_STATIC_EMPTY_STRING
 struct TPP_INTERNAL(tpp_string_empty_struct) {
-	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
-	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
-	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
+	_tpp_string_refcnt TPP_INTERNAL(ts_refcnt); /* Reference counter */
+	tpp_size           TPP_INTERNAL(ts_len);    /* [const] Length of the string */
+	tpp_char           TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
 };
 
 #if !TPP_USE_STATIC
@@ -94,6 +119,9 @@ TPP_DECL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty;
 #define tpp_string_newempty()               \
 	(tpp_string_incref(&_tpp_string_empty), \
 	 (TPP_REF tpp_string *)&_tpp_string_empty)
+#else /* TPP_HAVE_STATIC_EMPTY_STRING */
+#define tpp_string_newempty() tpp_string_malloc(0)
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 
 
@@ -123,8 +151,9 @@ typedef struct tpp_string_builder {
  * This function never fails, but it *DOES* finalize `self`
  * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
- * @return: * : The string that was written to this builder */
-TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
+ * @return: * :   The string that was written to this builder
+ * @return: NULL: Out-of-memory (only if `!TPP_HAVE_STATIC_EMPTY_STRING`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self);
 
 /* Allocate (and return) an additional buffer of at least `num_bytes` characters,

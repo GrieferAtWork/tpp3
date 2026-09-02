@@ -487,7 +487,7 @@ typedef struct tpp_keyword {
 	tpp_hash                        TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
 	struct tpp_keyword             *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_KEYWORD_ASSTRING
-	tpp_refcnt_atomic               TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
+	_tpp_string_refcnt              TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
 	tpp_size                        TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
 	tpp_char                        TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */

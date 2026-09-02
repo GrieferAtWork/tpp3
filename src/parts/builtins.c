@@ -51,8 +51,11 @@ TPP_DECL_BEGIN
 #define _TPP_BUILTIN_KEYWORD_tk_misc_INIT /* nothing */
 #endif /* !TPP_HAVE_KEYWORD_MISC */
 #if TPP_HAVE_KEYWORD_ASSTRING
-#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  tpp_refcnt_atomic tk_refcnt;
-#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT TPP_REFCNT_ATOMIC_INIT(1),
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  _tpp_string_refcnt tk_refcnt;
+#define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT _TPP_STRING_REFCNT_INIT(1),
+#if !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0` and atomic reference are needed because of `-DTPP_HAVE_KEYWORD_ASSTRING=1`, but aren't supported (`-DTPP_REFCNT_ATOMIC_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 #else /* TPP_HAVE_KEYWORD_ASSTRING */
 #define _TPP_BUILTIN_KEYWORD_tk_refcnt_DEF  /* nothing */
 #define _TPP_BUILTIN_KEYWORD_tk_refcnt_INIT /* nothing */
@@ -411,6 +414,9 @@ static void tpp_init_extension_name_offsets_byname_impl(void) {
 }
 
 static void tpp_init_extension_name_offsets_byname(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_extension_name_offsets_byname_impl();
 	});
@@ -437,6 +443,9 @@ static void tpp_init_warning_group_name_offsets_byname_impl(void) {
 }
 
 static void tpp_init_warning_group_name_offsets_byname(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_warning_group_name_offsets_byname_impl();
 	});
@@ -539,6 +548,9 @@ static void tpp_init_builtin_keywords_impl(void) {
 }
 
 static void tpp_init_builtin_keywords(void) {
+#if !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0`, but `tpp_once()` is needed and non-atomic (`-DTPP_ONCE_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_ONCE_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 	tpp_once({
 		tpp_init_builtin_keywords_impl();
 	});

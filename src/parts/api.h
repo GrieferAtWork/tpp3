@@ -129,6 +129,14 @@
 #endif /* !__has_attribute */
 #endif /* !TPP_HOST_HAS_ATTRIBUTE */
 
+#ifndef TPP_HOST_HAS_EXTENSION
+#ifdef __has_extension
+#define TPP_HOST_HAS_EXTENSION(x) __has_extension(x)
+#else /* __has_extension */
+#define TPP_HOST_HAS_EXTENSION(x) 0
+#endif /* !__has_extension */
+#endif /* !TPP_HOST_HAS_EXTENSION */
+
 #ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
 #ifdef __has_declspec_attribute
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
@@ -1003,14 +1011,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
  *       that reference counts don't need to be atomic, because all
  *       components are thread-local. */
 typedef struct {
-	tpp_uint_fast32 trc_count; /* Reference counter */
+	tpp_uint_fast32 TPP_INTERNAL(trc_count); /* Reference counter */
 } tpp_refcnt;
 #define tpp_refcnt             tpp_refcnt
 #define TPP_REFCNT_INIT(v)     { v }
-#define tpp_refcnt_init(p, v)  (void)((p)->trc_count = (v))
-#define tpp_refcnt_inc(p)      (void)(++(p)->trc_count)
-#define tpp_refcnt_decfetch(p) (--(p)->trc_count)
-#define tpp_refcnt_isshared(p) ((p)->trc_count > 1)
+#define tpp_refcnt_init(p, v)  (void)((p)->TPP_INTERNAL(trc_count) = (v))
+#define tpp_refcnt_inc(p)      (void)(++(p)->TPP_INTERNAL(trc_count))
+#define tpp_refcnt_decfetch(p) (--(p)->TPP_INTERNAL(trc_count))
+#define tpp_refcnt_isshared(p) ((p)->TPP_INTERNAL(trc_count) > 1)
 #endif /* !tpp_refcnt */
 #ifndef tpp_refcnt_dec
 #define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
@@ -1018,38 +1026,176 @@ typedef struct {
 
 
 
+/* Disable thread safety */
+#ifndef TPP_SINGLE_THREADED
+#define TPP_SINGLE_THREADED 0
+#endif /* !TPP_SINGLE_THREADED */
+
+
+#ifdef tpp_atomic32
+#ifndef TPP_HAVE_ATOMIC32
+#define TPP_HAVE_ATOMIC32 1
+#endif /* !TPP_HAVE_ATOMIC32 */
+#else /* tpp_atomic32 */
+#undef TPP_HAVE_ATOMIC32
+#if !TPP_SINGLE_THREADED
+#if defined(TPP_USE_LIBATOMIC) && TPP_USE_LIBATOMIC
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+extern tpp_uint_least32 __atomic_load_4(tpp_uint_least32 const volatile *ptr, int order);
+extern tpp_uint_least32 __atomic_exchange_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+extern tpp_uint_least32 __atomic_add_fetch_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+extern tpp_uint_least32 __atomic_sub_fetch_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __atomic_load_4((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __atomic_exchange_4((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__atomic_add_fetch_4((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     __atomic_sub_fetch_4((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#elif TPP_GCC_VERSION_NUM >= 40700 || defined(__clang__)
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __atomic_load_n((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __atomic_exchange_n((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__atomic_add_fetch((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     __atomic_sub_fetch((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#elif TPP_HOST_HAS_EXTENSION(c_atomic) || TPP_HOST_HAS_EXTENSION(cxx_atomic)
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __c11_atomic_load((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __c11_atomic_exchange((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__c11_atomic_fetch_add((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     (__c11_atomic_fetch_sub((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST) - 1)
+#elif defined(_MSC_VER)
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
+#include <intrin.h>
+TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        unsigned __int32
+#define tpp_atomic32_xchg(p_atomic, newval) ((unsigned __int32)_InterlockedExchange((long volatile *)(p_atomic), (long)(newval)))
+#define tpp_atomic32_inc(p_atomic)          (void)_InterlockedIncrement((long volatile *)(p_atomic))
+#define tpp_atomic32_decfetch(p_atomic)     ((unsigned __int32)_InterlockedDecrement((long volatile *)(p_atomic)))
+#elif TPP_GCC_VERSION_NUM || defined(__DCC_VERSION__)
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_inc(p_atomic)          (void)__sync_fetch_and_add(p_atomic, 1)
+#define tpp_atomic32_decfetch(p_atomic)     __sync_fetch_and_sub(p_atomic, 1)
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_atomic32 TPPCALL
+tpp_atomic32_xchg(tpp_atomic32 *tpp_restrict p_atomic, tpp_atomic32 newval) {
+	tpp_atomic32 result;
+	do {
+		result = tpp_atomic32_read(p_atomic);
+	} while (!__sync_bool_compare_and_swap(p_atomic, result, newval));
+	return result;
+}
+#endif /* ... */
+#endif /* TPP_SINGLE_THREADED */
+#ifndef tpp_atomic32
+#define TPP_HAVE_ATOMIC32                   0
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_inc(p_atomic)          (void)(++*(tpp_uint_least32 volatile *)(p_atomic))
+#define tpp_atomic32_decfetch(p_atomic)     (--*(tpp_uint_least32 volatile *)(p_atomic))
+TPP_INLINE TPP_NONNULL((1)) tpp_atomic32 TPPCALL
+tpp_atomic32_xchg(tpp_atomic32 *tpp_restrict p_atomic, tpp_atomic32 newval) {
+	tpp_atomic32 const result = *(tpp_uint_least32 const volatile *)p_atomic;
+	*(tpp_uint_least32 volatile *)p_atomic = newval;
+	return result;
+}
+#endif /* !tpp_atomic32 */
+#ifndef tpp_atomic32_read
+#define tpp_atomic32_read(p_atomic) (*(tpp_uint_least32 const volatile *)(p_atomic))
+#endif /* !tpp_atomic32_read */
+#ifndef tpp_atomic32_init
+#define tpp_atomic32_init(p_atomic, value) (void)(*(p_atomic) = (value))
+#endif /* !tpp_atomic32_init */
+#ifndef TPP_ATOMIC32_INIT
+#define TPP_ATOMIC32_INIT(value) value
+#endif /* !TPP_ATOMIC32_INIT */
+#endif /* !tpp_atomic32 */
+
+
 /* Atomic reference counter API */
-#ifndef tpp_refcnt_atomic
-/* WARNING: Multi-threaded applications must override this: this kind of
- *          reference counter is used in places where the linked component
- *          may be shared between multiple lexers (and thus: threads) */
+#ifdef tpp_refcnt_atomic
+#ifndef TPP_REFCNT_ATOMIC_IS_ATOMIC
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC 1
+#endif /* !TPP_REFCNT_ATOMIC_IS_ATOMIC */
+#else /* tpp_refcnt_atomic */
+#if TPP_SINGLE_THREADED
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC 0
+#define tpp_refcnt_atomic           tpp_refcnt
+#define TPP_REFCNT_ATOMIC_INIT      TPP_REFCNT_INIT
+#define tpp_refcnt_atomic_init      tpp_refcnt_init
+#define tpp_refcnt_atomic_inc       tpp_refcnt_inc
+#define tpp_refcnt_atomic_decfetch  tpp_refcnt_decfetch
+#define tpp_refcnt_atomic_dec       tpp_refcnt_dec
+#define tpp_refcnt_atomic_isshared  tpp_refcnt_isshared
+#else /* TPP_SINGLE_THREADED */
 typedef struct {
-	tpp_uint_fast32 trca_count; /* Reference counter */
+	tpp_atomic32 TPP_INTERNAL(trca_count); /* Reference counter */
 } tpp_refcnt_atomic;
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC   TPP_HAVE_ATOMIC32
 #define tpp_refcnt_atomic             tpp_refcnt_atomic
-#define TPP_REFCNT_ATOMIC_INIT(v)     { v }
-#define tpp_refcnt_atomic_init(p, v)  (void)((p)->trca_count = (v))
-#define tpp_refcnt_atomic_inc(p)      (void)(++(p)->trca_count)
-#define tpp_refcnt_atomic_decfetch(p) (--(p)->trca_count)
-#define tpp_refcnt_atomic_isshared(p) ((p)->trca_count > 1)
+#define TPP_REFCNT_ATOMIC_INIT(v)     { TPP_ATOMIC32_INIT(v) }
+#define tpp_refcnt_atomic_init(p, v)  tpp_atomic32_init(&(p)->TPP_INTERNAL(trca_count), v)
+#define tpp_refcnt_atomic_inc(p)      tpp_atomic32_inc(&(p)->TPP_INTERNAL(trca_count))
+#define tpp_refcnt_atomic_decfetch(p) tpp_atomic32_decfetch(&(p)->TPP_INTERNAL(trca_count))
+#define tpp_refcnt_atomic_isshared(p) (tpp_atomic32_read(&(p)->TPP_INTERNAL(trca_count)) > 1)
+#endif /* !TPP_SINGLE_THREADED */
 #endif /* !tpp_refcnt_atomic */
 #ifndef tpp_refcnt_atomic_dec
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
 
+/* Hint to kernel scheduler that the calling thread wants to be preempted. */
+#ifndef tpp_sched_yield
+#define tpp_sched_yield() (void)0
+#endif /* !tpp_sched_yield */
+
 
 /* Execute-once block */
-#ifndef tpp_once
-/* WARNING: Multi-threaded applications must override this */
-#define tpp_once(expr)             \
-	do {                           \
-		static int _to_didrun = 0; \
-		if (!_to_didrun) {         \
-			_to_didrun = 1;        \
-			expr;                  \
-		}                          \
+#ifdef tpp_once
+#ifndef TPP_ONCE_IS_ATOMIC
+#define TPP_ONCE_IS_ATOMIC 1
+#endif /* !TPP_ONCE_IS_ATOMIC */
+#else /* tpp_once */
+#if TPP_SINGLE_THREADED || !TPP_HAVE_ATOMIC32
+#define TPP_ONCE_IS_ATOMIC 0
+#define tpp_once(expr)                  \
+	do {                                \
+		static bool _to_didrun = false; \
+		if (!_to_didrun) {              \
+			expr;                       \
+			_to_didrun = true;          \
+		}                               \
 	} while (0)
+#else /* TPP_SINGLE_THREADED || !TPP_HAVE_ATOMIC32 */
+#define TPP_ONCE_IS_ATOMIC 1
+#define tpp_once(expr)                                              \
+	do {                                                            \
+		static bool volatile _to_didrun = false;                    \
+		while (!_to_didrun) {                                       \
+			static tpp_atomic32 _to_running = TPP_ATOMIC32_INIT(0); \
+			if (tpp_atomic32_xchg(&_to_running, 1) == 0) {          \
+				expr; /* First time here... */                      \
+				_to_didrun = true;                                  \
+				break;                                              \
+			}                                                       \
+			if (_to_didrun)                                         \
+				break; /* Already executed */                       \
+			tpp_sched_yield();                                      \
+		}                                                           \
+	} while (0)
+#endif /* !TPP_SINGLE_THREADED && TPP_HAVE_ATOMIC32 */
 #endif /* !tpp_once */
 
 TPP_DECL_END

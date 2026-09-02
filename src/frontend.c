@@ -23,6 +23,7 @@
 #define TPP_PROFILE TPP_PROFILE_ALL /* Enable everything */
 #define TPP_COMMON_HAVE_FEATURES 0  /* Use extensions instead of features (so everything is configurable via `-f[no-]extension`) */
 #define TPP_USE_STATIC 1            /* Define everything with `static` linkage */
+#define TPP_SINGLE_THREADED 1       /* We don't do any threading, so can turn this on */
 
 #if 0 /* Developer test-area */
 #undef TPP_PROFILE

@@ -34,7 +34,7 @@ TPP_IMPL TPP_WUNUSED tpp_string *TPPCALL
 tpp_string_trymalloc(tpp_size len) {
 	tpp_string *result = _tpp_string_trymalloc(len);
 	if tpp_likely(result) {
-		tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+		_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 		result->ts_len      = len;
 		result->ts_str[len] = '\0';
 	}
@@ -45,18 +45,23 @@ TPP_IMPL TPP_WUNUSED tpp_string *TPPCALL
 tpp_string_malloc(tpp_size len) {
 	tpp_string *result = _tpp_string_malloc(len);
 	if tpp_likely(result) {
-		tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+		_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 		result->ts_len      = len;
 		result->ts_str[len] = '\0';
 	}
 	return result;
 }
 
+#if TPP_HAVE_STATIC_EMPTY_STRING
+#if !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION
+#error "Unsupported configuration: `-DTPP_SINGLE_THREADED=0` and atomic reference are needed because of `-DTPP_HAVE_STATIC_EMPTY_STRING=1`, but aren't supported (`-DTPP_REFCNT_ATOMIC_IS_ATOMIC=0`)"
+#endif /* !TPP_SINGLE_THREADED && !TPP_REFCNT_ATOMIC_IS_ATOMIC && !TPP_IGNORE_INVALID_CONFIGURATION */
 TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
-	/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),
+	/* .ts_refcnt = */ _TPP_STRING_REFCNT_INIT(1),
 	/* .ts_len    = */ 0,
 	/* .ts_nul    = */ 0,
 };
+#endif /* TPP_HAVE_STATIC_EMPTY_STRING */
 
 
 /************************************************************************/
@@ -68,7 +73,8 @@ TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
  * This function never fails, but it *DOES* finalize `self`
  * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
- * @return: * : The string that was written to this builder */
+ * @return: * : The string that was written to this builder
+ * @return: NULL: Out-of-memory (only if `!TPP_HAVE_STATIC_EMPTY_STRING`) */
 TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self) {
 	TPP_REF tpp_string *result;
@@ -90,7 +96,7 @@ tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict sel
 		result->ts_len = self->tsb_len;
 		result->ts_str[result->ts_len] = (tpp_char)'\0';
 	}
-	tpp_refcnt_atomic_init(&result->ts_refcnt, 1);
+	_tpp_string_refcnt_init(&result->ts_refcnt, 1);
 	return result;
 }
 

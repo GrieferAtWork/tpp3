@@ -1533,12 +1533,13 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * This *includes* the bytes of any already-unloaded chunk of `self`, though `pos` must
  * point into the current chunk (past hash values from previous chunks cannot be determined)
  *
- * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL`.
+ * Also note that the hash can *only* be determined when `tpp_file_haschunk(self)`.
+ *
  * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
  * then this function always returns the same value. */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
 tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
-	tpp_hash result = 1;
+	tpp_hash result = TPP_HASH_INITIAL;
 	if (self->tf_chunk != NULL &&
 	    pos >= tpp_string_str(self->tf_chunk) &&
 	    pos <= tpp_string_end(self->tf_chunk)) {

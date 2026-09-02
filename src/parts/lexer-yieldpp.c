@@ -2047,6 +2047,13 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 	tpp_lcstate_init_invalid(&file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+	if tpp_unlikely(!file->tf_chunk) {
+		tpp_file_free(prev_file);
+		result = TPP_TOK_ENOMEM;
+		goto return_result_and_fini;
+	}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 	file->tf_pos   = tpp_string_str(file->tf_chunk);
 	file->tf_end   = tpp_string_end(file->tf_chunk);
 	file->tf_prev  = prev_file;
@@ -2058,6 +2065,13 @@ done_inherit_io_handle:
 #else /* TPP_HAVE_FILE_ENCODING_EMBED */
 	{
 		TPP_REF tpp_string *chunk = tpp_string_builder_pack(&embed_data);
+#if !TPP_HAVE_STATIC_EMPTY_STRING
+		if tpp_unlikely(!chunk) {
+			tpp_file_free(prev_file);
+			result = TPP_TOK_ENOMEM;
+			goto return_result_and_fini;
+		}
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 		tpp_file_init_text_ascii(file, tpp_lexer_openfile_result_getfilename(&self->teb_ofr),
 		                         chunk, tpp_string_str(chunk), tpp_string_len(chunk),
 		                         tpp_lexer_openfile_result_getfileflags(&self->teb_ofr),

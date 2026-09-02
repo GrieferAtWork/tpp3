@@ -5254,6 +5254,14 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* !__has_attribute */
 #endif /* !TPP_HOST_HAS_ATTRIBUTE */
 
+#ifndef TPP_HOST_HAS_EXTENSION
+#ifdef __has_extension
+#define TPP_HOST_HAS_EXTENSION(x) __has_extension(x)
+#else /* __has_extension */
+#define TPP_HOST_HAS_EXTENSION(x) 0
+#endif /* !__has_extension */
+#endif /* !TPP_HOST_HAS_EXTENSION */
+
 #ifndef TPP_HOST_HAS_DECLSPEC_ATTRIBUTE
 #ifdef __has_declspec_attribute
 #define TPP_HOST_HAS_DECLSPEC_ATTRIBUTE(x) __has_declspec_attribute(x)
@@ -6104,14 +6112,14 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
  *       that reference counts don't need to be atomic, because all
  *       components are thread-local. */
 typedef struct {
-	tpp_uint_fast32 trc_count; /* Reference counter */
+	tpp_uint_fast32 TPP_INTERNAL(trc_count); /* Reference counter */
 } tpp_refcnt;
 #define tpp_refcnt             tpp_refcnt
 #define TPP_REFCNT_INIT(v)     { v }
-#define tpp_refcnt_init(p, v)  (void)((p)->trc_count = (v))
-#define tpp_refcnt_inc(p)      (void)(++(p)->trc_count)
-#define tpp_refcnt_decfetch(p) (--(p)->trc_count)
-#define tpp_refcnt_isshared(p) ((p)->trc_count > 1)
+#define tpp_refcnt_init(p, v)  (void)((p)->TPP_INTERNAL(trc_count) = (v))
+#define tpp_refcnt_inc(p)      (void)(++(p)->TPP_INTERNAL(trc_count))
+#define tpp_refcnt_decfetch(p) (--(p)->TPP_INTERNAL(trc_count))
+#define tpp_refcnt_isshared(p) ((p)->TPP_INTERNAL(trc_count) > 1)
 #endif /* !tpp_refcnt */
 #ifndef tpp_refcnt_dec
 #define tpp_refcnt_dec(p) (void)tpp_refcnt_decfetch(p)
@@ -6119,38 +6127,176 @@ typedef struct {
 
 
 
+/* Disable thread safety */
+#ifndef TPP_SINGLE_THREADED
+#define TPP_SINGLE_THREADED 0
+#endif /* !TPP_SINGLE_THREADED */
+
+
+#ifdef tpp_atomic32
+#ifndef TPP_HAVE_ATOMIC32
+#define TPP_HAVE_ATOMIC32 1
+#endif /* !TPP_HAVE_ATOMIC32 */
+#else /* tpp_atomic32 */
+#undef TPP_HAVE_ATOMIC32
+#if !TPP_SINGLE_THREADED
+#if defined(TPP_USE_LIBATOMIC) && TPP_USE_LIBATOMIC
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+extern tpp_uint_least32 __atomic_load_4(tpp_uint_least32 const volatile *ptr, int order);
+extern tpp_uint_least32 __atomic_exchange_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+extern tpp_uint_least32 __atomic_add_fetch_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+extern tpp_uint_least32 __atomic_sub_fetch_4(tpp_uint_least32 volatile *ptr, tpp_uint_least32 val, int order);
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __atomic_load_4((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __atomic_exchange_4((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__atomic_add_fetch_4((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     __atomic_sub_fetch_4((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#elif TPP_GCC_VERSION_NUM >= 40700 || defined(__clang__)
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __atomic_load_n((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __atomic_exchange_n((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__atomic_add_fetch((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     __atomic_sub_fetch((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#elif TPP_HOST_HAS_EXTENSION(c_atomic) || TPP_HOST_HAS_EXTENSION(cxx_atomic)
+#ifndef __ATOMIC_SEQ_CST
+#define __ATOMIC_SEQ_CST 5
+#endif /* !__ATOMIC_SEQ_CST */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_read(p_atomic)         __c11_atomic_load((tpp_atomic32 const volatile *)(p_atomic), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_xchg(p_atomic, newval) __c11_atomic_exchange((tpp_atomic32 volatile *)(p_atomic), (tpp_atomic32)(newval), __ATOMIC_SEQ_CST)
+#define tpp_atomic32_inc(p_atomic)          (void)__c11_atomic_fetch_add((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST)
+#define tpp_atomic32_decfetch(p_atomic)     (__c11_atomic_fetch_sub((tpp_atomic32 volatile *)(p_atomic), 1, __ATOMIC_SEQ_CST) - 1)
+#elif defined(_MSC_VER)
+#if !TPP_HOST_NO_SYSTEM_INCLUDES
+TPP_DECL_END
+#include <intrin.h>
+TPP_DECL_BEGIN
+#endif /* !TPP_HOST_NO_SYSTEM_INCLUDES */
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        unsigned __int32
+#define tpp_atomic32_xchg(p_atomic, newval) ((unsigned __int32)_InterlockedExchange((long volatile *)(p_atomic), (long)(newval)))
+#define tpp_atomic32_inc(p_atomic)          (void)_InterlockedIncrement((long volatile *)(p_atomic))
+#define tpp_atomic32_decfetch(p_atomic)     ((unsigned __int32)_InterlockedDecrement((long volatile *)(p_atomic)))
+#elif TPP_GCC_VERSION_NUM || defined(__DCC_VERSION__)
+#define TPP_HAVE_ATOMIC32                   1
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_inc(p_atomic)          (void)__sync_fetch_and_add(p_atomic, 1)
+#define tpp_atomic32_decfetch(p_atomic)     __sync_fetch_and_sub(p_atomic, 1)
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_atomic32 TPPCALL
+tpp_atomic32_xchg(tpp_atomic32 *tpp_restrict p_atomic, tpp_atomic32 newval) {
+	tpp_atomic32 result;
+	do {
+		result = tpp_atomic32_read(p_atomic);
+	} while (!__sync_bool_compare_and_swap(p_atomic, result, newval));
+	return result;
+}
+#endif /* ... */
+#endif /* TPP_SINGLE_THREADED */
+#ifndef tpp_atomic32
+#define TPP_HAVE_ATOMIC32                   0
+#define tpp_atomic32                        tpp_uint_least32
+#define tpp_atomic32_inc(p_atomic)          (void)(++*(tpp_uint_least32 volatile *)(p_atomic))
+#define tpp_atomic32_decfetch(p_atomic)     (--*(tpp_uint_least32 volatile *)(p_atomic))
+TPP_INLINE TPP_NONNULL((1)) tpp_atomic32 TPPCALL
+tpp_atomic32_xchg(tpp_atomic32 *tpp_restrict p_atomic, tpp_atomic32 newval) {
+	tpp_atomic32 const result = *(tpp_uint_least32 const volatile *)p_atomic;
+	*(tpp_uint_least32 volatile *)p_atomic = newval;
+	return result;
+}
+#endif /* !tpp_atomic32 */
+#ifndef tpp_atomic32_read
+#define tpp_atomic32_read(p_atomic) (*(tpp_uint_least32 const volatile *)(p_atomic))
+#endif /* !tpp_atomic32_read */
+#ifndef tpp_atomic32_init
+#define tpp_atomic32_init(p_atomic, value) (void)(*(p_atomic) = (value))
+#endif /* !tpp_atomic32_init */
+#ifndef TPP_ATOMIC32_INIT
+#define TPP_ATOMIC32_INIT(value) value
+#endif /* !TPP_ATOMIC32_INIT */
+#endif /* !tpp_atomic32 */
+
+
 /* Atomic reference counter API */
-#ifndef tpp_refcnt_atomic
-/* WARNING: Multi-threaded applications must override this: this kind of
- *          reference counter is used in places where the linked component
- *          may be shared between multiple lexers (and thus: threads) */
+#ifdef tpp_refcnt_atomic
+#ifndef TPP_REFCNT_ATOMIC_IS_ATOMIC
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC 1
+#endif /* !TPP_REFCNT_ATOMIC_IS_ATOMIC */
+#else /* tpp_refcnt_atomic */
+#if TPP_SINGLE_THREADED
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC 0
+#define tpp_refcnt_atomic           tpp_refcnt
+#define TPP_REFCNT_ATOMIC_INIT      TPP_REFCNT_INIT
+#define tpp_refcnt_atomic_init      tpp_refcnt_init
+#define tpp_refcnt_atomic_inc       tpp_refcnt_inc
+#define tpp_refcnt_atomic_decfetch  tpp_refcnt_decfetch
+#define tpp_refcnt_atomic_dec       tpp_refcnt_dec
+#define tpp_refcnt_atomic_isshared  tpp_refcnt_isshared
+#else /* TPP_SINGLE_THREADED */
 typedef struct {
-	tpp_uint_fast32 trca_count; /* Reference counter */
+	tpp_atomic32 TPP_INTERNAL(trca_count); /* Reference counter */
 } tpp_refcnt_atomic;
+#define TPP_REFCNT_ATOMIC_IS_ATOMIC   TPP_HAVE_ATOMIC32
 #define tpp_refcnt_atomic             tpp_refcnt_atomic
-#define TPP_REFCNT_ATOMIC_INIT(v)     { v }
-#define tpp_refcnt_atomic_init(p, v)  (void)((p)->trca_count = (v))
-#define tpp_refcnt_atomic_inc(p)      (void)(++(p)->trca_count)
-#define tpp_refcnt_atomic_decfetch(p) (--(p)->trca_count)
-#define tpp_refcnt_atomic_isshared(p) ((p)->trca_count > 1)
+#define TPP_REFCNT_ATOMIC_INIT(v)     { TPP_ATOMIC32_INIT(v) }
+#define tpp_refcnt_atomic_init(p, v)  tpp_atomic32_init(&(p)->TPP_INTERNAL(trca_count), v)
+#define tpp_refcnt_atomic_inc(p)      tpp_atomic32_inc(&(p)->TPP_INTERNAL(trca_count))
+#define tpp_refcnt_atomic_decfetch(p) tpp_atomic32_decfetch(&(p)->TPP_INTERNAL(trca_count))
+#define tpp_refcnt_atomic_isshared(p) (tpp_atomic32_read(&(p)->TPP_INTERNAL(trca_count)) > 1)
+#endif /* !TPP_SINGLE_THREADED */
 #endif /* !tpp_refcnt_atomic */
 #ifndef tpp_refcnt_atomic_dec
 #define tpp_refcnt_atomic_dec(p) (void)tpp_refcnt_atomic_decfetch(p)
 #endif /* !tpp_refcnt_atomic_dec */
 
 
+/* Hint to kernel scheduler that the calling thread wants to be preempted. */
+#ifndef tpp_sched_yield
+#define tpp_sched_yield() (void)0
+#endif /* !tpp_sched_yield */
+
 
 /* Execute-once block */
-#ifndef tpp_once
-/* WARNING: Multi-threaded applications must override this */
-#define tpp_once(expr)             \
-	do {                           \
-		static int _to_didrun = 0; \
-		if (!_to_didrun) {         \
-			_to_didrun = 1;        \
-			expr;                  \
-		}                          \
+#ifdef tpp_once
+#ifndef TPP_ONCE_IS_ATOMIC
+#define TPP_ONCE_IS_ATOMIC 1
+#endif /* !TPP_ONCE_IS_ATOMIC */
+#else /* tpp_once */
+#if TPP_SINGLE_THREADED || !TPP_HAVE_ATOMIC32
+#define TPP_ONCE_IS_ATOMIC 0
+#define tpp_once(expr)                  \
+	do {                                \
+		static bool _to_didrun = false; \
+		if (!_to_didrun) {              \
+			expr;                       \
+			_to_didrun = true;          \
+		}                               \
 	} while (0)
+#else /* TPP_SINGLE_THREADED || !TPP_HAVE_ATOMIC32 */
+#define TPP_ONCE_IS_ATOMIC 1
+#define tpp_once(expr)                                              \
+	do {                                                            \
+		static bool volatile _to_didrun = false;                    \
+		while (!_to_didrun) {                                       \
+			static tpp_atomic32 _to_running = TPP_ATOMIC32_INIT(0); \
+			if (tpp_atomic32_xchg(&_to_running, 1) == 0) {          \
+				expr; /* First time here... */                      \
+				_to_didrun = true;                                  \
+				break;                                              \
+			}                                                       \
+			if (_to_didrun)                                         \
+				break; /* Already executed */                       \
+			tpp_sched_yield();                                      \
+		}                                                           \
+	} while (0)
+#endif /* !TPP_SINGLE_THREADED && TPP_HAVE_ATOMIC32 */
 #endif /* !tpp_once */
 
 /************************************************************************/
@@ -6546,7 +6692,7 @@ TPP_DECL_END
  * expense of adding an (otherwise unused) reference counter
  * field to `tpp_keyword`. */
 #ifndef TPP_HAVE_KEYWORD_ASSTRING
-#define TPP_HAVE_KEYWORD_ASSTRING TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_KEYWORD_ASSTRING (TPP_HAVE_PROFILE_ALL && TPP_REFCNT_ATOMIC_IS_ATOMIC)
 #endif /* !TPP_HAVE_KEYWORD_ASSTRING */
 
 /* Include a counter for how often a specific I/O-file appears on the
@@ -13603,6 +13749,23 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
+/* `tpp_string_newempty()` is implemented in terms of a single, global "empty" string object.
+ *
+ * You might say that there's no point in disabling this, especially since the alternative
+ * is to always heap-allocate a new object every time you need an empty string. However:
+ * - When this (and `TPP_HAVE_KEYWORD_ASSTRING`) is disabled, then `tpp_refcnt` can be used
+ *   by the implementation of `tpp_string`, rather than `tpp_refcnt_atomic`.
+ * - If you intend to use TPP in a heavily parallelized environment, you should be aware
+ *   that *global* + *atomic* don't go together very well (so you can turn off this and
+ *   `TPP_HAVE_KEYWORD_ASSTRING` if you have bus locking problems) */
+#ifndef TPP_HAVE_STATIC_EMPTY_STRING
+#if TPP_HAVE_KEYWORD_ASSTRING || !TPP_REFCNT_ATOMIC_IS_ATOMIC || TPP_SINGLE_THREADED
+#define TPP_HAVE_STATIC_EMPTY_STRING 1
+#else /* ... */
+#define TPP_HAVE_STATIC_EMPTY_STRING 0
+#endif /* !... */
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -14235,23 +14398,47 @@ tpp_decode_named_printnearest(tpp_char const *start, tpp_char const *end,
 /* File: parts/string.h                                                 */
 /************************************************************************/
 
+#if TPP_HAVE_KEYWORD_ASSTRING || TPP_HAVE_STATIC_EMPTY_STRING
+/* Need to use atomic reference counters because:
+ * - `TPP_HAVE_KEYWORD_ASSTRING`: keywords are effectively strings,
+ *   and builtin keywords (`tpp_builtin_getkeyword()`) are global.
+ * - `TPP_HAVE_STATIC_EMPTY_STRING`: `tpp_string_newempty()` returns
+ *   a global singleton. */
+#define _tpp_string_refcnt          tpp_refcnt_atomic
+#define _TPP_STRING_REFCNT_INIT     TPP_REFCNT_ATOMIC_INIT
+#define _tpp_string_refcnt_init     tpp_refcnt_atomic_init
+#define _tpp_string_refcnt_inc      tpp_refcnt_atomic_inc
+#define _tpp_string_refcnt_decfetch tpp_refcnt_atomic_decfetch
+#define _tpp_string_refcnt_isshared tpp_refcnt_atomic_isshared
+#define _tpp_string_refcnt_dec      tpp_refcnt_atomic_dec
+#else /* TPP_HAVE_KEYWORD_ASSTRING || TPP_HAVE_STATIC_EMPTY_STRING */
+/* Can use non-atomic reference counters in `tpp_string` in this configuration */
+#define _tpp_string_refcnt          tpp_refcnt
+#define _TPP_STRING_REFCNT_INIT     TPP_REFCNT_INIT
+#define _tpp_string_refcnt_init     tpp_refcnt_init
+#define _tpp_string_refcnt_inc      tpp_refcnt_inc
+#define _tpp_string_refcnt_decfetch tpp_refcnt_decfetch
+#define _tpp_string_refcnt_isshared tpp_refcnt_isshared
+#define _tpp_string_refcnt_dec      tpp_refcnt_dec
+#endif /* !TPP_HAVE_KEYWORD_ASSTRING && !TPP_HAVE_STATIC_EMPTY_STRING */
+
 typedef struct tpp_string {
-	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic because of "_tpp_string_empty") */
-	tpp_size          TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
-	tpp_char          TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
-/*	tpp_char          TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing `\0`-character */
+	_tpp_string_refcnt TPP_INTERNAL(ts_refcnt);              /* Reference counter (must be atomic in this configuration) */
+	tpp_size           TPP_INTERNAL(ts_len);                 /* [const] Length of the string */
+	tpp_char           TPP_INTERNAL(ts_str)[TPP_FLEX_ARRAY]; /* [const][ts_len] String content */
+/*	tpp_char           TPP_INTERNAL(ts_nul);                  * [const][== 0] Trailing `\0`-character */
 } tpp_string;
 
 /* Helper macro to statically define a string. */
-#define TPP_STRING_DEFINE(name, value)                         \
-	struct {                                                   \
-		tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt);             \
-		tpp_size          TPP_INTERNAL(ts_len);                \
-		tpp_char          TPP_INTERNAL(ts_str)[sizeof(value)]; \
-	} name = {                                                 \
-		/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),          \
-		/* .ts_len    = */ sizeof(value) - sizeof(char),       \
-		/* .ts_str    = */ value                               \
+#define TPP_STRING_DEFINE(name, value)                          \
+	struct {                                                    \
+		_tpp_string_refcnt TPP_INTERNAL(ts_refcnt);             \
+		tpp_size           TPP_INTERNAL(ts_len);                \
+		tpp_char           TPP_INTERNAL(ts_str)[sizeof(value)]; \
+	} name = {                                                  \
+		/* .ts_refcnt = */ TPP_REFCNT_ATOMIC_INIT(1),           \
+		/* .ts_len    = */ sizeof(value) - sizeof(char),        \
+		/* .ts_str    = */ value                                \
 	}
 
 /* Internal allocation API */
@@ -14278,11 +14465,11 @@ typedef struct tpp_string {
 
 /* Helpers for interacting with TPP strings */
 #define tpp_string_destroy(self)  _tpp_string_free(self)
-#define tpp_string_incref(self)   tpp_refcnt_atomic_inc(&(self)->TPP_INTERNAL(ts_refcnt))
-#define tpp_string_isshared(self) tpp_refcnt_atomic_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_incref(self)   _tpp_string_refcnt_inc(&(self)->TPP_INTERNAL(ts_refcnt))
+#define tpp_string_isshared(self) _tpp_string_refcnt_isshared(&(self)->TPP_INTERNAL(ts_refcnt))
 #define tpp_string_decref(self) \
-	(void)(tpp_refcnt_atomic_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
-#define tpp_string_decref_nokill(self) tpp_refcnt_atomic_dec(&(self)->TPP_INTERNAL(ts_refcnt))
+	(void)(_tpp_string_refcnt_decfetch(&(self)->TPP_INTERNAL(ts_refcnt)) || (tpp_string_destroy(self), 0))
+#define tpp_string_decref_nokill(self) _tpp_string_refcnt_dec(&(self)->TPP_INTERNAL(ts_refcnt))
 
 /* Allocate new (uninitialized) string buffers
  * @return: NULL: Propagate TPP_ENOMEM */
@@ -14290,10 +14477,11 @@ TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_trymalloc(tpp_size len);
 TPP_DECL TPP_WUNUSED tpp_string *TPPCALL tpp_string_malloc(tpp_size len);
 
 
+#if TPP_HAVE_STATIC_EMPTY_STRING
 struct TPP_INTERNAL(tpp_string_empty_struct) {
-	tpp_refcnt_atomic TPP_INTERNAL(ts_refcnt); /* Reference counter */
-	tpp_size          TPP_INTERNAL(ts_len);    /* [const] Length of the string */
-	tpp_char          TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
+	_tpp_string_refcnt TPP_INTERNAL(ts_refcnt); /* Reference counter */
+	tpp_size           TPP_INTERNAL(ts_len);    /* [const] Length of the string */
+	tpp_char           TPP_INTERNAL(ts_nul);    /* [const][== 0] Trailing `\0`-character */
 };
 
 #if !TPP_USE_STATIC
@@ -14303,6 +14491,9 @@ TPP_DECL struct TPP_INTERNAL(tpp_string_empty_struct) _tpp_string_empty;
 #define tpp_string_newempty()               \
 	(tpp_string_incref(&_tpp_string_empty), \
 	 (TPP_REF tpp_string *)&_tpp_string_empty)
+#else /* TPP_HAVE_STATIC_EMPTY_STRING */
+#define tpp_string_newempty() tpp_string_malloc(0)
+#endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
 
 
@@ -14332,8 +14523,9 @@ typedef struct tpp_string_builder {
  * This function never fails, but it *DOES* finalize `self`
  * iow: DO NOT CALL `tpp_string_builder_fini()` AFTER THIS FUNCTION!
  *
- * @return: * : The string that was written to this builder */
-TPP_DECL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
+ * @return: * :   The string that was written to this builder
+ * @return: NULL: Out-of-memory (only if `!TPP_HAVE_STATIC_EMPTY_STRING`) */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self);
 
 /* Allocate (and return) an additional buffer of at least `num_bytes` characters,
@@ -21430,7 +21622,8 @@ typedef struct tpp_file {
 #define tpp_file_getkind(self)  ((self)->TPP_INTERNAL(tf_kind))
 #define tpp_file_getpos(self)   ((self)->TPP_INTERNAL(tf_pos))
 #define tpp_file_getend(self)   ((self)->TPP_INTERNAL(tf_end))
-#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk))
+#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk)) /* XXX: This should not be exposed like that -- instead, there should be a function like `struct { tpp_char const *start, *end; TPP_REF tpp_string *str; } tpp_file_getchunkof(tpp_file *self, tpp_char const *start, tpp_char const *end);` that returns the chunk-ref+start+end for a given sub-range (in case the way file chunks work ever changes) */
+#define tpp_file_haschunk(self) ((self)->TPP_INTERNAL(tf_chunk) != NULL)
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef)) /* XXX: This should not be exposed */
 #endif /* !TPP_HAVE_IFDEF_STACK */
@@ -21439,9 +21632,9 @@ typedef struct tpp_file {
  * Used by the implementation of `tpp_file_getlcfile()` */
 #define tpp_file_haslcinfo(self)                                                                                                 \
 	((tpp_file_getkind(self) == TPP_FILE_KIND_IO &&                                                                              \
-	  (tpp_file_getchunk(self) == NULL ||                                                                                        \
+	  (!tpp_file_haschunk(self) ||                                                                                               \
 	   tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc))))) || \
-	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_getchunk(self) != NULL &&                                         \
+	 (tpp_file_getkind(self) == TPP_FILE_KIND_TEXT && tpp_file_haschunk(self) &&                                                 \
 	  tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)))))
 
 
@@ -22159,7 +22352,8 @@ tpp_file_setline(tpp_file *tpp_restrict self,
  * This *includes* the bytes of any already-unloaded chunk of `self`, though `pos` must
  * point into the current chunk (past hash values from previous chunks cannot be determined)
  *
- * Also note that the hash can *only* be determined when `tpp_file_getchunk(self) != NULL`.
+ * Also note that the hash can *only* be determined when `tpp_file_haschunk(self)`.
+ *
  * If the file doesn't have an input chunk (e.g.: its contents are statically allocated),
  * then this function always returns the same value. */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
@@ -23046,7 +23240,7 @@ typedef struct tpp_keyword {
 	tpp_hash                        TPP_INTERNAL(tk_hash);                /* [const] Hash for `tk_kwd` */
 	struct tpp_keyword             *TPP_INTERNAL(tk_next);                /* [0..1] Next keyword with a similar hash */
 #if TPP_HAVE_KEYWORD_ASSTRING
-	tpp_refcnt_atomic               TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
+	_tpp_string_refcnt              TPP_INTERNAL(tk_refcnt);              /* Keyword reference count (for binary compatibility with `tpp_string`) */
 #endif /* TPP_HAVE_KEYWORD_ASSTRING */
 	tpp_size                        TPP_INTERNAL(tk_len);                 /* [const] # of bytes (char-s) in `tk_kwd` (excluding trailing `\0`) */
 	tpp_char                        TPP_INTERNAL(tk_kwd)[TPP_FLEX_ARRAY]; /* [const][tk_len] Keyword string (in input encoding; `\0`-terminated; never contains `\`-escaped linefeeds) */

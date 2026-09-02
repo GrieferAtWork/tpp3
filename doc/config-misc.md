@@ -1548,6 +1548,30 @@ typedef struct {
 
 
 
+## TPP_SINGLE_THREADED
+
+Define to `1` to disable thread-safety if TPP will only ever be used by a single thread. If you're having trouble compiling TPP due to missing compiler support for atomics, but you don't intend to do any multi-threading (or just want the small, extra performance boost), you can enable this to work around any such issues.
+
+
+
+## tpp_atomic32
+
+Used by the default implementations of `tpp_refcnt_atomic` and `tpp_once` (see below). If you intend to override this API, you must `#define tpp_atomic32` and supply the following functions yourself:
+
+```c
+#define tpp_atomic32 my_tpp_atomic32
+typedef ... my_tpp_atomic32;
+
+#define TPP_ATOMIC32_INIT(value) ... /* Static initializer for `tpp_atomic32` */
+void tpp_atomic32_init(tpp_atomic32 *p_atomic, tpp_uint_least32 value);
+tpp_uint_least32 tpp_atomic32_read(tpp_atomic32 *p_atomic);
+tpp_uint_least32 tpp_atomic32_xchg(tpp_atomic32 *p_atomic, tpp_uint_least32 newval);
+void tpp_atomic32_inc(tpp_atomic32 *p_atomic);
+tpp_uint_least32 tpp_atomic32_decfetch(tpp_atomic32 *p_atomic);
+```
+
+
+
 ## tpp_refcnt_atomic
 
 Same as `tpp_refcnt`, but these reference counters are used when multiple threads *may* access the same shared, global object, even when conventions are followed and every thread has its own, private `tpp_lexer`.
@@ -1586,6 +1610,16 @@ typedef struct {
 #define tpp_refcnt_atomic_dec(p)      (void)tpp_refcnt_atomic_decfetch(p)
 ```
 </details>
+
+
+
+## tpp_sched_yield
+
+Optional kernel scheduler hint to indicate that the calling thread wants to be preempted. Currently only used by the default implementation of `tpp_once()` (see below) when waiting for another thread to finish executing the once-expression.
+
+```c
+void tpp_sched_yield(void);
+```
 
 
 
