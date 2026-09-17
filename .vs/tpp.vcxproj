@@ -132,6 +132,7 @@
     <ClInclude Include="..\src\tpp-emitter.h" />
     <ClInclude Include="..\src\tpp-makefile.h" />
     <ClInclude Include="..\src\tpp.h" />
+    <ClInclude Include="..\src\tpp2-forward.h" />
     <ClInclude Include="..\src\tpp2.h" />
   </ItemGroup>
   <ItemGroup>

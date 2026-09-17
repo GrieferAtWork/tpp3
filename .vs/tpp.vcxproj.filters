@@ -320,6 +320,9 @@
     <ClInclude Include="..\src\parts\optional\makefile\mf-io.h">
       <Filter>src\parts\optional\makefile</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\tpp2-forward.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\cpp.hint" />
