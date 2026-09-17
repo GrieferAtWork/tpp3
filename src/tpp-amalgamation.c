@@ -29,7 +29,31 @@
 #undef TPP_BUILDING
 #define TPP_BUILDING 1
 #include TPP_AMALGAMATION_H
-#endif /* !GUARD_TPP_AMALGAMATION_H */
+#else /* !GUARD_TPP_AMALGAMATION_H */
+#ifdef _MSC_VER
+#undef _CRT_SECURE_NO_WARNINGS
+#undef _CRT_NONSTDC_NO_WARNINGS
+#undef _CRT_OBSOLETE_NO_DEPRECATE
+#define _CRT_SECURE_NO_WARNINGS    /* Know your... */
+#define _CRT_NONSTDC_NO_WARNINGS   /* ... f$cking place ... */
+#define _CRT_OBSOLETE_NO_DEPRECATE /* ... trash! */
+
+/* Disable some warnings */
+#pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
+#pragma warning(disable: 4127) /* Conditional expression is constant (cannot be avoided when features are compile-time enabled/disabled) */
+
+/* Disable some garbage inspection warnings */
+#pragma warning(disable: 26446)
+#pragma warning(disable: 26482)
+#pragma warning(disable: 26438)
+#pragma warning(disable: 26494)
+#pragma warning(disable: 26496)
+#pragma warning(disable: 26485)
+#pragma warning(disable: 26448)
+#pragma warning(disable: 26461) /* Kind-of like this one, but also warns in cases where adding "const" causes compiler errors due to function prototype conflicts... */
+#pragma warning(disable: 26826)
+#endif /* _MSC_VER */
+#endif /* GUARD_TPP_AMALGAMATION_H */
 
 #if !TPP_BUILDING
 /************************************************************************/
@@ -54344,7 +54368,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				tpp_feature_test_macro_expansion_len = (tpp_size)((char *)tpp_feature_test_macro_expansion +
 					                                              tpp_lengthof(tpp_feature_test_macro_expansion) -
 					                                              expansion_dst);
-				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst,
+				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, (tpp_char const *)expansion_dst,
 					                  tpp_feature_test_macro_expansion_len);
 				goto after_expansion_mode_assignment;
 #define WANT_after_expansion_mode_assignment
@@ -55984,7 +56008,7 @@ TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_by
 	tpp_size offset, delta_size, remaining;
 	struct tpp_string_builder_inplace_escape_data *data;
 	data = (struct tpp_string_builder_inplace_escape_data *)arg;
-	if (data->tsbied_text == text) {
+	if (data->tsbied_text == (tpp_char *)text) {
 		tpp_assert(data->tsbied_size >= num_bytes);
 		data->tsbied_text += num_bytes;
 		data->tsbied_size -= num_bytes;
@@ -58146,7 +58170,7 @@ tpp_token_decodestring_oct_sequence(tpp_lexer *tpp_restrict self,
 	}
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 	ch = (tpp_char)bigword;
-	result = (*config->tldsc_dataprinter)(config->tldsc_arg, &ch, 1);
+	result = tpp_formatprinter_print(config->tldsc_dataprinter, config->tldsc_arg, &ch, 1);
 done:
 	*p_iter = iter;
 	return result;
@@ -59154,7 +59178,7 @@ handle_unknown_escape_sequence:
 			/* Successfully handled via hook. */
 			result += temp;
 			iter = esc_first;
-			goto done;
+			break; /* goto done; */
 		}
 		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
 			goto err_temp; /* Error/abort from printer callback */
@@ -59181,7 +59205,7 @@ handle_unknown_escape_sequence:
 	}	break;
 
 	}
-done:
+/*done:*/
 	*p_flush_start = iter;
 	*p_iter = iter;
 	return result;
@@ -60287,8 +60311,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, num_byte
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 		{
 			tpp_token const *token = tpp_lexer_gettoken(data->tldsccd_lexer);
-			if ((text) < tpp_token_getstart(token) ||
-			    (text + num_bytes) > tpp_token_getend(token)) {
+			if (((tpp_char const *)text /*       */) < tpp_token_getstart(token) ||
+			    ((tpp_char const *)text + num_bytes) > tpp_token_getend(token)) {
 				data->tldsccd_count = TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO;
 				return TPP_LEXER_PARSESTRING_CHUNK_STOP;
 			}
@@ -60367,7 +60391,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, n
 		return 0;
 	data = (struct tpp_lexer_decodestring_as_single_chunk_data *)arg;
 	tpp_assert(data->tldsascd_cb != NULL && "Multiple invocations?");
-	error = (*data->tldsascd_cb)(data->tldsascd_arg, data->tldsascd_chunk, text, num_bytes);
+	error = (*data->tldsascd_cb)(data->tldsascd_arg, data->tldsascd_chunk,
+	                             (tpp_char const *)text, num_bytes);
 #if TPP_DEBUG
 	data->tldsascd_cb = NULL;
 #endif /* TPP_DEBUG */
@@ -60757,8 +60782,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 
 #if TPP_HAVE_UNICODE
 TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_utf8_cb, arg, text, num_bytes) {
-	tpp_char const *iter = text;
-	tpp_char const *end = text + num_bytes;
+	tpp_char const *iter = (tpp_char const *)text;
+	tpp_char const *end = (tpp_char const *)text + num_bytes;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
 	while (iter < end) {
@@ -64647,13 +64672,25 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
 #if TPP_HAVE_CLI_SETINPUTS_DASH
 	if (tpp_strcmp(input_filename, "-") == 0) {
 #ifdef tpp_io_getstdin
-		tpp_io_handle std_input = tpp_io_getstdin();
+		tpp_io_handle std_input;
+		result = tpp_io_getstdin(&std_input);
+		if (TPP_ISERR(result))
+			return result;
+#if TPP_IO_GETSTDIN_MUST_CLOSE
+#if TPP_HAVE_FILE_NOKWD
+		tpp_file_init_io_ex(file, TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME,
+		                    std_input, TPP_FILE_FLAGS_NOKWD);
+#else /* TPP_HAVE_FILE_NOKWD */
+		tpp_file_init_io_ex(file, NULL, std_input, TPP_FILE_FLAGS_NORMAL);
+#endif /* !TPP_HAVE_FILE_NOKWD */
+#else /* TPP_IO_GETSTDIN_MUST_CLOSE */
 #if TPP_HAVE_FILE_NOKWD
 		tpp_file_init_io_ex(file, TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME,
 		                    std_input, TPP_FILE_FLAGS_NOCLOSE | TPP_FILE_FLAGS_NOKWD);
 #else /* TPP_HAVE_FILE_NOKWD */
 		tpp_file_init_io_ex(file, NULL, std_input, TPP_FILE_FLAGS_NOCLOSE);
 #endif /* !TPP_HAVE_FILE_NOKWD */
+#endif /* !TPP_IO_GETSTDIN_MUST_CLOSE */
 		return TPP_EOK;
 #else /* tpp_io_getstdin */
 #if !TPP_IGNORE_INVALID_CONFIGURATION

@@ -433,7 +433,11 @@ for (local doc, name,
 			print("#define tpp_hooks_getcookie_", name.lower(), "(self, lexer) (lexer)");
 	}
 	print("#define tpp_hooks_call_", name.lower(), "(self", "".join(for (local x: prototypeArgs) f", {x}"), ") \\");
-	print("	TPP_HOOK_", name, "(", ", ".join(prototypeArgs), ")");
+	if (isFormatPrinter) {
+		print("	tpp_formatprinter_print_byname(TPP_HOOK_", name, ", ", ", ".join(prototypeArgs), ")");
+	} else {
+		print("	TPP_HOOK_", name, "(", ", ".join(prototypeArgs), ")");
+	}
 	if (builtin_FOO_HOOK) {
 		print("#elif TPP_HAVE_", name, "_HOOK == TPP_HOOK_CONST_BUILTIN");
 		if (hookMustBeFunctionPointer) {
@@ -1264,7 +1268,7 @@ typedef struct tpp_hooks {
 #define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(TPP_HOOK_WARNPRINTER)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
 #define tpp_hooks_call_warnprinter(self, cookie, text, num_bytes) \
-	TPP_HOOK_WARNPRINTER(cookie, text, num_bytes)
+	tpp_formatprinter_print_byname(TPP_HOOK_WARNPRINTER, cookie, text, num_bytes)
 #elif TPP_HAVE_WARNPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
 #define tpp_hooks_get_warnprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_warnprinter(self, lexer) (lexer)
@@ -1394,7 +1398,7 @@ typedef struct tpp_hooks {
 #define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(TPP_HOOK_MESGPRINTER)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)
 #define tpp_hooks_call_mesgprinter(self, cookie, text, num_bytes) \
-	TPP_HOOK_MESGPRINTER(cookie, text, num_bytes)
+	tpp_formatprinter_print_byname(TPP_HOOK_MESGPRINTER, cookie, text, num_bytes)
 #elif TPP_HAVE_MESGPRINTER_HOOK == TPP_HOOK_CONST_BUILTIN
 #define tpp_hooks_get_mesgprinter(self) tpp_formatprinter_of(_tpp_lexer_builtin_warn_or_mesg_printer)
 #define tpp_hooks_getcookie_mesgprinter(self, lexer) (lexer)

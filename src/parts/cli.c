@@ -1590,13 +1590,25 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
 #if TPP_HAVE_CLI_SETINPUTS_DASH
 	if (tpp_strcmp(input_filename, "-") == 0) {
 #ifdef tpp_io_getstdin
-		tpp_io_handle std_input = tpp_io_getstdin();
+		tpp_io_handle std_input;
+		result = tpp_io_getstdin(&std_input);
+		if (TPP_ISERR(result))
+			return result;
+#if TPP_IO_GETSTDIN_MUST_CLOSE
+#if TPP_HAVE_FILE_NOKWD
+		tpp_file_init_io_ex(file, TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME,
+		                    std_input, TPP_FILE_FLAGS_NOKWD);
+#else /* TPP_HAVE_FILE_NOKWD */
+		tpp_file_init_io_ex(file, NULL, std_input, TPP_FILE_FLAGS_NORMAL);
+#endif /* !TPP_HAVE_FILE_NOKWD */
+#else /* TPP_IO_GETSTDIN_MUST_CLOSE */
 #if TPP_HAVE_FILE_NOKWD
 		tpp_file_init_io_ex(file, TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME,
 		                    std_input, TPP_FILE_FLAGS_NOCLOSE | TPP_FILE_FLAGS_NOKWD);
 #else /* TPP_HAVE_FILE_NOKWD */
 		tpp_file_init_io_ex(file, NULL, std_input, TPP_FILE_FLAGS_NOCLOSE);
 #endif /* !TPP_HAVE_FILE_NOKWD */
+#endif /* !TPP_IO_GETSTDIN_MUST_CLOSE */
 		return TPP_EOK;
 #else /* tpp_io_getstdin */
 #if !TPP_IGNORE_INVALID_CONFIGURATION

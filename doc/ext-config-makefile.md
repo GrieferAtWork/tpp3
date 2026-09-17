@@ -78,16 +78,16 @@ Used to implement `-MG` (aka. `--print-missing-file-dependencies`).
 
 When enabled, the following APIs become available:
 
-- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L912)
-- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L914)
-- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L913)
-- [`tpp_makefile_set_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L931)
+- [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L915)
+- [`tpp_makefile_disable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L917)
+- [`tpp_makefile_get_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L916)
+- [`tpp_makefile_set_missing_file_dependencies_enabled()`](../src/tpp-makefile-amalgamation.h#L934)
 
 Note that this config only controls if the APIs for enabling printing of
 missing file dependencies is available. There is no config to have this
 enabled by default. If you always want it enabled, you still have to make
-a call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L912)) right after
-initializing your [`tpp_makefile`](../src/tpp-makefile-amalgamation.h#L630).
+a call to [`tpp_makefile_enable_missing_file_dependencies()`](../src/tpp-makefile-amalgamation.h#L915)) right after
+initializing your [`tpp_makefile`](../src/tpp-makefile-amalgamation.h#L633).
 
 Configure as one of:
 
@@ -172,7 +172,7 @@ TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 
-Provide an API [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L765) that can be used to override
+Provide an API [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L768) that can be used to override
 the makefile's output printer with one that prints data into a linked I/O
 handle of type [`tpp_makefile_io_handle`](../src/tpp-makefile-amalgamation.h#L475).
 
@@ -192,7 +192,7 @@ Default:
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
 
-Provide an API [`tpp_makefile_setoutput_io_ex()`](../src/tpp-makefile-amalgamation.h#L797) that can also be used to
+Provide an API [`tpp_makefile_setoutput_io_ex()`](../src/tpp-makefile-amalgamation.h#L800) that can also be used to
 set a flag specifying that the specified I/O handle should *not* be closed
 when the makefile is finalized (or a different output is assigned)
 
@@ -212,8 +212,8 @@ Default:
 
 ## TPP_MAKEFILE_HAVE_OUTPUT_FILE
 
-Provide an API [`tpp_makefile_setoutput_file()`](../src/tpp-makefile-amalgamation.h#L829) that is a convenience
-wrapper around [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L765) by automatically opening
+Provide an API [`tpp_makefile_setoutput_file()`](../src/tpp-makefile-amalgamation.h#L832) that is a convenience
+wrapper around [`tpp_makefile_setoutput_io()`](../src/tpp-makefile-amalgamation.h#L768) by automatically opening
 the file in question and assigning its output.
 
 Configure as one of:
@@ -232,7 +232,7 @@ Default:
 
 ## TPP_MAKEFILE_HAVE_CLI
 
-Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L995)
+Enable support for [`tpp_makefile_cli_loader`](../src/tpp-makefile-amalgamation.h#L998)
 
 Configure as one of:
 
@@ -423,7 +423,7 @@ TPP_MAKEFILE_HAVE_CLI
 
 `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
 output filename (unless specified by `-MF FILE`) based on the `output_filename`
-argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1217) or `__FILE__`:
+argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1220) or `__FILE__`:
 
 - If `output_filename` is given, then the makefile output is
   `output_filename.rpartition(".").first + ".d"` (unless that
@@ -570,12 +570,12 @@ Default:
 Controls whether [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m)
 and [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) will cause the
 lexer's entire input to be consumed during a call
-to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1217).
+to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1220).
 
 s.a.:
 
-- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1119)
-- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1121)
+- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1122)
+- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1124)
 
 Configure as one of:
 

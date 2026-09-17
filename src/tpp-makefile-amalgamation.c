@@ -576,7 +576,7 @@ tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
 	return tpp_makefile_new_dependency_hook_impl(self, ro_keyword);
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
                                      tpp_hook_include_kind include_kind) {
 	tpp_makefile *const self = _tpp_makefile_include_not_found_hook_ofcookie(cookie);
@@ -949,7 +949,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_makefile_cli_default_target_printer, arg, text, num
 	struct tpp_makefile_cli_default_target_data *data;
 	data   = (struct tpp_makefile_cli_default_target_data *)arg;
 	result = tpp_makefile_escape(tpp_makefile_getoutput(data->tmfcdtd_mf),
-	                             data->tmfcdtd_mf, text, num_bytes, &count);
+	                             data->tmfcdtd_mf, (tpp_char const *)text,
+	                             num_bytes, &count);
 	data->tmfcdtd_count += count;
 	return result;
 }
@@ -1142,8 +1143,15 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH
 		if (tpp_strcmp(self->tmkfcl_outfile, "-") == 0) {
 #ifdef tpp_makefile_io_getstdout
-			tpp_makefile_io_handle handle = tpp_makefile_io_getstdout();
+			tpp_makefile_io_handle handle;
+			error = tpp_makefile_io_getstdout(&handle);
+			if (TPP_ISERR(error))
+				return error;
+#if TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE
+			tpp_makefile_setoutput_io(self->tmkfcl_mf, handle);
+#else /* TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE */
 			tpp_makefile_setoutput_io_ex(self->tmkfcl_mf, handle, true);
+#endif /* !TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE */
 #else /* tpp_makefile_io_getstdout */
 #if !TPP_IGNORE_INVALID_CONFIGURATION
 #error "Invalid configuration: 'TPP_MAKEFILE_HAVE_CLI_DASH_MF_DASH' is enabled, but no way to retrieve STDOUT handle"

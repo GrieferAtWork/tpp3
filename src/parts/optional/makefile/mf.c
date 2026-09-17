@@ -366,7 +366,7 @@ tpp_makefile_include_not_found_cb(void *arg, char const *str, tpp_size length) {
 	return tpp_makefile_new_dependency_hook_impl(self, ro_keyword);
 }
 
-TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
                                      tpp_hook_include_kind include_kind) {
 	tpp_makefile *const self = _tpp_makefile_include_not_found_hook_ofcookie(cookie);

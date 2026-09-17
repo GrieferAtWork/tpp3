@@ -29,7 +29,31 @@
 #undef TPP_BUILDING
 #define TPP_BUILDING 1
 #include TPP_AMALGAMATION_H
-#endif /* !GUARD_TPP_AMALGAMATION_H */
+#else /* !GUARD_TPP_AMALGAMATION_H */
+#ifdef _MSC_VER
+#undef _CRT_SECURE_NO_WARNINGS
+#undef _CRT_NONSTDC_NO_WARNINGS
+#undef _CRT_OBSOLETE_NO_DEPRECATE
+#define _CRT_SECURE_NO_WARNINGS    /* Know your... */
+#define _CRT_NONSTDC_NO_WARNINGS   /* ... f$cking place ... */
+#define _CRT_OBSOLETE_NO_DEPRECATE /* ... trash! */
+
+/* Disable some warnings */
+#pragma warning(disable: 4065) /* "switch statement contains 'default' but no 'case' labels" (cannot be avoided under certain feature-configurations) */
+#pragma warning(disable: 4127) /* Conditional expression is constant (cannot be avoided when features are compile-time enabled/disabled) */
+
+/* Disable some garbage inspection warnings */
+#pragma warning(disable: 26446)
+#pragma warning(disable: 26482)
+#pragma warning(disable: 26438)
+#pragma warning(disable: 26494)
+#pragma warning(disable: 26496)
+#pragma warning(disable: 26485)
+#pragma warning(disable: 26448)
+#pragma warning(disable: 26461) /* Kind-of like this one, but also warns in cases where adding "const" causes compiler errors due to function prototype conflicts... */
+#pragma warning(disable: 26826)
+#endif /* _MSC_VER */
+#endif /* GUARD_TPP_AMALGAMATION_H */
 
 #if !TPP_BUILDING
 #include "parts/expose-internals.h"

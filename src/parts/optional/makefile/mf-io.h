@@ -69,16 +69,19 @@ TPP_DECL_BEGIN
 
 /* Return a handle for the hosting process's STDOUT stream */
 #ifdef tpp_makefile_io_handle_IS_HANDLE
-#define tpp_makefile_io_getstdout() GetStdHandle(STD_OUTPUT_HANDLE)
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = GetStdHandle(STD_OUTPUT_HANDLE), TPP_EOK)
 #elif defined(tpp_makefile_io_handle_IS_int)
 #ifdef STDOUT_FILENO
-#define tpp_makefile_io_getstdout() STDOUT_FILENO
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = STDOUT_FILENO, TPP_EOK)
 #else /* STDOUT_FILENO */
-#define tpp_makefile_io_getstdout() 1
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = 1, TPP_EOK)
 #endif /* !STDOUT_FILENO */
 #elif defined(tpp_makefile_io_handle_IS_FILE)
-#define tpp_makefile_io_getstdout() stdout
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = stdout, TPP_EOK)
 #endif /* ... */
+#ifndef TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE
+#define TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE 0
+#endif /* !TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE */
 
 /* Open a file for writing
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)

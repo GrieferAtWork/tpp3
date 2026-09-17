@@ -57,7 +57,7 @@ for (local partsDir: {
 }
 
 @@Return the `#include "parts/..."` filenames performed within @filename
-function getPartIncludes(filename: string): {string...} {
+function getPartIncludes(filename: string): {Bytes...} {
 	local data = File.open(filename, "rb").read();
 	for (local match: data.reglocateall(r'\n\s*#\s*include\s*"parts/([^"]+)"'))
 		yield match.last;

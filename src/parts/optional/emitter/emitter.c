@@ -233,7 +233,8 @@ TPP_FORMATPRINTER_DEFINE(_tpp_emitter_print, arg, text, num_bytes) {
 	tpp_emitter *self = (tpp_emitter *)arg;
 	tpp_ssize result = tpp_emitter_output_printraw(self, text, num_bytes);
 	if (result >= 0) {
-		tpp_lcstate_account_ex(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos, text, num_bytes,
+		tpp_lcstate_account_ex(&self->tem_state.tems_curfile.temsfs_file.temsf_curpos,
+		                       (tpp_char const *)text, num_bytes,
 		                       tpp_file_getencoding(tpp_lexer_getfile(tpp_emitter_getlexer(self))));
 	}
 	return result;

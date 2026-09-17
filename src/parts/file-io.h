@@ -122,16 +122,19 @@ _tpp_nt_fix_unc_path(/*utf-8*/ char const *tpp_restrict sFilename,
  *
  * NOTE: This API is (currently) only used for `TPP_HAVE_CLI_SETINPUTS_DASH` */
 #ifdef tpp_io_handle_IS_HANDLE
-#define tpp_io_getstdin() GetStdHandle(STD_INPUT_HANDLE)
+#define tpp_io_getstdin(p_handle) (*(p_handle) = GetStdHandle(STD_INPUT_HANDLE), TPP_EOK)
 #elif defined(tpp_io_handle_IS_int)
 #ifdef STDIN_FILENO
-#define tpp_io_getstdin() STDIN_FILENO
+#define tpp_io_getstdin(p_handle) (*(p_handle) = STDIN_FILENO, TPP_EOK)
 #else /* STDIN_FILENO */
-#define tpp_io_getstdin() 0
+#define tpp_io_getstdin(p_handle) (*(p_handle) = 0, TPP_EOK)
 #endif /* !STDIN_FILENO */
 #elif defined(tpp_io_handle_IS_FILE)
-#define tpp_io_getstdin() stdin
+#define tpp_io_getstdin(p_handle) (*(p_handle) = stdin, TPP_EOK)
 #endif /* !... */
+#ifndef TPP_IO_GETSTDIN_MUST_CLOSE
+#define TPP_IO_GETSTDIN_MUST_CLOSE 0
+#endif /* !TPP_IO_GETSTDIN_MUST_CLOSE */
 
 
 /* Open a file for reading

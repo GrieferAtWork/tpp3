@@ -383,7 +383,80 @@ tpp_intvalue_printrepr(struct tpp_lexer *tpp_restrict lexer,
                        tpp_formatprinter printer, void *arg);
 #endif /* TPP_HAVE_INTVALUE_PRINTREPR */
 #endif /* TPP_HAVE_BUILTIN_EXPR_VALUE */
-#endif /* !tpp_intvalue */
+#else /* !tpp_intvalue */
+#if TPP_HAVE_LEXER_DECODEINT && !defined(tpp_intvalue_builder)
+/* Fallback implementation that uses `tpp_intvalue` to implement `tpp_intvalue_builder` */
+typedef struct tpp_intvalue_builder {
+	tpp_intvalue TPP_INTERNAL(tivb_value); /* Integer value */
+	tpp_intvalue TPP_INTERNAL(tivb_radix); /* Digit radix */
+} tpp_intvalue_builder;
+
+#define tpp_intvalue_builder_fini(self)                    \
+	(tpp_intvalue_fini(&(self)->TPP_INTERNAL(tivb_radix)), \
+	 tpp_intvalue_fini(&(self)->TPP_INTERNAL(tivb_value)))
+#define tpp_intvalue_builder_pack(self, p_intvalue)        \
+	(tpp_intvalue_fini(&(self)->TPP_INTERNAL(tivb_radix)), \
+	 *(p_intvalue) = (self)->TPP_INTERNAL(tivb_value),     \
+	 TPP_EOK)
+
+#define tpp_intvalue_builder_init tpp_intvalue_builder_init
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_intvalue_builder_init(tpp_intvalue_builder *tpp_restrict self, unsigned int radix) {
+	tpp_errno result = tpp_intvalue_init_zero(&self->TPP_INTERNAL(tivb_value));
+	if (!TPP_ISERR(result)) {
+#ifdef tpp_intvalue_init_char
+		result = tpp_intvalue_init_char(&self->TPP_INTERNAL(tivb_radix), (tpp_char)radix);
+#elif defined(tpp_intvalue_init_size)
+		result = tpp_intvalue_init_size(&self->TPP_INTERNAL(tivb_radix), (tpp_size)radix);
+#elif defined(tpp_intvalue_init_uintmax)
+		result = tpp_intvalue_init_uintmax(&self->TPP_INTERNAL(tivb_radix), (tpp_uintmax)radix);
+#else /* ... */
+#error "No way to provide fallback implementation of `tpp_intvalue_builder` -- please provide your own"
+#endif /* !... */
+		if (TPP_ISERR(result))
+			tpp_intvalue_fini(&self->TPP_INTERNAL(tivb_value));
+	}
+	return result;
+}
+
+TPP_INLINE TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_intvalue_builder_adddigit(tpp_intvalue_builder *tpp_restrict self,
+                              unsigned int digit) {
+	tpp_errno result;
+	tpp_intvalue digit_value;
+	tpp_intvalue mul_result;
+	tpp_intvalue add_result;
+#ifdef tpp_intvalue_init_char
+	result = tpp_intvalue_init_char(&digit_value, (tpp_char)digit);
+#elif defined(tpp_intvalue_init_size)
+	result = tpp_intvalue_init_size(&digit_value, (tpp_size)digit);
+#elif defined(tpp_intvalue_init_uintmax)
+	result = tpp_intvalue_init_uintmax(&digit_value, (tpp_uintmax)digit);
+#else /* ... */
+#error "No way to provide fallback implementation of `tpp_intvalue_builder` -- please provide your own"
+#endif /* !... */
+	if (TPP_ISERR(result))
+		goto err;
+	result = tpp_intvalue_mul(&self->TPP_INTERNAL(tivb_value),
+	                          &self->TPP_INTERNAL(tivb_radix),
+	                          &mul_result);
+	if (TPP_ISERR(result))
+		goto err_digit_value;
+	result = tpp_intvalue_add(&mul_result, &digit_value, &add_result);
+	tpp_intvalue_fini(&mul_result);
+	tpp_intvalue_fini(&digit_value);
+	if (!TPP_ISERR(result)) {
+		tpp_intvalue_fini(&self->TPP_INTERNAL(tivb_value));
+		self->TPP_INTERNAL(tivb_value) = add_result;
+	}
+	return result;
+err_digit_value:
+	tpp_intvalue_fini(&digit_value);
+err:
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_DECODEINT && !tpp_intvalue_builder */
+#endif /* tpp_intvalue */
 
 
 
@@ -464,11 +537,11 @@ typedef struct tpp_expr_value {
 #endif /* !_TPP_EXPR_VALUE_KIND_MULTIPLE */
 
 /* Finalize `self` (never fails) */
-#define tpp_expr_value_fini(self)                     \
-	((void)0 _tpp_expr_value_decref(self),            \
-	 tpp_expr_value_isint(self)                       \
-	 ? tpp_intvalue_fini(_tpp_expr_value_getint(dst)) \
-	 : (void)0,                                       \
+#define tpp_expr_value_fini(self)                      \
+	((void)0 _tpp_expr_value_decref(self),             \
+	 tpp_expr_value_isint(self)                        \
+	 ? tpp_intvalue_fini(_tpp_expr_value_getint(self)) \
+	 : (void)0,                                        \
 	 tpp_dbg_memset(self, sizeof(tpp_expr_value)))
 
 /* Check which native representation is used by `self` (never fails) */

@@ -251,7 +251,7 @@ tpp_token_decodestring_oct_sequence(tpp_lexer *tpp_restrict self,
 	}
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 	ch = (tpp_char)bigword;
-	result = (*config->tldsc_dataprinter)(config->tldsc_arg, &ch, 1);
+	result = tpp_formatprinter_print(config->tldsc_dataprinter, config->tldsc_arg, &ch, 1);
 done:
 	*p_iter = iter;
 	return result;
@@ -1293,7 +1293,7 @@ handle_unknown_escape_sequence:
 			/* Successfully handled via hook. */
 			result += temp;
 			iter = esc_first;
-			goto done;
+			break; /* goto done; */
 		}
 		if (temp != TPP_SSIZE_OFERR(TPP_ENOENT))
 			goto err_temp; /* Error/abort from printer callback */
@@ -1320,7 +1320,7 @@ handle_unknown_escape_sequence:
 	}	break;
 
 	}
-done:
+/*done:*/
 	*p_flush_start = iter;
 	*p_iter = iter;
 	return result;
@@ -2426,8 +2426,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_chunk_count, arg, text, num_byte
 #endif /* TPP_HAVE_LEXER_PARSESTRING_FLAG_ALLOWTEMPS */
 		{
 			tpp_token const *token = tpp_lexer_gettoken(data->tldsccd_lexer);
-			if ((text) < tpp_token_getstart(token) ||
-			    (text + num_bytes) > tpp_token_getend(token)) {
+			if (((tpp_char const *)text /*       */) < tpp_token_getstart(token) ||
+			    ((tpp_char const *)text + num_bytes) > tpp_token_getend(token)) {
 				data->tldsccd_count = TPP_LEXER_DECODESTRING_IS_SINGLE_CHUNK_NO;
 				return TPP_LEXER_PARSESTRING_CHUNK_STOP;
 			}
@@ -2506,7 +2506,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodestring_as_single_chunk_cb, arg, text, n
 		return 0;
 	data = (struct tpp_lexer_decodestring_as_single_chunk_data *)arg;
 	tpp_assert(data->tldsascd_cb != NULL && "Multiple invocations?");
-	error = (*data->tldsascd_cb)(data->tldsascd_arg, data->tldsascd_chunk, text, num_bytes);
+	error = (*data->tldsascd_cb)(data->tldsascd_arg, data->tldsascd_chunk,
+	                             (tpp_char const *)text, num_bytes);
 #if TPP_DEBUG
 	data->tldsascd_cb = NULL;
 #endif /* TPP_DEBUG */
@@ -2896,8 +2897,8 @@ TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_cb, arg, text, num_bytes) {
 
 #if TPP_HAVE_UNICODE
 TPP_FORMATPRINTER_DEFINE(tpp_lexer_decodecharacter_utf8_cb, arg, text, num_bytes) {
-	tpp_char const *iter = text;
-	tpp_char const *end = text + num_bytes;
+	tpp_char const *iter = (tpp_char const *)text;
+	tpp_char const *end = (tpp_char const *)text + num_bytes;
 	struct tpp_lexer_decodecharacter_data *data;
 	data = (struct tpp_lexer_decodecharacter_data *)arg;
 	while (iter < end) {

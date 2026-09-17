@@ -509,16 +509,19 @@ TPP_DECL_BEGIN
 
 /* Return a handle for the hosting process's STDOUT stream */
 #ifdef tpp_makefile_io_handle_IS_HANDLE
-#define tpp_makefile_io_getstdout() GetStdHandle(STD_OUTPUT_HANDLE)
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = GetStdHandle(STD_OUTPUT_HANDLE), TPP_EOK)
 #elif defined(tpp_makefile_io_handle_IS_int)
 #ifdef STDOUT_FILENO
-#define tpp_makefile_io_getstdout() STDOUT_FILENO
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = STDOUT_FILENO, TPP_EOK)
 #else /* STDOUT_FILENO */
-#define tpp_makefile_io_getstdout() 1
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = 1, TPP_EOK)
 #endif /* !STDOUT_FILENO */
 #elif defined(tpp_makefile_io_handle_IS_FILE)
-#define tpp_makefile_io_getstdout() stdout
+#define tpp_makefile_io_getstdout(p_handle) (*(p_handle) = stdout, TPP_EOK)
 #endif /* ... */
+#ifndef TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE
+#define TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE 0
+#endif /* !TPP_MAKEFILE_IO_GETSTDOUT_MUST_CLOSE */
 
 /* Open a file for writing
  * @return: TPP_EOK:    Success (*p_result was populated and must eventually be closed by caller)
@@ -931,7 +934,7 @@ _tpp_makefile_new_dependency_hook(_tpp_makefile_new_dependency_hook_cookie cooki
 #define tpp_makefile_set_missing_file_dependencies_enabled(self, v) \
 	((v) ? tpp_makefile_enable_missing_file_dependencies(self)      \
 	     : (tpp_makefile_disable_missing_file_dependencies(self), TPP_EOK))
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 _tpp_makefile_include_not_found_hook(_tpp_makefile_include_not_found_hook_cookie cookie,
                                      tpp_hook_include_kind include_kind);
 #else /* TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */

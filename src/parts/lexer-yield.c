@@ -436,7 +436,7 @@ tpp_lexer_handle_feature_test_macro(tpp_lexer *tpp_restrict self, tpp_token_id m
 				tpp_feature_test_macro_expansion_len = (tpp_size)((char *)tpp_feature_test_macro_expansion +
 					                                              tpp_lengthof(tpp_feature_test_macro_expansion) -
 					                                              expansion_dst);
-				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, expansion_dst,
+				(void)tpp_memmovedown(tpp_feature_test_macro_expansion, (tpp_char const *)expansion_dst,
 					                  tpp_feature_test_macro_expansion_len);
 				goto after_expansion_mode_assignment;
 #define WANT_after_expansion_mode_assignment
@@ -2103,7 +2103,7 @@ TPP_FORMATPRINTER_DEFINE(tpp_string_builder_inplace_escape_cb, arg, text, num_by
 	tpp_size offset, delta_size, remaining;
 	struct tpp_string_builder_inplace_escape_data *data;
 	data = (struct tpp_string_builder_inplace_escape_data *)arg;
-	if (data->tsbied_text == text) {
+	if (data->tsbied_text == (tpp_char *)text) {
 		tpp_assert(data->tsbied_size >= num_bytes);
 		data->tsbied_text += num_bytes;
 		data->tsbied_size -= num_bytes;
