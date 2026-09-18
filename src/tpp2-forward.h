@@ -1635,6 +1635,50 @@ TPP_INLINE tpp_lcinfo tpp_lexer_getstartlcinfo(tpp_lexer *self) {
 #define tpp_lexer_warnf(self, ...) ((void)(self), TPPLexer_Warn(__VA_ARGS__) ? TPP_EOK : TPP_ELEXERROR)
 #endif /* TPP_CONFIG_ONELEXER != 2 */
 
+
+
+
+/************************************************************************/
+/* "parts/preparse.h"                                                   */
+/************************************************************************/
+#define tpp_preparse_skipbse_fwd(lexer, pos, end)   ((void)(lexer), _tpp_preparse_skipbse_fwd(pos, end))
+#define tpp_preparse_skipbse_bck(lexer, start, pos) ((void)(lexer), _tpp_preparse_skipbse_bck(start, pos))
+
+/* TPP2 only (and always) supported BSE, so that's what we emulate here... */
+TPP_INLINE /*TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2))*/ tpp_char const *TPPCALL
+_tpp_preparse_skipbse_fwd(tpp_char const *pos, tpp_char const *end) {
+	while (*pos == '\\' && pos + 1 < end) {
+		if (pos[1] == '\n') {
+			pos += 2;
+		} else if (pos[1] == '\r') {
+			pos += (pos + 2 < end && pos[2] == '\n') ? 3 : 2;
+		} else {
+			break;
+		}
+	}
+	return pos;
+}
+
+TPP_INLINE /*TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2))*/ tpp_char const *TPPCALL
+_tpp_preparse_skipbse_bck(tpp_char const *start, tpp_char const *pos) {
+	for (;;) {
+		if (pos[-1] == '\n' && (pos - 1) > start) {
+			if (pos[-2] == '\\') {
+				pos -= 2;
+			} else if (pos[-2] == '\r' && (pos - 2) > start && pos[-3] == '\\') {
+				pos -= 3;
+			} else {
+				break;
+			}
+		} else if (pos[-1] == '\r' && (pos - 1) > start && pos[-2] == '\\') {
+			pos -= 2;
+		} else {
+			break;
+		}
+	}
+	return pos;
+}
+
 TPP_DECL_END
 
 #endif /* !GUARD_TPP2_FORWARD_H */
