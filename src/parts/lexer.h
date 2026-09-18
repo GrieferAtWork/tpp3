@@ -292,14 +292,18 @@ typedef struct tpp_lexer {
 #define tpp_lexer_has(self, conf) _tpp_lexer_has_##conf(self)
 
 /* Current token */
-#define tpp_lexer_gettok(self)          ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
-#define tpp_lexer_gettoken(self)        (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
-#define tpp_lexer_hastokenkwd(self)     tpp_token_haskwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenkwd(self)     tpp_token_getkwd(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenkwdcstr(self) tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenstart(self)   tpp_token_getstart(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenend(self)     tpp_token_getend(tpp_lexer_gettoken(self))
-#define tpp_lexer_gettokenlen(self)     tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettok(self)                    ((self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok).TPP_INTERNAL(tt_id))
+#define tpp_lexer_gettoken(self)                  (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_tok))
+#define tpp_lexer_hastokenkwd(self)               tpp_token_haskwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwd(self)               tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdcstr(self)           tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)             tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)               tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)               tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_settokenid(self, id)            tpp_token_setid(tpp_lexer_gettoken(self), id)
+#define tpp_lexer_settokenrange(self, start, end) tpp_token_setrange(tpp_lexer_gettoken(self), start, end)
+#define tpp_lexer_settokenend(self, end)          tpp_token_setend(tpp_lexer_gettoken(self), end)
+
 
 /* Current file */
 #define tpp_lexer_getfile(self)     (&(self)->TPP_INTERNAL(tl_core).TPP_INTERNAL(tlc_input).TPP_INTERNAL(tli_file))

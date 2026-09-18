@@ -1704,6 +1704,8 @@ typedef struct tpp_token {
 #define tpp_token_setrange(self, start, end)         \
 	(void)((self)->TPP_INTERNAL(tt_start) = (start), \
 	       (self)->TPP_INTERNAL(tt_end)   = (end))
+#define tpp_token_setend(self, end) \
+	(void)((self)->TPP_INTERNAL(tt_end) = (end))
 
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)

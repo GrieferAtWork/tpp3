@@ -1256,9 +1256,11 @@ rename("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define tpp_token_getkwdcstr(self) ((tpp_char const *)(self)->t_kwd->k_name)
 #define tpp_token_setid(self, id)   (void)((self)->t_id = (id))
 #define tpp_token_setkwd(self, kwd) (void)((self)->t_id = ((self)->t_kwd = (kwd))->k_id)
-#define tpp_token_setrange(self, start, end)  \
+/* Not exposed since this wouldn't also set the position in the linked file.
+ * Use `tpp_lexer_settokenrange()` or `tpp_lexer_settokenend()` instead! */
+/*#define tpp_token_setrange(self, start, end)  \
 	(void)((self)->t_begin = (char *)(start), \
-	       (self)->t_end   = (char *)(end))
+	       (self)->t_end   = (char *)(end))*/
 
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
@@ -1441,6 +1443,12 @@ typedef struct tpp_lcinfo_ex {
 #define tpp_lexer_gettokenstart(self)   ((tpp_char const *)(self)->l_token.t_begin)
 #define tpp_lexer_gettokenend(self)     ((tpp_char const *)(self)->l_token.t_end)
 #define tpp_lexer_gettokenlen(self)     ((tpp_size)(tpp_lexer_gettokenend(self) - tpp_lexer_gettokenstart(self)))
+#define tpp_lexer_settokenid(self, id)  (void)((self)->l_token.t_id = (id))
+#define tpp_lexer_settokenrange(self, start, end)           \
+	(void)((self)->l_token.t_begin       = (char *)(start), \
+	       (self)->l_token.t_file->f_pos = ((self)->l_token.t_end = (char *)(end)))
+#define tpp_lexer_settokenend(self, end) \
+	(void)((self)->l_token.t_file->f_pos = ((self)->l_token.t_end = (char *)(end)))
 
 /* Current file */
 #define tpp_lexer_getfile(self)     ((self)->l_token.t_file)
