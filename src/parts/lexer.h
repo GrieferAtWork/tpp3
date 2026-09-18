@@ -297,6 +297,8 @@ typedef struct tpp_lexer {
 #define tpp_lexer_hastokenkwd(self)               tpp_token_haskwd(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenkwd(self)               tpp_token_getkwd(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenkwdcstr(self)           tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdstr(self)            tpp_token_getkwdstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdlen(self)            tpp_token_getkwdlen(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenstart(self)             tpp_token_getstart(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenend(self)               tpp_token_getend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenlen(self)               tpp_token_getlen(tpp_lexer_gettoken(self))
