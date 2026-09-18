@@ -6743,6 +6743,21 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
+/* Enable support for `tpp_lexer_peek_raw()`, which is a convenience wrapper
+ * around `tpp_lexer_seek_backup` and `tpp_lexer_manualpopfile_start(self)` to
+ * get a peek at the next upcoming token, as returned by `tpp_lexer_yieldraw()`
+ *
+ * With this in mind, this function behaves very similar to `tpp_lexer_tryskip_raw()`,
+ * except that it always performs a rollback, rather than committing to the next
+ * upcoming token on match. */
+#ifndef TPP_HAVE_LEXER_PEEK_RAW
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_LEXER_PEEK_RAW 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PEEK_RAW 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PEEK_RAW */
+
 /* Provide a function `tpp_lexer_reprtokenid()` to
  * return the string-representation of a given token ID */
 #ifndef TPP_HAVE_LEXER_REPRTOKENID

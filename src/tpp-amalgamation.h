@@ -12497,6 +12497,21 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_TRYSKIP_RAW */
 
+/* Enable support for `tpp_lexer_peek_raw()`, which is a convenience wrapper
+ * around `tpp_lexer_seek_backup` and `tpp_lexer_manualpopfile_start(self)` to
+ * get a peek at the next upcoming token, as returned by `tpp_lexer_yieldraw()`
+ *
+ * With this in mind, this function behaves very similar to `tpp_lexer_tryskip_raw()`,
+ * except that it always performs a rollback, rather than committing to the next
+ * upcoming token on match. */
+#ifndef TPP_HAVE_LEXER_PEEK_RAW
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_LEXER_PEEK_RAW 1
+#else /* ... */
+#define TPP_HAVE_LEXER_PEEK_RAW 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_PEEK_RAW */
+
 /* Provide a function `tpp_lexer_reprtokenid()` to
  * return the string-representation of a given token ID */
 #ifndef TPP_HAVE_LEXER_REPRTOKENID
@@ -29447,6 +29462,43 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_tryskip_raw(tpp_lexer *tpp_restrict self, tpp_token_id expected,
                       unsigned int flags);
 #endif /* TPP_HAVE_LEXER_TRYSKIP_RAW */
+
+
+#if TPP_HAVE_LEXER_PEEK_RAW
+#define TPP_LEXER_PEEK_RAW_FLAG_NORMAL      0x0000 /* Normal flags */
+#define TPP_LEXER_PEEK_RAW_FLAG_STOPONSPACE 0x0001 /* TPP_TOK_ISSPACE_OR_COMMENT-tokens are counted as regular tokens */
+#define TPP_LEXER_PEEK_RAW_FLAG_STOPONLF    0x0002 /* TPP_TOK_ISLF_OR_COMMENT-tokens are counted as regular tokens */
+#define TPP_LEXER_PEEK_RAW_FLAG_INCLPREV    0x0004 /* Also include the preceding token's range in `p_token` on success. */
+
+/* Get a peek at upcoming ("raw") tokens. This function correctly
+ * handles EOF (by temporarily unwinding the #include-stack, before
+ * undoing any such changes prior to returning).
+ *
+ * NOTE: This function also suppress warnings while peeking tokens!
+ *
+ * @param: flags:     Set of `TPP_LEXER_PEEK_RAW_FLAG_*`
+ * @param: p_token:   When non-NULL, initialize to describe the upcoming
+ *                    token (since this function always rolls back, such
+ *                    information will not be in `tpp_lexer_gettoken(self)`)
+ * @param: accept_cb: When non-NULL, a callback that is invoked while the
+ *                    peeked token is loaded into `tpp_lexer_gettoken(self)`.
+ *                    This callback can be used to:
+ *                    - `return TPP_ENOENT`:   Continue peeking the next token
+ *                    - `return TPP_EOK`:      Rewind and return this token
+ *                    - `return TPP_ISERR(*)`: Rewind and return this error
+ *                    When `NULL` is given, behaves the same as if an accept-
+ *                    callback that always returns `return TPP_EOK` was used.
+ *
+ * @return: * :                The upcoming token (also stored in `tpp_token_getid(p_token)`)
+ * @return: TPP_TOK_EOF:       No acceptable upcoming token (also stored in `tpp_token_getid(p_token)`)
+ * @return: TPP_TOK_ENOMEM:    Out of memory
+ * @return: TPP_TOK_EIO:       I/O error while trying to read from file
+ * @return: TPP_TOK_ELEXERROR: Lexer error
+ * @return: TPP_TOK_EUSER(*):  User-defined error from hook */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
+tpp_lexer_peek_raw(tpp_lexer *tpp_restrict self, unsigned int flags, /*out*/ tpp_token *p_token,
+                   tpp_errno (TPPCALL *accept_cb)(void *arg, tpp_lexer *self), void *accept_arg);
+#endif /* TPP_HAVE_LEXER_PEEK_RAW */
 
 
 

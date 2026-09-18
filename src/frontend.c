@@ -43,6 +43,7 @@
 /* Disable some stuff turned on by `TPP_PROFILE_ALL` but not actually used.
  * These superfluous APIs can easily be discovered thanks to `-DTPP_USE_STATIC=1` */
 #define TPP_HAVE_LEXER_COPY             0
+#define TPP_HAVE_LEXER_PEEK_RAW         0
 #define TPP_HAVE_KEYWORDS_UNDEFALLUSER  0
 #define TPP_HAVE_KEYWORDS_UNASSERTALL   0
 #define TPP_HAVE_KEYWORDS_RESETFLAGS    0
