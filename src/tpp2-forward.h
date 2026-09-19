@@ -1436,17 +1436,17 @@ typedef struct tpp_lcinfo_ex {
 #define tpp_lexer_setrecursivemacrolimit(self, v) (void)((self)->l_limit_mrec = (v))
 #define tpp_lexer_resetrecursivemacrolimit(self)  (void)((self)->l_limit_mrec = -TPP_MAX_RECURSIVE_MACRO_DEPTH)
 
-#define tpp_lexer_getnextcounter(self)    ((self)->l_counter)
+#define tpp_lexer_getnextcounter(self)    (self)->l_counter
 #define tpp_lexer_setnextcounter(self, v) (void)((self)->l_counter = (v))
 #define tpp_lexer_resetnextcounter(self)  (void)((self)->l_counter = 0)
 
-#define tpp_lexer_gettok(self)          ((self)->l_token.t_id)
+#define tpp_lexer_gettok(self)          ((tpp_token_id)(self)->l_token.t_id)
 #define tpp_lexer_gettoken(self)        (&(self)->l_token)
 #define tpp_lexer_hastokenkwd(self)     TPP_ISKEYWORD(tpp_lexer_gettok(self))
-#define tpp_lexer_gettokenkwd(self)     ((self)->l_token.t_kwd)
-#define tpp_lexer_gettokenkwdcstr(self) ((self)->l_token.t_kwd->k_name)
+#define tpp_lexer_gettokenkwd(self)     ((tpp_keyword const *)(self)->l_token.t_kwd)
+#define tpp_lexer_gettokenkwdcstr(self) ((char const *)(self)->l_token.t_kwd->k_name)
 #define tpp_lexer_gettokenkwdstr(self)  ((tpp_char const *)(self)->l_token.t_kwd->k_name)
-#define tpp_lexer_gettokenkwdlen(self)  ((self)->l_token.t_kwd->k_size)
+#define tpp_lexer_gettokenkwdlen(self)  ((tpp_size)(self)->l_token.t_kwd->k_size)
 #define tpp_lexer_gettokenstart(self)   ((tpp_char const *)(self)->l_token.t_begin)
 #define tpp_lexer_gettokenend(self)     ((tpp_char const *)(self)->l_token.t_end)
 #define tpp_lexer_gettokenlen(self)     ((tpp_size)(tpp_lexer_gettokenend(self) - tpp_lexer_gettokenstart(self)))
