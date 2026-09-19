@@ -380,9 +380,20 @@ typedef struct tpp_lexer {
 #define tpp_lexer_enablefeature(self, TPP_FEAT_x)       tpp_features_enable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_disablefeature(self, TPP_FEAT_x)      tpp_features_disable(&(self)->TPP_INTERNAL(tl_feat), TPP_FEAT_x)
 #define tpp_lexer_resetfeatures(self)                   tpp_features_reset(&(self)->TPP_INTERNAL(tl_feat))
+#define tpp_lexer_pushfeatures(self) \
+	do {                             \
+		tpp_features const _tlpf_saved = (self)->TPP_INTERNAL(tl_feat)
+#define tpp_lexer_breakfeatures(self) \
+		(void)((self)->TPP_INTERNAL(tl_feat) = _tlpf_saved)
+#define tpp_lexer_popfeatures(self)    \
+		tpp_lexer_breakfeatures(self); \
+	}	while (0)
 #else /* TPP_HAVE_FEATURES */
 #define tpp_lexer_getfeature(self, TPP_FEAT_x) 0
 #define tpp_lexer_resetfeatures(self)          (void)0
+#define tpp_lexer_pushfeatures(self)  do {
+#define tpp_lexer_breakfeatures(self) (void)0
+#define tpp_lexer_popfeatures(self)   (void)0; } while (0)
 #endif /* !TPP_HAVE_FEATURES */
 
 /* Check if `tpp_lexer_yieldpp()` might parse directives right now.
