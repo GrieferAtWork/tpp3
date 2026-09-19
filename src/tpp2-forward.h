@@ -1250,15 +1250,15 @@ rename("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TPP_TOK_ISUSERKEYWORD(id)                   TPP_ISUSERKEYWORD(id)
 #define TPP_TOK_ISBUILTINKEYWORD(id)                (TPP_TOK_ISKEYWORD(id) && !TPP_TOK_ISUSERKEYWORD(id))
 
-#define tpp_token_haskwd(self)     TPP_TOK_ISKEYWORD(tpp_token_getid(self))
-#define tpp_token_getid(self)      ((self)->t_id)
-#define tpp_token_getkwd(self)     ((self)->t_kwd) /* Only valid when `tpp_token_haskwd(self)` */
-#define tpp_token_getstart(self)   ((tpp_char const *)(self)->t_begin)
-#define tpp_token_getend(self)     ((tpp_char const *)(self)->t_end) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
-#define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
-#define tpp_token_getkwdcstr(self) ((self)->t_kwd->k_name)
-#define tpp_token_getkwdstr(self)  ((tpp_char const *)(self)->t_kwd->k_name)
-#define tpp_token_getkwdlen(self)  ((self)->t_kwd->k_size)
+#define tpp_token_haskwd(self)      TPP_TOK_ISKEYWORD(tpp_token_getid(self))
+#define tpp_token_getid(self)       ((tpp_token_id)(self)->t_id)
+#define tpp_token_getkwd(self)      ((tpp_keyword const *)(self)->t_kwd) /* Only valid when `tpp_token_haskwd(self)` */
+#define tpp_token_getstart(self)    ((tpp_char const *)(self)->t_begin)
+#define tpp_token_getend(self)      ((tpp_char const *)(self)->t_end) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
+#define tpp_token_getlen(self)      ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#define tpp_token_getkwdcstr(self)  ((char const *)(self)->t_kwd->k_name)
+#define tpp_token_getkwdstr(self)   ((tpp_char const *)(self)->t_kwd->k_name)
+#define tpp_token_getkwdlen(self)   ((tpp_size)(self)->t_kwd->k_size)
 #define tpp_token_setid(self, id)   (void)((self)->t_id = (id))
 #define tpp_token_setkwd(self, kwd) (void)((self)->t_id = ((self)->t_kwd = (kwd))->k_id)
 /* Not exposed since this wouldn't also set the position in the linked file.
@@ -1440,17 +1440,18 @@ typedef struct tpp_lcinfo_ex {
 #define tpp_lexer_setnextcounter(self, v) (void)((self)->l_counter = (v))
 #define tpp_lexer_resetnextcounter(self)  (void)((self)->l_counter = 0)
 
-#define tpp_lexer_gettok(self)          ((tpp_token_id)(self)->l_token.t_id)
-#define tpp_lexer_gettoken(self)        (&(self)->l_token)
-#define tpp_lexer_hastokenkwd(self)     TPP_ISKEYWORD(tpp_lexer_gettok(self))
-#define tpp_lexer_gettokenkwd(self)     ((tpp_keyword const *)(self)->l_token.t_kwd)
-#define tpp_lexer_gettokenkwdcstr(self) ((char const *)(self)->l_token.t_kwd->k_name)
-#define tpp_lexer_gettokenkwdstr(self)  ((tpp_char const *)(self)->l_token.t_kwd->k_name)
-#define tpp_lexer_gettokenkwdlen(self)  ((tpp_size)(self)->l_token.t_kwd->k_size)
-#define tpp_lexer_gettokenstart(self)   ((tpp_char const *)(self)->l_token.t_begin)
-#define tpp_lexer_gettokenend(self)     ((tpp_char const *)(self)->l_token.t_end)
-#define tpp_lexer_gettokenlen(self)     ((tpp_size)(tpp_lexer_gettokenend(self) - tpp_lexer_gettokenstart(self)))
-#define tpp_lexer_settokenid(self, id)  (void)((self)->l_token.t_id = (id))
+#define tpp_lexer_gettok(self)           ((tpp_token_id)(self)->l_token.t_id)
+#define tpp_lexer_gettoken(self)         (&(self)->l_token)
+#define tpp_lexer_hastokenkwd(self)      tpp_token_haskwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwd(self)      tpp_token_getkwd(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdcstr(self)  tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdstr(self)   tpp_token_getkwdstr(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenkwdlen(self)   tpp_token_getkwdlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenstart(self)    tpp_token_getstart(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenend(self)      tpp_token_getend(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenlen(self)      tpp_token_getlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_settokenid(self, id)   tpp_token_setid(tpp_lexer_gettoken(self), id)
+#define tpp_lexer_settokenkwd(self, kwd) tpp_token_setkwd(tpp_lexer_gettoken(self), kwd)
 #define tpp_lexer_settokenrange(self, start, end)           \
 	(void)((self)->l_token.t_begin       = (char *)(start), \
 	       (self)->l_token.t_file->f_pos = ((self)->l_token.t_end = (char *)(end)))

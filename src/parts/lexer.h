@@ -303,6 +303,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_gettokenend(self)               tpp_token_getend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenlen(self)               tpp_token_getlen(tpp_lexer_gettoken(self))
 #define tpp_lexer_settokenid(self, id)            tpp_token_setid(tpp_lexer_gettoken(self), id)
+#define tpp_lexer_settokenkwd(self, kwd)          tpp_token_setkwd(tpp_lexer_gettoken(self), kwd)
 #define tpp_lexer_settokenrange(self, start, end) tpp_token_setrange(tpp_lexer_gettoken(self), start, end)
 #define tpp_lexer_settokenend(self, end)          tpp_token_setend(tpp_lexer_gettoken(self), end)
 
