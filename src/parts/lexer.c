@@ -463,6 +463,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ *
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until `self` is finalized.
@@ -471,18 +472,25 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
  *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect 
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags) {
+_tpp_lexer_pushfile_io(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                       tpp_io_handle handle, tpp_file_flags ioflags, tpp_lcinfo start_lc
+#if TPP_HAVE_UNICODE
+                       , tpp_file_encoding enc
+#endif /* TPP_HAVE_UNICODE */
+                       ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	tpp_file_move(prev_file, file);
-	ioflags |= TPP_FILE_FLAGS_NOKWD;
-	tpp_file_init_io_ex(file, filename, handle, ioflags);
+	ioflags |= TPP_FILE_FLAGS_NOKWD; /* Must always be set */
+	tpp_file_init_io_ex2(file, filename, handle, ioflags, start_lc, enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);

@@ -25952,7 +25952,16 @@ reuse_old_chunk:
 			ps_rel = 0;
 			kp_rel = 0;
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			tpp_lcstate_init(&self->tf_data.td_io.tff_start_lc, 0, 0);
+			/* Start LC was already set during init, and was set to whatever
+			 * the first byte read from the file (i.e.: the byte that we're
+			 * about to read) should map to.
+			 *
+			 * As such, we only need to initialize everything *except* the
+			 * LC information of the current lc-state (which essentially
+			 * boils down to simply initializing its MB-state). */
+#if TPP_HAVE_UNICODE
+			self->tf_data.td_io.tff_start_lc.tlcs_data[0] = 0;
+#endif /* TPP_HAVE_UNICODE */
 #if TPP_HAVE_FILE_GETHASH
 			self->tf_data.td_io.tff_hash = TPP_HASH_INITIAL;
 #endif /* TPP_HAVE_FILE_GETHASH */
@@ -26287,8 +26296,12 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcstate result;
 	if tpp_unlikely(!self->tf_chunk) {
-		if (self->tf_kind == TPP_FILE_KIND_IO)
-			return tpp_lcinfo_of(0, 0); /* Start of I/O file with nothing loaded, yet */
+		if (self->tf_kind == TPP_FILE_KIND_IO) {
+			/* Start of I/O file with nothing loaded, yet
+			 * -> In this case, the start L/C info set by
+			 *    `tpp_file_init_io_ex()` must be returned. */
+			return tpp_lcstate_getlc(&self->tf_data.td_io.tff_start_lc);
+		}
 #if TPP_HAVE_FILE_DUMMY
 		if (self->tf_kind == TPP_FILE_KIND_DUMMY)
 			return tpp_lcstate_getlc(&self->tf_data.td_dummy.tfd_start_lc);
@@ -35207,6 +35220,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ *
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until `self` is finalized.
@@ -35215,18 +35229,25 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
  *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect 
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags) {
+_tpp_lexer_pushfile_io(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                       tpp_io_handle handle, tpp_file_flags ioflags, tpp_lcinfo start_lc
+#if TPP_HAVE_UNICODE
+                       , tpp_file_encoding enc
+#endif /* TPP_HAVE_UNICODE */
+                       ) {
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_file *const prev_file = tpp_file_alloc();
 	if tpp_unlikely(!prev_file)
 		return TPP_ENOMEM;
 	tpp_file_move(prev_file, file);
-	ioflags |= TPP_FILE_FLAGS_NOKWD;
-	tpp_file_init_io_ex(file, filename, handle, ioflags);
+	ioflags |= TPP_FILE_FLAGS_NOKWD; /* Must always be set */
+	tpp_file_init_io_ex2(file, filename, handle, ioflags, start_lc, enc);
 	file->tf_prev  = prev_file;
 	file->tf_tprev = prev_file;
 	return tpp_lexer_callhook_file_pushed(self);
@@ -51766,7 +51787,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		if tpp_unlikely(!prev_file)
 			goto err_nomem;
 		tpp_file_move(prev_file, file);
-		tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
+		tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_LCINFO_INVALID, TPP_FILE_ENCODING_EMBED);
 		tpp_lcstate_init_invalid(&file->tf_data.td_io.tff_start_lc);
 		file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 		file->tf_prev  = prev_file;
@@ -51850,7 +51871,7 @@ tpp_embed_builder_pack_and_pushfile(tpp_embed_builder *tpp_restrict self,
 		goto err_nomem_embed_data;
 	tpp_file_move(prev_file, file);
 #if TPP_HAVE_FILE_ENCODING_EMBED
-	tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_FILE_ENCODING_EMBED);
+	tpp_file_init_io_from_ofr_ex(file, &self->teb_ofr, TPP_LCINFO_INVALID, TPP_FILE_ENCODING_EMBED);
 	tpp_lcstate_init_invalid(&file->tf_data.td_io.tff_start_lc);
 	file->tf_data.td_io.tff_encdat.tffed_embedlimit = self->teb_limit;
 	file->tf_chunk = tpp_string_builder_pack(&embed_data);

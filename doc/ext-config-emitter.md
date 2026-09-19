@@ -212,7 +212,7 @@ is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16744) (or [`TPP
 (though only done if the desired target token is enabled).
 
 In order to do this normalization, the string is decoded and re-encoded via
-use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29920) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18031), thereby
+use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L29946) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18031), thereby
 allowing a consumer of the preprocessor output to only have to support a
 greatly reduced set of string tokens (and escape sequences) in order to
 fully understand *any* kind of string token that may be produced by TPP.
@@ -603,7 +603,7 @@ but taking a completely different approach in order to get there:
     emit a `#undef`-directive and delete the saved macro definition.
 - In order to remember the *most-recently-dumped* macro definition
   linked to a keyword, [`TPP_HAVE_KEYWORD_USERDATA`](config-core.md#tpp_have_keyword_userdata) is used to store
-  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L22709) that was most-recently dumped
+  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L22715) that was most-recently dumped
 
 NOTE: In order to determine the name of the macro when it is used
       as a result of being expanded onto the #include-stack, this
@@ -690,7 +690,7 @@ TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0
 ## TPP_EMITTER_HAVE_TRACE_INCLUDES
 
 Trace includes (and the depth of the `#include`-stack in terms of IO files)
-by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L28171)
+by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L28197)
 whenever an I/O file is pushed to the `#include`-stack:
 
 ```deemon
@@ -843,7 +843,7 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
 CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1806) is called):
-[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30219)
+[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30245)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's
 mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose)).

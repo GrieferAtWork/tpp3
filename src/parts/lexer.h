@@ -746,12 +746,15 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
  * @param: ioflags:  Extra flags specifying how to interact with `handle`:
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
- *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings */
-#define tpp_lexer_initfile_io_ex(self, filename, handle, ioflags)  \
-	tpp_file_init_io_ex(tpp_lexer_getfile(self), filename, handle, \
-	                    (ioflags) | TPP_FILE_FLAGS_NOKWD)
+ *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect */
 #define tpp_lexer_initfile_io(self, filename, handle) \
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#define tpp_lexer_initfile_io_ex(self, filename, handle, ioflags)  \
+	tpp_lexer_initfile_io_ex2(self, filename, handle, ioflags, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#define tpp_lexer_initfile_io_ex2(self, filename, handle, ioflags, start_lc, enc)  \
+	tpp_file_init_io_ex2(tpp_lexer_getfile(self), filename, handle, (ioflags) | TPP_FILE_FLAGS_NOKWD, start_lc, enc)
 #endif /* TPP_HAVE_FILE_NOKWD */
 
 
@@ -777,6 +780,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ *
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until `self` is finalized.
@@ -785,13 +789,29 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
  *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect 
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags);
 #define tpp_lexer_pushfile_io(self, filename, handle) \
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#define tpp_lexer_pushfile_io_ex(self, filename, handle, ioflags) \
+	tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, start_lc, enc) \
+	_tpp_lexer_pushfile_io(self, filename, handle, ioflags, start_lc, enc)
+#else /* TPP_HAVE_UNICODE */
+#define tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, start_lc, enc) \
+	_tpp_lexer_pushfile_io(self, filename, handle, ioflags, start_lc)
+#endif /* !TPP_HAVE_UNICODE */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_io(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                       tpp_io_handle handle, tpp_file_flags ioflags, tpp_lcinfo start_lc
+#if TPP_HAVE_UNICODE
+                       , tpp_file_encoding enc
+#endif /* TPP_HAVE_UNICODE */
+                       );
 #endif /* TPP_HAVE_LEXER_PUSHFILE_IO */
 
 

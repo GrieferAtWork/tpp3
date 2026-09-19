@@ -21599,7 +21599,10 @@ typedef struct tpp_file {
 	union {
 		struct {
 			char const *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */
-			tpp_lcstate TPP_INTERNAL(tff_start_lc); /* [valid_if(tf_chunk != NULL)] Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID` */
+			tpp_lcstate TPP_INTERNAL(tff_start_lc); /* Line/Column numbers (0-based) of `tf_chunk->ts_str`, or `TPP_LCINFO_INVALID`
+			                                         * When no chunk has been loaded yet, this is the start of the initial chunk.
+			                                         * WARNING: When `tf_chunk == NULL`, only `tlcs_info` is initialize (meaning
+			                                         *          that `tlcs_data` isn't) */
 #if TPP_HAVE_FILE_SETFILENAME
 			TPP_REF tpp_string *TPP_INTERNAL(tff_user_filename); /* [0..1] User-defined override for name of this file */
 #define _tpp_file_init_io_user_filename(self) , (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_user_filename) = NULL
@@ -22171,17 +22174,19 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #endif /* !TPP_HAVE_KEYWORD_INCLCOUNT */
 
 /* Initialize `self` as a `TPP_FILE_KIND_IO` file
- * @param: char const    *filename: [0..1] Filename (if known)
- * @param: tpp_io_handle  fp:       File descriptor (inherited)
- * @param: tpp_file_flags flags:    File flags (set of `TPP_FILE_FLAGS_*`) */
+ * @param: char const       *filename: [0..1] Filename (if known)
+ * @param: tpp_io_handle     handle:   File handle (inherited unless `TPP_FILE_FLAGS_NOCLOSE` is set)
+ * @param: tpp_file_flags    flags:    File flags (set of `TPP_FILE_FLAGS_*`)
+ * @param: tpp_lcinfo        start_lc: Start line/column of the first byte read from `handle`
+ * @param: tpp_file_encoding enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect */
 #if TPP_HAVE_FILE_NOKWD
-#define tpp_file_init_io(self, filename, /*inherit*/ fp) tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NOKWD)
+#define tpp_file_init_io(self, filename, /*inherit*/ handle) tpp_file_init_io_ex(self, filename, handle, TPP_FILE_FLAGS_NOKWD)
 #else /* TPP_HAVE_FILE_NOKWD */
-#define tpp_file_init_io(self, filename, /*inherit*/ fp) tpp_file_init_io_ex(self, filename, fp, TPP_FILE_FLAGS_NORMAL)
+#define tpp_file_init_io(self, filename, /*inherit*/ handle) tpp_file_init_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
 #endif /* !TPP_HAVE_FILE_NOKWD */
-#define tpp_file_init_io_ex(self, filename, /*inherit*/ fp, flags) \
-	tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, TPP_FILE_ENCODING_UTF8)
-#define tpp_file_init_io_ex2(self, filename, /*inherit*/ fp, flags, enc)                          \
+#define tpp_file_init_io_ex(self, filename, /*inherit*/ handle, flags) \
+	tpp_file_init_io_ex2(self, filename, /*inherit*/ handle, flags, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#define tpp_file_init_io_ex2(self, filename, /*inherit*/ handle, flags, start_lc, enc)            \
 	(void)((self)->TPP_INTERNAL(tf_tpos)  = NULL,                                                 \
 	       (self)->TPP_INTERNAL(tf_pos)   = NULL,                                                 \
 	       (self)->TPP_INTERNAL(tf_chunk) = NULL,                                                 \
@@ -22192,7 +22197,8 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 	       _tpp_file_init_flags(self, flags)                                                      \
 	       _tpp_file_init_common(self),                                                           \
 	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_name) = (filename), \
-	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (fp)        \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(tlcs_info) = (start_lc), \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file) = (handle)    \
 	       _tpp_file_init_io_user_filename(self)                                                  \
 	       _tpp_file_init_io_keep(self),                                                          \
 	       _tpp_file_io_notify_initialized(self))
@@ -22200,10 +22206,10 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 /* Initialize `self` from a given `tpp_lexer_openfile_result` */
 #if TPP_HAVE_LEXER_OPENFILE
 #define tpp_file_init_io_from_ofr(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr) \
-	tpp_file_init_io_from_ofr_ex(self, ofr, TPP_FILE_ENCODING_UTF8)
-#define tpp_file_init_io_from_ofr_ex(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, enc) \
-	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                       \
-	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr), enc)
+	tpp_file_init_io_from_ofr_ex(self, ofr, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#define tpp_file_init_io_from_ofr_ex(self, /*inherit*/ /*tpp_lexer_openfile_result **/ ofr, start_lc, enc) \
+	tpp_file_init_io_ex2(self, tpp_lexer_openfile_result_getfilename(ofr),                                 \
+	                     (ofr)->tlofr_handle, tpp_lexer_openfile_result_getfileflags(ofr), start_lc, enc)
 #endif /* TPP_HAVE_LEXER_OPENFILE */
 
 
@@ -27924,12 +27930,15 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self);
  * @param: ioflags:  Extra flags specifying how to interact with `handle`:
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
- *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings */
-#define tpp_lexer_initfile_io_ex(self, filename, handle, ioflags)  \
-	tpp_file_init_io_ex(tpp_lexer_getfile(self), filename, handle, \
-	                    (ioflags) | TPP_FILE_FLAGS_NOKWD)
+ *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect */
 #define tpp_lexer_initfile_io(self, filename, handle) \
 	tpp_lexer_initfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#define tpp_lexer_initfile_io_ex(self, filename, handle, ioflags)  \
+	tpp_lexer_initfile_io_ex2(self, filename, handle, ioflags, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#define tpp_lexer_initfile_io_ex2(self, filename, handle, ioflags, start_lc, enc)  \
+	tpp_file_init_io_ex2(tpp_lexer_getfile(self), filename, handle, (ioflags) | TPP_FILE_FLAGS_NOKWD, start_lc, enc)
 #endif /* TPP_HAVE_FILE_NOKWD */
 
 
@@ -27955,6 +27964,7 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_LEXER_PUSHFILE_IO
 /* Push another file onto the `#include`-stack:
  * After a call to this function, the caller is responsible to yield the first token!
+ *
  * @param: filename: [0..1] Filename to use for messages (s.a. `tpp_file_getrealfilename()`)
  *                          WARNING: This filename is *NOT* copied -- it must remain
  *                                   allocated and valid until `self` is finalized.
@@ -27963,13 +27973,29 @@ tpp_lexer_initfile_open(tpp_lexer *tpp_restrict self,
  *                   - `TPP_FILE_FLAGS_NONBLOCK`: Do non-blocking reads (useful in case `handle` is a pipe)
  *                   - `TPP_FILE_FLAGS_NOCLOSE`:  A later call to `tpp_lexer_finifile()` will not close `handle`
  *                   - `TPP_FILE_FLAGS_SYSHDR`:   Do not emit warnings
+ * @param: start_lc: Start line/column of the first byte read from `handle`
+ * @param: enc:      Encoding to use for file, or `TPP_FILE_ENCODING_UTF8` to auto-detect 
+ *
  * @return: TPP_EOK:    Success
  * @return: TPP_ENOMEM: Out of memory */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-tpp_lexer_pushfile_io_ex(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
-                         tpp_io_handle handle, tpp_file_flags ioflags);
 #define tpp_lexer_pushfile_io(self, filename, handle) \
 	tpp_lexer_pushfile_io_ex(self, filename, handle, TPP_FILE_FLAGS_NORMAL)
+#define tpp_lexer_pushfile_io_ex(self, filename, handle, ioflags) \
+	tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, tpp_lcinfo_of(0, 0), TPP_FILE_ENCODING_UTF8)
+#if TPP_HAVE_UNICODE
+#define tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, start_lc, enc) \
+	_tpp_lexer_pushfile_io(self, filename, handle, ioflags, start_lc, enc)
+#else /* TPP_HAVE_UNICODE */
+#define tpp_lexer_pushfile_io_ex2(self, filename, handle, ioflags, start_lc, enc) \
+	_tpp_lexer_pushfile_io(self, filename, handle, ioflags, start_lc)
+#endif /* !TPP_HAVE_UNICODE */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+_tpp_lexer_pushfile_io(tpp_lexer *tpp_restrict self, /*utf-8*/ char const *filename,
+                       tpp_io_handle handle, tpp_file_flags ioflags, tpp_lcinfo start_lc
+#if TPP_HAVE_UNICODE
+                       , tpp_file_encoding enc
+#endif /* TPP_HAVE_UNICODE */
+                       );
 #endif /* TPP_HAVE_LEXER_PUSHFILE_IO */
 
 

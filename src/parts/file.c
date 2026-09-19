@@ -864,7 +864,16 @@ reuse_old_chunk:
 			ps_rel = 0;
 			kp_rel = 0;
 #endif /* TPP_HAVE_FILE_KEEPPOS */
-			tpp_lcstate_init(&self->tf_data.td_io.tff_start_lc, 0, 0);
+			/* Start LC was already set during init, and was set to whatever
+			 * the first byte read from the file (i.e.: the byte that we're
+			 * about to read) should map to.
+			 *
+			 * As such, we only need to initialize everything *except* the
+			 * LC information of the current lc-state (which essentially
+			 * boils down to simply initializing its MB-state). */
+#if TPP_HAVE_UNICODE
+			self->tf_data.td_io.tff_start_lc.tlcs_data[0] = 0;
+#endif /* TPP_HAVE_UNICODE */
 #if TPP_HAVE_FILE_GETHASH
 			self->tf_data.td_io.tff_hash = TPP_HASH_INITIAL;
 #endif /* TPP_HAVE_FILE_GETHASH */
@@ -1199,8 +1208,12 @@ TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_lcinfo TPPCALL
 tpp_file_getlcinfo(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	tpp_lcstate result;
 	if tpp_unlikely(!self->tf_chunk) {
-		if (self->tf_kind == TPP_FILE_KIND_IO)
-			return tpp_lcinfo_of(0, 0); /* Start of I/O file with nothing loaded, yet */
+		if (self->tf_kind == TPP_FILE_KIND_IO) {
+			/* Start of I/O file with nothing loaded, yet
+			 * -> In this case, the start L/C info set by
+			 *    `tpp_file_init_io_ex()` must be returned. */
+			return tpp_lcstate_getlc(&self->tf_data.td_io.tff_start_lc);
+		}
 #if TPP_HAVE_FILE_DUMMY
 		if (self->tf_kind == TPP_FILE_KIND_DUMMY)
 			return tpp_lcstate_getlc(&self->tf_data.td_dummy.tfd_start_lc);
