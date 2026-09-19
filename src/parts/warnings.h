@@ -77,14 +77,14 @@ typedef enum tpp_warning_state {
 /* Check if the warning state specified by `self` will cause something to be emitted. */
 #if TPP_HAVE_WARNING_SUPPRESS
 #if 1
-#define tpp_warning_state_willemit(self) ((int)(self) > 0)
+#define tpp_warning_state_willemit(state) ((int)(state) > 0)
 #else
-#define tpp_warning_state_willemit(self) \
-	((self) != TPP_WSTATE_DISABLED && (self) != TPP_WSTATE_SUPPRESS)
+#define tpp_warning_state_willemit(state) \
+	((state) != TPP_WSTATE_DISABLED && (state) != TPP_WSTATE_SUPPRESS)
 #endif
 #else /* TPP_HAVE_WARNING_SUPPRESS */
-#define tpp_warning_state_willemit(self) \
-	((self) != TPP_WSTATE_DISABLED)
+#define tpp_warning_state_willemit(state) \
+	((state) != TPP_WSTATE_DISABLED)
 #endif /* !TPP_HAVE_WARNING_SUPPRESS */
 
 

@@ -24,7 +24,9 @@
  *
  * Same as `tpp2.h`, this header is meant to make it easier to transition from TPP2 to TPP3 */
 
+#ifdef __INTELLISENSE__
 #include "deprecated-tpp2/tpp.h"
+#endif /* __INTELLISENSE__ */
 
 #ifdef __cplusplus
 #define TPP_DECL_BEGIN extern "C" {
@@ -1212,8 +1214,47 @@ rename("W_VA_KEYWORD_IN_REGULAR_MACRO", "TPP_W_RESERVED_MACRO_KEYWORD");
 #define TPP_TOK_EQUAL_EQUAL_EQUAL          TPP_FORWARD_COMPAT(TOK_EQUAL3)
 #define TPP_TOK_EXCLAIM_EQUAL_EQUAL        TPP_FORWARD_COMPAT(TOK_NOT_EQUAL3)
 #define TPP_TOK_QMARK_QMARK                TPP_FORWARD_COMPAT(TOK_QMARK_QMARK)
+#define TPP_TOK_TILDE_TILDE                TPP_FORWARD_COMPAT(TOK_TILDE_TILDE)
+#define TPP_TOK_DOT_STAR                   TPP_FORWARD_COMPAT(TOK_DOT_STAR)
 #define TPP_TOK_KEYWORD_BEGIN              TPP_FORWARD_COMPAT(TOK_KEYWORD_BEGIN)
 #define TPP_TOK_MULTICHAR_END              TPP_FORWARD_COMPAT(TOK_TWOCHAR_END)
+
+#define TPP_TOK_MC_STARTSWITH_EXCLAIM(id)      ((id) == TPP_FORWARD_COMPAT(TOK_NOT_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_NOT_EQUAL3))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_EXCLAIM case TPP_FORWARD_COMPAT(TOK_NOT_EQUAL): case TPP_FORWARD_COMPAT(TOK_NOT_EQUAL3):
+#define TPP_TOK_MC_STARTSWITH_POUND(id)        ((id) == TPP_FORWARD_COMPAT(TOK_GLUE))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_POUND   case TPP_FORWARD_COMPAT(TOK_GLUE):
+#define TPP_TOK_MC_STARTSWITH_PERCENT(id)      ((id) == TPP_FORWARD_COMPAT(TOK_MOD_EQUAL))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_PERCENT case TPP_FORWARD_COMPAT(TOK_MOD_EQUAL):
+#define TPP_TOK_MC_STARTSWITH_AMP(id)          ((id) == TPP_FORWARD_COMPAT(TOK_AND_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_LAND))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_AMP     case TPP_FORWARD_COMPAT(TOK_AND_EQUAL): case TPP_FORWARD_COMPAT(TOK_LAND):
+#define TPP_TOK_MC_STARTSWITH_STAR(id)         ((id) == TPP_FORWARD_COMPAT(TOK_MUL_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_POW_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_POW))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_STAR    case TPP_FORWARD_COMPAT(TOK_MUL_EQUAL): case TPP_FORWARD_COMPAT(TOK_POW_EQUAL): case TPP_FORWARD_COMPAT(TOK_POW):
+#define TPP_TOK_MC_STARTSWITH_PLUS(id)         ((id) == TPP_FORWARD_COMPAT(TOK_ADD_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_INC))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_PLUS    case TPP_FORWARD_COMPAT(TOK_ADD_EQUAL): case TPP_FORWARD_COMPAT(TOK_INC):
+#define TPP_TOK_MC_STARTSWITH_MINUS(id)        ((id) == TPP_FORWARD_COMPAT(TOK_SUB_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_DEC) || (id) == TPP_FORWARD_COMPAT(TOK_ARROW) || (id) == TPP_FORWARD_COMPAT(TOK_ARROW_STAR))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_MINUS   case TPP_FORWARD_COMPAT(TOK_SUB_EQUAL): case TPP_FORWARD_COMPAT(TOK_DEC): case TPP_FORWARD_COMPAT(TOK_ARROW): case TPP_FORWARD_COMPAT(TOK_ARROW_STAR):
+#define TPP_TOK_MC_STARTSWITH_DOT(id)          ((id) == TPP_FORWARD_COMPAT(TOK_DOT_STAR) || (id) == TPP_FORWARD_COMPAT(TOK_DOTDOT) || (id) == TPP_FORWARD_COMPAT(TOK_DOTS))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_DOT     case TPP_FORWARD_COMPAT(TOK_DOT_STAR): case TPP_FORWARD_COMPAT(TOK_DOTDOT): case TPP_FORWARD_COMPAT(TOK_DOTS):
+#define TPP_TOK_MC_STARTSWITH_SLASH(id)        ((id) == TPP_FORWARD_COMPAT(TOK_DIV_EQUAL))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_SLASH   case TPP_FORWARD_COMPAT(TOK_DIV_EQUAL):
+#define TPP_TOK_MC_STARTSWITH_COLON(id)        ((id) == TPP_FORWARD_COMPAT(TOK_COLON_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_NAMESPACE))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_COLON   case TPP_FORWARD_COMPAT(TOK_COLON_EQUAL): case TPP_FORWARD_COMPAT(TOK_NAMESPACE):
+#define TPP_TOK_MC_STARTSWITH_LANGLE(id)       ((id) == TPP_FORWARD_COMPAT(TOK_SHL) || (id) == TPP_FORWARD_COMPAT(TOK_LOWER_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_SHL_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_LOGT) || (id) == TPP_FORWARD_COMPAT(TOK_LANGLE3) || (id) == TPP_FORWARD_COMPAT(TOK_LANGLE3_EQUAL))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_LANGLE  case TPP_FORWARD_COMPAT(TOK_SHL): case TPP_FORWARD_COMPAT(TOK_LOWER_EQUAL): case TPP_FORWARD_COMPAT(TOK_SHL_EQUAL): case TPP_FORWARD_COMPAT(TOK_LOGT): case TPP_FORWARD_COMPAT(TOK_LANGLE3): case TPP_FORWARD_COMPAT(TOK_LANGLE3_EQUAL):
+#define TPP_TOK_MC_STARTSWITH_EQUAL(id)        ((id) == TPP_FORWARD_COMPAT(TOK_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_EQUAL3))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_EQUAL   case TPP_FORWARD_COMPAT(TOK_EQUAL): case TPP_FORWARD_COMPAT(TOK_EQUAL3):
+#define TPP_TOK_MC_STARTSWITH_RANGLE(id)       ((id) == TPP_FORWARD_COMPAT(TOK_SHR) || (id) == TPP_FORWARD_COMPAT(TOK_GREATER_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_SHR_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_RANGLE3) || (id) == TPP_FORWARD_COMPAT(TOK_RANGLE3_EQUAL))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_RANGLE  case TPP_FORWARD_COMPAT(TOK_SHR): case TPP_FORWARD_COMPAT(TOK_GREATER_EQUAL): case TPP_FORWARD_COMPAT(TOK_SHR_EQUAL): case TPP_FORWARD_COMPAT(TOK_RANGLE3): case TPP_FORWARD_COMPAT(TOK_RANGLE3_EQUAL):
+#define TPP_TOK_MC_STARTSWITH_QMARK(id)        ((id) == TPP_FORWARD_COMPAT(TOK_QMARK_QMARK))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_QMARK   case TPP_FORWARD_COMPAT(TOK_QMARK_QMARK):
+#define TPP_TOK_MC_STARTSWITH_AT(id)           ((id) == TPP_FORWARD_COMPAT(TOK_AT_EQUAL))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_AT      case TPP_FORWARD_COMPAT(TOK_AT_EQUAL):
+#define TPP_TOK_MC_STARTSWITH_HAT(id)          ((id) == TPP_FORWARD_COMPAT(TOK_XOR_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_LXOR))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_HAT     case TPP_FORWARD_COMPAT(TOK_XOR_EQUAL): case TPP_FORWARD_COMPAT(TOK_LXOR):
+#define TPP_TOK_MC_STARTSWITH_PIPE(id)         ((id) == TPP_FORWARD_COMPAT(TOK_OR_EQUAL) || (id) == TPP_FORWARD_COMPAT(TOK_LOR))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_PIPE    case TPP_FORWARD_COMPAT(TOK_OR_EQUAL): case TPP_FORWARD_COMPAT(TOK_LOR):
+#define TPP_TOK_MC_STARTSWITH_TILDE(id)        ((id) == TPP_FORWARD_COMPAT(TOK_TILDE_TILDE))
+#define TPP_CASE_TPP_TOK_MC_STARTSWITH_TILDE   case TPP_FORWARD_COMPAT(TOK_TILDE_TILDE):
 
 #define TPP_TOK_ISERR(id)         ((int)(id) < 0)
 #define TPP_TOK_ISERR_OR_EOF(id)  ((int)(id) <= 0)
@@ -1713,6 +1754,45 @@ _tpp_preparse_skipbse_bck(tpp_char const *start, tpp_char const *pos) {
 	}
 	return pos;
 }
+
+
+
+
+/************************************************************************/
+/* "parts/warnings.h"                                                   */
+/************************************************************************/
+#define tpp_warning_state         TPP_FORWARD_COMPAT(wstate_t)
+#define TPP_WSTATE_DISABLED       TPP_FORWARD_COMPAT(WSTATE_DISABLED)
+#define TPP_WSTATE_WARN           TPP_FORWARD_COMPAT(WSTATE_WARN)
+#define TPP_WSTATE_ERROR          TPP_FORWARD_COMPAT(WSTATE_ERROR)
+#define TPP_WSTATE_FATAL          TPP_FORWARD_COMPAT(WSTATE_FATAL)
+#define TPP_WSTATE_UNDEFINED      TPP_FORWARD_COMPAT(WSTATE_UNKNOWN)
+#define TPP_WSTATE_SUPPRESS       TPP_FORWARD_COMPAT(WSTATE_SUPPRESS)
+#define TPP_WSTATE_DEFAULT        TPP_FORWARD_COMPAT(WSTATE_DEFAULT)
+#define TPP_WSTATE_ERROR_OR_FATAL TPP_WSTATE_ERROR
+
+#define tpp_warning_state_willemit(state) TPP_WSTATE_ISENABLED(state)
+
+#define tpp_warning_group_id int
+#define TPP_WG_COUNT         TPP_FORWARD_COMPAT(WG_COUNT)
+
+#define tpp_warning_id int
+#define TPP_W_COUNT    TPP_FORWARD_COMPAT(W_COUNT)
+
+#define tpp_warning_ofnumber(num) ((tpp_warning_id)(num))
+
+#define _tpp_warnings_state_bitindx(ctx_id) (((unsigned int)((unsigned int)(ctx_id) / 4)))
+#define _tpp_warnings_state_bitshft(ctx_id) (((unsigned int)((unsigned int)(ctx_id) % 4)) << 1)
+#define tpp_warnings_state TPPWarningState
+#define tpp_warnings_state_get(self, ctx_id) \
+	((tpp_warning_state)(((self)->ws_state[_tpp_warnings_state_bitindx(ctx_id)] >> _tpp_warnings_state_bitshft(ctx_id)) & 3))
+#define tpp_warnings_state_set(self, ctx_id, value)                                                                                \
+	(void)((self)->ws_state[_tpp_warnings_state_bitindx(ctx_id)] =                                                 \
+	       ((self)->ws_state[_tpp_warnings_state_bitindx(ctx_id)] & ~(3 << _tpp_warnings_state_bitshft(ctx_id))) | \
+	       (((unsigned char)(unsigned int)(value)) << _tpp_warnings_state_bitshft(ctx_id)))
+
+#define tpp_warnings struct TPPWarnings
+
 
 TPP_DECL_END
 
