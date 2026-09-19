@@ -5689,7 +5689,6 @@ handle_space:
 		if (tpp_ascii_maybe_test(tpp_ascii_issymstrt(ch))) {
 			tpp_char const *kwd_start;
 			tpp_size kwd_len;
-			tpp_hash kwd_hash;
 			tpp_keyword const *kwd;
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			bool uses_esc;
@@ -5859,20 +5858,18 @@ handle_keyword_with_esc:
 			kwd_len   = (tpp_size)(pos - kwd_start);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			if (uses_esc) {
-				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, self);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword_esc(self, kwd_start, kwd_len);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword_esc(self, kwd_start, kwd_len);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
-				kwd_hash = tpp_hashof(kwd_start, kwd_len);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_newkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword(self, kwd_start, kwd_len);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_getkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword(self, kwd_start, kwd_len);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			}
 #if TPP_HAVE_USER_KEYWORDS

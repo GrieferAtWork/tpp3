@@ -27659,15 +27659,21 @@ typedef struct tpp_lexer {
 
 /* Wrappers for keywords API */
 #if TPP_HAVE_USER_KEYWORDS
-#define _tpp_lexer_getkeyword(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#define _tpp_lexer_getkeyword_byid(self, id)        _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
-#define tpp_lexer_getkeyword(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
-#define tpp_lexer_getkeyword_byid(self, id)         tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
-#define tpp_lexer_newkeyword(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define _tpp_lexer_getkeyword_byid(self, id)           _tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define _tpp_lexer_getkeyword(self, kwd, len)          _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof(kwd, len))
+#define _tpp_lexer_getkeyword_ex(self, kwd, len, hash) _tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define tpp_lexer_getkeyword_byid(self, id)            tpp_keywords_getkeyword_byid(&(self)->TPP_INTERNAL(tl_kwds), id)
+#define tpp_lexer_getkeyword(self, kwd, len)           tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof(kwd, len))
+#define tpp_lexer_getkeyword_ex(self, kwd, len, hash)  tpp_keywords_getkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
+#define tpp_lexer_newkeyword(self, kwd, len)           tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof(kwd, len))
+#define tpp_lexer_newkeyword_ex(self, kwd, len, hash)  tpp_keywords_newkeyword(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash)
 #if TPP_HAVE_ESCAPED_KEYWORDS
-#define _tpp_lexer_getkeyword_esc(self, kwd, len, hash) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
-#define tpp_lexer_getkeyword_esc(self, kwd, len, hash)  tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
-#define tpp_lexer_newkeyword_esc(self, kwd, len, hash)  tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define _tpp_lexer_getkeyword_esc(self, kwd, len)          _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof_esc(kwd, len, self), self)
+#define _tpp_lexer_getkeyword_esc_ex(self, kwd, len, hash) _tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_getkeyword_esc(self, kwd, len)           tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof_esc(kwd, len, self), self)
+#define tpp_lexer_getkeyword_esc_ex(self, kwd, len, hash)  tpp_keywords_getkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
+#define tpp_lexer_newkeyword_esc(self, kwd, len)           tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, tpp_hashof_esc(kwd, len, self), self)
+#define tpp_lexer_newkeyword_esc_ex(self, kwd, len, hash)  tpp_keywords_newkeyword_esc(&(self)->TPP_INTERNAL(tl_kwds), kwd, len, hash, self)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #if TPP_HAVE_COPYABLE_BUILTIN_KEYWORDS
 #define tpp_lexer_copybuiltinkwd(self, kwd) tpp_keywords_copybuiltin(&(self)->TPP_INTERNAL(tl_kwds), kwd)
@@ -27704,10 +27710,12 @@ typedef struct tpp_lexer {
  *          this function */
 #define tpp_lexer_resetallkwds(self) tpp_keywords_reset(&(self)->TPP_INTERNAL(tl_kwds))
 #else /* TPP_HAVE_USER_KEYWORDS */
-#define tpp_lexer_getkeyword(self, kwd, len, hash) tpp_builtin_getkeyword(kwd, len, hash)
-#define tpp_lexer_getkeyword_byid(self, id)        tpp_builtin_getkeyword_byid(id)
+#define tpp_lexer_getkeyword(self, kwd, len)          tpp_builtin_getkeyword(kwd, len, tpp_hashof(kwd, len))
+#define tpp_lexer_getkeyword_ex(self, kwd, len, hash) tpp_builtin_getkeyword(kwd, len, hash)
+#define tpp_lexer_getkeyword_byid(self, id)           tpp_builtin_getkeyword_byid(id)
 #if TPP_HAVE_ESCAPED_KEYWORDS
-#define tpp_lexer_getkeyword_esc(self, kwd, len, hash, file) tpp_builtin_getkeyword_esc(kwd, len, hash, file)
+#define tpp_lexer_getkeyword_esc(self, kwd, len)          tpp_builtin_getkeyword_esc(kwd, len, tpp_hashof_esc(kwd, len, self), self)
+#define tpp_lexer_getkeyword_esc_ex(self, kwd, len, hash) tpp_builtin_getkeyword_esc(kwd, len, hash, self)
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 #define tpp_lexer_resetallkwds(self) (void)0
 #endif /* !TPP_HAVE_USER_KEYWORDS */

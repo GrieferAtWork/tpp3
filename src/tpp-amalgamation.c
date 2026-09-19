@@ -30273,15 +30273,13 @@ tpp_lexer_assert(tpp_lexer *tpp_restrict self,
                  char const *value, tpp_size value_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
 	tpp_size value_len = tpp_strnlen(value, value_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
 	tpp_keyword const *ro_key_keyword;
 	tpp_keyword const *ro_value_keyword;
 	tpp_keyword *key_keyword;
-	ro_key_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	ro_key_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)key, key_len);
 	if tpp_unlikely(!ro_key_keyword)
 		goto err_nomem;
-	ro_value_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	ro_value_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)value, value_len);
 	if tpp_unlikely(!ro_value_keyword)
 		goto err_nomem;
 	key_keyword = tpp_lexer_copybuiltinkwd(self, ro_key_keyword);
@@ -30302,14 +30300,12 @@ tpp_lexer_unassert(tpp_lexer *tpp_restrict self,
                    char const *value, tpp_size value_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
 	tpp_size value_len = tpp_strnlen(value, value_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
 	tpp_keyword *key_keyword;
 	tpp_keyword const *ro_value_keyword;
-	key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len);
 	if (!key_keyword)
 		return false;
-	ro_value_keyword = tpp_lexer_getkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	ro_value_keyword = tpp_lexer_getkeyword(self, (tpp_char const *)value, value_len);
 	if (!ro_value_keyword)
 		return false;
 	return tpp_keyword_unassert(key_keyword, ro_value_keyword);
@@ -30321,8 +30317,7 @@ TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
                       char const *key, tpp_size key_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_keyword *key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	tpp_keyword *key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len);
 	if (key_keyword)
 		tpp_keyword_unassertall(key_keyword);
 }
@@ -43632,7 +43627,6 @@ handle_space:
 		if (tpp_ascii_maybe_test(tpp_ascii_issymstrt(ch))) {
 			tpp_char const *kwd_start;
 			tpp_size kwd_len;
-			tpp_hash kwd_hash;
 			tpp_keyword const *kwd;
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			bool uses_esc;
@@ -43802,20 +43796,18 @@ handle_keyword_with_esc:
 			kwd_len   = (tpp_size)(pos - kwd_start);
 #if TPP_HAVE_ESCAPED_KEYWORDS
 			if (uses_esc) {
-				kwd_hash = tpp_hashof_esc(kwd_start, kwd_len, self);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_newkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword_esc(self, kwd_start, kwd_len);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_getkeyword_esc(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword_esc(self, kwd_start, kwd_len);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			} else
 #endif /* TPP_HAVE_ESCAPED_KEYWORDS */
 			{
-				kwd_hash = tpp_hashof(kwd_start, kwd_len);
 #if TPP_HAVE_USER_KEYWORDS
-				kwd = tpp_lexer_newkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_newkeyword(self, kwd_start, kwd_len);
 #else /* TPP_HAVE_USER_KEYWORDS */
-				kwd = tpp_lexer_getkeyword(self, kwd_start, kwd_len, kwd_hash);
+				kwd = tpp_lexer_getkeyword(self, kwd_start, kwd_len);
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 			}
 #if TPP_HAVE_USER_KEYWORDS
@@ -46536,11 +46528,9 @@ tpp_lexer_define_impl(tpp_lexer *tpp_restrict self,
 		tpp_char const *token_start = tpp_lexer_gettokenstart(self);
 		tpp_size token_len = tpp_lexer_gettokenlen(self);
 #if TPP_HAVE_ESCAPED_KEYWORDS
-		tpp_hash hash = tpp_hashof_esc(token_start, token_len, self);
-		ro_macro_keyword = tpp_lexer_newkeyword_esc(self, token_start, token_len, hash);
+		ro_macro_keyword = tpp_lexer_newkeyword_esc(self, token_start, token_len);
 #else /* TPP_HAVE_ESCAPED_KEYWORDS */
-		tpp_hash hash = tpp_hashof(token_start, token_len);
-		ro_macro_keyword = tpp_lexer_newkeyword(self, token_start, token_len, hash);
+		ro_macro_keyword = tpp_lexer_newkeyword(self, token_start, token_len);
 #endif /* !TPP_HAVE_ESCAPED_KEYWORDS */
 		if tpp_unlikely(!ro_macro_keyword)
 			goto err_nomem;
@@ -46640,8 +46630,7 @@ tpp_lexer_undef(tpp_lexer *tpp_restrict self,
                 char const *macro_name,
                 tpp_size macro_name_maxlen) {
 	tpp_size macro_name_len = tpp_strnlen(macro_name, macro_name_maxlen);
-	tpp_hash hash = tpp_hashof((tpp_char const *)macro_name, macro_name_len);
-	tpp_keyword *macro_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)macro_name, macro_name_len, hash);
+	tpp_keyword *macro_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)macro_name, macro_name_len);
 	if (macro_keyword) {
 		tpp_keyword_undef(macro_keyword);
 		return true;
@@ -46675,13 +46664,12 @@ tpp_lexer_handle_pushpopmacro_cb(void *arg, tpp_string *chunk,
 	struct tpp_lexer_handle_pushpopmacro_data *data;
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
-	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
 	data  = (struct tpp_lexer_handle_pushpopmacro_data *)arg;
 	lexer = data->tlhppmd_lexer;
 
 	/* Load keyword */
-	ro_keyword = tpp_keywords_newkeyword(&lexer->tl_kwds, str, length, hash);
+	ro_keyword = tpp_lexer_newkeyword(lexer, str, length);
 	if tpp_unlikely(!ro_keyword)
 		goto err_nomem;
 
@@ -46848,9 +46836,8 @@ tpp_lexer_process_pragma_deprecated_cb(void *arg, tpp_string *chunk,
 	tpp_keyword const *ro_keyword;
 	tpp_keyword *keyword;
 	tpp_keyword_flags flags;
-	tpp_hash hash = tpp_hashof(str, length);
 	(void)chunk;
-	ro_keyword = tpp_lexer_newkeyword(lexer, str, length, hash);
+	ro_keyword = tpp_lexer_newkeyword(lexer, str, length);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
 	keyword = tpp_lexer_copybuiltinkwd(lexer, ro_keyword);
@@ -48114,7 +48101,7 @@ tpp_lexer_process_pragma_tpp_set_keyword_flags_cb(void *arg, tpp_string *chunk,
 	struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *data;
 	data = (struct tpp_lexer_process_pragma_tpp_set_keyword_flags_data *)arg;
 	(void)chunk;
-	ro_keyword = tpp_lexer_newkeyword(data->tlpptskfd_lexer, str, length, tpp_hashof(str, length));
+	ro_keyword = tpp_lexer_newkeyword(data->tlpptskfd_lexer, str, length);
 	if tpp_unlikely(!ro_keyword)
 		return TPP_ENOMEM;
 	rw_keyword = tpp_lexer_copybuiltinkwd(data->tlpptskfd_lexer, ro_keyword);
@@ -51532,8 +51519,7 @@ handle_gnu_clang_ns_prefixed_tok:
 				while (len && function_name[0] == '_')
 					++function_name, --len;
 				if (len) {
-					function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len,
-					                                         tpp_hashof((tpp_char const *)function_name, len));
+					function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len);
 					if (function_name_kwd) {
 						tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
 						param_kwd = tpp_keyword_getid(function_name_kwd);
@@ -51601,8 +51587,7 @@ handle_gnu_clang_ns_prefixed_tok:
 			while (len && function_name[0] == '_')
 				++function_name, --len;
 			if (len) {
-				function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len,
-				                                         tpp_hashof((tpp_char const *)function_name, len));
+				function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len);
 				if (function_name_kwd) {
 					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
 					param_kwd = tpp_keyword_getid(function_name_kwd);
@@ -54538,16 +54523,13 @@ probe_feature_keyword:
 			    feature_keyword->tk_kwd[feature_keyword->tk_len - 1] == '_') {
 				tpp_char const *strip = feature_keyword->tk_kwd;
 				tpp_size strip_len = feature_keyword->tk_len;
-				tpp_hash strip_hash;
 				while (*strip == '_') {
 					++strip;
 					--strip_len;
 				}
 				while (strip[strip_len - 1] == '_')
 					--strip_len;
-				strip_hash = tpp_hashof(strip, strip_len);
-				feature_keyword = tpp_keywords_getkeyword(&self->tl_kwds, strip,
-				                                          strip_len, strip_hash);
+				feature_keyword = tpp_lexer_getkeyword(self, strip, strip_len);
 				if (feature_keyword)
 					goto probe_feature_keyword;
 			}
@@ -55008,8 +54990,7 @@ tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
 	struct tpp_lexer_handle_tpp_identifier_data *data;
 	(void)chunk;
 	data = (struct tpp_lexer_handle_tpp_identifier_data *)arg;
-	kwd = tpp_keywords_newkeyword(&data->tlhtid_lexer->tl_kwds,
-	                              str, length, tpp_hashof(str, length));
+	kwd = tpp_lexer_newkeyword(data->tlhtid_lexer, str, length);
 	if tpp_unlikely(!kwd)
 		return TPP_ENOMEM;
 	data->tlhtid_keyword = kwd;

@@ -1485,6 +1485,40 @@ TPP_INLINE tpp_lcinfo tpp_lexer_getstartlcinfo(tpp_lexer *self) {
 	return tpp_file_getlcinfo(lcfile, pos);
 }
 
+/* Wrappers for keywords API */
+#if TPP_CONFIG_ONELEXER == 3
+#define tpp_lexer_getkeyword_byid(self, id)               ((tpp_keyword const *)TPPLexer_LookupKeywordID_(self, id))
+#define tpp_lexer_getkeyword(self, kwd, len)              ((tpp_keyword const *)TPPLexer_LookupKeyword_(self, kwd, len, 0))
+#define tpp_lexer_getkeyword_ex(self, kwd, len, hash)     ((tpp_keyword const *)TPPLexer_LookupKeyword_(self, kwd, len, 0))
+#define tpp_lexer_newkeyword(self, kwd, len)              ((tpp_keyword const *)TPPLexer_LookupKeyword_(self, kwd, len, 1))
+#define tpp_lexer_newkeyword_ex(self, kwd, len, hash)     ((tpp_keyword const *)TPPLexer_LookupKeyword_(self, kwd, len, 1))
+#define tpp_lexer_getkeyword_esc(self, kwd, len)          ((tpp_keyword const *)TPPLexer_LookupEscapedKeyword_(self, kwd, len, 0))
+#define tpp_lexer_getkeyword_esc_ex(self, kwd, len, hash) ((tpp_keyword const *)TPPLexer_LookupEscapedKeyword_(self, kwd, len, 0))
+#define tpp_lexer_newkeyword_esc(self, kwd, len)          ((tpp_keyword const *)TPPLexer_LookupEscapedKeyword_(self, kwd, len, 1))
+#define tpp_lexer_newkeyword_esc_ex(self, kwd, len, hash) ((tpp_keyword const *)TPPLexer_LookupEscapedKeyword_(self, kwd, len, 1))
+#else /* TPP_CONFIG_ONELEXER == 3 */
+#define tpp_lexer_getkeyword_byid(self, id)               ((void)(self), (tpp_keyword const *)TPPLexer_LookupKeywordID(id))
+#define tpp_lexer_getkeyword(self, kwd, len)              ((void)(self), (tpp_keyword const *)TPPLexer_LookupKeyword(kwd, len, 0))
+#define tpp_lexer_getkeyword_ex(self, kwd, len, hash)     ((void)(self), (tpp_keyword const *)TPPLexer_LookupKeyword(kwd, len, 0))
+#define tpp_lexer_newkeyword(self, kwd, len)              ((void)(self), (tpp_keyword const *)TPPLexer_LookupKeyword(kwd, len, 1))
+#define tpp_lexer_newkeyword_ex(self, kwd, len, hash)     ((void)(self), (tpp_keyword const *)TPPLexer_LookupKeyword(kwd, len, 1))
+#define tpp_lexer_getkeyword_esc(self, kwd, len)          ((void)(self), (tpp_keyword const *)TPPLexer_LookupEscapedKeyword(kwd, len, 0))
+#define tpp_lexer_getkeyword_esc_ex(self, kwd, len, hash) ((void)(self), (tpp_keyword const *)TPPLexer_LookupEscapedKeyword(kwd, len, 0))
+#define tpp_lexer_newkeyword_esc(self, kwd, len)          ((void)(self), (tpp_keyword const *)TPPLexer_LookupEscapedKeyword(kwd, len, 1))
+#define tpp_lexer_newkeyword_esc_ex(self, kwd, len, hash) ((void)(self), (tpp_keyword const *)TPPLexer_LookupEscapedKeyword(kwd, len, 1))
+#endif /* TPP_CONFIG_ONELEXER != 3 */
+#define tpp_lexer_copybuiltinkwd(self, kwd) ((tpp_keyword *)(kwd))
+
+/* Lexer component reset */
+#define tpp_lexer_resetextensions(self)     TPPLexer_Reset(self, TPPLEXER_RESET_ESTATE)
+#define tpp_lexer_resetwarnings(self)       TPPLexer_Reset(self, TPPLEXER_RESET_WSTATE)
+#define tpp_lexer_resetincludes(self)       TPPLexer_Reset(self, TPPLEXER_RESET_SYSPATHS)
+#define tpp_lexer_resetallkwds(self)        TPPLexer_Reset(self, TPPLEXER_RESET_KEYWORDS)
+#define tpp_lexer_undefalluser(self)        TPPLexer_Reset(self, TPPLEXER_RESET_MACRO)
+#define tpp_lexer_unassertallkwds(self)     TPPLexer_Reset(self, TPPLEXER_RESET_ASSERT)
+#define tpp_lexer_resetallkwdcounters(self) TPPLexer_Reset(self, TPPLEXER_RESET_COUNTER)
+
+
 #define tpp_lexer_has(self, feat) tpp_lexer_getextension(self, TPP_EXT_##feat)
 #define tpp_lexer_getextension(self, TPP_EXT_x)     ((self)->l_extensions.es_bitset[(TPP_EXT_x) / 8] & (1 << ((TPP_EXT_x) % 8)))
 #define tpp_lexer_enableextension(self, TPP_EXT_x)  (void)((self)->l_extensions.es_bitset[(TPP_EXT_x) / 8] |= (1 << ((TPP_EXT_x) % 8)))

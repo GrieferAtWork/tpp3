@@ -1710,8 +1710,7 @@ handle_gnu_clang_ns_prefixed_tok:
 				while (len && function_name[0] == '_')
 					++function_name, --len;
 				if (len) {
-					function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len,
-					                                         tpp_hashof((tpp_char const *)function_name, len));
+					function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len);
 					if (function_name_kwd) {
 						tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
 						param_kwd = tpp_keyword_getid(function_name_kwd);
@@ -1779,8 +1778,7 @@ handle_gnu_clang_ns_prefixed_tok:
 			while (len && function_name[0] == '_')
 				++function_name, --len;
 			if (len) {
-				function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len,
-				                                         tpp_hashof((tpp_char const *)function_name, len));
+				function_name_kwd = tpp_lexer_getkeyword(lexer, (tpp_char const *)function_name, len);
 				if (function_name_kwd) {
 					tpp_token_setkwd(tpp_lexer_gettoken(lexer), function_name_kwd);
 					param_kwd = tpp_keyword_getid(function_name_kwd);

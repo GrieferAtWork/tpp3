@@ -3181,15 +3181,13 @@ tpp_lexer_assert(tpp_lexer *tpp_restrict self,
                  char const *value, tpp_size value_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
 	tpp_size value_len = tpp_strnlen(value, value_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
 	tpp_keyword const *ro_key_keyword;
 	tpp_keyword const *ro_value_keyword;
 	tpp_keyword *key_keyword;
-	ro_key_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	ro_key_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)key, key_len);
 	if tpp_unlikely(!ro_key_keyword)
 		goto err_nomem;
-	ro_value_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	ro_value_keyword = tpp_lexer_newkeyword(self, (tpp_char const *)value, value_len);
 	if tpp_unlikely(!ro_value_keyword)
 		goto err_nomem;
 	key_keyword = tpp_lexer_copybuiltinkwd(self, ro_key_keyword);
@@ -3210,14 +3208,12 @@ tpp_lexer_unassert(tpp_lexer *tpp_restrict self,
                    char const *value, tpp_size value_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
 	tpp_size value_len = tpp_strnlen(value, value_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_hash value_hash = tpp_hashof((tpp_char const *)value, value_len);
 	tpp_keyword *key_keyword;
 	tpp_keyword const *ro_value_keyword;
-	key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len);
 	if (!key_keyword)
 		return false;
-	ro_value_keyword = tpp_lexer_getkeyword(self, (tpp_char const *)value, value_len, value_hash);
+	ro_value_keyword = tpp_lexer_getkeyword(self, (tpp_char const *)value, value_len);
 	if (!ro_value_keyword)
 		return false;
 	return tpp_keyword_unassert(key_keyword, ro_value_keyword);
@@ -3229,8 +3225,7 @@ TPP_IMPL TPP_NONNULL((1, 2)) void TPPCALL
 tpp_lexer_unassertall(tpp_lexer *tpp_restrict self,
                       char const *key, tpp_size key_maxlen) {
 	tpp_size key_len = tpp_strnlen(key, key_maxlen);
-	tpp_hash key_hash = tpp_hashof((tpp_char const *)key, key_len);
-	tpp_keyword *key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len, key_hash);
+	tpp_keyword *key_keyword = _tpp_lexer_getkeyword(self, (tpp_char const *)key, key_len);
 	if (key_keyword)
 		tpp_keyword_unassertall(key_keyword);
 }

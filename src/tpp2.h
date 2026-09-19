@@ -5010,9 +5010,8 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 		while (without_underscore_len && without_underscore_start[without_underscore_len - 1] == '_')
 			--without_underscore_len;
 		if (without_underscore_len < tpp_keyword_getlen(self)) {
-			tpp_hash hash = tpp_hashof(without_underscore_start, without_underscore_len);
 			tpp_keyword const *without_underscore = tpp_lexer_getkeyword(lexer, without_underscore_start,
-			                                                             without_underscore_len, hash);
+			                                                             without_underscore_len);
 			if (without_underscore)
 				result |= tpp_keyword_getflags(without_underscore);
 		}
@@ -5301,12 +5300,12 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 #define TPPLexer_PopFile_(self) tpp_lexer_popfile(self)
 #define TPPLexer_PopFile()      TPPLexer_PopFile_(TPP2_LEXER)
 
-#define TPPLexer_LookupKeyword_(self, name, namelen, create_missing)                         \
-	((create_missing) ? tpp_lexer_newkeyword(self, name, namelen, tpp_hashof(name, namelen)) \
-	                  : tpp_lexer_getkeyword(self, name, namelen, tpp_hashof(name, namelen)))
-#define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing)                      \
-	((create_missing) ? tpp_lexer_newkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)) \
-	                  : tpp_lexer_getkeyword_esc(self, name, namelen, tpp_hashof(name, namelen)))
+#define TPPLexer_LookupKeyword_(self, name, namelen, create_missing) \
+	((create_missing) ? tpp_lexer_newkeyword(self, name, namelen)    \
+	                  : tpp_lexer_getkeyword(self, name, namelen))
+#define TPPLexer_LookupEscapedKeyword_(self, name, namelen, create_missing) \
+	((create_missing) ? tpp_lexer_newkeyword_esc(self, name, namelen)       \
+	                  : tpp_lexer_getkeyword_esc(self, name, namelen))
 #define TPPLexer_LookupKeyword(name, namelen, create_missing) \
 	TPPLexer_LookupKeyword_(TPP2_LEXER, name, namelen, create_missing)
 #define TPPLexer_LookupEscapedKeyword(name, namelen, create_missing) \
@@ -5414,7 +5413,7 @@ TPPLexer_GetExtension_(tpp_lexer *self, char const *tpp_restrict name) {
 
 #define TPPConst_IsTrue(self) TPPConst_IsTrue_(TPP2_LEXER, self)
 TPP_INLINE bool TPPConst_IsTrue_(tpp_lexer *lexer, tpp_expr_value *self) {
-	tpp_errno error = tpp_expr_value_asbool(lexer, self, &result);
+	tpp_errno error = tpp_expr_value_asbool(lexer, self);
 	if (error == TPP_ENOENT)
 		return false;
 	if (TPP_ISERR(error))
@@ -5623,6 +5622,7 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 	tpp_char const *suffix_start;
 	tpp_char const *suffix_end;
 	tpp_char ch;
+	tpp_intvalue intvalue;
 	if (TPP_TOK_ISSTRING(tok)) {
 		/* Parse strings into character literals */
 		error = tpp_lexer_parsecharacter_literal(self, (tpp_uintmax *)pint,
@@ -5634,7 +5634,11 @@ TPP_INLINE int TPPCALL TPP_Atoi_(tpp_lexer *self, tpp_intmax *tpp_restrict pint)
 //		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT | TPP_ATOI_UNSIGNED; /* Returned by TPP2 dependent on "TPPLEXER_FLAG_CHAR_UNSIGNED" */
 		return TPP_ATOI_OK | TPP_ATOI_TYPE_INT;
 	}
-	error = tpp_lexer_decodeint_ex(self, pint, &suffix_start);
+	error = tpp_lexer_decodeint_ex(self, &intvalue, &suffix_start);
+	if (TPP_ISERR(error))
+		return TPP_ATOI_ERR;
+	error = tpp_intvalue_asintmax(&intvalue, pint);
+	tpp_intvalue_fini(&intvalue);
 	if (TPP_ISERR(error))
 		return TPP_ATOI_ERR;
 	suffix_end = tpp_lexer_gettokenend(self);

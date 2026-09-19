@@ -473,16 +473,13 @@ probe_feature_keyword:
 			    feature_keyword->tk_kwd[feature_keyword->tk_len - 1] == '_') {
 				tpp_char const *strip = feature_keyword->tk_kwd;
 				tpp_size strip_len = feature_keyword->tk_len;
-				tpp_hash strip_hash;
 				while (*strip == '_') {
 					++strip;
 					--strip_len;
 				}
 				while (strip[strip_len - 1] == '_')
 					--strip_len;
-				strip_hash = tpp_hashof(strip, strip_len);
-				feature_keyword = tpp_keywords_getkeyword(&self->tl_kwds, strip,
-				                                          strip_len, strip_hash);
+				feature_keyword = tpp_lexer_getkeyword(self, strip, strip_len);
 				if (feature_keyword)
 					goto probe_feature_keyword;
 			}
@@ -962,8 +959,7 @@ tpp_lexer_handle_tpp_identifier_cb(void *arg, tpp_string *chunk,
 	struct tpp_lexer_handle_tpp_identifier_data *data;
 	(void)chunk;
 	data = (struct tpp_lexer_handle_tpp_identifier_data *)arg;
-	kwd = tpp_keywords_newkeyword(&data->tlhtid_lexer->tl_kwds,
-	                              str, length, tpp_hashof(str, length));
+	kwd = tpp_lexer_newkeyword(data->tlhtid_lexer, str, length);
 	if tpp_unlikely(!kwd)
 		return TPP_ENOMEM;
 	data->tlhtid_keyword = kwd;
