@@ -246,11 +246,6 @@ TPP_DECL_BEGIN
 #endif /* !... */
 #endif /* !tpp_hash */
 
-#ifndef tpp_line
-#define tpp_line   TPP_FORWARD_COMPAT(line_t)
-#define tpp_column TPP_FORWARD_COMPAT(col_t)
-#endif /* !tpp_line */
-
 #ifndef tpp_char
 #define tpp_char unsigned char
 #endif /* !tpp_char */
@@ -260,13 +255,11 @@ TPP_DECL_BEGIN
 #define TPP_UNICHAR_C TPP_UINT_LEAST32_C
 #endif /* !tpp_unichar */
 
-#ifndef tpp_counter
-#define tpp_counter TPP_FORWARD_COMPAT(tint_t)
-#endif /* !tpp_counter */
-
-#ifndef tpp_float
-#define tpp_float TPP_FORWARD_COMPAT(tfloat_t)
-#endif /* !tpp_float */
+#define tpp_line      TPP_FORWARD_COMPAT(line_t)
+#define tpp_column    TPP_FORWARD_COMPAT(col_t)
+#define tpp_counter   TPP_FORWARD_COMPAT(tint_t)
+#define tpp_float     TPP_FORWARD_COMPAT(tfloat_t)
+#define tpp_token_num unsigned long
 
 #ifndef TPP_REF
 #define TPP_REF /* nothing */
@@ -1303,6 +1296,9 @@ rename("W_INVALID_INTEGER", "TPP_W_INVALID_INTEGER");
 #define tpp_token_getkwdlen(self)   ((tpp_size)(self)->t_kwd->k_size)
 #define tpp_token_setid(self, id)   (void)((self)->t_id = (id))
 #define tpp_token_setkwd(self, kwd) (void)((self)->t_id = ((self)->t_kwd = (kwd))->k_id)
+#define tpp_token_getnum(self)      ((tpp_token_num)(self)->t_num)
+#define tpp_token_setnum(self, v)   (void)((self)->t_num = (v))
+#define tpp_token_resetnum(self)    (void)((self)->t_num = 0)
 /* Not exposed since this wouldn't also set the position in the linked file.
  * Use `tpp_lexer_settokenrange()` or `tpp_lexer_settokenend()` instead! */
 /*#define tpp_token_setrange(self, start, end)  \
@@ -1499,6 +1495,18 @@ typedef struct tpp_lcinfo_ex {
 	       (self)->l_token.t_file->f_pos = ((self)->l_token.t_end = (char *)(end)))
 #define tpp_lexer_settokenend(self, end) \
 	(void)((self)->l_token.t_file->f_pos = ((self)->l_token.t_end = (char *)(end)))
+
+#define tpp_lexer_gettokennum(self)    tpp_token_getnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_resettokennum(self)  tpp_token_resetnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_settokennum(self, v) tpp_token_setnum(tpp_lexer_gettoken(self), v)
+#define tpp_lexer_pushtokennum(self) \
+	do {                             \
+		tpp_token_num const _tlptn_saved_num = tpp_lexer_gettokennum(self)
+#define tpp_lexer_breaktokennum(self) \
+		tpp_lexer_settokennum(self, _tlptn_saved_num)
+#define tpp_lexer_poptokennum(self)    \
+		tpp_lexer_breaktokennum(self); \
+	} while (0)
 
 /* Current file */
 #define tpp_lexer_getfile(self)     ((self)->l_token.t_file)

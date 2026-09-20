@@ -855,7 +855,9 @@
 #define tt_id                                              TPP_INTERNAL(tt_id)
 #define tlsb_id                                            TPP_INTERNAL(tlsb_id)
 #define tlsb_kwd                                           TPP_INTERNAL(tlsb_kwd)
+#define tlsb_num                                           TPP_INTERNAL(tlsb_num)
 #define tlsb_len                                           TPP_INTERNAL(tlsb_len)
+#define tt_num                                             TPP_INTERNAL(tt_num)
 #define tt_end                                             TPP_INTERNAL(tt_end)
 #define tt_kwd                                             TPP_INTERNAL(tt_kwd)
 #define tme_chunk                                          TPP_INTERNAL(tme_chunk)
@@ -34922,6 +34924,14 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	(void)self;
 
+#if TPP_HAVE_TOKEN_NUMBER
+	/* Special case: must initialize the token number here, since calls
+	 * to `tpp_lexer_yieldraw()` only ever increment it (meaning they
+	 * assume that it is always pre-initialized, unlike all other fields
+	 * of the current token) */
+	tpp_lexer_gettoken(self)->tt_num = 0;
+#endif /* TPP_HAVE_TOKEN_NUMBER */
+
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_init(&self->tl_kwds);
 #endif /* TPP_HAVE_USER_KEYWORDS */
@@ -43908,6 +43918,9 @@ handle_keyword_with_esc:
 set_result_ch:
 	result = TPP_TOK_OFCHAR(ch);
 set_result:
+#if TPP_HAVE_TOKEN_NUMBER
+	++token->tt_num;
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 	token->tt_id    = result;
 	token->tt_start = tpp_file_rel2ptr(file, rel_start);
 	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_end") */

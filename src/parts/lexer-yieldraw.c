@@ -5949,6 +5949,9 @@ handle_keyword_with_esc:
 set_result_ch:
 	result = TPP_TOK_OFCHAR(ch);
 set_result:
+#if TPP_HAVE_TOKEN_NUMBER
+	++token->tt_num;
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 	token->tt_id    = result;
 	token->tt_start = tpp_file_rel2ptr(file, rel_start);
 	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_end") */

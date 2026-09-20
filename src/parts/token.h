@@ -1663,6 +1663,9 @@ struct tpp_keyword;
 typedef struct tpp_token {
 	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*`; iow: always positive or `TPP_TOK_EOF`) */
 	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id` */
+#if TPP_HAVE_TOKEN_NUMBER
+	tpp_token_num             TPP_INTERNAL(tt_num);   /* Token number (incremented every time a token is generated) */
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
 	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_start` and `tt_end` (or `NULL` if not needed) */
@@ -1692,6 +1695,16 @@ typedef struct tpp_token {
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdstr(self)  tpp_keyword_getstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdlen(self)  tpp_keyword_getlen(tpp_token_getkwd(self))
+
+/* Access to the token's *number* (incremented every time a new token is generated) */
+#if TPP_HAVE_TOKEN_NUMBER
+#define tpp_token_getnum(self)    ((self)->TPP_INTERNAL(tt_num))
+#define tpp_token_setnum(self, v) (void)((self)->TPP_INTERNAL(tt_num) = (v))
+#define tpp_token_resetnum(self)  (void)((self)->TPP_INTERNAL(tt_num) = 0)
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define tpp_token_getnum(self)    ((tpp_token_num)0)
+#define tpp_token_resetnum(self)  (void)0
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 
 /* Helpers to set the data-fields of `self` */
 #define tpp_token_setid(self, id) \

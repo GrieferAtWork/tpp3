@@ -165,6 +165,14 @@ TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	(void)self;
 
+#if TPP_HAVE_TOKEN_NUMBER
+	/* Special case: must initialize the token number here, since calls
+	 * to `tpp_lexer_yieldraw()` only ever increment it (meaning they
+	 * assume that it is always pre-initialized, unlike all other fields
+	 * of the current token) */
+	tpp_lexer_gettoken(self)->tt_num = 0;
+#endif /* TPP_HAVE_TOKEN_NUMBER */
+
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_init(&self->tl_kwds);
 #endif /* TPP_HAVE_USER_KEYWORDS */

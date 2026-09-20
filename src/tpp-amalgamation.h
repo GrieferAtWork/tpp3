@@ -5795,16 +5795,26 @@ TPP_WARNING(TPP_W_TOO_MANY_INPUT_FILES, 0(), 0(), ~,
 #endif /* ... */
 #endif /* !tpp_ssize */
 
+/* Integer type used for keyword hashes */
 #ifndef tpp_hash
 #define tpp_hash      tpp_uint_fast32
 #define TPP_HASH_MAX  TPP_UINT_FAST32_MAX
 #define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #endif /* !tpp_hash */
 
+/* Integer types for line/column */
 #ifndef tpp_line
 #define tpp_line   tpp_int_fast32
 #define tpp_column tpp_int_fast32
 #endif /* !tpp_line */
+
+/* Integer type used to describe the position "number"
+ * of a token in the stream of all tokens read thus far.
+ *
+ * s.a. `TPP_HAVE_TOKEN_NUMBER` */
+#ifndef tpp_token_num
+#define tpp_token_num tpp_uintmax
+#endif /* !tpp_token_num */
 
 /* WARNING: You probably don't want to override this one:
  * `tpp_char` is assumed to be unsigned by lots of TPP APIs */
@@ -13781,6 +13791,28 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
+/* Provide an extra *running number* field in `tpp_token` that can is incremented every
+ * time a token is returned by `tpp_lexer_yieldraw()` and `tpp_lexer_yieldraw_at()`.
+ *
+ * NOTE: The token number is *NOT* incremented when `TPP_TOK_EOF` is reached, or
+ *       when `tpp_lexer_yieldraw()` returns an error.
+ *
+ * TODO: This feature will also be required to properly implement `#pragma GCC poison`,
+ *       since a poisoned keyword shouldn't be warned about if produced from the body
+ *       of a macro that was defined *before* the poison command. This can be done by
+ *       saving the current token number when defining a macro, and when poisoning a
+ *       keyword. Then, when a poisoned keyword is encountered, don't warn if the
+ *       (then) current token originates from a macro with a token number < than the
+ *       token number at the time the keyword was poisoned (s.a.: the comment in the
+ *       (thus-far not implemented) `tpp_lexer_process_pragma_GCC_poison()`) */
+#ifndef TPP_HAVE_TOKEN_NUMBER
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_TOKEN_NUMBER 1
+#else /* TPP_HAVE_PROFILE_ALL */
+#define TPP_HAVE_TOKEN_NUMBER 0
+#endif /* !TPP_HAVE_PROFILE_ALL */
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -17957,6 +17989,9 @@ struct tpp_keyword;
 typedef struct tpp_token {
 	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*`; iow: always positive or `TPP_TOK_EOF`) */
 	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id` */
+#if TPP_HAVE_TOKEN_NUMBER
+	tpp_token_num             TPP_INTERNAL(tt_num);   /* Token number (incremented every time a token is generated) */
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
 	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_start` and `tt_end` (or `NULL` if not needed) */
@@ -17986,6 +18021,16 @@ typedef struct tpp_token {
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdstr(self)  tpp_keyword_getstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdlen(self)  tpp_keyword_getlen(tpp_token_getkwd(self))
+
+/* Access to the token's *number* (incremented every time a new token is generated) */
+#if TPP_HAVE_TOKEN_NUMBER
+#define tpp_token_getnum(self)    ((self)->TPP_INTERNAL(tt_num))
+#define tpp_token_setnum(self, v) (void)((self)->TPP_INTERNAL(tt_num) = (v))
+#define tpp_token_resetnum(self)  (void)((self)->TPP_INTERNAL(tt_num) = 0)
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define tpp_token_getnum(self)    ((tpp_token_num)0)
+#define tpp_token_resetnum(self)  (void)0
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 
 /* Helpers to set the data-fields of `self` */
 #define tpp_token_setid(self, id) \
@@ -27490,6 +27535,23 @@ typedef struct tpp_lexer {
 #define tpp_lexer_settokenkwd(self, kwd)          tpp_token_setkwd(tpp_lexer_gettoken(self), kwd)
 #define tpp_lexer_settokenrange(self, start, end) tpp_token_setrange(tpp_lexer_gettoken(self), start, end)
 #define tpp_lexer_settokenend(self, end)          tpp_token_setend(tpp_lexer_gettoken(self), end)
+#define tpp_lexer_gettokennum(self)               tpp_token_getnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_resettokennum(self)             tpp_token_resetnum(tpp_lexer_gettoken(self))
+#if TPP_HAVE_TOKEN_NUMBER
+#define tpp_lexer_settokennum(self, v)            tpp_token_setnum(tpp_lexer_gettoken(self), v)
+#define tpp_lexer_pushtokennum(self) \
+	do {                             \
+		tpp_token_num const _tlptn_saved_num = tpp_lexer_gettokennum(self)
+#define tpp_lexer_breaktokennum(self) \
+		tpp_lexer_settokennum(self, _tlptn_saved_num)
+#define tpp_lexer_poptokennum(self)    \
+		tpp_lexer_breaktokennum(self); \
+	} while (0)
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define tpp_lexer_pushtokennum(self)  do {
+#define tpp_lexer_breaktokennum(self) (void)0
+#define tpp_lexer_poptokennum(self)   (void)0; } while (0)
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 
 
 /* Current file */
@@ -29018,9 +29080,12 @@ tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos);
 
 
 typedef struct tpp_lexer_seek_backup {
-	tpp_token_id              TPP_INTERNAL(tlsb_id);    /* Saved token id */
-	struct tpp_keyword const *TPP_INTERNAL(tlsb_kwd);   /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tlsb_id))] Saved token keyword */
-	tpp_size                  TPP_INTERNAL(tlsb_len);   /* Relative length of token */
+	tpp_token_id              TPP_INTERNAL(tlsb_id);  /* Saved token id */
+	struct tpp_keyword const *TPP_INTERNAL(tlsb_kwd); /* [1..1][valid_if(TPP_TOK_ISKEYWORD(tlsb_id))] Saved token keyword */
+#if TPP_HAVE_TOKEN_NUMBER
+	tpp_token_num             TPP_INTERNAL(tlsb_num); /* Saved token number */
+#endif /* TPP_HAVE_TOKEN_NUMBER */
+	tpp_size                  TPP_INTERNAL(tlsb_len); /* Relative length of token */
 } tpp_lexer_seek_backup;
 
 /* Save/restore the currently loaded token. This must be done before/after
@@ -29045,6 +29110,12 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	backup->TPP_INTERNAL(tlsb_id)  = tpp_token_getid(token);
 	backup->TPP_INTERNAL(tlsb_kwd) = tpp_token_getkwd(token);
+#if TPP_HAVE_TOKEN_NUMBER
+	backup->TPP_INTERNAL(tlsb_num) = tpp_token_getnum(token);
+#define _tpp_lexer_seek_rollback_num(self, backup) , tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_num) = (backup)->TPP_INTERNAL(tlsb_num)
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define _tpp_lexer_seek_rollback_num(self, backup) /* nothing */
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 	backup->TPP_INTERNAL(tlsb_len) = tpp_token_getlen(token);
 	result                         = tpp_token_getend(token);
 	token->TPP_INTERNAL(tt_end)    = tpp_token_getstart(token);
@@ -29052,9 +29123,11 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
 }
 #define tpp_lexer_seek_commit(self, pos) \
 	(void)(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end) = (pos))
+
 /* @return: * : The restored `tpp_token_id` */
 #define tpp_lexer_seek_rollback(self, backup)                                                                             \
-	(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_kwd)   = (backup)->TPP_INTERNAL(tlsb_kwd),                                 \
+	(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_kwd) = (backup)->TPP_INTERNAL(tlsb_kwd)                                    \
+	 _tpp_lexer_seek_rollback_num(self, backup),                                                                          \
 	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_start) = tpp_lexer_gettokenend(self),                                      \
 	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end)   = tpp_lexer_gettokenstart(self) + (backup)->TPP_INTERNAL(tlsb_len), \
 	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_id)    = (backup)->TPP_INTERNAL(tlsb_id))

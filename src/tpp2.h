@@ -2783,6 +2783,8 @@ PREDEFINED_MACRO_IF(__WCHAR_UNSIGNED__, HAS(EXT_UTILITY_MACROS), "1")
 #define TPP_HAVE_LEXER_DECODEINT_BINARY_LITERALS TPP_CONFIG_EXTENSION_BININTEGRAL /* Enable support for "0b" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
 #define TPP_HAVE_LEXER_DECODEINT_OCTAL_LITERALS  0                                /* Enable support for "0o" literals in `tpp_lexer_decodeint()` when parsing `TPP_TOK_C_INT` (see `TPP_HAVE_TOK_C_INT`) */
 #define TPP_HAVE_API_TOKEN_NAMES_IN_GLOBAL_NAMESPACE TPP2_HAVE_GLOBAL_NAMESPACE   /* Enable global namespace aliases for token names */
+#define TPP_HAVE_STATIC_EMPTY_STRING             1                                /* So the emulated `TPPString_NewEmpty()` never fails (matching TPP2 behavior) */
+#define TPP_HAVE_TOKEN_NUMBER                    1                                /* To emulate `TPPToken::t_num` */
 
 /* Force extensions to use the names they'd been using in TPP2 */
 #define TPP_EXTNAME_TRIGRAPHS                           "trigraphs"
@@ -5032,14 +5034,14 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 
 /* struct TPPToken { */
 #define TPPToken tpp_token
-#define t_id TPP_INTERNAL(tt_id)
-#undef t_num  /* Not supported by TPP3 */
+#define t_id    TPP_INTERNAL(tt_id)    /* Use `tpp_token_getid()` + `tpp_token_setid()` */
+#define t_num   TPP_INTERNAL(tt_num)   /* Use `tpp_token_getnum()` + `tpp_token_setnum()` */
 #undef t_file /* In TPP3, the lexer always re-uses the same file structure as the current file.
                * (when a new file is `#include`-ed, the old one is saved in the `#include`-stack)
                * To access the current file, use `tpp_lexer_getfile()` */
-#define t_begin TPP_INTERNAL(tt_start)
-#define t_end   TPP_INTERNAL(tt_end)
-#define t_kwd   TPP_INTERNAL(tt_kwd)
+#define t_begin TPP_INTERNAL(tt_start) /* Use `tpp_token_getstart()` + `tpp_token_setrange()` */
+#define t_end   TPP_INTERNAL(tt_end)   /* Use `tpp_token_getend()` + `tpp_token_setrange()` / `tpp_token_setend()` */
+#define t_kwd   TPP_INTERNAL(tt_kwd)   /* Use `tpp_token_getkwd()` + `tpp_token_setkwd()` */
 /* }; */
 
 /* Returns the top-level source locations (in-macro & everything)

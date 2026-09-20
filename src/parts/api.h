@@ -694,16 +694,26 @@
 #endif /* ... */
 #endif /* !tpp_ssize */
 
+/* Integer type used for keyword hashes */
 #ifndef tpp_hash
 #define tpp_hash      tpp_uint_fast32
 #define TPP_HASH_MAX  TPP_UINT_FAST32_MAX
 #define TPP_HASH_C(x) TPP_UINT_FAST32_C(x)
 #endif /* !tpp_hash */
 
+/* Integer types for line/column */
 #ifndef tpp_line
 #define tpp_line   tpp_int_fast32
 #define tpp_column tpp_int_fast32
 #endif /* !tpp_line */
+
+/* Integer type used to describe the position "number"
+ * of a token in the stream of all tokens read thus far.
+ *
+ * s.a. `TPP_HAVE_TOKEN_NUMBER` */
+#ifndef tpp_token_num
+#define tpp_token_num tpp_uintmax
+#endif /* !tpp_token_num */
 
 /* WARNING: You probably don't want to override this one:
  * `tpp_char` is assumed to be unsigned by lots of TPP APIs */

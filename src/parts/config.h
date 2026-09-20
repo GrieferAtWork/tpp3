@@ -8027,6 +8027,28 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_STATIC_EMPTY_STRING */
 
+/* Provide an extra *running number* field in `tpp_token` that can is incremented every
+ * time a token is returned by `tpp_lexer_yieldraw()` and `tpp_lexer_yieldraw_at()`.
+ *
+ * NOTE: The token number is *NOT* incremented when `TPP_TOK_EOF` is reached, or
+ *       when `tpp_lexer_yieldraw()` returns an error.
+ *
+ * TODO: This feature will also be required to properly implement `#pragma GCC poison`,
+ *       since a poisoned keyword shouldn't be warned about if produced from the body
+ *       of a macro that was defined *before* the poison command. This can be done by
+ *       saving the current token number when defining a macro, and when poisoning a
+ *       keyword. Then, when a poisoned keyword is encountered, don't warn if the
+ *       (then) current token originates from a macro with a token number < than the
+ *       token number at the time the keyword was poisoned (s.a.: the comment in the
+ *       (thus-far not implemented) `tpp_lexer_process_pragma_GCC_poison()`) */
+#ifndef TPP_HAVE_TOKEN_NUMBER
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_TOKEN_NUMBER 1
+#else /* TPP_HAVE_PROFILE_ALL */
+#define TPP_HAVE_TOKEN_NUMBER 0
+#endif /* !TPP_HAVE_PROFILE_ALL */
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
