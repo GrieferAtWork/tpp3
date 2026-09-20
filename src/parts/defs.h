@@ -5193,7 +5193,7 @@ TPP_WARNING_EX(TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED, 1(TPP_WG_LIMIT), 0(), ~, {
 	tpp_keyword const *const macro_keyword = tpp_current_va_arg(tpp_keyword const *);
 	tpp_macro const *const macro = tpp_current_va_arg(tpp_macro const *);
 	tpp_warn_printf1(tpp_current_info(), _TPP_W_MACRO_RECURSION_LIMIT_EXCEEDED_FEATUREHINT
-	                                     "self-recursive macro %[%s%] expanded to itself too many times",
+	                                     "self-recursive macro %[%s%] expanded to itself too many times\n",
 	                 tpp_keyword_getcstr(macro_keyword));
 	if (tpp_macro_getdeffilename(macro)) {
 		tpp_warn_print_file_and_line_lc(tpp_macro_getdeffilename(macro),
