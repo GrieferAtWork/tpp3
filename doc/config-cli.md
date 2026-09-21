@@ -5,14 +5,14 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L30392), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L30459), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
 be done using some other C API; it's only there as a convenience to you.
 
 The CLI loader must be used on a lexer that has already been initialized
-itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L27808)), though whether or not the its initial
+itself (as per [`tpp_lexer_init()`](../src/tpp-amalgamation.h#L27816)), though whether or not the its initial
 file has already been initialized doesn't matter (the CLI loader will never
 make persistent modifications to a lexer's current file/token).
 
@@ -123,7 +123,7 @@ TPP_HAVE_CLI && ((TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_CPP_MACROS)
 `-Umacro`, `-U macro`, `--undefine-macro=macro`, `--undefine-macro macro`:
 Delete a macro definition, the same way `#undef macro` would.
 
-Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L28853) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L28865)
+Implementation makes use of: [`tpp_lexer_define()`](../src/tpp-amalgamation.h#L28861) + [`tpp_lexer_undef()`](../src/tpp-amalgamation.h#L28873)
 
 <details><summary>Details</summary>
 
@@ -141,8 +141,8 @@ TPP_HAVE_CLI && (TPP_PROFILE != TPP_PROFILE_MINIMAL) && TPP_HAVE_CPP_MACROS
 `--assert=-predicate[=answer]`, `--assert -predicate[=answer]`:
 Define or delete a preprocessor *"assertion"* (see [`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert)).
 
-Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L28883) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L28892) +
-                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L28899)
+Implementation makes use of: [`tpp_lexer_assert()`](../src/tpp-amalgamation.h#L28891) + [`tpp_lexer_unassert()`](../src/tpp-amalgamation.h#L28900) +
+                             [`tpp_lexer_unassertall()`](../src/tpp-amalgamation.h#L28907)
 
 <details><summary>Details</summary>
 
@@ -565,7 +565,7 @@ TPP_HAVE_CLI && TPP_CONF_ISRT(TPP_HAVE_WERROR)
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit))
 to `1`, or restore its default when this flag is disabled.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L27365) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L27373) be available.
 
 <details><summary>Details</summary>
 
@@ -581,7 +581,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNING_ERROR && (TPP_ERROR_LIMIT < 0)
 `-fmax-errors=COUNT`:
 Change the max-error limit (as specified by [`TPP_ERROR_LIMIT`](config-limit.md#tpp_error_limit)) to `COUNT`.
 
-Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L27365) be available.
+Requires that [`tpp_lexer_seterrorlimit()`](../src/tpp-amalgamation.h#L27373) be available.
 
 <details><summary>Details</summary>
 
@@ -630,14 +630,14 @@ TPP_HAVE_CLI && TPP_HAVE_WARNINGS
 
 ## TPP_HAVE_CLI_SETINPUTS
 
-Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30578), which can be used
+Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30645), which can be used
 to easily implement a high-level wrapper around the different APIs
 that exist to load files into the lexer:
 
-- [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L28026)
-- [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L28084)
-- [`tpp_lexer_initfile_io_ex()`](../src/tpp-amalgamation.h#L28011)
-- [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L28056)
+- [`tpp_lexer_initfile_open()`](../src/tpp-amalgamation.h#L28034)
+- [`tpp_lexer_pushfile_open()`](../src/tpp-amalgamation.h#L28092)
+- [`tpp_lexer_initfile_io_ex()`](../src/tpp-amalgamation.h#L28019)
+- [`tpp_lexer_pushfile_io_ex()`](../src/tpp-amalgamation.h#L28064)
 
 When this API is enabled and being used, it also becomes possible
 to enable some additional CLI options such as `-fsearch-include-path`
@@ -654,7 +654,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_SETINPUTS_DASH
 
-[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30578) supports a special case when the given
+[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30645) supports a special case when the given
 filename is `"-"`. When that is the case, *STDIN* is used as input
 instead, with [`TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME`](#tpp_have_cli_setinputs_stdin_filename) becoming the
 filename.
@@ -685,7 +685,7 @@ Default:
 ## TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 
 `-fsearch-include-path[=kind]` (where `kind` is one of `(user|system)`, defaulting to `user`):
-When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30578) (as enabled by
+When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L30645) (as enabled by
 [`TPP_HAVE_CLI_SETINPUTS`](#tpp_have_cli_setinputs)) when the specified file cannot be found (as a file realtive to the
 preprocessor's current working directory). If that happens, perform an additional search for
 the specified filename using `#include`-paths (s.a. [`TPP_HAVE_INCLUDE_PATH`](config-core.md#tpp_have_include_path)):

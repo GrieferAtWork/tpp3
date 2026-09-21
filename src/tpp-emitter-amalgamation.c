@@ -2501,23 +2501,20 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self) {
 static TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
 tpp_emitter_cli_warnf(tpp_emitter *tpp_restrict self, tpp_char const *token_start,
                       tpp_size token_size, tpp_warning_id id, ...) {
-	/* XXX: Use of `TPP_INTERNAL` here isn't allowed -- come up with
-	 *      APIs to allow users to do this stuff without needing to
-	 *      access TPP internal! */
 	tpp_lexer *const lexer = tpp_emitter_getlexer(self);
+	tpp_file *const file = tpp_lexer_getfile(lexer);
 	tpp_errno result;
 	va_list args;
-	union TPP_INTERNAL(tpp_lexer_core) saved_core = lexer->TPP_INTERNAL(tl_core);
-	tpp_file *const file = tpp_lexer_getfile(lexer);
+	tpp_lexer_pushcore(lexer);
 	tpp_file_init_text_utf8(file, TPP_CONFIG_CLI_FILENAME,
 	                        NULL, token_start, token_size,
 	                        TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
-	file->TPP_INTERNAL(tf_tpos) = token_start;
-	file->TPP_INTERNAL(tf_pos)  = token_start + token_size;
+	tpp_lexer_settokenrange(lexer, token_start, token_start + token_size);
 	va_start(args, id);
 	result = tpp_lexer_vwarnf(lexer, id, args);
 	va_end(args);
-	lexer->TPP_INTERNAL(tl_core) = saved_core;
+	tpp_lexer_finifile(lexer);
+	tpp_lexer_popcore(lexer);
 	return result;
 }
 #endif /* TPP_HAVE_EMITTER_CLI_WARN */

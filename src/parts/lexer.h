@@ -72,6 +72,14 @@ union TPP_INTERNAL(tpp_lexer_core) {
 
 typedef struct tpp_lexer {
 	union TPP_INTERNAL(tpp_lexer_core) TPP_INTERNAL(tl_core); /* Lexer core */
+#if TPP_HAVE_TOKEN_NUMBER
+#define _tpp_lexer_init_core(self)                                                               \
+	(tpp_dbg_memset(&(self)->TPP_INTERNAL(tl_core), sizeof(union TPP_INTERNAL(tpp_lexer_core))), \
+	 tpp_token_resetnum(tpp_lexer_gettoken(self)))
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define _tpp_lexer_init_core(self) \
+	tpp_dbg_memset(&(self)->TPP_INTERNAL(tl_core), sizeof(union TPP_INTERNAL(tpp_lexer_core)))
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 
 	/* Lexer state flags */
 #if TPP_HAVE_LEXER_STATE_FLAGS
@@ -572,9 +580,9 @@ typedef struct tpp_lexer {
 #endif /* !TPP_HAVE_USER_KEYWORDS */
 
 
-/* Initialize/finalize everything about `self`, except for the
- * currently loaded file; which the caller must still initialize
- * using one of the `tpp_lexer_initfile_*` functions below. */
+/* Initialize/finalize everything about `self`, except for the currently
+ * loaded file; which the caller must still initialize *AFTER* calling
+ * this function using one of the `tpp_lexer_initfile_*` functions below. */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self);
 
@@ -582,8 +590,8 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self);
 /* Finalize the lexer, except for the currently loaded file.
  *
  * If the caller made use of `tpp_lexer_initfile_*`, then they
- * must also (either before or after this function) call
- * `tpp_lexer_finifile()` to finalize the currently loaded file. */
+ * must call `tpp_lexer_finifile()` *BEFORE* calling this function
+ * to finalize the currently loaded file. */
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self);
 
@@ -1804,6 +1812,65 @@ tpp_lexer_readunichar(tpp_lexer *tpp_restrict self,
                       tpp_char const **tpp_restrict p_pos,
                       tpp_unichar *tpp_restrict p_result);
 #endif /* TPP_HAVE_LEXER_READUNICHAR */
+
+
+
+/* Temporarily push(+invalidate)/pop(+restore) the lexer's "core":
+ * - The currently open (set of) files (including the entire file-stack)
+ * - The currently loaded token (if one has already been loaded)
+ *
+ * After pushing the core, you can/must (re-)initialize the lexer's
+ * file-stack by calling one of `tpp_lexer_initfile_*()`, which you
+ * must then match by a call to `tpp_lexer_finifile()` just before
+ * you restore its old core (by calling `tpp_lexer_popcore()`)
+ *
+ * Using these APIs, you can (re-)use a lexer to parse something
+ * completely different, then go back to whatever its previous file
+ * stack was.
+ *
+ * WARNINGS:
+ * - This only saves(+invalidates) and later restores:
+ *   - The `#include`-stack (including all currently opened files)
+ *   - The `#ifdef`-stack
+ *   - The current token (if already initialized)
+ * - It does *NOT* save/restore (meaning changes made to any of these
+ *   are retained within the sub-"core"-region, and change made to
+ *   them while the core has been pushed will remain *after* the core
+ *   has been restored):
+ *   - Macro definitions (`#define`) (this also includes legacy `#ifndef`-style include guards)
+ *   - Active extensions, and the extension-push-stack (`#pragma TPP extension`)
+ *   - Active warnings, and the warning-push-stack (`#pragma TPP warning`)
+ *   - Keyword IDs and flags (`#pragma deprecated`, `#pragma TPP __has_feature`, ...)
+ *   - Include paths (`#pragma TPP include_path`)
+ *   - Already-included headers as per `#pragma once`
+ *   - Already-included headers as per `#import`
+ *   - ... (anything not accessible via `tpp_lexer_getfile()` or `tpp_lexer_gettoken()`)
+ *
+ * Example:
+ * >> // Parse "data" using "lexer", but don't clobber the lexer's file/token context
+ * >> tpp_errno parse_with_lexer(tpp_lexer *lexer, tpp_char const *data, size_t length) {
+ * >>     tpp_errno result;
+ * >>     tpp_lexer_pushcore(lexer);
+ * >>     tpp_lexer_initfile_text(lexer, NULL, NULL, data, length,
+ * >>                             TPP_LCINFO_INVALID, TPP_FILE_FLAGS_NORMAL);
+ * >>     result = do_parse_with_lexer(lexer);
+ * >>     if (!TPP_ISERR(result) && tpp_lexer_gettok(lexer) != TPP_TOK_EOF)
+ * >>         result = tpp_lexer_warnf(lexer, TPP_W_MY_WARNING_FOR_UNUSED_TRAILING_TOKENS);
+ * >>     if (!TPP_ISERR(result))
+ * >>         result = tpp_lexer_warn_nonempty_ifdef(lexer);
+ * >>     tpp_lexer_finifile(lexer);
+ * >>     tpp_lexer_popcore(lexer);
+ * >>     return result;
+ * >> }
+ */
+#define tpp_lexer_pushcore(self)                                                                \
+	do {                                                                                        \
+		union TPP_INTERNAL(tpp_lexer_core) const _tlpc_oldcore = (self)->TPP_INTERNAL(tl_core); \
+		_tpp_lexer_init_core(self)
+#define tpp_lexer_breakcore(self) (void)((self)->TPP_INTERNAL(tl_core) = _tlpc_oldcore)
+#define tpp_lexer_popcore(self)    \
+		tpp_lexer_breakcore(self); \
+	} while(0)
 
 
 

@@ -158,20 +158,15 @@ TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_end) ==
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_chunk));
 
-/* Initialize/finalize everything about `self`, except for the
- * currently loaded file; which the caller must still initialize
- * using one of the `tpp_lexer_initfile_*` functions below. */
+/* Initialize/finalize everything about `self`, except for the currently
+ * loaded file; which the caller must still initialize *AFTER* calling
+ * this function using one of the `tpp_lexer_initfile_*` functions below. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 	(void)self;
 
-#if TPP_HAVE_TOKEN_NUMBER
-	/* Special case: must initialize the token number here, since calls
-	 * to `tpp_lexer_yieldraw()` only ever increment it (meaning they
-	 * assume that it is always pre-initialized, unlike all other fields
-	 * of the current token) */
-	tpp_lexer_gettoken(self)->tt_num = 0;
-#endif /* TPP_HAVE_TOKEN_NUMBER */
+	/* Initialize the lexer's "core" */
+	_tpp_lexer_init_core(self);
 
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_keywords_init(&self->tl_kwds);
@@ -229,8 +224,8 @@ tpp_lexer_init(tpp_lexer *tpp_restrict self) {
 /* Finalize the lexer, except for the currently loaded file.
  *
  * If the caller made use of `tpp_lexer_initfile_*`, then they
- * must also (either before or after this function) call
- * `tpp_lexer_finifile()` to finalize the currently loaded file. */
+ * must call `tpp_lexer_finifile()` *BEFORE* calling this function
+ * to finalize the currently loaded file. */
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
 tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 	(void)self;
@@ -280,8 +275,7 @@ tpp_lexer_fini(tpp_lexer *tpp_restrict self) {
 		tpp_string_decref(self->tl_userpwd);
 #endif /* TPP_HAVE_LEXER_USERPWD */
 
-	tpp_dbg_memset((char *)&self->tl_core + sizeof(self->tl_core),
-	               sizeof(*self) - sizeof(self->tl_core));
+	tpp_dbg_memset(self, sizeof(tpp_lexer));
 }
 
 
@@ -439,7 +433,7 @@ tpp_lexer_finifile(tpp_lexer *tpp_restrict self) {
 
 	/* Finalize the top-most file of the #include-stack */
 	tpp_file_fini(file);
-	tpp_dbg_memset(&self->tl_core, sizeof(self->tl_core));
+	_tpp_lexer_init_core(self);
 }
 
 
