@@ -123,6 +123,11 @@ typedef struct tpp_makefile_cli_loader {
 #define tpp_makefile_cli_loader_hasddash(self) \
 	((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_DDASH)
 
+/* Check if `self` is in the *default* loader state (i.e.: does not
+ * expect any arguments, and hasn't encountered a "--" argument). */
+#define tpp_makefile_cli_loader_hasdefaultstate(self) \
+	((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_state) == TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL)
+
 
 /* Control if `tpp_makefile_cli_loader_flush()` will turn eanble the makefile */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED

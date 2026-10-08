@@ -83,6 +83,11 @@ typedef struct tpp_emitter_cli_loader {
 #define tpp_emitter_cli_loader_hasddash(self) \
 	((self)->TPP_EMITTER_INTERNAL(temcl_state) == TPP_EMITTER_CLI_LOADER_STATE_DDASH)
 
+/* Check if `self` is in the *default* loader state (i.e.: does not
+ * expect any arguments, and hasn't encountered a "--" argument). */
+#define tpp_emitter_cli_loader_hasdefaultstate(self) \
+	((self)->TPP_EMITTER_INTERNAL(temcl_state) == TPP_EMITTER_CLI_LOADER_STATE_NORMAL)
+
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
  * default/initial state, `arg` is a CLI argument as you'd expect.

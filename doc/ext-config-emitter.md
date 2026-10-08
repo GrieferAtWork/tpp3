@@ -782,7 +782,7 @@ TPP_HAVE_CLI
 
 ## TPP_EMITTER_HAVE_CLI_PARSEARGV
 
-Provide a convenience function [`tpp_emitter_cli_loader_parseargv()`](../src/tpp-emitter-amalgamation.h#L1795) to directly parse argc/argv
+Provide a convenience function [`tpp_emitter_cli_loader_parseargv()`](../src/tpp-emitter-amalgamation.h#L1800) to directly parse argc/argv
 
 <details><summary>Details</summary>
 
@@ -855,7 +855,7 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
-CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1813) is called):
+CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1818) is called):
 [`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30415)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's

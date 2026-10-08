@@ -79,6 +79,11 @@ typedef struct tpp_cli_loader {
 #define tpp_cli_loader_hasddash(self) \
 	((self)->TPP_INTERNAL(tcl_state) == TPP_CLI_LOADER_STATE_DDASH)
 
+/* Check if `self` is in the *default* loader state (i.e.: does not
+ * expect any arguments, and hasn't encountered a "--" argument). */
+#define tpp_cli_loader_hasdefaultstate(self) \
+	((self)->TPP_INTERNAL(tcl_state) == TPP_CLI_LOADER_STATE_NORMAL)
+
 
 /* Get/Set/Reset the `-fsearch-include-path=...` mode of the CLI loader.
  * For this purpose, token IDs are used as follows:

@@ -250,7 +250,7 @@ TPP_HAVE_CLI
 
 ## TPP_MAKEFILE_HAVE_CLI_PARSEARGV
 
-Provide a convenience function [`tpp_makefile_cli_loader_parseargv()`](../src/tpp-makefile-amalgamation.h#L1263) to directly parse argc/argv
+Provide a convenience function [`tpp_makefile_cli_loader_parseargv()`](../src/tpp-makefile-amalgamation.h#L1268) to directly parse argc/argv
 
 <details><summary>Details</summary>
 
@@ -436,7 +436,7 @@ TPP_MAKEFILE_HAVE_CLI
 
 `-MD`: Similar to `-M`, but don't consume all input and instead auto-determine
 output filename (unless specified by `-MF FILE`) based on the `output_filename`
-argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1292) or `__FILE__`:
+argument passed to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1297) or `__FILE__`:
 
 - If `output_filename` is given, then the makefile output is
   `output_filename.rpartition(".").first + ".d"` (unless that
@@ -514,10 +514,10 @@ Configure as one of:
 
 When runtime configurable, the following function can be used:
 
-- [`tpp_makefile_cli_loader_enablecheckenv()`](../src/tpp-makefile-amalgamation.h#L1131)
-- [`tpp_makefile_cli_loader_disablecheckenv()`](../src/tpp-makefile-amalgamation.h#L1132)
-- [`tpp_makefile_cli_loader_getcheckenv()`](../src/tpp-makefile-amalgamation.h#L1133)
-- [`tpp_makefile_cli_loader_setcheckenv()`](../src/tpp-makefile-amalgamation.h#L1134)
+- [`tpp_makefile_cli_loader_enablecheckenv()`](../src/tpp-makefile-amalgamation.h#L1136)
+- [`tpp_makefile_cli_loader_disablecheckenv()`](../src/tpp-makefile-amalgamation.h#L1137)
+- [`tpp_makefile_cli_loader_getcheckenv()`](../src/tpp-makefile-amalgamation.h#L1138)
+- [`tpp_makefile_cli_loader_setcheckenv()`](../src/tpp-makefile-amalgamation.h#L1139)
 
 <details><summary>Details</summary>
 
@@ -615,12 +615,12 @@ Default:
 Controls whether [`TPP_MAKEFILE_HAVE_CLI_DASH_M`](#tpp_makefile_have_cli_dash_m)
 and [`TPP_MAKEFILE_HAVE_CLI_DASH_MM`](#tpp_makefile_have_cli_dash_mm) will cause the
 lexer's entire input to be consumed during a call
-to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1292).
+to [`tpp_makefile_cli_loader_flush()`](../src/tpp-makefile-amalgamation.h#L1297).
 
 s.a.:
 
-- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1192)
-- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1194)
+- [`tpp_makefile_cli_loader_getonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1197)
+- [`tpp_makefile_cli_loader_setonlymakefile()`](../src/tpp-makefile-amalgamation.h#L1199)
 
 Configure as one of:
 
