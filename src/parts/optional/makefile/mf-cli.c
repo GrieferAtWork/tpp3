@@ -538,7 +538,8 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 	 *       As such, if both CLI and environ are present, then environ won't ever
 	 *       get checked, meaning CLI overrides whatever environ might say. */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
-	if (!tpp_makefile_cli_loader_getmakefileenabled(self)) {
+	if (!tpp_makefile_cli_loader_getmakefileenabled(self) &&
+	    tpp_makefile_cli_loader_getcheckenv(self)) {
 #if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
 		/* Check for environment variables. */
 #if TPP_MAKEFILE_HAVE_CLI_ENV_MMD

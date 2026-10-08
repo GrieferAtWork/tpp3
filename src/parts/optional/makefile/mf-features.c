@@ -70,6 +70,9 @@ TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
 		/* .tmkff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
+#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV)
+		/* .tmkff_CLI_ENV           = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV),
+#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
 	}
 };
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */

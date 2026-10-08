@@ -65,6 +65,7 @@ for (local ident: identifiers) {
 #define tmkf_bitset             TPP_MAKEFILE_INTERNAL(tmkf_bitset)
 #define tmkff_USER_DEPENDENCIES TPP_MAKEFILE_INTERNAL(tmkff_USER_DEPENDENCIES)
 #define tmkff_PHONY             TPP_MAKEFILE_INTERNAL(tmkff_PHONY)
+#define tmkff_CLI_ENV           TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV)
 #define tmkf_lexer              TPP_MAKEFILE_INTERNAL(tmkf_lexer)
 #define tmkf_output             TPP_MAKEFILE_INTERNAL(tmkf_output)
 #define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)

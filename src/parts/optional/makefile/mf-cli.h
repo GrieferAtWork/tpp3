@@ -46,7 +46,8 @@ TPP_DECL_BEGIN
 	 TPP_MAKEFILE_HAVE_CLI_ONLYMAKEFILE ||                                \
 	 (TPP_MAKEFILE_HAVE_CLI_DASH_MT && TPP_MAKEFILE_HAVE_CLI_DASH_MQ) ||  \
 	 (TPP_MAKEFILE_HAVE_CLI_DASH_MD || TPP_MAKEFILE_HAVE_CLI_DASH_MMD) || \
-	 TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE)
+	 TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE ||                      \
+	 TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_CLI_ENV))
 
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
 #define _tpp_makefile_cli_loader_flags tpp_uint_least8
@@ -66,6 +67,9 @@ TPP_DECL_BEGIN
 #if TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE
 #define _TPP_MAKEFILE_CLI_LOADER_FLAG_NO_MAINFILE  TPP_UINT_LEAST8_C(0x10) /* Omit dependency generation of the preprocessor "main" input files */
 #endif /* TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE */
+#if TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_CLI_ENV)
+#define _TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON   TPP_UINT_LEAST8_C(0x20) /* Invert checking environment variables to see if generation should be enabled */
+#endif /* TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_CLI_ENV) */
 #endif /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 
 
@@ -152,6 +156,31 @@ typedef struct tpp_makefile_cli_loader {
 #define tpp_makefile_cli_loader_getomitmainfile(self)     0
 #define tpp_makefile_cli_loader_disableomitmainfile(self) (void)0
 #endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MD_OMITS_MAIN_FILE */
+
+
+
+/* Enable/disable checking of environment variables for the purpose of enabling Makefile generation */
+#if TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_CLI_ENV) && TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV)
+#define tpp_makefile_cli_loader_enablecheckenv(self)  (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON)
+#define tpp_makefile_cli_loader_disablecheckenv(self) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON)
+#define tpp_makefile_cli_loader_getcheckenv(self)     (!((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON))
+#define tpp_makefile_cli_loader_setcheckenv(self, v)    \
+	((v) ? tpp_makefile_cli_loader_enablecheckenv(self) \
+	     : tpp_makefile_cli_loader_disablecheckenv(self))
+#elif TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_CLI_ENV)
+#define tpp_makefile_cli_loader_enablecheckenv(self)  (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) |= _TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON)
+#define tpp_makefile_cli_loader_disablecheckenv(self) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) &= ~_TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON)
+#define tpp_makefile_cli_loader_getcheckenv(self)     ((self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) & _TPP_MAKEFILE_CLI_LOADER_FLAG_INVENVIRON)
+#define tpp_makefile_cli_loader_setcheckenv(self, v)    \
+	((v) ? tpp_makefile_cli_loader_enablecheckenv(self) \
+	     : tpp_makefile_cli_loader_disablecheckenv(self))
+#elif TPP_MAKEFILE_HAVE_CLI_ENV
+#define tpp_makefile_cli_loader_enablecheckenv(self) (void)0
+#define tpp_makefile_cli_loader_getcheckenv(self)    1
+#else /* TPP_MAKEFILE_HAVE_CLI_ENV */
+#define tpp_makefile_cli_loader_disablecheckenv(self) (void)0
+#define tpp_makefile_cli_loader_getcheckenv(self)     0
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ENV */
 
 
 /* Get/set the target, as specified by `-MT` and `-MQ` */

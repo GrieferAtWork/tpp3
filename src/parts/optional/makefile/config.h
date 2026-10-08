@@ -301,6 +301,31 @@
 
 /* XXX: CLI option to control `TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH` */
 
+/* Enable support for checking environment variables to control
+ * the generation of makefile dependencies. Individual environ
+ * checks are controlled by:
+ * - `TPP_MAKEFILE_HAVE_CLI_ENV_MD`
+ * - `TPP_MAKEFILE_HAVE_CLI_ENV_MMD`
+ *
+ * Configure as one of:
+ * - `TPP_CONF_0`, `0`: Always disabled
+ * - `TPP_CONF_1`, `1`: Always enabled
+ * - `TPP_CONF_FEAT0`:  Runtime-configurable (disabled by default)
+ * - `TPP_CONF_FEAT1`:  Runtime-configurable (enabled by default)
+ *
+ * When runtime configurable, the following function can be used:
+ * - `tpp_makefile_cli_loader_enablecheckenv()`
+ * - `tpp_makefile_cli_loader_disablecheckenv()`
+ * - `tpp_makefile_cli_loader_getcheckenv()`
+ * - `tpp_makefile_cli_loader_setcheckenv()`
+ */
+#ifndef TPP_MAKEFILE_HAVE_CLI_ENV
+#define TPP_MAKEFILE_HAVE_CLI_ENV                                                    \
+	((TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE) \
+	 ? ((TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL) ? TPP_CONF_FEAT1 : 1)              \
+	 : 0)
+#endif /* !TPP_MAKEFILE_HAVE_CLI_ENV */
+
 /* Check for an environment variable `TPP_MAKEFILE_CONFIG_CLI_ENV_MD`
  * that is checked for a filename (+ optional target name) to use as
  * a Makefile target when not otherwise already enabled.
@@ -309,8 +334,8 @@
  * - `<file>`:          Same as `-MD -MF <file>`
  * - `<file> <target>`  Same as `-MD -MF <file> -MT <target>` */
 #ifndef TPP_MAKEFILE_HAVE_CLI_ENV_MD
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                                                  \
-	(TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MD                                                      \
+	(TPP_MAKEFILE_HAVE_CLI_ENV && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
 	 (!TPP_MAKEFILE_HAVE_USER_DEPENDENCIES || TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)))
 #endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MD */
 
@@ -335,8 +360,8 @@
  * - `<file>`:          Same as `-MMD -MF <file>`
  * - `<file> <target>`  Same as `-MMD -MF <file> -MT <target>` */
 #ifndef TPP_MAKEFILE_HAVE_CLI_ENV_MMD
-#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                                                 \
-	(TPP_MAKEFILE_HAVE_CLI && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
+#define TPP_MAKEFILE_HAVE_CLI_ENV_MMD                                                     \
+	(TPP_MAKEFILE_HAVE_CLI_ENV && TPP_HAVE_IO_WITHENV && TPP_MAKEFILE_HAVE_OUTPUT_FILE && \
 	 (TPP_MAKEFILE_HAVE_USER_DEPENDENCIES || TPP_CONF_ISRT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)))
 #endif /* !TPP_MAKEFILE_HAVE_CLI_ENV_MMD */
 

@@ -48,6 +48,7 @@
 #define tmkf_bitset             TPP_MAKEFILE_INTERNAL(tmkf_bitset)
 #define tmkff_USER_DEPENDENCIES TPP_MAKEFILE_INTERNAL(tmkff_USER_DEPENDENCIES)
 #define tmkff_PHONY             TPP_MAKEFILE_INTERNAL(tmkff_PHONY)
+#define tmkff_CLI_ENV           TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV)
 #define tmkf_lexer              TPP_MAKEFILE_INTERNAL(tmkf_lexer)
 #define tmkf_output             TPP_MAKEFILE_INTERNAL(tmkf_output)
 #define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
@@ -232,6 +233,9 @@ TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
 		/* .tmkff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
 #endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
+#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV)
+		/* .tmkff_CLI_ENV           = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV),
+#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
 	}
 };
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */
@@ -1101,7 +1105,8 @@ tpp_makefile_cli_loader_flush(tpp_makefile_cli_loader *tpp_restrict self,
 	 *       As such, if both CLI and environ are present, then environ won't ever
 	 *       get checked, meaning CLI overrides whatever environ might say. */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAG_ENABLED
-	if (!tpp_makefile_cli_loader_getmakefileenabled(self)) {
+	if (!tpp_makefile_cli_loader_getmakefileenabled(self) &&
+	    tpp_makefile_cli_loader_getcheckenv(self)) {
 #if TPP_MAKEFILE_HAVE_CLI_ENV_MD || TPP_MAKEFILE_HAVE_CLI_ENV_MMD
 		/* Check for environment variables. */
 #if TPP_MAKEFILE_HAVE_CLI_ENV_MMD
