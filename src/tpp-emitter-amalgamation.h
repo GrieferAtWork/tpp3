@@ -582,6 +582,11 @@
 #define TPP_EMITTER_HAVE_CLI TPP_HAVE_CLI
 #endif /* !TPP_EMITTER_HAVE_CLI */
 
+/* Provide a convenience function `tpp_emitter_cli_loader_parseargv()` to directly parse argc/argv */
+#ifndef TPP_EMITTER_HAVE_CLI_PARSEARGV
+#define TPP_EMITTER_HAVE_CLI_PARSEARGV (TPP_EMITTER_HAVE_CLI && (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_EMITTER_HAVE_CLI_PARSEARGV */
+
 /* Enable support for `tpp_emitter_cli_loader_help`, which exposes a small
  * database of supported commandline flags in a human-readable format that
  * can also be rendered (fairly) easily.
@@ -1775,6 +1780,7 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char const **p_arg);
 
+#if TPP_EMITTER_HAVE_CLI_PARSEARGV
 /* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.
  *
@@ -1788,6 +1794,7 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
                                  int *p_argc, char ***p_argv);
+#endif /* TPP_EMITTER_HAVE_CLI_PARSEARGV */
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning

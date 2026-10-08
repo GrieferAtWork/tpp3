@@ -252,6 +252,7 @@ tpp_makefile_cli_loader_parsearg(tpp_makefile_cli_loader *tpp_restrict self, cha
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_makefile_cli_loader_parseflag(tpp_makefile_cli_loader *tpp_restrict self, char const **p_arg);
 
+#if TPP_MAKEFILE_HAVE_CLI_PARSEARGV
 /* Convenience wrapper around `tpp_makefile_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.
  *
@@ -265,6 +266,7 @@ tpp_makefile_cli_loader_parseflag(tpp_makefile_cli_loader *tpp_restrict self, ch
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
                                   int *p_argc, char ***p_argv);
+#endif /* TPP_MAKEFILE_HAVE_CLI_PARSEARGV */
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning

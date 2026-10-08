@@ -7872,6 +7872,25 @@ print("#endif /" "* !... *" "/");
 	(TPP_HAVE_CLI && TPP_HAVE_WARNINGS)
 #endif /* !TPP_HAVE_CLI_DASH_WERROR_WARNING */
 
+/* Provide a convenience function `tpp_cli_loader_parseargv()` to directly parse argc/argv */
+#ifndef TPP_HAVE_CLI_PARSEARGV
+#define TPP_HAVE_CLI_PARSEARGV (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_HAVE_CLI_PARSEARGV */
+
+/* Provide a function `tpp_cli_loader_initinput()` that can be used to
+ * initialize the associated lexer's file-stack (~ala `tpp_lexer_initfile_*`).
+ * Similar functionality is also available via `TPP_HAVE_CLI_SETINPUTS` */
+#ifndef TPP_HAVE_CLI_INITINPUT
+#define TPP_HAVE_CLI_INITINPUT (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_HAVE_CLI_INITINPUT */
+
+/* Provide a function `tpp_cli_loader_pushinput()` that can be used to push an
+ * additional file onto the associated lexer's file-stack (~ala `tpp_lexer_pushfile_*`).
+ * Similar functionality is also available via `TPP_HAVE_CLI_SETINPUTS` */
+#ifndef TPP_HAVE_CLI_PUSHINPUT
+#define TPP_HAVE_CLI_PUSHINPUT (TPP_HAVE_CLI && TPP_HAVE_PROFILE_ALL)
+#endif /* !TPP_HAVE_CLI_PUSHINPUT */
+
 /* Enable support for `tpp_cli_loader_setinputs()`, which can be used
  * to easily implement a high-level wrapper around the different APIs
  * that exist to load files into the lexer:

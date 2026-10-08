@@ -3107,6 +3107,7 @@ tpp_emitter_cli_loader_parseflag(tpp_emitter_cli_loader *tpp_restrict self, char
 
 
 
+#if TPP_EMITTER_HAVE_CLI_PARSEARGV
 /* Convenience wrapper around `tpp_emitter_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.
  *
@@ -3168,6 +3169,7 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
 	*p_argv = argv;
 	return result;
 }
+#endif /* TPP_EMITTER_HAVE_CLI_PARSEARGV */
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,
  * unterminated multi-argument parameters). If that is not the case, then a warning

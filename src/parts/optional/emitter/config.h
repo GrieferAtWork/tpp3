@@ -532,6 +532,11 @@
 #define TPP_EMITTER_HAVE_CLI TPP_HAVE_CLI
 #endif /* !TPP_EMITTER_HAVE_CLI */
 
+/* Provide a convenience function `tpp_emitter_cli_loader_parseargv()` to directly parse argc/argv */
+#ifndef TPP_EMITTER_HAVE_CLI_PARSEARGV
+#define TPP_EMITTER_HAVE_CLI_PARSEARGV (TPP_EMITTER_HAVE_CLI && (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_EMITTER_HAVE_CLI_PARSEARGV */
+
 /* Enable support for `tpp_emitter_cli_loader_help`, which exposes a small
  * database of supported commandline flags in a human-readable format that
  * can also be rendered (fairly) easily.

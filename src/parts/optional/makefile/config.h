@@ -161,6 +161,11 @@
 #define TPP_MAKEFILE_HAVE_CLI TPP_HAVE_CLI
 #endif /* !TPP_MAKEFILE_HAVE_CLI */
 
+/* Provide a convenience function `tpp_makefile_cli_loader_parseargv()` to directly parse argc/argv */
+#ifndef TPP_MAKEFILE_HAVE_CLI_PARSEARGV
+#define TPP_MAKEFILE_HAVE_CLI_PARSEARGV (TPP_MAKEFILE_HAVE_CLI && (TPP_MAKEFILE_PROFILE == TPP_PROFILE_ALL))
+#endif /* !TPP_MAKEFILE_HAVE_CLI_PARSEARGV */
+
 /* Enable support for `tpp_makefile_cli_loader_help`, which exposes a small
  * database of supported commandline flags in a human-readable format that
  * can also be rendered (fairly) easily.

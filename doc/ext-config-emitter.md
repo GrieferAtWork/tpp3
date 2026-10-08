@@ -119,7 +119,7 @@ TPP_EMITTER_PROFILE == TPP_PROFILE_ALL
 
 Provide support for `TPP_EMITTER_MODE_TYPED`, where tokens are
 emitted surrounded as `[{TYPE}:{TOKEN}]`, where `TYPE` is the
-result of [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17974) and the canonical keyword name.
+result of [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17993) and the canonical keyword name.
 
 Configure as one of:
 
@@ -160,7 +160,7 @@ TPP_EMITTER_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_EMITTER_HAVE_NORMALIZE_SPACE
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L16514)-token
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L16533)-token
 is emitted as an (appropriately long) sequence of ` `-characters, rather
 than as an echo of the original token's space characters (thereby normalizing
 any unicode whitespace or other control characters to `U+0020 SPACE`).
@@ -183,7 +183,7 @@ TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0
 
 ## TPP_EMITTER_HAVE_NORMALIZE_LF
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_LF`](../src/tpp-amalgamation.h#L16513)-token is
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_LF`](../src/tpp-amalgamation.h#L16532)-token is
 emitted as a `\n`-character, rather than as an echo of the original token's
 linefeed bytes (thereby normalizing any unicode linefeed, CR, or CRLF
 sequences to LF).
@@ -206,13 +206,13 @@ TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0
 
 ## TPP_EMITTER_HAVE_NORMALIZE_C_STRING
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_ISSTRING`](../src/tpp-amalgamation.h#L16995)-token
-is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16776) (or [`TPP_TOK_C_CHAR`](../src/tpp-amalgamation.h#L16866), when
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_ISSTRING`](../src/tpp-amalgamation.h#L17014)-token
+is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16795) (or [`TPP_TOK_C_CHAR`](../src/tpp-amalgamation.h#L16885), when
 [`TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS`](config-conf.md#tpp_have_builtin_expr_character_literals) is enabled in the lexer) token
 (though only done if the desired target token is enabled).
 
 In order to do this normalization, the string is decoded and re-encoded via
-use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L30097) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18076), thereby
+use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L30116) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18095), thereby
 allowing a consumer of the preprocessor output to only have to support a
 greatly reduced set of string tokens (and escape sequences) in order to
 fully understand *any* kind of string token that may be produced by TPP.
@@ -236,7 +236,7 @@ Default:
 ## TPP_EMITTER_HAVE_NORMALIZE_C_INT
 
 When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any
-[`TPP_TOK_ISINT`](../src/tpp-amalgamation.h#L16588)-token is emitted as a [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16572) token.
+[`TPP_TOK_ISINT`](../src/tpp-amalgamation.h#L16607)-token is emitted as a [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16591) token.
 
 Configure as one of:
 
@@ -469,9 +469,9 @@ Extension to [`TPP_EMITTER_HAVE_USE_CPP_DIGIT`](#tpp_emitter_have_use_cpp_digit)
 - `1`: Push a dummy-file containing the old file/line/column onto the `#include`-stack,
        before applying the new line/filename.
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21458) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21458) is instead cleared for the current text-file.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L21467) flag.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21477) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21477) is instead cleared for the current text-file.
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L21486) flag.
 
 s.a. [`TPP_HAVE_CPP_DIGIT_LINE`](config-conf.md#tpp_have_cpp_digit_line)
 
@@ -539,10 +539,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1408)
-- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1425)
-- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1406)
-- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1407)
+- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1413)
+- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1430)
+- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1411)
+- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1412)
 
 <details><summary>Details</summary>
 
@@ -569,10 +569,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1440)
-- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1491)
-- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1487)
-- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1488)
+- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1445)
+- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1496)
+- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1492)
+- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1493)
 
 <details><summary>Details</summary>
 
@@ -594,7 +594,7 @@ but taking a completely different approach in order to get there:
   been dumped.
   - If not, or if the macro's definition has changed, dump it now.
     If there was a different definition, emit a `#undef` first.
-- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L17962)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1400)
+- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L17981)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1405)
   is called while a keyword-token is loaded into the lexer), and the
   linked keyword doesn't have a user-defined macro definition (i.e.
   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
@@ -603,7 +603,7 @@ but taking a completely different approach in order to get there:
     emit a `#undef`-directive and delete the saved macro definition.
 - In order to remember the *most-recently-dumped* macro definition
   linked to a keyword, [`TPP_HAVE_KEYWORD_USERDATA`](config-core.md#tpp_have_keyword_userdata) is used to store
-  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L22760) that was most-recently dumped
+  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L22779) that was most-recently dumped
 
 NOTE: In order to determine the name of the macro when it is used
       as a result of being expanded onto the #include-stack, this
@@ -612,10 +612,10 @@ NOTE: In order to determine the name of the macro when it is used
 Because this feature also requires a hook, it must be turned on
 using the following APIs, rather than directly setting its feature:
 
-- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1652)
-- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1654)
-- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1648)
-- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1649)
+- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1657)
+- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1659)
+- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1653)
+- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1654)
 
 Configure as one of:
 
@@ -673,10 +673,10 @@ Can be configured in one of 3 ways:
 
 When not *Disabled*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1505)
-- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1522)
-- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1503)
-- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1504)
+- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1510)
+- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1527)
+- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1508)
+- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1509)
 
 <details><summary>Details</summary>
 
@@ -690,7 +690,7 @@ TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0
 ## TPP_EMITTER_HAVE_TRACE_INCLUDES
 
 Trace includes (and the depth of the `#include`-stack in terms of IO files)
-by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L28278)
+by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L28297)
 whenever an I/O file is pushed to the `#include`-stack:
 
 ```deemon
@@ -701,10 +701,10 @@ Because this feature uses the [`TPP_HAVE_FILE_PUSHED_HOOK`](config-hook.md#tpp_h
 must be turned on using the following APIs, rather than directly
 setting its feature:
 
-- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1667)
-- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1669)
-- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1663)
-- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1664)
+- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1672)
+- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1674)
+- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1668)
+- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1669)
 
 Configure as one of:
 
@@ -729,10 +729,10 @@ instead emit a(nother) `#line` (or `# <linenum>`) directive.
 
 When negative, the threshold is configurable at runtime.
 When configured as `0`, the threshold becomes infinite (at
-runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1327) for this)
+runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1332) for this)
 
-**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1325)<br/>
-**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1326)
+**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1330)<br/>
+**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1331)
 
 <details><summary>Details</summary>
 
@@ -745,7 +745,7 @@ Default:
 
 ## TPP_EMITTER_HAVE_IO_PRINTPWD
 
-Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L953) that can be used to print the hosting
+Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L958) that can be used to print the hosting
 process's current working directory to a given [`tpp_formatprinter`](../src/tpp-amalgamation.h#L6001).
 
 Configure as one of:
@@ -764,7 +764,7 @@ TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
 
 ## TPP_EMITTER_HAVE_CLI
 
-Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1698)
+Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1703)
 
 Configure as one of:
 
@@ -777,6 +777,19 @@ Default:
 
 ```c
 TPP_HAVE_CLI
+```
+</details>
+
+## TPP_EMITTER_HAVE_CLI_PARSEARGV
+
+Provide a convenience function [`tpp_emitter_cli_loader_parseargv()`](../src/tpp-emitter-amalgamation.h#L1795) to directly parse argc/argv
+
+<details><summary>Details</summary>
+
+Default:
+
+```c
+TPP_EMITTER_HAVE_CLI && (TPP_EMITTER_PROFILE == TPP_PROFILE_ALL)
 ```
 </details>
 
@@ -842,8 +855,8 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
-CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1806) is called):
-[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30396)
+CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1813) is called):
+[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30415)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's
 mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose)).
@@ -1358,5 +1371,5 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_MODE_ZERO
 # Glossary
 
 <!--BEGIN:glossary-->
-[`TPP_EMITTER_PROFILE`](#tpp_emitter_profile) [`TPP_EMITTER_HAVE_MODE_EMIT`](#tpp_emitter_have_mode_emit) [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose) [`TPP_EMITTER_HAVE_MODE_BRACKET`](#tpp_emitter_have_mode_bracket) [`TPP_EMITTER_HAVE_MODE_TYPED`](#tpp_emitter_have_mode_typed) [`TPP_EMITTER_HAVE_MODE_ZERO`](#tpp_emitter_have_mode_zero) [`TPP_EMITTER_HAVE_NORMALIZE_SPACE`](#tpp_emitter_have_normalize_space) [`TPP_EMITTER_HAVE_NORMALIZE_LF`](#tpp_emitter_have_normalize_lf) [`TPP_EMITTER_HAVE_NORMALIZE_C_STRING`](#tpp_emitter_have_normalize_c_string) [`TPP_EMITTER_HAVE_NORMALIZE_C_INT`](#tpp_emitter_have_normalize_c_int) [`TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS`](#tpp_emitter_have_normalize_keywords) [`TPP_EMITTER_HAVE_NORMALIZE_BSE`](#tpp_emitter_have_normalize_bse) [`TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS`](#tpp_emitter_have_normalize_trigraphs) [`TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS`](#tpp_emitter_have_normalize_digraphs) [`TPP_EMITTER_HAVE_NOLINE`](#tpp_emitter_have_noline) [`TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN`](#tpp_emitter_have_relaxed_macro_column) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT`](#tpp_emitter_have_use_cpp_digit) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS`](#tpp_emitter_have_use_cpp_digit_flags) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY`](#tpp_emitter_have_use_cpp_digit_working_directory) [`TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA`](#tpp_emitter_have_reemit_unknown_pragma) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`](#tpp_emitter_have_reemit_macro_definitions_lazy) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY`](#tpp_emitter_have_reemit_macro_definitions_name_only) [`TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES`](#tpp_emitter_have_reemit_include_directives) [`TPP_EMITTER_HAVE_TRACE_INCLUDES`](#tpp_emitter_have_trace_includes) [`TPP_EMITTER_CONFIG_LINE_THRESHOLD`](#tpp_emitter_config_line_threshold) [`TPP_EMITTER_HAVE_IO_PRINTPWD`](#tpp_emitter_have_io_printpwd) [`TPP_EMITTER_HAVE_CLI`](#tpp_emitter_have_cli) [`TPP_EMITTER_HAVE_CLI_HELP`](#tpp_emitter_have_cli_help) [`TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS`](#tpp_emitter_have_cli_help_all_spellings) [`TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS`](#tpp_emitter_have_cli_dash_no_line_commands) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_M`](#tpp_emitter_have_cli_dash_dump_m) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_D`](#tpp_emitter_have_cli_dash_dump_d) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_N`](#tpp_emitter_have_cli_dash_dump_n) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_I`](#tpp_emitter_have_cli_dash_dump_i) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_U`](#tpp_emitter_have_cli_dash_dump_u) [`TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES`](#tpp_emitter_have_cli_dash_trace_includes) [`TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN`](#tpp_emitter_have_cli_dash_frelaxed_macro_column) [`TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA`](#tpp_emitter_have_cli_dash_freemit_unknown_pragma) [`TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY`](#tpp_emitter_have_cli_dash_fworking_directory) [`TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT`](#tpp_emitter_have_cli_dash_fuse_cpp_digit) [`TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS`](#tpp_emitter_have_cli_dash_fuse_cpp_digit_flags) [`TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD`](#tpp_emitter_have_cli_dash_line_threshold) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE`](#tpp_emitter_have_cli_dash_fnormalize_space) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF`](#tpp_emitter_have_cli_dash_fnormalize_lf) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS`](#tpp_emitter_have_cli_dash_fnormalize_strings) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT`](#tpp_emitter_have_cli_dash_fnormalize_int) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS`](#tpp_emitter_have_cli_dash_fnormalize_keywords) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE`](#tpp_emitter_have_cli_dash_fnormalize_bse) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS`](#tpp_emitter_have_cli_dash_fnormalize_trigraphs) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS`](#tpp_emitter_have_cli_dash_fnormalize_digraphs) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE`](#tpp_emitter_have_cli_dash_fnormalize) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT`](#tpp_emitter_have_cli_dash_mode_emit) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE`](#tpp_emitter_have_cli_dash_mode_dispose) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET`](#tpp_emitter_have_cli_dash_mode_bracket) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED`](#tpp_emitter_have_cli_dash_mode_typed) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO`](#tpp_emitter_have_cli_dash_mode_zero)
+[`TPP_EMITTER_PROFILE`](#tpp_emitter_profile) [`TPP_EMITTER_HAVE_MODE_EMIT`](#tpp_emitter_have_mode_emit) [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose) [`TPP_EMITTER_HAVE_MODE_BRACKET`](#tpp_emitter_have_mode_bracket) [`TPP_EMITTER_HAVE_MODE_TYPED`](#tpp_emitter_have_mode_typed) [`TPP_EMITTER_HAVE_MODE_ZERO`](#tpp_emitter_have_mode_zero) [`TPP_EMITTER_HAVE_NORMALIZE_SPACE`](#tpp_emitter_have_normalize_space) [`TPP_EMITTER_HAVE_NORMALIZE_LF`](#tpp_emitter_have_normalize_lf) [`TPP_EMITTER_HAVE_NORMALIZE_C_STRING`](#tpp_emitter_have_normalize_c_string) [`TPP_EMITTER_HAVE_NORMALIZE_C_INT`](#tpp_emitter_have_normalize_c_int) [`TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS`](#tpp_emitter_have_normalize_keywords) [`TPP_EMITTER_HAVE_NORMALIZE_BSE`](#tpp_emitter_have_normalize_bse) [`TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS`](#tpp_emitter_have_normalize_trigraphs) [`TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS`](#tpp_emitter_have_normalize_digraphs) [`TPP_EMITTER_HAVE_NOLINE`](#tpp_emitter_have_noline) [`TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN`](#tpp_emitter_have_relaxed_macro_column) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT`](#tpp_emitter_have_use_cpp_digit) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS`](#tpp_emitter_have_use_cpp_digit_flags) [`TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY`](#tpp_emitter_have_use_cpp_digit_working_directory) [`TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA`](#tpp_emitter_have_reemit_unknown_pragma) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY`](#tpp_emitter_have_reemit_macro_definitions_lazy) [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY`](#tpp_emitter_have_reemit_macro_definitions_name_only) [`TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES`](#tpp_emitter_have_reemit_include_directives) [`TPP_EMITTER_HAVE_TRACE_INCLUDES`](#tpp_emitter_have_trace_includes) [`TPP_EMITTER_CONFIG_LINE_THRESHOLD`](#tpp_emitter_config_line_threshold) [`TPP_EMITTER_HAVE_IO_PRINTPWD`](#tpp_emitter_have_io_printpwd) [`TPP_EMITTER_HAVE_CLI`](#tpp_emitter_have_cli) [`TPP_EMITTER_HAVE_CLI_PARSEARGV`](#tpp_emitter_have_cli_parseargv) [`TPP_EMITTER_HAVE_CLI_HELP`](#tpp_emitter_have_cli_help) [`TPP_EMITTER_HAVE_CLI_HELP_ALL_SPELLINGS`](#tpp_emitter_have_cli_help_all_spellings) [`TPP_EMITTER_HAVE_CLI_DASH_NO_LINE_COMMANDS`](#tpp_emitter_have_cli_dash_no_line_commands) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_M`](#tpp_emitter_have_cli_dash_dump_m) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_D`](#tpp_emitter_have_cli_dash_dump_d) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_N`](#tpp_emitter_have_cli_dash_dump_n) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_I`](#tpp_emitter_have_cli_dash_dump_i) [`TPP_EMITTER_HAVE_CLI_DASH_DUMP_U`](#tpp_emitter_have_cli_dash_dump_u) [`TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES`](#tpp_emitter_have_cli_dash_trace_includes) [`TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN`](#tpp_emitter_have_cli_dash_frelaxed_macro_column) [`TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA`](#tpp_emitter_have_cli_dash_freemit_unknown_pragma) [`TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY`](#tpp_emitter_have_cli_dash_fworking_directory) [`TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT`](#tpp_emitter_have_cli_dash_fuse_cpp_digit) [`TPP_EMITTER_HAVE_CLI_DASH_FUSE_CPP_DIGIT_FLAGS`](#tpp_emitter_have_cli_dash_fuse_cpp_digit_flags) [`TPP_EMITTER_HAVE_CLI_DASH_LINE_THRESHOLD`](#tpp_emitter_have_cli_dash_line_threshold) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_SPACE`](#tpp_emitter_have_cli_dash_fnormalize_space) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_LF`](#tpp_emitter_have_cli_dash_fnormalize_lf) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_STRINGS`](#tpp_emitter_have_cli_dash_fnormalize_strings) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_INT`](#tpp_emitter_have_cli_dash_fnormalize_int) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_KEYWORDS`](#tpp_emitter_have_cli_dash_fnormalize_keywords) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_BSE`](#tpp_emitter_have_cli_dash_fnormalize_bse) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_TRIGRAPHS`](#tpp_emitter_have_cli_dash_fnormalize_trigraphs) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE_DIGRAPHS`](#tpp_emitter_have_cli_dash_fnormalize_digraphs) [`TPP_EMITTER_HAVE_CLI_DASH_FNORMALIZE`](#tpp_emitter_have_cli_dash_fnormalize) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_EMIT`](#tpp_emitter_have_cli_dash_mode_emit) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_DISPOSE`](#tpp_emitter_have_cli_dash_mode_dispose) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_BRACKET`](#tpp_emitter_have_cli_dash_mode_bracket) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_TYPED`](#tpp_emitter_have_cli_dash_mode_typed) [`TPP_EMITTER_HAVE_CLI_DASH_MODE_ZERO`](#tpp_emitter_have_cli_dash_mode_zero)
 <!--END:glossary-->

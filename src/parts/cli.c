@@ -1552,7 +1552,7 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
 	return result;
 }
 
-#if TPP_HAVE_CLI_SETINPUTS
+#if TPP_HAVE_CLI_INITINPUT || TPP_HAVE_CLI_PUSHINPUT || TPP_HAVE_CLI_SETINPUTS
 
 typedef struct tpp_cli_loader_open_input_data {
 	tpp_lexer_openfile_result tcloid_ofr;   /* Open-file-result */
@@ -1678,6 +1678,67 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
 	return TPP_ENOENT;
 }
 
+#if TPP_HAVE_CLI_INITINPUT
+/* Initialize the linked lexer's file-stack (~ala `tpp_lexer_initfile_*`)
+ * The combination of this and `tpp_cli_loader_pushinput()` is also available
+ * via use of `tpp_cli_loader_setinputs()`
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_initinput(tpp_cli_loader *tpp_restrict self,
+                         char *const input) {
+	tpp_errno error;
+	tpp_lexer *const lexer = self->tcl_lexer;
+	error = tpp_cli_loader_open_input(self, input, tpp_lexer_getfile(lexer));
+	if (error == TPP_ENOENT) {
+		/* Not treated as an error -> must still initialize the lexer's file */
+		tpp_lexer_initfile_text_utf8(lexer, NULL, NULL, NULL, 0,
+		                             TPP_LCINFO_INVALID,
+		                             TPP_FILE_FLAGS_NORMAL);
+		error = TPP_EOK;
+	}
+	return error;
+}
+#endif /* TPP_HAVE_CLI_INITINPUT */
+
+#if TPP_HAVE_CLI_PUSHINPUT
+/* Push an additional file onto the lexer's file-stack (~ala `tpp_lexer_pushfile_*`)
+ * The combination of this and `tpp_cli_loader_initinput()` is also available
+ * via use of `tpp_cli_loader_setinputs()`
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_pushinput(tpp_cli_loader *tpp_restrict self,
+                         char *const input) {
+	tpp_errno error;
+	tpp_lexer *const lexer = self->tcl_lexer;
+	tpp_file *const file = tpp_lexer_getfile(lexer);
+	tpp_file *const prev_file = tpp_file_alloc();
+	if tpp_unlikely(!prev_file)
+		return TPP_ENOMEM;
+	tpp_file_move(prev_file, file);
+	error = tpp_cli_loader_open_input(self, input, file);
+	if (TPP_ISERR(error)) {
+		tpp_file_move(file, prev_file);
+		tpp_file_free(prev_file);
+		if (error == TPP_ENOENT)
+			error = TPP_EOK;
+		return error;
+	}
+	file->tf_prev  = prev_file;
+	file->tf_tprev = prev_file;
+	return tpp_lexer_callhook_file_pushed(lexer);
+}
+#endif /* TPP_HAVE_CLI_PUSHINPUT */
+
+
+#if TPP_HAVE_CLI_SETINPUTS
 /* Use the given `argc` and `argv` as inputs for the lexer.
  *
  * This function should be used to pass everything on your `argv` following
@@ -1692,6 +1753,10 @@ tpp_cli_loader_open_input(tpp_cli_loader *tpp_restrict self,
  *
  * - If there are inputs, a warning `TPP_W_NO_INPUT_FILES` is emitted.
  * - If one of the inputs cannot be opened, a warning `TPP_W_NO_SUCH_FILE` is emitted.
+ *
+ * HINT: This function is a (smarter) the combination of:
+ * - `tpp_cli_loader_initinput()`
+ * - `tpp_cli_loader_pushinput()`
  *
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
@@ -1772,6 +1837,7 @@ return_error:
 	return TPP_EOK;
 }
 #endif /* TPP_HAVE_CLI_SETINPUTS */
+#endif /* TPP_HAVE_CLI_INITINPUT || TPP_HAVE_CLI_PUSHINPUT || TPP_HAVE_CLI_SETINPUTS */
 
 
 /* Ensure that `self` is in a *normal* state (meaning that there aren't any remaining,

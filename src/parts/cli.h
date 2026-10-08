@@ -167,6 +167,7 @@ tpp_cli_loader_parsearg(tpp_cli_loader *tpp_restrict self, char const *arg);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 
+#if TPP_HAVE_CLI_PARSEARGV
 /* Convenience wrapper around `tpp_cli_loader_parsearg()`:
  * - This function passes every argument given to `tpp_cli_loader_parsearg()`
  *   in the order they appear within the specified argument vector (as it was
@@ -199,7 +200,36 @@ tpp_cli_loader_parseflag(tpp_cli_loader *tpp_restrict self, char const **p_arg);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
 tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
                          int *p_argc, char ***p_argv);
+#endif /* TPP_HAVE_CLI_PARSEARGV */
 
+
+#if TPP_HAVE_CLI_INITINPUT
+/* Initialize the linked lexer's file-stack (~ala `tpp_lexer_initfile_*`)
+ * The combination of this and `tpp_cli_loader_pushinput()` is also available
+ * via use of `tpp_cli_loader_setinputs()`
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_initinput(tpp_cli_loader *tpp_restrict self,
+                         char *const input);
+#endif /* TPP_HAVE_CLI_INITINPUT */
+
+#if TPP_HAVE_CLI_PUSHINPUT
+/* Push an additional file onto the lexer's file-stack (~ala `tpp_lexer_pushfile_*`)
+ * The combination of this and `tpp_cli_loader_initinput()` is also available
+ * via use of `tpp_cli_loader_setinputs()`
+ *
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ENOMEM:    Out of memory
+ * @return: TPP_EIO:       I/O Error
+ * @return: TPP_ELEXERROR: A lexer error was thrown */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_cli_loader_pushinput(tpp_cli_loader *tpp_restrict self,
+                         char *const input);
+#endif /* TPP_HAVE_CLI_PUSHINPUT */
 
 #if TPP_HAVE_CLI_SETINPUTS
 /* Use the given `argc` and `argv` as inputs for the lexer.
@@ -216,6 +246,10 @@ tpp_cli_loader_parseargv(tpp_cli_loader *tpp_restrict self,
  *
  * - If there are inputs, a warning `TPP_W_NO_INPUT_FILES` is emitted.
  * - If one of the inputs cannot be opened, a warning `TPP_W_NO_SUCH_FILE` is emitted.
+ *
+ * HINT: This function is a (smarter) the combination of:
+ * - `tpp_cli_loader_initinput()`
+ * - `tpp_cli_loader_pushinput()`
  *
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory

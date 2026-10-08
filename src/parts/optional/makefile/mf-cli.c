@@ -309,6 +309,7 @@ tpp_makefile_cli_loader_parseflag(tpp_makefile_cli_loader *tpp_restrict self, ch
 
 
 
+#if TPP_MAKEFILE_HAVE_CLI_PARSEARGV
 /* Convenience wrapper around `tpp_makefile_cli_loader_parsearg()`.
  * For more information, see `tpp_cli_loader_parseargv()`.
  *
@@ -370,6 +371,7 @@ tpp_makefile_cli_loader_parseargv(tpp_makefile_cli_loader *tpp_restrict self,
 	*p_argv = argv;
 	return result;
 }
+#endif /* TPP_MAKEFILE_HAVE_CLI_PARSEARGV */
 
 struct tpp_makefile_cli_default_target_data {
 	tpp_makefile *tmfcdtd_mf;    /* [1..1][const] Makefile */
