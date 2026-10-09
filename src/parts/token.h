@@ -1665,7 +1665,10 @@ typedef struct tpp_token {
 	struct tpp_keyword const *TPP_INTERNAL(tt_kwd);   /* [1..1][valid_if(tpp_token_haskwd(self))] Keyword identified by `tt_id` */
 #if TPP_HAVE_TOKEN_NUMBER
 	tpp_token_num             TPP_INTERNAL(tt_num);   /* Token number (incremented every time a token is generated) */
-#endif /* TPP_HAVE_TOKEN_NUMBER */
+#define _TPP_TOKEN_INIT_FORCORE_NUM(self) , 0
+#else /* TPP_HAVE_TOKEN_NUMBER */
+#define _TPP_TOKEN_INIT_FORCORE_NUM(self) /* nothing */
+#endif /* !TPP_HAVE_TOKEN_NUMBER */
 	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
 	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
 	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_start` and `tt_end` (or `NULL` if not needed) */

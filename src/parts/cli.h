@@ -41,28 +41,36 @@ typedef struct tpp_cli_loader {
 	unsigned int TPP_INTERNAL(tcl_state);  /* CLI loader state (meaning of value is internal, except for `TPP_CLI_LOADER_STATE_*` listed above) */
 #if TPP_HAVE_CLI_DASH_IPREFIX
 	char const  *TPP_INTERNAL(tcl_prefix); /* [0..1][const] Current path prefix for `TPP_HAVE_CLI_DASH_IWITHPREFIX` and `TPP_HAVE_CLI_DASH_IWITHPREFIXBEFORE` */
+#define _TPP_CLI_LOADER_INIT_PREFIX(self) , NULL
 #define _tpp_cli_loader_init_prefix(self) , (self)->TPP_INTERNAL(tcl_prefix) = NULL
 #else /* TPP_HAVE_CLI_DASH_IPREFIX */
+#define _TPP_CLI_LOADER_INIT_PREFIX(self) /* nothing */
 #define _tpp_cli_loader_init_prefix(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_IPREFIX */
 #if TPP_HAVE_CLI_DASH_ISYSROOT
 	char const  *TPP_INTERNAL(tcl_sysroot); /* [0..1][const] Sysroot prefix */
+#define _TPP_CLI_LOADER_INIT_SYSROOT(self) , TPP_CONFIG_CLI_DEFAULT_SYSROOT
 #define _tpp_cli_loader_init_sysroot(self) , (self)->TPP_INTERNAL(tcl_sysroot) = TPP_CONFIG_CLI_DEFAULT_SYSROOT
 #else /* TPP_HAVE_CLI_DASH_ISYSROOT */
+#define _TPP_CLI_LOADER_INIT_SYSROOT(self) /* nothing */
 #define _tpp_cli_loader_init_sysroot(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_ISYSROOT */
 #if TPP_HAVE_CLI_DASH_INCLUDE
 #define TPP_HAVE_CLI_NEEDS_FINI 1
 	tpp_lexer_openfile_result *TPP_INTERNAL(tcl_includev); /* [0..tcl_includec][owned] Extra files to #include at start of main input file */
 	tpp_size                   TPP_INTERNAL(tcl_includec); /* # of elements in `tcl_includev` */
+#define _TPP_CLI_LOADER_INIT_INCLUDE(self) , NULL, 0
 #define _tpp_cli_loader_init_include(self) , (self)->TPP_INTERNAL(tcl_includev) = NULL, (self)->TPP_INTERNAL(tcl_includec) = 0
 #else /* TPP_HAVE_CLI_DASH_INCLUDE */
+#define _TPP_CLI_LOADER_INIT_INCLUDE(self) /* nothing */
 #define _tpp_cli_loader_init_include(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_INCLUDE */
 #if TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 	tpp_token_id TPP_INTERNAL(tcl_search_include_path_mode);
+#define _TPP_CLI_LOADER_INIT_TCL_SEARCH_INCLUDE_PATH_MODE(self) , TPP_TOK_EOF
 #define _tpp_cli_loader_init_tcl_search_include_path_mode(self) , (self)->TPP_INTERNAL(tcl_search_include_path_mode) = TPP_TOK_EOF
 #else /* TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
+#define _TPP_CLI_LOADER_INIT_TCL_SEARCH_INCLUDE_PATH_MODE(self) /* nothing */
 #define _tpp_cli_loader_init_tcl_search_include_path_mode(self) /* nothing */
 #endif /* !TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH */
 } tpp_cli_loader;
@@ -109,6 +117,18 @@ typedef struct tpp_cli_loader {
 #ifndef TPP_HAVE_CLI_NEEDS_FINI
 #define TPP_HAVE_CLI_NEEDS_FINI 0
 #endif /* !TPP_HAVE_CLI_NEEDS_FINI */
+
+
+/* Static initializer */
+#define TPP_CLI_LOADER_INIT(self, lexer)                             \
+	{                                                                \
+		/* .TPP_INTERNAL(tcl_lexer) = */ (lexer),                    \
+		/* .TPP_INTERNAL(tcl_state) = */ TPP_CLI_LOADER_STATE_NORMAL \
+		_TPP_CLI_LOADER_INIT_PREFIX(self)                            \
+		_TPP_CLI_LOADER_INIT_SYSROOT(self)                           \
+		_TPP_CLI_LOADER_INIT_INCLUDE(self)                           \
+		_TPP_CLI_LOADER_INIT_TCL_SEARCH_INCLUDE_PATH_MODE(self)      \
+	}
 
 /* Initialize a CLI loader for `lexer`
  *

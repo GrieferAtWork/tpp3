@@ -31,52 +31,10 @@
 /*[[[tpp-begin]]]*/
 TPP_DECL_BEGIN
 
-/*[[[deemon
-import * from deemon;
-local configs: {string...} = [];
-for (local line: File.open("config.h", "rb").read().decode("utf-8")
-		.replace("\\\n", "").splitlines(false)) {
-	local TPP_MAKEFILE_HAVE_FOO, defValue;
-	try {
-		TPP_MAKEFILE_HAVE_FOO, defValue = line.rescanf(r'#\s*define\s+(\w+)\s*([^/]+)')...;
-	} catch (...) {
-		continue;
-	}
-	if (defValue.recontains(r"\bTPP_CONF_FEAT[01]\b")) {
-		local CONF = TPP_MAKEFILE_HAVE_FOO.lsstrip("TPP_MAKEFILE_HAVE_");
-		configs.append(CONF);
-	}
-}
-
-print("#if TPP_MAKEFILE_HAVE_FEATURES");
-print("TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {");
-print("	/" "* .tmkf_flags = *" "/ {");
-local configsLen = (configs.each.length > ...);
-for (local CONF: configs) {
-	print("#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ")");
-	print("		/" "* .tmkff_", CONF, " " * (configsLen - #CONF), " = *" "/ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_", CONF, "),");
-	print("#endif /" "* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
-}
-print("	}");
-print("};");
-print("#endif /" "* TPP_MAKEFILE_HAVE_FEATURES *" "/");
-]]]*/
 #if TPP_MAKEFILE_HAVE_FEATURES
-TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
-	/* .tmkf_flags = */ {
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
-		/* .tmkff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
-		/* .tmkff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV)
-		/* .tmkff_CLI_ENV           = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
-	}
-};
+TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default =
+TPP_MAKEFILE_FEATURES_INIT(tpp_makefile_features_default);
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */
-/*[[[end]]]*/
 
 TPP_DECL_END
 /*[[[tpp-end]]]*/

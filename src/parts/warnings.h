@@ -237,14 +237,14 @@ typedef union tpp_warnings_state {
 	struct {
 #define TPP_DEFS
 #define TPP_WGROUP(wgroup_id, names, default) \
-	unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state` */
+		unsigned int TPP_INTERNAL(twsg_##wgroup_id): 2; /* One of `tpp_warning_state` */
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #if TPP_HAVE_WARNING_NUMBERS
 #define TPP_DECLARE_NUMBERED_WARNING(warning_id) \
-	unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state` */
+		unsigned int TPP_INTERNAL(twsn_##warning_id): 2; /* One of `tpp_warning_state` */
 #define TPP_WARNING(warning_id, wgroup_ids, numbers, numbers_default, format) \
-	TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
+		TPP_TUPLE_IF_NONEMPTY(numbers, TPP_DECLARE_NUMBERED_WARNING, warning_id)
 #undef GUARD_TPP_AMALGAMATION_H
 #include TPP_CONFIG_DEFS_FILENAME
 #undef TPP_DECLARE_NUMBERED_WARNING
@@ -283,6 +283,7 @@ typedef struct tpp_warning_suppressions {
 	tpp_size                   TPP_INTERNAL(tws_ctxa); /* Allocated size of `tws_ctxv` */
 	tpp_warning_suppress_item *TPP_INTERNAL(tws_ctxv); /* [0..tws_ctxc|alloc(tws_ctxa)][owned] Vector of suppressions (sorted by `twsi_ctx_id`) */
 } tpp_warning_suppressions;
+#define TPP_WARNING_SUPPRESSIONS_INIT(self) { 0, 0, NULL }
 #define tpp_warning_suppressions_init(self)    \
 	(void)((self)->TPP_INTERNAL(tws_ctxc) = 0, \
 	       (self)->TPP_INTERNAL(tws_ctxa) = 0, \

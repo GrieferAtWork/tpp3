@@ -965,6 +965,7 @@ typedef struct tpp_lcinfo {
 
 #define tpp_lcinfo_getline(self) ((tpp_line)(self).TPP_INTERNAL(lci_line))
 #define tpp_lcinfo_getcol(self)  ((tpp_column)(self).TPP_INTERNAL(lci_col))
+#define TPP_LCINFO_INIT(self, line, col) { (line), (col) }
 #define tpp_lcinfo_init(p_self, line, col)            \
 	(void)((p_self)->TPP_INTERNAL(lci_line) = (line), \
 	       (p_self)->TPP_INTERNAL(lci_col)  = (col))
@@ -981,6 +982,9 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #endif /* !TPP_UINT_LEAST64_MAX || TPP_HAVE_TPP2_COMPAT */
 #endif /* !tpp_lcinfo */
 
+#ifndef TPP_LCINFO_INIT
+#define TPP_LCINFO_INIT(self, line, col) tpp_lcinfo_of(line, col)
+#endif /* !TPP_LCINFO_INIT */
 #ifndef tpp_lcinfo_init
 #define tpp_lcinfo_init(p_self, line, col) \
 	(void)(*(p_self) = tpp_lcinfo_of(line, col))
@@ -1001,6 +1005,7 @@ tpp_lcinfo_of(tpp_line line, tpp_column col) {
 #ifndef TPP_LCINFO_INVALID
 #define TPP_LCINFO_INVALID              tpp_lcinfo_of(-1, -1)
 #define tpp_lcinfo_isvalid(self)        (tpp_lcinfo_getcol(self) >= 0)
+#define TPP_LCINFO_INIT_INVALID(self)   TPP_LCINFO_INIT(self, -1, -1)
 #define tpp_lcinfo_init_invalid(p_self) tpp_lcinfo_init(p_self, -1, -1)
 #endif /* !TPP_LCINFO_INVALID */
 

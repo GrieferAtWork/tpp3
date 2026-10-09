@@ -59,6 +59,7 @@ typedef struct tpp_macro_pushstack {
 } tpp_macro_pushstack;
 
 /* Initialize/finalize a given macro-push stack */
+#define TPP_MACRO_PUSHSTACK_INIT(self) { 0, NULL }
 #define tpp_macro_pushstack_init(self)         \
 	(void)((self)->TPP_INTERNAL(tmps_cnt) = 0, \
 	       (self)->TPP_INTERNAL(tmps_vec) = NULL)
@@ -232,6 +233,7 @@ typedef struct tpp_assertions {
 	tpp_assertion *TPP_INTERNAL(tass_bckv); /* [0..tass_bckm+1][owned] Hash-map of assertions */
 } tpp_assertions;
 
+#define TPP_ASSERTIONS_INIT(self) { 0, 0, NULL }
 #define tpp_assertions_init(self)               \
 	(void)((self)->TPP_INTERNAL(tass_assc) = 0, \
 	       (self)->TPP_INTERNAL(tass_bckm) = 0, \
@@ -955,6 +957,7 @@ TPP_CONST_DECL TPP_REF tpp_keyword *const _tpp_keywords_empty_map[1]; /* Conside
 #endif /* !TPP_USE_STATIC */
 
 /* Initialize/finalize a given keywords table. */
+#define TPP_KEYWORDS_INIT(self) { 0, 0, (tpp_keyword **)_tpp_keywords_empty_map }
 #define tpp_keywords_init(self)                \
 	(void)((self)->TPP_INTERNAL(tks_kwdc) = 0, \
 	       (self)->TPP_INTERNAL(tks_bckm) = 0, \

@@ -1462,6 +1462,7 @@ void tpp_lcinfo_setline(tpp_lcinfo *p_self, tpp_line line);               // OPT
 void tpp_lcinfo_setcol(tpp_lcinfo *p_self, tpp_column col);               // OPTIONAL
 bool tpp_lcinfo_equals(tpp_lcinfo a, tpp_lcinfo b);                       // OPTIONAL
 tpp_lcinfo const TPP_LCINFO_INVALID = ...;                                // OPTIONAL
+#define TPP_LCINFO_INIT_INVALID(self) { ... }                             // OPTIONAL
 bool tpp_lcinfo_isvalid(tpp_lcinfo self);                                 // OPTIONAL
 void tpp_lcinfo_init_invalid(tpp_lcinfo *p_self);                         // OPTIONAL
 ```

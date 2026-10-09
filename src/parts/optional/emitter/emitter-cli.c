@@ -586,11 +586,12 @@ tpp_emitter_cli_loader_parsearg(tpp_emitter_cli_loader *tpp_restrict self, char 
 				return TPP_EOK;
 			} else
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN */
-#if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
 			if (tpp_streq(arg, "reemit-unknown-pragma\0")) {
-				return tpp_emitter_set_reemit_unknown_pragma(self->temcl_emitter, !no);
+				tpp_emitter_cli_loader_set_reemit_unknown_pragma(self, !no);
+				return TPP_EOK;
 			} else
-#endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 #if TPP_EMITTER_HAVE_CLI_DASH_FWORKING_DIRECTORY
 			if (tpp_streq(arg, "working-directory\0")) {
 				tpp_emitter_setfeature(self->temcl_emitter, TPP_EMITTER_FEAT_USE_CPP_DIGIT_WORKING_DIRECTORY, !no);
@@ -842,6 +843,11 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
  *
+ * WARNING: If your compiler has a CLI switch that must be present for it
+ *          to actually emit preprocessor output (e.g. `gcc -E`), you should
+ *          *ONLY* call this function is that switch was present. Otherwise,
+ *          you should simply finalize the CLI loader and emitter.
+ *
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory
  * @return: TPP_EIO:       I/O Error
@@ -862,6 +868,16 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 	}
 #endif /* TPP_HAVE_TPP_W_MISSING_CLI_ARGUMENT */
 
+	/* Configure -freemit-unknown-pragma */
+#if TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
+	if (tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)) {
+		tpp_errno error = tpp_emitter_enable_reemit_unknown_pragma(self->temcl_emitter);
+		if (TPP_ISERR(error))
+			return error;
+	}
+#endif /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+
+	/* Dump definitions if enabled. */
 #if (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS
 	if (self->temcl_flags & _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M) {
 		tpp_ssize temp;
@@ -874,7 +890,8 @@ tpp_emitter_cli_loader_flush(tpp_emitter_cli_loader *tpp_restrict self) {
 	}
 #endif /* (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N) && TPP_HAVE_LEXER_DUMP_DEFINITIONS */
 
-	return TPP_EOK;
+	/* Register default emitter hooks. */
+	return tpp_emitter_registerdefaulthooks(self->temcl_emitter);
 }
 
 #if TPP_EMITTER_HAVE_CLI_HELP

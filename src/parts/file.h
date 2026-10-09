@@ -70,6 +70,7 @@ typedef struct tpp_lcstate {
 } tpp_lcstate;
 
 #if TPP_HAVE_UNICODE
+#define TPP_LCSTATE_INIT(self, l, c) { TPP_LCINFO_INIT((self).TPP_INTERNAL(tlcs_info), l, c), { 0, 0, 0, 0, 0, 0, 0, 0 } }
 #define tpp_lcstate_init(self, l, c)                                \
 	(void)(tpp_lcinfo_init(&(self)->TPP_INTERNAL(tlcs_info), l, c), \
 	       (self)->TPP_INTERNAL(tlcs_data)[0] = 0)
@@ -81,6 +82,7 @@ typedef struct tpp_lcstate {
 	       (self)->TPP_INTERNAL(tlcs_data)[0] = 0)
 #define tpp_lcstate_iszeroshift(self) ((self)->TPP_INTERNAL(tlcs_data)[0] == 0)
 #else /* TPP_HAVE_UNICODE */
+#define TPP_LCSTATE_INIT(self, l, c) { TPP_LCINFO_INIT((self).TPP_INTERNAL(tlcs_info), l, c) }
 #define tpp_lcstate_init(self, l, c) \
 	tpp_lcinfo_init(&(self)->TPP_INTERNAL(tlcs_info), l, c)
 #define tpp_lcstate_init_invalid(self) \
@@ -359,7 +361,6 @@ typedef struct tpp_file {
 #else /* TPP_HAVE_FILE_FLAGS */
 #define _tpp_file_init_flags(self, v) /* nothing */
 #endif /* !TPP_HAVE_FILE_FLAGS */
-#define _tpp_file_init_enc(self)   _tpp_file_init_enc_ex(self, TPP_FILE_ENCODING_UTF8)
 	union {
 		struct {
 			char const *TPP_INTERNAL(tff_name);     /* [0..1][const] Filename by which this file was included (if available) */

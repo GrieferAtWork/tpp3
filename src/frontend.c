@@ -556,14 +556,8 @@ int main(int argc, char **argv) {
 
 	/* Initialize frontend */
 	tpp_lexer_init(&fe.tf_lexer);
-	error = tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer,
-	                         tpp_formatprinter_of(tpp_frontend_emitter_output_printer));
-	if (TPP_ISERR(error)) {
-		fprintf(stderr, "failed to initialize emitter: %s\n", tpp_strerror(error));
-		goto out_lexer;
-	}
-	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer,
-	                  tpp_formatprinter_of(tpp_frontend_makefile_output_printer));
+	tpp_emitter_init(&fe.tf_emitter, &fe.tf_lexer, tpp_formatprinter_of(tpp_frontend_emitter_output_printer));
+	tpp_makefile_init(&fe.tf_makefile, &fe.tf_lexer, tpp_formatprinter_of(tpp_frontend_makefile_output_printer));
 	tpp_cli_loader_init(&fe.tf_cli_loader, &fe.tf_lexer);
 	tpp_emitter_cli_loader_init(&fe.tf_emitter_cli_loader, &fe.tf_emitter);
 	tpp_makefile_cli_loader_init(&fe.tf_makefile_cli_loader, &fe.tf_makefile);
@@ -581,7 +575,7 @@ int main(int argc, char **argv) {
 		error = tpp_frontend_parseargv(&fe, &argc, &argv); /* FRONTEND */
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to parse arguments: %s\n", tpp_strerror(error));
-		goto out_emitter_cli;
+		goto out_lexer_cli;
 	}
 
 	/* Parse remainder of argument list using our own CLI handler, as well */
@@ -594,17 +588,17 @@ int main(int argc, char **argv) {
 			++argv;
 			tpp_frontend_help(appname, argc, argv);
 			result = 0;
-			goto out_emitter_cli;
+			goto out_lexer_cli;
 		} else if (tpp_strcmp(*argv, "--version") == 0) {
 			tpp_frontend_version();
 			result = 0;
-			goto out_emitter_cli;
+			goto out_lexer_cli;
 		}
 		fprintf(stderr, "unknown argument %s\n"
 		                "Usage: %s [ARGS...] [--] [INFILES]\n"
 		                "See --help for more info\n",
 		        *argv, appname);
-		goto out_emitter_cli;
+		goto out_lexer_cli;
 	}
 	if (argc == 0) {
 		argc = 1;
@@ -616,7 +610,7 @@ int main(int argc, char **argv) {
 	error = tpp_cli_loader_setinputs(&fe.tf_cli_loader, argc, argv);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to load inputs: %s\n", tpp_strerror(error));
-		goto out_emitter_cli;
+		goto out_lexer_cli;
 	}
 
 	/* Flush CLI loaders */
@@ -636,7 +630,7 @@ int main(int argc, char **argv) {
 	/* Final check for errors. */
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to complete arguments: %s\n", tpp_strerror(error));
-		goto out_emitter_file;
+		goto out_lexer_file;
 	}
 
 	/* Yield & re-emit tokens (unless consumed by Makefile). */
@@ -645,7 +639,7 @@ int main(int argc, char **argv) {
 			tpp_token_id const tok = tpp_lexer_yield(&fe.tf_lexer);
 			if (TPP_TOK_ISERR(tok)) {
 				fprintf(stderr, "yield failed: %s\n", tpp_strerror(TPP_TOK_ASERR(tok)));
-				goto out_emitter_file;
+				goto out_lexer_file;
 			}
 			(void)tpp_emitter_emitcurrent(&fe.tf_emitter);
 			if (tok == TPP_TOK_EOF)
@@ -657,29 +651,28 @@ int main(int argc, char **argv) {
 	error = tpp_makefile_flush(&fe.tf_makefile);
 	if (TPP_ISERR(error)) {
 		fprintf(stderr, "failed to flush makefile: %s\n", tpp_strerror(error));
-		goto out_emitter_file;
+		goto out_lexer_file;
 	}
 
 	/* Return "0" if there were no TPP_WSTATE_ERROR-level messages */
 	if (tpp_lexer_geterrorcount(&fe.tf_lexer) == 0)
 		result = 0;
 
-out_emitter_file:
+out_lexer_file:
 	tpp_lexer_finifile(&fe.tf_lexer);
-out_emitter:
+out_lexer:
 	tpp_makefile_fini(&fe.tf_makefile);
 	tpp_emitter_fini(&fe.tf_emitter);
-out_lexer:
 	tpp_lexer_fini(&fe.tf_lexer);
 #if defined(_MSC_VER) && defined(_CRTDBG_MAP_ALLOC)
 	_CrtDumpMemoryLeaks();
 #endif /* _MSC_VER && _CRTDBG_MAP_ALLOC */
 	return result;
-out_emitter_cli:
+out_lexer_cli:
 	tpp_makefile_cli_loader_fini(&fe.tf_makefile_cli_loader);
 	tpp_emitter_cli_loader_fini(&fe.tf_emitter_cli_loader);
 	tpp_cli_loader_fini(&fe.tf_cli_loader);
-	goto out_emitter;
+	goto out_lexer;
 }
 
 TPP_DECL_END

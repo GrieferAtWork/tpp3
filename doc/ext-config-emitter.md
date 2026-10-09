@@ -119,7 +119,7 @@ TPP_EMITTER_PROFILE == TPP_PROFILE_ALL
 
 Provide support for `TPP_EMITTER_MODE_TYPED`, where tokens are
 emitted surrounded as `[{TYPE}:{TOKEN}]`, where `TYPE` is the
-result of [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17993) and the canonical keyword name.
+result of [`tpp_strtokenid()`](../src/tpp-amalgamation.h#L17999) and the canonical keyword name.
 
 Configure as one of:
 
@@ -160,17 +160,17 @@ TPP_EMITTER_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_EMITTER_HAVE_NORMALIZE_SPACE
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L16533)-token
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_SPACE`](../src/tpp-amalgamation.h#L16539)-token
 is emitted as an (appropriately long) sequence of ` `-characters, rather
 than as an echo of the original token's space characters (thereby normalizing
 any unicode whitespace or other control characters to `U+0020 SPACE`).
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -183,17 +183,17 @@ TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0
 
 ## TPP_EMITTER_HAVE_NORMALIZE_LF
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_LF`](../src/tpp-amalgamation.h#L16532)-token is
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_LF`](../src/tpp-amalgamation.h#L16538)-token is
 emitted as a `\n`-character, rather than as an echo of the original token's
 linefeed bytes (thereby normalizing any unicode linefeed, CR, or CRLF
 sequences to LF).
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -206,23 +206,23 @@ TPP_EMITTER_HAVE_EMIT_TOKEN ? TPP_CONF_FEAT1 : 0
 
 ## TPP_EMITTER_HAVE_NORMALIZE_C_STRING
 
-When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_ISSTRING`](../src/tpp-amalgamation.h#L17014)-token
-is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16795) (or [`TPP_TOK_C_CHAR`](../src/tpp-amalgamation.h#L16885), when
+When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any [`TPP_TOK_ISSTRING`](../src/tpp-amalgamation.h#L17020)-token
+is emitted as a [`TPP_TOK_C_STRING`](../src/tpp-amalgamation.h#L16801) (or [`TPP_TOK_C_CHAR`](../src/tpp-amalgamation.h#L16891), when
 [`TPP_HAVE_BUILTIN_EXPR_CHARACTER_LITERALS`](config-conf.md#tpp_have_builtin_expr_character_literals) is enabled in the lexer) token
 (though only done if the desired target token is enabled).
 
 In order to do this normalization, the string is decoded and re-encoded via
-use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L30116) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18095), thereby
+use of [`tpp_lexer_decodestring()`](../src/tpp-amalgamation.h#L31415) and [`tpp_token_encodestring()`](../src/tpp-amalgamation.h#L18104), thereby
 allowing a consumer of the preprocessor output to only have to support a
 greatly reduced set of string tokens (and escape sequences) in order to
 fully understand *any* kind of string token that may be produced by TPP.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -236,14 +236,14 @@ Default:
 ## TPP_EMITTER_HAVE_NORMALIZE_C_INT
 
 When enabled and in `TPP_EMITTER_MODE_EMIT`-mode, any
-[`TPP_TOK_ISINT`](../src/tpp-amalgamation.h#L16607)-token is emitted as a [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16591) token.
+[`TPP_TOK_ISINT`](../src/tpp-amalgamation.h#L16613)-token is emitted as a [`TPP_TOK_C_INT`](../src/tpp-amalgamation.h#L16597) token.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -276,10 +276,10 @@ NOTE: The *empty* keyword (i.e. `__TPP_IDENTIFIER("")`) continues to
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -297,10 +297,10 @@ line-feeds from generic tokens.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -318,10 +318,10 @@ sequences in generic tokens.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -339,10 +339,10 @@ sequences in generic tokens.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -367,10 +367,10 @@ Can be used to implement the `-P` CLI switch
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -423,10 +423,10 @@ With this:
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -448,10 +448,10 @@ s.a.:
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -469,18 +469,18 @@ Extension to [`TPP_EMITTER_HAVE_USE_CPP_DIGIT`](#tpp_emitter_have_use_cpp_digit)
 - `1`: Push a dummy-file containing the old file/line/column onto the `#include`-stack,
        before applying the new line/filename.
 - `2`: Do the inverse of flag `1` and pop a dummy-file off the `#include`-stack.
-- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21477) for the current text-file. When this flag is not
-       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L21477) is instead cleared for the current text-file.
-- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L21486) flag.
+- `3`: Set [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L22649) for the current text-file. When this flag is not
+       supplied, [`TPP_FILE_FLAGS_SYSHDR`](../src/tpp-amalgamation.h#L22649) is instead cleared for the current text-file.
+- `4`: Same as flag `3`, except for the [`TPP_FILE_FLAGS_EXTERN_C`](../src/tpp-amalgamation.h#L22658) flag.
 
 s.a. [`TPP_HAVE_CPP_DIGIT_LINE`](config-conf.md#tpp_have_cpp_digit_line)
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -510,10 +510,10 @@ if the intend is to turn them into absolute paths.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -533,16 +533,15 @@ initialization)
 
 Can be configured in one of 3 ways:
 
-- `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
-- `1`:  Enabled
-- `-1`: Available (but not enabled by default)
+- `0`: Disabled (unknown pragmas cause warnings and are not (re-)emitted
+- `1`: Available (but not enabled by default)
 
-When not *Disabled*, can be turned on/off using:
+When *Available*, can be configured at runtime using:
 
-- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1413)
-- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1430)
-- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1411)
-- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1412)
+- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1617)
+- [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1634)
+- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1615)
+- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1616)
 
 <details><summary>Details</summary>
 
@@ -563,23 +562,22 @@ its initialization)
 
 Can be configured in one of 3 ways:
 
-- `0`:  Disabled
-- `1`:  Enabled (`#define`/`#undef` are re-emitted)
-- `-1`: Available (but not enabled by default)
+- `0`: Disabled
+- `1`: Available (but not enabled by default)
 
-When not *Disabled*, can be turned on/off using:
+When *Available*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1445)
-- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1496)
-- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1492)
-- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1493)
+- [`tpp_emitter_get_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1649)
+- [`tpp_emitter_set_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1700)
+- [`tpp_emitter_enable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1696)
+- [`tpp_emitter_disable_reemit_macro_definitions()`](../src/tpp-emitter-amalgamation.h#L1697)
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-(TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)) ? -1 : 0
+(TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)) ? 1 : 0
 ```
 </details>
 
@@ -594,7 +592,7 @@ but taking a completely different approach in order to get there:
   been dumped.
   - If not, or if the macro's definition has changed, dump it now.
     If there was a different definition, emit a `#undef` first.
-- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L17981)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1405)
+- Whenever a [`TPP_TOK_ISKEYWORD()`](../src/tpp-amalgamation.h#L17987)-token is emitted ([`tpp_emitter_emitcurrent()`](../src/tpp-emitter-amalgamation.h#L1609)
   is called while a keyword-token is loaded into the lexer), and the
   linked keyword doesn't have a user-defined macro definition (i.e.
   `!tpp_keyword_hasmacro()`), check what was most-recently emitted
@@ -603,7 +601,7 @@ but taking a completely different approach in order to get there:
     emit a `#undef`-directive and delete the saved macro definition.
 - In order to remember the *most-recently-dumped* macro definition
   linked to a keyword, [`TPP_HAVE_KEYWORD_USERDATA`](config-core.md#tpp_have_keyword_userdata) is used to store
-  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L22779) that was most-recently dumped
+  a reference to the [`tpp_macro`](../src/tpp-amalgamation.h#L23950) that was most-recently dumped
 
 NOTE: In order to determine the name of the macro when it is used
       as a result of being expanded onto the #include-stack, this
@@ -612,17 +610,17 @@ NOTE: In order to determine the name of the macro when it is used
 Because this feature also requires a hook, it must be turned on
 using the following APIs, rather than directly setting its feature:
 
-- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1657)
-- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1659)
-- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1653)
-- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1654)
+- [`tpp_emitter_get_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1861)
+- [`tpp_emitter_set_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1863)
+- [`tpp_emitter_enable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1857)
+- [`tpp_emitter_disable_reemit_macro_definitions_lazy()`](../src/tpp-emitter-amalgamation.h#L1858)
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -642,10 +640,10 @@ the macro's actual definition.
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -667,30 +665,29 @@ to be able to override that hook during its initialization)
 
 Can be configured in one of 3 ways:
 
-- `0`:  Disabled
-- `1`:  Enabled (`#include` are re-emitted)
-- `-1`: Available (but not enabled by default)
+- `0`: Disabled
+- `1`: Available (but not enabled by default)
 
-When not *Disabled*, can be turned on/off using:
+When *Available*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1510)
-- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1527)
-- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1508)
-- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1509)
+- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1714)
+- [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1731)
+- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1712)
+- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1713)
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0
+TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? 1 : 0
 ```
 </details>
 
 ## TPP_EMITTER_HAVE_TRACE_INCLUDES
 
 Trace includes (and the depth of the `#include`-stack in terms of IO files)
-by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L28297)
+by emitting a line like the following to [`tpp_lexer_gethook_mesgprinter()`](../src/tpp-amalgamation.h#L29596)
 whenever an I/O file is pushed to the `#include`-stack:
 
 ```deemon
@@ -701,17 +698,17 @@ Because this feature uses the [`TPP_HAVE_FILE_PUSHED_HOOK`](config-hook.md#tpp_h
 must be turned on using the following APIs, rather than directly
 setting its feature:
 
-- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1672)
-- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1674)
-- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1668)
-- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1669)
+- [`tpp_emitter_get_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1876)
+- [`tpp_emitter_set_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1878)
+- [`tpp_emitter_enable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1872)
+- [`tpp_emitter_disable_trace_includes()`](../src/tpp-emitter-amalgamation.h#L1873)
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6865), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6864), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6869): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6868): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6870), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6869), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -729,10 +726,10 @@ instead emit a(nother) `#line` (or `# <linenum>`) directive.
 
 When negative, the threshold is configurable at runtime.
 When configured as `0`, the threshold becomes infinite (at
-runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1332) for this)
+runtime, use [`tpp_emitter_disablelinethreshold()`](../src/tpp-emitter-amalgamation.h#L1507) for this)
 
-**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1330)<br/>
-**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1331)
+**Getter**: [`tpp_emitter_getlinethreshold(emitter)`](../src/tpp-emitter-amalgamation.h#L1505)<br/>
+**Setter**: [`tpp_emitter_setlinethreshold(emitter, v)`](../src/tpp-emitter-amalgamation.h#L1506)
 
 <details><summary>Details</summary>
 
@@ -745,7 +742,7 @@ Default:
 
 ## TPP_EMITTER_HAVE_IO_PRINTPWD
 
-Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L958) that can be used to print the hosting
+Provide an API [`tpp_io_printpwd()`](../src/tpp-emitter-amalgamation.h#L961) that can be used to print the hosting
 process's current working directory to a given [`tpp_formatprinter`](../src/tpp-amalgamation.h#L6001).
 
 Configure as one of:
@@ -764,7 +761,7 @@ TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY
 
 ## TPP_EMITTER_HAVE_CLI
 
-Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1703)
+Enable support for [`tpp_emitter_cli_loader`](../src/tpp-emitter-amalgamation.h#L1911)
 
 Configure as one of:
 
@@ -782,7 +779,7 @@ TPP_HAVE_CLI
 
 ## TPP_EMITTER_HAVE_CLI_PARSEARGV
 
-Provide a convenience function [`tpp_emitter_cli_loader_parseargv()`](../src/tpp-emitter-amalgamation.h#L1800) to directly parse argc/argv
+Provide a convenience function [`tpp_emitter_cli_loader_parseargv()`](../src/tpp-emitter-amalgamation.h#L2050) to directly parse argc/argv
 
 <details><summary>Details</summary>
 
@@ -855,8 +852,8 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
-CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L1818) is called):
-[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L30415)
+CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L2073) is called):
+[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L31714)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's
 mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose)).
@@ -963,6 +960,8 @@ Configure as one of:
 - `0`: Disabled
 - `1`: Enabled
 
+Configure the default value using [`TPP_EMITTER_HAVE_TRACE_INCLUDES`](#tpp_emitter_have_trace_includes)
+
 <details><summary>Details</summary>
 
 Default:
@@ -982,6 +981,8 @@ Configure as one of:
 - `0`: Disabled
 - `1`: Enabled
 
+Configure the default value using [`TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN`](#tpp_emitter_have_relaxed_macro_column)
+
 <details><summary>Details</summary>
 
 Default:
@@ -998,15 +999,17 @@ Turn [`TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA`](#tpp_emitter_have_reemit_unknown
 
 Configure as one of:
 
-- `0`: Disabled
-- `1`: Enabled
+- `0`: Always Disabled (CLI flag is not available)
+- `1`: Always Enabled  (CLI flag is not available)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6873): Configurable, enabled by default
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6874): Configurable, disabled by default
 
 <details><summary>Details</summary>
 
 Default:
 
 ```c
-TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
+(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA) ? TPP_CONF_FEAT1 : 0
 ```
 </details>
 

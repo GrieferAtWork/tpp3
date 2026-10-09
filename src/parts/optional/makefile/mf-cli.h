@@ -78,23 +78,39 @@ typedef struct tpp_makefile_cli_loader {
 	unsigned int  TPP_MAKEFILE_INTERNAL(tmkfcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_MAKEFILE_CLI_LOADER_STATE_*` listed above) */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ
 	char const   *TPP_MAKEFILE_INTERNAL(tmkfcl_target);  /* [0..1][const] Target specified by `-MT TARGET` or `-MQ TARGET` */
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_TARGET(self) , NULL
 #define _tpp_makefile_cli_loader_init_target(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_target) = NULL
 #else /* TPP_MAKEFILE_HAVE_CLI_DASH_MT || TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_TARGET(self) /* nothing */
 #define _tpp_makefile_cli_loader_init_target(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MT && !TPP_MAKEFILE_HAVE_CLI_DASH_MQ */
 #if TPP_MAKEFILE_HAVE_CLI_DASH_MF
 	char const   *TPP_MAKEFILE_INTERNAL(tmkfcl_outfile); /* [0..1][const] Filename specified by `-MF FILE` */
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_OUTFILE(self) , NULL
 #define _tpp_makefile_cli_loader_init_outfile(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_outfile) = NULL
 #else /* TPP_MAKEFILE_HAVE_CLI_DASH_MF */
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_OUTFILE(self) /* nothing */
 #define _tpp_makefile_cli_loader_init_outfile(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_DASH_MF */
 #if TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS
 	_tpp_makefile_cli_loader_flags TPP_MAKEFILE_INTERNAL(tmkfcl_flags);
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_FLAGS(self) , _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
 #define _tpp_makefile_cli_loader_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkfcl_flags) = _TPP_MAKEFILE_CLI_LOADER_FLAG_NORMAL
 #else /* TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
+#define _TPP_MAKEFILE_CLI_LOADER_INIT_FLAGS(self) /* nothing */
 #define _tpp_makefile_cli_loader_init_flags(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_CLI_LOADER_FLAGS */
 } tpp_makefile_cli_loader;
+
+/* Static initializer */
+#define TPP_MAKEFILE_CLI_LOADER_INIT(self, makefile)                                      \
+	{                                                                                     \
+		/* .TPP_MAKEFILE_INTERNAL(tmkfcl_mf)    = */ (makefile),                          \
+		/* .TPP_MAKEFILE_INTERNAL(tmkfcl_state) = */ TPP_MAKEFILE_CLI_LOADER_STATE_NORMAL \
+		_TPP_MAKEFILE_CLI_LOADER_INIT_TARGET(self)                                        \
+		_TPP_MAKEFILE_CLI_LOADER_INIT_OUTFILE(self)                                       \
+		_TPP_MAKEFILE_CLI_LOADER_INIT_FLAGS(self)                                         \
+	}
 
 /* Initialize a CLI loader for `makefile`
  *

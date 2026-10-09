@@ -57,6 +57,7 @@ typedef struct tpp_include_path_list {
 } tpp_include_path_list;
 
 /* Initialize/finalize a given `tpp_include_path_list` */
+#define TPP_INCLUDE_PATH_LIST_INIT(self) { NULL, 0 }
 #define tpp_include_path_list_init(self)           \
 	(void)((self)->TPP_INTERNAL(tipl_list) = NULL, \
 	       (self)->TPP_INTERNAL(tipl_size) = 0)
@@ -120,34 +121,42 @@ typedef struct tpp_include_paths {
 	tpp_include_path_list TPP_INTERNAL(tip_system_list); /* System `#include`-path list: `#pragma TPP include_path("/usr/include")` */
 #if TPP_HAVE_INCLUDE_PATH_QUOTE
 	tpp_include_path_list TPP_INTERNAL(tip_quote_list);  /* `"`-quote `#include`-path list: `#pragma TPP include_path(quote: "/usr/include")` */
+#define _TPP_INCLUDE_PATHS_INIT_QUOTE(self) , TPP_INCLUDE_PATH_LIST_INIT((self).TPP_INTERNAL(tip_quote_list))
 #define _tpp_include_paths_init_quote(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_quote_list))
 #define _tpp_include_paths_fini_quote(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_quote_list))
 #else /* TPP_HAVE_INCLUDE_PATH_QUOTE */
+#define _TPP_INCLUDE_PATHS_INIT_QUOTE(self) /* nothing */
 #define _tpp_include_paths_init_quote(self) /* nothing */
 #define _tpp_include_paths_fini_quote(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_QUOTE */
 #if TPP_HAVE_INCLUDE_PATH_SYSHDR
 	tpp_include_path_list TPP_INTERNAL(tip_syshdr_list);  /* `#include`-paths treated as TPP_FILE_FLAGS_SYSHDR: `#pragma TPP include_path(system: "/usr/include")` */
+#define _TPP_INCLUDE_PATHS_INIT_SYSHDR(self) , TPP_INCLUDE_PATH_LIST_INIT((self).TPP_INTERNAL(tip_syshdr_list))
 #define _tpp_include_paths_init_syshdr(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #define _tpp_include_paths_fini_syshdr(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_syshdr_list))
 #else /* TPP_HAVE_INCLUDE_PATH_SYSHDR */
+#define _TPP_INCLUDE_PATHS_INIT_SYSHDR(self) /* nothing */
 #define _tpp_include_paths_init_syshdr(self) /* nothing */
 #define _tpp_include_paths_fini_syshdr(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_SYSHDR */
 #if TPP_HAVE_INCLUDE_PATH_AFTER
 	tpp_include_path_list TPP_INTERNAL(tip_after_list);  /* `#include`-path list searched after all others: `#pragma TPP include_path(dirafter: "/usr/include")` */
+#define _TPP_INCLUDE_PATHS_INIT_AFTER(self) , TPP_INCLUDE_PATH_LIST_INIT((self).TPP_INTERNAL(tip_after_list))
 #define _tpp_include_paths_init_after(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_after_list))
 #define _tpp_include_paths_fini_after(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_after_list))
 #else /* TPP_HAVE_INCLUDE_PATH_AFTER */
+#define _TPP_INCLUDE_PATHS_INIT_AFTER(self) /* nothing */
 #define _tpp_include_paths_init_after(self) /* nothing */
 #define _tpp_include_paths_fini_after(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_AFTER */
 
 #if TPP_HAVE_INCLUDE_PATH_EMBED
 	tpp_include_path_list TPP_INTERNAL(tip_embed_list);  /* #embed-path list searched for `#embed <file>`-like filenames: `#pragma TPP include_path(embed: "/usr/include")` */
+#define _TPP_INCLUDE_PATHS_INIT_EMBED(self) , TPP_INCLUDE_PATH_LIST_INIT((self).TPP_INTERNAL(tip_embed_list))
 #define _tpp_include_paths_init_embed(self) , tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_embed_list))
 #define _tpp_include_paths_fini_embed(self) , tpp_include_path_list_fini(&(self)->TPP_INTERNAL(tip_embed_list))
 #else /* TPP_HAVE_INCLUDE_PATH_EMBED */
+#define _TPP_INCLUDE_PATHS_INIT_EMBED(self) /* nothing */
 #define _tpp_include_paths_init_embed(self) /* nothing */
 #define _tpp_include_paths_fini_embed(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_EMBED */
@@ -155,13 +164,24 @@ typedef struct tpp_include_paths {
 #if TPP_HAVE_INCLUDE_PATH_PUSH_POP
 	tpp_size                  TPP_INTERNAL(tip_pushcnt); /* # of times paths pushed were since last modified */
 	struct tpp_include_paths *TPP_INTERNAL(tip_prev);    /* [0..1][owned] Old warning state. */
+#define _TPP_INCLUDE_PATHS_INIT_PUSH(self) , 0, NULL
 #define _tpp_include_paths_init_push(self) , (self)->TPP_INTERNAL(tip_pushcnt) = 0, (self)->TPP_INTERNAL(tip_prev) = NULL
 #else /* TPP_HAVE_INCLUDE_PATH_PUSH_POP */
+#define _TPP_INCLUDE_PATHS_INIT_PUSH(self) /* nothing */
 #define _tpp_include_paths_init_push(self) /* nothing */
 #endif /* !TPP_HAVE_INCLUDE_PATH_PUSH_POP */
 } tpp_include_paths;
 
 /* Initialize/finalize include paths. */
+#define TPP_INCLUDE_PATHS_INIT(self)                                     \
+	{                                                                    \
+		TPP_INCLUDE_PATH_LIST_INIT((self).TPP_INTERNAL(tip_system_list)) \
+		_TPP_INCLUDE_PATHS_INIT_QUOTE(self)                              \
+		_TPP_INCLUDE_PATHS_INIT_SYSHDR(self)                             \
+		_TPP_INCLUDE_PATHS_INIT_AFTER(self)                              \
+		_TPP_INCLUDE_PATHS_INIT_EMBED(self)                              \
+		_TPP_INCLUDE_PATHS_INIT_PUSH(self)                               \
+	}
 #define tpp_include_paths_init(self)                                    \
 	(tpp_include_path_list_init(&(self)->TPP_INTERNAL(tip_system_list)) \
 	 _tpp_include_paths_init_quote(self)                                \
@@ -385,6 +405,7 @@ typedef struct tpp_envinclude_paths {
 	                                 * list has a trailing `TPP_FS_SEP`. */
 } tpp_envinclude_paths;
 
+#define TPP_ENVINCLUDE_PATHS_INIT(self) { NULL }
 #define tpp_envinclude_paths_init(self) (void)((self)->TPP_INTERNAL(teip_cpath) = NULL)
 #define tpp_envinclude_paths_fini(self)                                        \
 	(((self)->TPP_INTERNAL(teip_cpath) != (char *)_tpp_envinclude_cpath_empty) \

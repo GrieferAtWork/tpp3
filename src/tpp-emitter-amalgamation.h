@@ -402,11 +402,10 @@
  * initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
- * - `1`:  Enabled
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled (unknown pragmas cause warnings and are not (re-)emitted
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be configured at runtime using:
  * - `tpp_emitter_get_reemit_unknown_pragma()`
  * - `tpp_emitter_set_reemit_unknown_pragma()`
  * - `tpp_emitter_enable_reemit_unknown_pragma()`
@@ -423,11 +422,10 @@
  * its initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled 
- * - `1`:  Enabled (`#define`/`#undef` are re-emitted)
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be turned on/off using:
  * - `tpp_emitter_get_reemit_macro_definitions()`
  * - `tpp_emitter_set_reemit_macro_definitions()`
  * - `tpp_emitter_enable_reemit_macro_definitions()`
@@ -436,7 +434,7 @@
 #define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS   \
 	((TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && \
 	  TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)) \
-	 ? -1                                           \
+	 ? 1                                            \
 	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
@@ -505,18 +503,17 @@
  * to be able to override that hook during its initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled 
- * - `1`:  Enabled (`#include` are re-emitted)
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled 
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be turned on/off using:
  * - `tpp_emitter_get_reemit_include_directives()`
  * - `tpp_emitter_set_reemit_include_directives()`
  * - `tpp_emitter_enable_reemit_include_directives()`
  * - `tpp_emitter_disable_reemit_include_directives()` */
 #ifndef TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
 #define TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES  \
-	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0)
+	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? 1 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 /* Trace includes (and the depth of the `#include`-stack in terms of IO files)
@@ -694,7 +691,9 @@
  *
  * Configure as one of:
  * - `0`: Disabled
- * - `1`: Enabled */
+ * - `1`: Enabled
+ *
+ * Configure the default value using `TPP_EMITTER_HAVE_TRACE_INCLUDES` */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 #define TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES \
 	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_TRACE_INCLUDES)
@@ -705,7 +704,9 @@
  *
  * Configure as one of:
  * - `0`: Disabled
- * - `1`: Enabled */
+ * - `1`: Enabled
+ *
+ * Configure the default value using `TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN` */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN
 #define TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN))
@@ -715,11 +716,13 @@
  * Turn `TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA` on/off
  *
  * Configure as one of:
- * - `0`: Disabled
- * - `1`: Enabled */
+ * - `0`: Always Disabled (CLI flag is not available)
+ * - `1`: Always Enabled  (CLI flag is not available)
+ * - `TPP_CONF_FEAT1`: Configurable, enabled by default
+ * - `TPP_CONF_FEAT0`: Configurable, disabled by default */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
 #define TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA \
-	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA)
+	((TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 
 /* `-fworking-directory`, `-fno-working-directory`:
@@ -979,7 +982,8 @@ tpp_io_printpwd(tpp_formatprinter printer, void *arg);
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) ||    \
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) ||      \
      TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) || \
-     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES))
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                     \
+     TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA))
 #define TPP_EMITTER_HAVE_FEATURES 1
 #else /* ... */
 #define TPP_EMITTER_HAVE_FEATURES 0
@@ -1035,6 +1039,9 @@ typedef enum tpp_emitter_feature_id {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
 	TPP_EMITTER_FEAT_TRACE_INCLUDES,
 #endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+	TPP_EMITTER_FEAT_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA,
+#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 	TPP_EMITTER_FEAT_COUNT
 } tpp_emitter_feature_id;
 
@@ -1042,68 +1049,123 @@ typedef union tpp_emitter_features {
 	struct {
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_SPACE): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_SPACE TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_SPACE),
 #define _tpp_emitter_has_NORMALIZE_SPACE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_SPACE)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_SPACE /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_SPACE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_LF): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_LF TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_LF),
 #define _tpp_emitter_has_NORMALIZE_LF(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_LF)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_LF /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_LF) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_STRING): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_STRING TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING),
 #define _tpp_emitter_has_NORMALIZE_C_STRING(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_STRING)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_STRING /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_STRING) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_INT): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_INT TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_C_INT),
 #define _tpp_emitter_has_NORMALIZE_C_INT(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_C_INT)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_INT /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_C_INT) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_KEYWORDS): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_KEYWORDS TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS),
 #define _tpp_emitter_has_NORMALIZE_KEYWORDS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_KEYWORDS)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_KEYWORDS /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_KEYWORDS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_BSE): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_BSE TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_BSE),
 #define _tpp_emitter_has_NORMALIZE_BSE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_BSE)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_BSE /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_BSE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_TRIGRAPHS): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_TRIGRAPHS TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS),
 #define _tpp_emitter_has_NORMALIZE_TRIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_TRIGRAPHS)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_TRIGRAPHS /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_TRIGRAPHS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NORMALIZE_DIGRAPHS): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_DIGRAPHS TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS),
 #define _tpp_emitter_has_NORMALIZE_DIGRAPHS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NORMALIZE_DIGRAPHS)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) */
+#define _TPP_EMITTER_FEATURES_INIT_NORMALIZE_DIGRAPHS /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NORMALIZE_DIGRAPHS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE)
 		unsigned int TPP_EMITTER_INTERNAL(temff_NOLINE): 1;
+#define _TPP_EMITTER_FEATURES_INIT_NOLINE TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_NOLINE),
 #define _tpp_emitter_has_NOLINE(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_NOLINE)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
+#define _TPP_EMITTER_FEATURES_INIT_NOLINE /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_NOLINE) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN)
 		unsigned int TPP_EMITTER_INTERNAL(temff_RELAXED_MACRO_COLUMN): 1;
+#define _TPP_EMITTER_FEATURES_INIT_RELAXED_MACRO_COLUMN TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN),
 #define _tpp_emitter_has_RELAXED_MACRO_COLUMN(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_RELAXED_MACRO_COLUMN)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
+#define _TPP_EMITTER_FEATURES_INIT_RELAXED_MACRO_COLUMN /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT)
 		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT): 1;
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT),
 #define _tpp_emitter_has_USE_CPP_DIGIT(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
 		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_FLAGS): 1;
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_FLAGS TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS),
 #define _tpp_emitter_has_USE_CPP_DIGIT_FLAGS(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_FLAGS)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_FLAGS /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY)
 		unsigned int TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_WORKING_DIRECTORY): 1;
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_WORKING_DIRECTORY TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY),
 #define _tpp_emitter_has_USE_CPP_DIGIT_WORKING_DIRECTORY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_USE_CPP_DIGIT_WORKING_DIRECTORY)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
+#define _TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_WORKING_DIRECTORY /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_WORKING_DIRECTORY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY)
 		unsigned int TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_LAZY): 1;
+#define _TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_LAZY TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY),
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_LAZY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_LAZY)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
+#define _TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_LAZY /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
 		unsigned int TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY): 1;
+#define _TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY),
 #define _tpp_emitter_has_REEMIT_MACRO_DEFINITIONS_NAME_ONLY(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_REEMIT_MACRO_DEFINITIONS_NAME_ONLY)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
+#define _TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_NAME_ONLY) */
 #if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
 		unsigned int TPP_EMITTER_INTERNAL(temff_TRACE_INCLUDES): 1;
+#define _TPP_EMITTER_FEATURES_INIT_TRACE_INCLUDES TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES),
 #define _tpp_emitter_has_TRACE_INCLUDES(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_TRACE_INCLUDES)
-#endif /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#define _TPP_EMITTER_FEATURES_INIT_TRACE_INCLUDES /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#if TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+		unsigned int TPP_EMITTER_INTERNAL(temff_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA): 1;
+#define _TPP_EMITTER_FEATURES_INIT_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA),
+#define _tpp_emitter_has_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA(self) (self)->TPP_EMITTER_INTERNAL(tem_feat).TPP_EMITTER_INTERNAL(temf_flags).TPP_EMITTER_INTERNAL(temff_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#else /* TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
+#define _TPP_EMITTER_FEATURES_INIT_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 	} TPP_EMITTER_INTERNAL(temf_flags);
 	unsigned char TPP_EMITTER_INTERNAL(temf_bitset)[TPP_EMITTER_FEAT_COUNT ? ((TPP_EMITTER_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_emitter_features;
@@ -1123,6 +1185,24 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #define tpp_emitter_features_init(self)            (void)(*(self) = tpp_emitter_features_default)
 #define tpp_emitter_features_reset(self)           (void)(*(self) = tpp_emitter_features_default)
 #define tpp_emitter_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_emitter_features))
+#define TPP_EMITTER_FEATURES_INIT(self) {{ \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_SPACE \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_LF \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_STRING \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_C_INT \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_KEYWORDS \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_BSE \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_TRIGRAPHS \
+	_TPP_EMITTER_FEATURES_INIT_NORMALIZE_DIGRAPHS \
+	_TPP_EMITTER_FEATURES_INIT_NOLINE \
+	_TPP_EMITTER_FEATURES_INIT_RELAXED_MACRO_COLUMN \
+	_TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT \
+	_TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_FLAGS \
+	_TPP_EMITTER_FEATURES_INIT_USE_CPP_DIGIT_WORKING_DIRECTORY \
+	_TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_LAZY \
+	_TPP_EMITTER_FEATURES_INIT_REEMIT_MACRO_DEFINITIONS_NAME_ONLY \
+	_TPP_EMITTER_FEATURES_INIT_TRACE_INCLUDES \
+	_TPP_EMITTER_FEATURES_INIT_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA }}
 #endif /* TPP_EMITTER_HAVE_FEATURES */
 
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_NORMALIZE_SPACE)
@@ -1173,6 +1253,9 @@ TPP_CONST_DECL tpp_emitter_features const tpp_emitter_features_default;
 #if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_TRACE_INCLUDES)
 #define _tpp_emitter_has_TRACE_INCLUDES(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES)
 #endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_TRACE_INCLUDES) */
+#if TPP_CONF_ISCONST(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define _tpp_emitter_has_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA(self) TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#endif /* TPP_CONF_ISCONST(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 
 /************************************************************************/
 /* File: parts/optional/emitter/emitter.h                               */
@@ -1202,17 +1285,50 @@ typedef struct tpp_emitter_state_file {
 #endif /* !... */
 #if _TPP_EMITTER_STATE_FLAGS_MASK
 	tpp_file_flags          TPP_EMITTER_INTERNAL(temsf_flags); /* Set of `_TPP_EMITTER_STATE_FLAGS_MASK` */
+#define _TPP_EMITTER_STATE_FILE_INIT_FLAGS(self) , 0
+#define _tpp_emitter_state_file_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(temsf_flags) = 0
 #endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#ifndef _tpp_emitter_state_file_init_flags
+#define _TPP_EMITTER_STATE_FILE_INIT_FLAGS(self) /* nothing */
+#define _tpp_emitter_state_file_init_flags(self) /* nothing */
+#endif /* !_tpp_emitter_state_file_init_flags */
 } tpp_emitter_state_file;
+
+#define TPP_EMITTER_STATE_FILE_INIT(self)                                                                                 \
+	{                                                                                                                     \
+		/* .TPP_EMITTER_INTERNAL(temsf_curpos)    = */ TPP_LCSTATE_INIT((self).TPP_EMITTER_INTERNAL(temsf_curpos), 0, 0), \
+		/* .TPP_EMITTER_INTERNAL(temsf_fname)     = */ NULL,                                                              \
+		/* .TPP_EMITTER_INTERNAL(temsf_fname_str) = */ NULL                                                               \
+		_TPP_EMITTER_STATE_FILE_INIT_FLAGS(self)                                                                          \
+	}
+#define tpp_emitter_state_file_init(self)                                       \
+	(void)(tpp_lcstate_init(&(self)->TPP_EMITTER_INTERNAL(temsf_curpos), 0, 0), \
+	       (self)->TPP_EMITTER_INTERNAL(temsf_fname)     = NULL,                \
+	       (self)->TPP_EMITTER_INTERNAL(temsf_fname_str) = NULL                 \
+	       _tpp_emitter_state_file_init_flags(self))
 
 typedef struct tpp_emitter_state_files {
 	tpp_emitter_state_file  TPP_EMITTER_INTERNAL(temsfs_file);    /* Most-recent file */
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
 	tpp_size                TPP_EMITTER_INTERNAL(temsfs_filec);   /* # of dummy files pushed by `# <digit> "filename" 1` */
 	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(temsfs_filev);   /* [0..temsfs_filec][owned] Extra files pus */
-#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#define _TPP_EMITTER_STATE_FILES_INIT_FILEC(self) , 0, NULL
+#define _tpp_emitter_state_files_init_filec(self) , (self)->TPP_EMITTER_INTERNAL(temsfs_filec) = 0, (self)->TPP_EMITTER_INTERNAL(temsfs_filev) = NULL
+#else /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
+#define _TPP_EMITTER_STATE_FILES_INIT_FILEC(self) /* nothing */
+#define _tpp_emitter_state_files_init_filec(self) /* nothing */
+#endif /* !TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 } tpp_emitter_state_files;
+
+#define TPP_EMITTER_STATE_FILES_INIT(self)                                                                               \
+	{                                                                                                                    \
+		/* .TPP_EMITTER_INTERNAL(temsfs_file) = */ TPP_EMITTER_STATE_FILE_INIT((self).TPP_EMITTER_INTERNAL(temsfs_file)) \
+		_TPP_EMITTER_STATE_FILES_INIT_FILEC(self)                                                                        \
+	}
+#define tpp_emitter_state_files_init(self)                                         \
+	(void)(tpp_emitter_state_file_init(&(self)->TPP_EMITTER_INTERNAL(temsfs_file)) \
+	       _tpp_emitter_state_files_init_filec(self))
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 
 #undef TPP_EMITTER_HAVE_FLAGS
@@ -1236,19 +1352,49 @@ typedef struct tpp_emitter_state_files {
 
 
 typedef struct tpp_emitter_state {
+	/* Last token ID (preceding the token currently being emitted).
+	 * When the current token is the first, this is `TPP_TOK_EOF` */
+	tpp_token_id TPP_EMITTER_INTERNAL(tems_prevtok);
+
+	/* Current file-state. */
 #if TPP_EMITTER_HAVE_CURPOS
-	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tems_curfile); /* Current file-state. */
+	tpp_emitter_state_files TPP_EMITTER_INTERNAL(tems_curfile);
+#define _TPP_EMITTER_STATE_INIT_CURFILE(self) , TPP_EMITTER_STATE_FILES_INIT((self).TPP_EMITTER_INTERNAL(tems_curfile))
+#define _tpp_emitter_state_init_curfile(self) , tpp_emitter_state_files_init(&(self)->TPP_EMITTER_INTERNAL(tems_curfile))
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
 	tpp_size                TPP_EMITTER_INTERNAL(tems_cached_filec); /* Size of alternate file-state buffer (`tems_cached_filev`). */
 	tpp_emitter_state_file *TPP_EMITTER_INTERNAL(tems_cached_filev); /* [0..tems_cached_filec] Alternate file-state buffer (used internally) */
+#define _TPP_EMITTER_STATE_INIT_CACHED_FILE(self) , 0, NULL
+#define _tpp_emitter_state_init_cached_file(self) , (self)->TPP_EMITTER_INTERNAL(tems_cached_filec) = 0, (self)->TPP_EMITTER_INTERNAL(tems_cached_filev) = NULL
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #endif /* TPP_EMITTER_HAVE_CURPOS */
+#ifndef _tpp_emitter_state_init_cached_file
+#define _TPP_EMITTER_STATE_INIT_CACHED_FILE(self) /* nothing */
+#define _tpp_emitter_state_init_cached_file(self) /* nothing */
+#endif /* !_tpp_emitter_state_init_cached_file */
+
+	/* Emitter flags */
 #if TPP_EMITTER_HAVE_FLAGS
-	tpp_emitter_flags       TPP_EMITTER_INTERNAL(tems_flags);   /* Emitter flags */
-#endif /* TPP_EMITTER_HAVE_FLAGS */
-	tpp_token_id            TPP_EMITTER_INTERNAL(tems_prevtok); /* Last token ID (preceding the token currently being emitted).
-	                                                            * When the current token is the first, this is `TPP_TOK_EOF` */
+	tpp_emitter_flags TPP_EMITTER_INTERNAL(tems_flags);
+#define _TPP_EMITTER_STATE_INIT_FLAGS(self) , TPP_EMITTER_FLAG_NORMAL
+#define _tpp_emitter_state_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(tems_flags) = TPP_EMITTER_FLAG_NORMAL
+#else /* TPP_EMITTER_HAVE_FLAGS */
+#define _TPP_EMITTER_STATE_INIT_FLAGS(self) /* nothing */
+#define _tpp_emitter_state_init_flags(self) /* nothing */
+#endif /* !TPP_EMITTER_HAVE_FLAGS */
 } tpp_emitter_state;
+
+#define TPP_EMITTER_STATE_INIT(self)                            \
+	{                                                           \
+		/* .TPP_EMITTER_INTERNAL(tems_prevtok) = */ TPP_TOK_EOF \
+		_TPP_EMITTER_STATE_INIT_CURFILE(self)                   \
+		_TPP_EMITTER_STATE_INIT_FLAGS(self)                     \
+	}
+#define tpp_emitter_state_init(self)                                \
+	(void)((self)->TPP_EMITTER_INTERNAL(tems_prevtok) = TPP_TOK_EOF \
+	       _tpp_emitter_state_init_curfile(self)                    \
+	       _tpp_emitter_state_init_cached_file(self)                \
+	       _tpp_emitter_state_init_flags(self))
 
 
 #undef _TPP_EMITTER_MODE_DEFAULT
@@ -1309,56 +1455,114 @@ typedef enum tpp_emitter_mode {
 
 
 typedef struct tpp_emitter {
+	/* [1..1][const] The lexer whose tokens are being emitted */
 #ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
-	tpp_lexer           *TPP_EMITTER_INTERNAL(tem_lexer);  /* [1..1][const] The lexer whose tokens are being emitted */
+	tpp_lexer *TPP_EMITTER_INTERNAL(tem_lexer);
+#define _TPP_EMITTER_INIT_LEXER(self, lexer) (lexer),
+#define _tpp_emitter_init_lexer(self, lexer) (self)->TPP_EMITTER_INTERNAL(tem_lexer) = (lexer)
+#else /* TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
+#define _TPP_EMITTER_INIT_LEXER(self, lexer) /* nothing */
+#define _tpp_emitter_init_lexer(self, lexer) tpp_assert(tpp_emitter_getlexer(self) == (lexer))
 #endif /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-	tpp_formatprinter    TPP_EMITTER_INTERNAL(tem_output); /* [1..1][const] Emitter output printer (the emitter itself will be passed as argument) */
-	tpp_emitter_state    TPP_EMITTER_INTERNAL(tem_state);  /* Emitter output state */
+
+	/* [1..1][const] Emitter output printer (the emitter itself will be passed as argument) */
+	tpp_formatprinter TPP_EMITTER_INTERNAL(tem_output);
+
+	/* Emitter output state */
+	tpp_emitter_state TPP_EMITTER_INTERNAL(tem_state);
+
+	/* Emitter feature configuration */
 #if TPP_EMITTER_HAVE_FEATURES
-	tpp_emitter_features TPP_EMITTER_INTERNAL(tem_feat);   /* Emitter feature configuration */
-#endif /* TPP_EMITTER_HAVE_FEATURES */
+	tpp_emitter_features TPP_EMITTER_INTERNAL(tem_feat);
+#define _TPP_EMITTER_INIT_FEAT(self) , TPP_EMITTER_FEATURES_INIT((self).TPP_EMITTER_INTERNAL(tem_feat))
+#define _tpp_emitter_init_feat(self) , tpp_emitter_features_init(&(self)->TPP_EMITTER_INTERNAL(tem_feat))
+#define _tpp_emitter_fini_feat(self) , tpp_emitter_features_fini(&(self)->TPP_EMITTER_INTERNAL(tem_feat))
+#else /* TPP_EMITTER_HAVE_FEATURES */
+#define _TPP_EMITTER_INIT_FEAT(self) /* nothing */
+#define _tpp_emitter_init_feat(self) /* nothing */
+#define _tpp_emitter_fini_feat(self) /* nothing */
+#endif /* !TPP_EMITTER_HAVE_FEATURES */
+
+	/* Mode in which tokens are emitted. */
 #if TPP_EMITTER_MODE_HAVE_MULTIPLE
-	tpp_emitter_mode     TPP_EMITTER_INTERNAL(tem_mode);   /* Mode in which tokens are emitted. */
+	tpp_emitter_mode TPP_EMITTER_INTERNAL(tem_mode);
+#define _TPP_EMITTER_INIT_MODE(self) , _TPP_EMITTER_MODE_DEFAULT
+#define _tpp_emitter_init_mode(self) , (self)->TPP_EMITTER_INTERNAL(tem_mode) = _TPP_EMITTER_MODE_DEFAULT
 #define tpp_emitter_getmode(self)    ((self)->TPP_EMITTER_INTERNAL(tem_mode))
 #define tpp_emitter_setmode(self, v) (void)((self)->TPP_EMITTER_INTERNAL(tem_mode) = (v))
 #else /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
+#define _TPP_EMITTER_INIT_MODE(self) /* nothing */
+#define _tpp_emitter_init_mode(self) /* nothing */
 #define tpp_emitter_getmode(self)    _TPP_EMITTER_MODE_DEFAULT
 #define tpp_emitter_setmode(self, v) (void)(v)
 #endif /* !TPP_EMITTER_MODE_HAVE_MULTIPLE */
+
+	/* max # of blank lines emitted for alignment purposes */
 #if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
-	tpp_line             TPP_EMITTER_INTERNAL(tem_linethreshold); /* max # of blank lines emitted for alignment purposes */
+	tpp_line TPP_EMITTER_INTERNAL(tem_linethreshold);
+#define _TPP_EMITTER_INIT_LINETHRESHOLD(self)  , (-TPP_EMITTER_CONFIG_LINE_THRESHOLD)
+#define _tpp_emitter_init_linethreshold(self)  , (self)->TPP_EMITTER_INTERNAL(tem_linethreshold) = (-TPP_EMITTER_CONFIG_LINE_THRESHOLD)
 #define tpp_emitter_getlinethreshold(self)     ((self)->TPP_EMITTER_INTERNAL(tem_linethreshold))
 #define tpp_emitter_setlinethreshold(self, v)  (void)((self)->TPP_EMITTER_INTERNAL(tem_linethreshold) = (tpp_line)(v))
 #define tpp_emitter_disablelinethreshold(self) (void)((self)->TPP_EMITTER_INTERNAL(tem_linethreshold) = -1)
-#elif !TPP_EMITTER_CONFIG_LINE_THRESHOLD
+#else /* TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0 */
+#define _TPP_EMITTER_INIT_LINETHRESHOLD(self) /* nothing */
+#define _tpp_emitter_init_linethreshold(self) /* nothing */
+#if !TPP_EMITTER_CONFIG_LINE_THRESHOLD
 #define tpp_emitter_getlinethreshold(self) (-1)
-#else /* ... */
+#else /* !TPP_EMITTER_CONFIG_LINE_THRESHOLD */
 #define tpp_emitter_getlinethreshold(self) TPP_EMITTER_CONFIG_LINE_THRESHOLD
-#endif /* !... */
+#endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD */
+#endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD >= 0 */
 } tpp_emitter;
+
+/* Static initializer */
+#define TPP_EMITTER_INIT(self, lexer, output)                                                                    \
+	{                                                                                                            \
+		_TPP_EMITTER_INIT_LEXER(self, lexer)                                                                     \
+		/* .TPP_EMITTER_INTERNAL(tem_output) = */ (output),                                                      \
+		/* .TPP_EMITTER_INTERNAL(tem_state)  = */ TPP_EMITTER_STATE_INIT((self).TPP_EMITTER_INTERNAL(tem_state)) \
+		_TPP_EMITTER_INIT_FEAT(self)                                                                             \
+		_TPP_EMITTER_INIT_MODE(self)                                                                             \
+		_TPP_EMITTER_INIT_LINETHRESHOLD(self)                                                                    \
+	}
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
  * (before `tpp_lexer_fini()` is called) a given emitter.
  *
  * @param: output: Output printer. On error, must return one of `TPP_SSIZE_OFERR(*)`
- * @param: lexer:  The lexer whose tokens are being emitted
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
-#ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_emitter_init(tpp_emitter *tpp_restrict self,
-                 tpp_lexer *tpp_restrict lexer,
-                 tpp_formatprinter output);
-#else /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_emitter_init(tpp_emitter *tpp_restrict self,
-                  tpp_formatprinter output);
-#define tpp_emitter_init(self, lexer, output)           \
-	(tpp_assert(tpp_emitter_getlexer(self) == (lexer)), \
-	 _tpp_emitter_init(self, output))
-#endif /* TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
+ * @param: lexer:  The lexer whose tokens are being emitted */
+#define tpp_emitter_init(self, lexer, output)                               \
+	(void)(_tpp_emitter_init_lexer(self, lexer),                            \
+	       (self)->TPP_EMITTER_INTERNAL(tem_output) = (output),             \
+	       tpp_emitter_state_init(&(self)->TPP_EMITTER_INTERNAL(tem_state)) \
+	       _tpp_emitter_init_feat(self)                                     \
+	       _tpp_emitter_init_mode(self)                                     \
+	       _tpp_emitter_init_linethreshold(self))
 TPP_DECL TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_fini(tpp_emitter *tpp_restrict self);
+
+
+/* Register default lexer hooks. This function should be called at least
+ * once before you start yielding tokens from the associated lexer. Otherwise,
+ * the emitter may not be properly informed about all relevant state changes
+ * that might happen within the associated lexer.
+ *
+ * If you're using `tpp_emitter_cli_loader`, this function is automatically
+ * called by `tpp_emitter_cli_loader_flush()`
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+	/* Enable default hooks */
+#if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_registerdefaulthooks(tpp_emitter *tpp_restrict self);
+#else /* ... */
+#define tpp_emitter_registerdefaulthooks(self) TPP_EOK
+#endif /* !... */
+
 
 /* Retrieve components of the emitter. */
 #define tpp_emitter_getoutput(self) (self)->TPP_EMITTER_INTERNAL(tem_output)
@@ -1688,14 +1892,18 @@ tpp_emitter_enable_trace_includes(tpp_emitter *tpp_restrict self);
 #define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
 #undef TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
-#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS \
-	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
+#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS                               \
+	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) || \
+	 (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
 #if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 #define _tpp_emitter_cli_loader_flags tpp_uint_least8
 #define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL TPP_UINT_LEAST8_C(0x00) /* Normal flags */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA TPP_UINT_LEAST8_C(0x01) /* Invert default config */
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
-#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M TPP_UINT_LEAST8_C(0x01) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
+#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M TPP_UINT_LEAST8_C(0x02) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
 #endif /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 
@@ -1705,11 +1913,21 @@ typedef struct tpp_emitter_cli_loader {
 	unsigned int TPP_EMITTER_INTERNAL(temcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
 #if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(temcl_flags);
+#define _TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self) , _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
 #define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(temcl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
 #else /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
+#define _TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self) /* nothing */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
 #endif /* !TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 } tpp_emitter_cli_loader;
+
+/* Static initializer */
+#define TPP_EMITTER_CLI_LOADER_INIT(self, emitter)                                       \
+	{                                                                                    \
+		/* .TPP_EMITTER_INTERNAL(temcl_emitter) = */ (emitter),                          \
+		/* .TPP_EMITTER_INTERNAL(temcl_state)   = */ TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
+		_TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self)                                         \
+	}
 
 /* Initialize a CLI loader for `emitter`
  *
@@ -1740,6 +1958,38 @@ typedef struct tpp_emitter_cli_loader {
  * expect any arguments, and hasn't encountered a "--" argument). */
 #define tpp_emitter_cli_loader_hasdefaultstate(self) \
 	((self)->TPP_EMITTER_INTERNAL(temcl_state) == TPP_EMITTER_CLI_LOADER_STATE_NORMAL)
+
+
+/* Configure how `tpp_emitter_cli_loader_flush()` should configure
+ * the associated emitter's `TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA`
+ *
+ * s.a.:
+ * - `tpp_emitter_get_reemit_unknown_pragma()`
+ * - `tpp_emitter_set_reemit_unknown_pragma()`
+ * - `tpp_emitter_enable_reemit_unknown_pragma()`
+ * - `tpp_emitter_disable_reemit_unknown_pragma()` */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) && TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self)  (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) &= ~_TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) |= _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     (!((self)->TPP_EMITTER_INTERNAL(temcl_flags) & _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA))
+#define tpp_emitter_cli_loader_set_reemit_unknown_pragma(self, v)    \
+	((v) ? tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) \
+	     : tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self))
+#elif TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self)  (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) |= _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) &= ~_TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     ((self)->TPP_EMITTER_INTERNAL(temcl_flags) & _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_set_reemit_unknown_pragma(self, v)    \
+	((v) ? tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) \
+	     : tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self))
+#elif TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) (void)0
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)    1
+#else /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)0
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     0
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -1808,6 +2058,11 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * Unlike the other CLI loader functions above, this one *MUST* be called
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
+ *
+ * WARNING: If your compiler has a CLI switch that must be present for it
+ *          to actually emit preprocessor output (e.g. `gcc -E`), you should
+ *          *ONLY* call this function is that switch was present. Otherwise,
+ *          you should simply finalize the CLI loader and emitter.
  *
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory

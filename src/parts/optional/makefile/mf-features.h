@@ -69,8 +69,11 @@ print("	struct {");
 for (local CONF: configs) {
 	print("#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ")");
 	print("		unsigned int TPP_MAKEFILE_INTERNAL(tmkff_", CONF, "): 1;");
+	print("#define _TPP_MAKEFILE_FEATURES_INIT_", CONF, " TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_", CONF, "),");
 	print("#define _tpp_makefile_has_", CONF, "(self) (self)->TPP_MAKEFILE_INTERNAL(tmkf_feat).TPP_MAKEFILE_INTERNAL(tmkf_flags).TPP_MAKEFILE_INTERNAL(tmkff_", CONF, ")");
-	print("#endif /" "* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
+	print("#else /" "* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
+	print("#define _TPP_MAKEFILE_FEATURES_INIT_", CONF, " /" "* nothing *" "/");
+	print("#endif /" "* !TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_", CONF, ") *" "/");
 }
 print("	} TPP_MAKEFILE_INTERNAL(tmkf_flags);");
 print("	unsigned char TPP_MAKEFILE_INTERNAL(tmkf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];");
@@ -91,6 +94,12 @@ print("	((enabled) ? tpp_makefile_features_enable(self, id) : tpp_makefile_featu
 print("#define tpp_makefile_features_init(self)            (void)(*(self) = tpp_makefile_features_default)");
 print("#define tpp_makefile_features_reset(self)           (void)(*(self) = tpp_makefile_features_default)");
 print("#define tpp_makefile_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_makefile_features))");
+print("#define TPP_MAKEFILE_FEATURES_INIT(self) {{"),;
+local isFirst = true;
+for (local CONF: configs) {
+	print(" \\\n	_TPP_MAKEFILE_FEATURES_INIT_", CONF, ""),;
+}
+print(" }}");
 print("#endif /" "* TPP_MAKEFILE_HAVE_FEATURES *" "/");
 print;
 for (local CONF: configs) {
@@ -126,16 +135,25 @@ typedef union tpp_makefile_features {
 	struct {
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
 		unsigned int TPP_MAKEFILE_INTERNAL(tmkff_USER_DEPENDENCIES): 1;
+#define _TPP_MAKEFILE_FEATURES_INIT_USER_DEPENDENCIES TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
 #define _tpp_makefile_has_USER_DEPENDENCIES(self) (self)->TPP_MAKEFILE_INTERNAL(tmkf_feat).TPP_MAKEFILE_INTERNAL(tmkf_flags).TPP_MAKEFILE_INTERNAL(tmkff_USER_DEPENDENCIES)
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+#else /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
+#define _TPP_MAKEFILE_FEATURES_INIT_USER_DEPENDENCIES /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
 		unsigned int TPP_MAKEFILE_INTERNAL(tmkff_PHONY): 1;
+#define _TPP_MAKEFILE_FEATURES_INIT_PHONY TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
 #define _tpp_makefile_has_PHONY(self) (self)->TPP_MAKEFILE_INTERNAL(tmkf_feat).TPP_MAKEFILE_INTERNAL(tmkf_flags).TPP_MAKEFILE_INTERNAL(tmkff_PHONY)
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
+#else /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
+#define _TPP_MAKEFILE_FEATURES_INIT_PHONY /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
 #if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV)
 		unsigned int TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV): 1;
+#define _TPP_MAKEFILE_FEATURES_INIT_CLI_ENV TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV),
 #define _tpp_makefile_has_CLI_ENV(self) (self)->TPP_MAKEFILE_INTERNAL(tmkf_feat).TPP_MAKEFILE_INTERNAL(tmkf_flags).TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV)
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
+#else /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
+#define _TPP_MAKEFILE_FEATURES_INIT_CLI_ENV /* nothing */
+#endif /* !TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
 	} TPP_MAKEFILE_INTERNAL(tmkf_flags);
 	unsigned char TPP_MAKEFILE_INTERNAL(tmkf_bitset)[TPP_MAKEFILE_FEAT_COUNT ? ((TPP_MAKEFILE_FEAT_COUNT + TPP_CHAR_BIT - 1) / TPP_CHAR_BIT) : 1];
 } tpp_makefile_features;
@@ -155,6 +173,10 @@ TPP_CONST_DECL tpp_makefile_features const tpp_makefile_features_default;
 #define tpp_makefile_features_init(self)            (void)(*(self) = tpp_makefile_features_default)
 #define tpp_makefile_features_reset(self)           (void)(*(self) = tpp_makefile_features_default)
 #define tpp_makefile_features_fini(self)            tpp_dbg_memset(self, sizeof(tpp_makefile_features))
+#define TPP_MAKEFILE_FEATURES_INIT(self) {{ \
+	_TPP_MAKEFILE_FEATURES_INIT_USER_DEPENDENCIES \
+	_TPP_MAKEFILE_FEATURES_INIT_PHONY \
+	_TPP_MAKEFILE_FEATURES_INIT_CLI_ENV }}
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */
 
 #if TPP_CONF_ISCONST(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)

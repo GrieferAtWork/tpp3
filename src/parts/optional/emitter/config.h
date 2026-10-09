@@ -352,11 +352,10 @@
  * initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled (unknown pragmas cause warnings and are not (re-)emitted
- * - `1`:  Enabled
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled (unknown pragmas cause warnings and are not (re-)emitted
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be configured at runtime using:
  * - `tpp_emitter_get_reemit_unknown_pragma()`
  * - `tpp_emitter_set_reemit_unknown_pragma()`
  * - `tpp_emitter_enable_reemit_unknown_pragma()`
@@ -373,11 +372,10 @@
  * its initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled 
- * - `1`:  Enabled (`#define`/`#undef` are re-emitted)
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be turned on/off using:
  * - `tpp_emitter_get_reemit_macro_definitions()`
  * - `tpp_emitter_set_reemit_macro_definitions()`
  * - `tpp_emitter_enable_reemit_macro_definitions()`
@@ -386,7 +384,7 @@
 #define TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS   \
 	((TPP_HOOK_ISRT(TPP_HAVE_MACRO_DEFINED_HOOK) && \
 	  TPP_HOOK_ISRT(TPP_HAVE_MACRO_UNDEFINED_HOOK)) \
-	 ? -1                                           \
+	 ? 1                                            \
 	 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS */
 
@@ -455,18 +453,17 @@
  * to be able to override that hook during its initialization)
  *
  * Can be configured in one of 3 ways:
- * - `0`:  Disabled 
- * - `1`:  Enabled (`#include` are re-emitted)
- * - `-1`: Available (but not enabled by default)
+ * - `0`: Disabled 
+ * - `1`: Available (but not enabled by default)
  *
- * When not *Disabled*, can be turned on/off using:
+ * When *Available*, can be turned on/off using:
  * - `tpp_emitter_get_reemit_include_directives()`
  * - `tpp_emitter_set_reemit_include_directives()`
  * - `tpp_emitter_enable_reemit_include_directives()`
  * - `tpp_emitter_disable_reemit_include_directives()` */
 #ifndef TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
 #define TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES  \
-	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? -1 : 0)
+	(TPP_HOOK_ISRT(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) ? 1 : 0)
 #endif /* !TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES */
 
 /* Trace includes (and the depth of the `#include`-stack in terms of IO files)
@@ -644,7 +641,9 @@
  *
  * Configure as one of:
  * - `0`: Disabled
- * - `1`: Enabled */
+ * - `1`: Enabled
+ *
+ * Configure the default value using `TPP_EMITTER_HAVE_TRACE_INCLUDES` */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES
 #define TPP_EMITTER_HAVE_CLI_DASH_TRACE_INCLUDES \
 	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_TRACE_INCLUDES)
@@ -655,7 +654,9 @@
  *
  * Configure as one of:
  * - `0`: Disabled
- * - `1`: Enabled */
+ * - `1`: Enabled
+ *
+ * Configure the default value using `TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN` */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN
 #define TPP_EMITTER_HAVE_CLI_DASH_FRELAXED_MACRO_COLUMN \
 	(TPP_EMITTER_HAVE_CLI && TPP_CONF_ISRT(TPP_EMITTER_HAVE_RELAXED_MACRO_COLUMN))
@@ -665,11 +666,13 @@
  * Turn `TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA` on/off
  *
  * Configure as one of:
- * - `0`: Disabled
- * - `1`: Enabled */
+ * - `0`: Always Disabled (CLI flag is not available)
+ * - `1`: Always Enabled  (CLI flag is not available)
+ * - `TPP_CONF_FEAT1`: Configurable, enabled by default
+ * - `TPP_CONF_FEAT0`: Configurable, disabled by default */
 #ifndef TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
 #define TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA \
-	(TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA)
+	((TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA) ? TPP_CONF_FEAT1 : 0)
 #endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
 
 /* `-fworking-directory`, `-fno-working-directory`:

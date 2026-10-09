@@ -39,6 +39,7 @@ TPP_DECL_BEGIN
 #define tpp_time                      time_t
 #define tpp_time_fini(p_time)         (void)0
 #define tpp_time_now(p_time)          (time(p_time), TPP_EOK)
+#define TPP_TIME_INIT_EMPTY(self)     0
 #define tpp_time_empty(p_time)        (void)(*(p_time) = 0)
 #define tpp_time_isempty(p_time)      (*(p_time) == 0)
 #if TPP_HAVE_LEXER_COPY

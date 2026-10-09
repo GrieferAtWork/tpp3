@@ -49,18 +49,76 @@ typedef struct tpp_makefile {
 	/* [1..1][const] The lexer whose tokens are being emitted */
 #ifndef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
 	tpp_lexer *TPP_MAKEFILE_INTERNAL(tmkf_lexer);
+#define _TPP_MAKEFILE_INIT_LEXER(self, lexer) (lexer),
 #define _tpp_makefile_init_lexer(self, lexer) (self)->TPP_MAKEFILE_INTERNAL(tmkf_lexer) = (lexer)
 #else /* !TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
+#define _TPP_MAKEFILE_INIT_LEXER(self, lexer) /* nothing */
 #define _tpp_makefile_init_lexer(self, lexer) tpp_assert(tpp_makefile_getlexer(self) == (lexer))
 #endif /* TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER */
 
 	/* [1..1][const] Makefile output printer (the makefile itself will be passed as argument) */
 	tpp_formatprinter TPP_MAKEFILE_INTERNAL(tmkf_output);
 
+	/* Makefile feature configuration */
+#if TPP_MAKEFILE_HAVE_FEATURES
+	tpp_makefile_features TPP_MAKEFILE_INTERNAL(tmkf_feat);
+#define _TPP_MAKEFILE_INIT_FEAT(self) , TPP_MAKEFILE_FEATURES_INIT((self).TPP_MAKEFILE_INTERNAL(tmkf_feat))
+#define _tpp_makefile_init_feat(self) , tpp_makefile_features_init(&(self)->TPP_MAKEFILE_INTERNAL(tmkf_feat))
+#define _tpp_makefile_fini_feat(self) , tpp_makefile_features_fini(&(self)->TPP_MAKEFILE_INTERNAL(tmkf_feat))
+#else /* TPP_MAKEFILE_HAVE_FEATURES */
+#define _TPP_MAKEFILE_INIT_FEAT(self) /* nothing */
+#define _tpp_makefile_init_feat(self) /* nothing */
+#define _tpp_makefile_fini_feat(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_FEATURES */
+
+	/* Makefile flags (set of `TPP_MAKEFILE_FLAG_*`) */
+#if TPP_MAKEFILE_HAVE_FLAGS
+	tpp_makefile_flags TPP_MAKEFILE_INTERNAL(tmkf_flags);
+#define _TPP_MAKEFILE_INIT_FLAGS(self) , TPP_MAKEFILE_FLAG_NORMAL
+#define _tpp_makefile_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) = TPP_MAKEFILE_FLAG_NORMAL
+#else /* TPP_MAKEFILE_HAVE_FLAGS */
+#define _TPP_MAKEFILE_INIT_FLAGS(self) /* nothing */
+#define _tpp_makefile_init_flags(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_FLAGS */
+
+#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
+	tpp_size            TPP_MAKEFILE_INTERNAL(tmkf_depc); /* # of elements in `tmkf_depv` */
+	tpp_size            TPP_MAKEFILE_INTERNAL(tmkf_depa); /* Allocated size of `tmkf_depv` */
+	tpp_keyword const **TPP_MAKEFILE_INTERNAL(tmkf_depv); /* [1..1][0..tmkf_depc][owned] Vector of dependencies (for replay as phonies) */
+#define _TPP_MAKEFILE_INIT_DEPV(self) , 0, 0, NULL
+#define _tpp_makefile_init_depv(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_depc) = (self)->TPP_MAKEFILE_INTERNAL(tmkf_depa) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmkf_depv) = NULL
+#define _tpp_makefile_fini_depv(self) , tpp_free((self)->TPP_MAKEFILE_INTERNAL(tmkf_depv))
+#else /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+#define _TPP_MAKEFILE_INIT_DEPV(self) /* nothing */
+#define _tpp_makefile_init_depv(self) /* nothing */
+#define _tpp_makefile_fini_depv(self) /* nothing */
+#endif /* !TPP_MAKEFILE_HAVE_PHONY && !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
+
+	/* Current/maximum column position before lines are wrapped */
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+	tpp_column TPP_MAKEFILE_INTERNAL(tmkf_curcol); /* Current column position */
+#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0
+	tpp_column TPP_MAKEFILE_INTERNAL(tmkf_maxcol); /* Max column position */
+#define tpp_makefile_getmaxcol(self)     (self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol)
+#define tpp_makefile_setmaxcol(self, v)  (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = (v))
+#define tpp_makefile_disablemaxcol(self) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = -1)
+#define _TPP_MAKEFILE_INIT_COL(self)     , 0, (-TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH)
+#define _tpp_makefile_init_col(self)     , (self)->TPP_MAKEFILE_INTERNAL(tmkf_curcol) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = (-TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH)
+#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
+#define _TPP_MAKEFILE_INIT_COL(self) , 0
+#define _tpp_makefile_init_col(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_curcol) = 0
+#define tpp_makefile_getmaxcol(self) TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
+#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH >= 0 */
+#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+#define _TPP_MAKEFILE_INIT_COL(self)     /* nothing */
+#define _tpp_makefile_init_col(self)     /* nothing */
+#define tpp_makefile_getmaxcol(self)     (-1)
+#define tpp_makefile_disablemaxcol(self) (void)0
+#endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
+
 	/* [valid_if(tmkf_output == tpp_formatprinter_of(_tpp_makefile_builtin_file_output))] Output-to-file information */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO
 	tpp_makefile_io_handle TPP_MAKEFILE_INTERNAL(tmkf_output_file);
-#define _tpp_makefile_init_output_file(self) /* nothing */
 #if TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE
 #define _tpp_makefile_fini_output_file_before_reassign(self)                                                \
 	, (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) == tpp_formatprinter_of(_tpp_makefile_builtin_file_output) \
@@ -80,61 +138,23 @@ typedef struct tpp_makefile {
 	  : (void)0
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO_NOCLOSE */
 #else /* TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
-#define _tpp_makefile_init_output_file(self) /* nothing */
 #define _tpp_makefile_fini_output_file(self) /* nothing */
 #endif /* !TPP_MAKEFILE_HAVE_OUTPUT_FILE_IO */
 #ifndef _tpp_makefile_fini_output_file_before_reassign
 #define _tpp_makefile_fini_output_file_before_reassign _tpp_makefile_fini_output_file
 #endif /* !_tpp_makefile_fini_output_file_before_reassign */
-
-	/* Makefile feature configuration */
-#if TPP_MAKEFILE_HAVE_FEATURES
-	tpp_makefile_features TPP_MAKEFILE_INTERNAL(tmkf_feat);
-#define _tpp_makefile_init_feat(self) , tpp_makefile_features_init(&(self)->TPP_MAKEFILE_INTERNAL(tmkf_feat))
-#define _tpp_makefile_fini_feat(self) , tpp_makefile_features_fini(&(self)->TPP_MAKEFILE_INTERNAL(tmkf_feat))
-#else /* TPP_MAKEFILE_HAVE_FEATURES */
-#define _tpp_makefile_init_feat(self) /* nothing */
-#define _tpp_makefile_fini_feat(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_FEATURES */
-
-	/* Makefile flags (set of `TPP_MAKEFILE_FLAG_*`) */
-#if TPP_MAKEFILE_HAVE_FLAGS
-	tpp_makefile_flags TPP_MAKEFILE_INTERNAL(tmkf_flags);
-#define _tpp_makefile_init_flags(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_flags) = TPP_MAKEFILE_FLAG_NORMAL
-#else /* TPP_MAKEFILE_HAVE_FLAGS */
-#define _tpp_makefile_init_flags(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_FLAGS */
-
-#if TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES
-	tpp_size            TPP_MAKEFILE_INTERNAL(tmkf_depc); /* # of elements in `tmkf_depv` */
-	tpp_size            TPP_MAKEFILE_INTERNAL(tmkf_depa); /* Allocated size of `tmkf_depv` */
-	tpp_keyword const **TPP_MAKEFILE_INTERNAL(tmkf_depv); /* [1..1][0..tmkf_depc][owned] Vector of dependencies (for replay as phonies) */
-#define _tpp_makefile_init_depv(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_depc) = (self)->TPP_MAKEFILE_INTERNAL(tmkf_depa) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmkf_depv) = NULL
-#define _tpp_makefile_fini_depv(self) , tpp_free((self)->TPP_MAKEFILE_INTERNAL(tmkf_depv))
-#else /* TPP_MAKEFILE_HAVE_PHONY || TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-#define _tpp_makefile_init_depv(self) /* nothing */
-#define _tpp_makefile_fini_depv(self) /* nothing */
-#endif /* !TPP_MAKEFILE_HAVE_PHONY && !TPP_MAKEFILE_HAVE_MISSING_FILE_DEPENDENCIES */
-
-	/* Current/maximum column position before lines are wrapped */
-#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-	tpp_column TPP_MAKEFILE_INTERNAL(tmkf_curcol); /* Current column position */
-#if TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0
-	tpp_column TPP_MAKEFILE_INTERNAL(tmkf_maxcol); /* Max column position */
-#define tpp_makefile_getmaxcol(self)     (self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol)
-#define tpp_makefile_setmaxcol(self, v)  (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = (v))
-#define tpp_makefile_disablemaxcol(self) (void)((self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = -1)
-#define _tpp_makefile_init_col(self)     , (self)->TPP_MAKEFILE_INTERNAL(tmkf_curcol) = 0, (self)->TPP_MAKEFILE_INTERNAL(tmkf_maxcol) = (-TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH)
-#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH < 0 */
-#define _tpp_makefile_init_col(self) , (self)->TPP_MAKEFILE_INTERNAL(tmkf_curcol) = 0
-#define tpp_makefile_getmaxcol(self) TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH
-#endif /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH >= 0 */
-#else /* TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
-#define _tpp_makefile_init_col(self)     /* nothing */
-#define tpp_makefile_getmaxcol(self)     (-1)
-#define tpp_makefile_disablemaxcol(self) (void)0
-#endif /* !TPP_MAKEFILE_CONFIG_MAX_LINE_LENGTH */
 } tpp_makefile;
+
+/* Static initializer */
+#define TPP_MAKEFILE_INIT(self, lexer, output)               \
+	{                                                        \
+		_TPP_MAKEFILE_INIT_LEXER(self, lexer)                \
+		/* .TPP_MAKEFILE_INTERNAL(tmkf_output) = */ (output) \
+		_TPP_MAKEFILE_INIT_FEAT(self)                        \
+		_TPP_MAKEFILE_INIT_FLAGS(self)                       \
+		_TPP_MAKEFILE_INIT_DEPV(self)                        \
+		_TPP_MAKEFILE_INIT_COL(self)                         \
+	}
 
 /* Initialize (after `tpp_lexer_init()` was called) or finalize
  * (before `tpp_lexer_fini()` is called) a given makefile.
@@ -144,7 +164,6 @@ typedef struct tpp_makefile {
 #define tpp_makefile_init(self, lexer, output)                   \
 	(void)(_tpp_makefile_init_lexer(self, lexer),                \
 	       (self)->TPP_MAKEFILE_INTERNAL(tmkf_output) = (output) \
-	       _tpp_makefile_init_output_file(self)                  \
 	       _tpp_makefile_init_feat(self)                         \
 	       _tpp_makefile_init_flags(self)                        \
 	       _tpp_makefile_init_depv(self)                         \

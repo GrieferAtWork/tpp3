@@ -33,12 +33,6 @@ TPP_DECL_BEGIN
 
 #if TPP_EMITTER_HAVE_CURPOS
 static TPP_NONNULL((1)) void TPPCALL
-tpp_emitter_state_file_init(tpp_emitter_state_file *tpp_restrict self) {
-	self->temsf_fname     = NULL;
-	self->temsf_fname_str = NULL;
-}
-
-static TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_state_file_fini(tpp_emitter_state_file *tpp_restrict self) {
 	if (self->temsf_fname_str)
 		tpp_string_decref(self->temsf_fname_str);
@@ -57,31 +51,7 @@ tpp_emitter_state_files_fini(tpp_emitter_state_files *tpp_restrict self) {
 	}
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 }
-
 #endif /* TPP_EMITTER_HAVE_CURPOS */
-
-static TPP_NONNULL((1)) void TPPCALL
-tpp_emitter_state_init(tpp_emitter_state *tpp_restrict self) {
-#if TPP_EMITTER_HAVE_CURPOS
-	tpp_lcstate_init(&self->tems_curfile.temsfs_file.temsf_curpos, 0, 0);
-#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	self->tems_cached_filec = 0;
-	self->tems_cached_filev = NULL;
-#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
-	tpp_emitter_state_file_init(&self->tems_curfile.temsfs_file);
-#if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
-	self->tems_curfile.temsfs_filec = 0;
-	self->tems_curfile.temsfs_filev = NULL;
-#if _TPP_EMITTER_STATE_FLAGS_MASK
-	self->tems_curfile.temsfs_file.temsf_flags = 0;
-#endif /* _TPP_EMITTER_STATE_FLAGS_MASK */
-#endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
-#endif /* TPP_EMITTER_HAVE_CURPOS */
-#if TPP_EMITTER_HAVE_FLAGS
-	self->tems_flags = TPP_EMITTER_FLAG_NORMAL;
-#endif /* TPP_EMITTER_HAVE_FLAGS */
-	self->tems_prevtok = TPP_TOK_EOF;
-}
 
 static TPP_NONNULL((1)) void TPPCALL
 tpp_emitter_state_fini(tpp_emitter_state *tpp_restrict self) {
@@ -92,81 +62,6 @@ tpp_emitter_state_fini(tpp_emitter_state *tpp_restrict self) {
 #endif /* TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS */
 #endif /* TPP_EMITTER_HAVE_CURPOS */
 	tpp_dbg_memset(self, sizeof(*self));
-}
-
-/* Initialize (after `tpp_lexer_init()` was called) or finalize
- * (before `tpp_lexer_fini()` is called) a given emitter.
- *
- * @param: output: Output printer. On error, must return one of `TPP_SSIZE_OFERR(*)`
- * @param: lexer:  The lexer whose tokens are being emitted
- * @return: TPP_EOK:    Success
- * @return: TPP_ENOMEM: One of the default-enabled hooks could not be registered */
-#ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_emitter_init(tpp_emitter *tpp_restrict self,
-                 tpp_lexer *tpp_restrict lexer,
-                 tpp_formatprinter output)
-#else /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-TPP_DECL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
-_tpp_emitter_init(tpp_emitter *tpp_restrict self,
-                  tpp_formatprinter output)
-#endif /* TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-{
-	tpp_errno result = TPP_EOK;
-#ifndef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
-	self->tem_lexer = lexer;
-#endif /* !TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER */
-	self->tem_output = output;
-	tpp_emitter_state_init(&self->tem_state);
-#if TPP_EMITTER_HAVE_FEATURES
-	tpp_emitter_features_init(&self->tem_feat);
-#endif /* TPP_EMITTER_HAVE_FEATURES */
-#if TPP_EMITTER_MODE_HAVE_MULTIPLE
-	self->tem_mode = _TPP_EMITTER_MODE_DEFAULT;
-#endif /* TPP_EMITTER_MODE_HAVE_MULTIPLE */
-#if TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0
-	self->tem_linethreshold = -TPP_EMITTER_CONFIG_LINE_THRESHOLD;
-#endif /* TPP_EMITTER_CONFIG_LINE_THRESHOLD < 0 */
-
-	/* Register default hooks */
-#if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0
-	result = tpp_emitter_enable_reemit_unknown_pragma(self);
-	if (TPP_ISERR(result))
-		goto handle_error;
-#define HAVE_handle_error
-#endif /* TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA > 0 */
-#if TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0
-	result = tpp_emitter_enable_reemit_macro_definitions(self);
-	if (TPP_ISERR(result))
-		goto handle_error;
-#define HAVE_handle_error
-#endif /* TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS > 0 */
-#if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0
-	result = tpp_emitter_enable_reemit_include_directives(self);
-	if (TPP_ISERR(result))
-		goto handle_error;
-#define HAVE_handle_error
-#endif /* TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES > 0 */
-#if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
-     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
-     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
-	result = _tpp_emitter_enable_file_pushed_hook(self); /* Must be turned on by default */
-	if (TPP_ISERR(result))
-		goto handle_error;
-#define HAVE_handle_error
-#endif /* ... */
-#if TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
-	result = _tpp_emitter_enable_file_popped_hook(self);
-	if (TPP_ISERR(result))
-		goto handle_error;
-#define HAVE_handle_error
-#endif /* TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS) */
-	return result;
-#ifdef HAVE_handle_error
-handle_error:
-	tpp_emitter_fini(self);
-	return result;
-#endif /* HAVE_handle_error */
 }
 
 TPP_IMPL TPP_NONNULL((1)) void TPPCALL
@@ -185,6 +80,49 @@ tpp_emitter_fini(tpp_emitter *tpp_restrict self) {
 #endif /* TPP_EMITTER_HAVE_FEATURES */
 	tpp_dbg_memset(self, sizeof(*self));
 }
+
+
+#if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
+/* Register default lexer hooks. This function should be called at least
+ * once before you start yielding tokens from the associated lexer. Otherwise,
+ * the emitter may not be properly informed about all relevant state changes
+ * that might happen within the associated lexer.
+ *
+ * If you're using `tpp_emitter_cli_loader`, this function is automatically
+ * called by `tpp_emitter_cli_loader_flush()`
+ *
+ * @return: TPP_EOK:    Success
+ * @return: TPP_ENOMEM: Out of memory */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_emitter_registerdefaulthooks(tpp_emitter *tpp_restrict self) {
+
+	/* Enable default hooks */
+#if (TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS_LAZY) || \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_TRACE_INCLUDES) ||                \
+     TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS))
+	if (tpp_emitter_has(self, REEMIT_MACRO_DEFINITIONS_LAZY) ||
+	    tpp_emitter_has(self, TRACE_INCLUDES) ||
+	    tpp_emitter_has(self, USE_CPP_DIGIT_FLAGS)) {
+		tpp_errno error = _tpp_emitter_enable_file_pushed_hook(self);
+		if (TPP_ISERR(error))
+			return error;
+	}
+#endif /* ... */
+
+#if TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS)
+	if (tpp_emitter_has(self, USE_CPP_DIGIT_FLAGS)) {
+		tpp_errno error = _tpp_emitter_enable_file_popped_hook(self);
+		if (TPP_ISERR(error))
+			return error;
+	}
+#endif /* ... */
+
+	return TPP_EOK;
+}
+#endif /* ... */
+
 
 
 

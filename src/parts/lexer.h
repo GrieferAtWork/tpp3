@@ -99,7 +99,7 @@ typedef struct tpp_lexer {
 #endif /* TPP_HAVE_EXTENSIONS */
 
 
-	/* Enabled tokens */
+	/* Enabled features. */
 #if TPP_HAVE_FEATURES
 	tpp_features TPP_INTERNAL(tl_feat);
 #endif /* TPP_HAVE_FEATURES */

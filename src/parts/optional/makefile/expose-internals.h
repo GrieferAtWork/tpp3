@@ -68,12 +68,12 @@ for (local ident: identifiers) {
 #define tmkff_CLI_ENV           TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV)
 #define tmkf_lexer              TPP_MAKEFILE_INTERNAL(tmkf_lexer)
 #define tmkf_output             TPP_MAKEFILE_INTERNAL(tmkf_output)
-#define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
 #define tmkf_depc               TPP_MAKEFILE_INTERNAL(tmkf_depc)
 #define tmkf_depa               TPP_MAKEFILE_INTERNAL(tmkf_depa)
 #define tmkf_depv               TPP_MAKEFILE_INTERNAL(tmkf_depv)
 #define tmkf_curcol             TPP_MAKEFILE_INTERNAL(tmkf_curcol)
 #define tmkf_maxcol             TPP_MAKEFILE_INTERNAL(tmkf_maxcol)
+#define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
 /*[[[end]]]*/
 
 /*[[[tpp-end]]]*/

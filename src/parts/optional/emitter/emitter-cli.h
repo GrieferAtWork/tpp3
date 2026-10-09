@@ -35,14 +35,18 @@ TPP_DECL_BEGIN
 #define TPP_EMITTER_CLI_LOADER_STATE_DDASH  1 /* State after "--" was encountered (causing all remaining ) */
 
 #undef TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
-#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS \
-	((TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
+#define TPP_EMITTER_HAVE_CLI_LOADER_FLAGS                               \
+	(TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) || \
+	 (TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N))
 
 #if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 #define _tpp_emitter_cli_loader_flags tpp_uint_least8
 #define _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL TPP_UINT_LEAST8_C(0x00) /* Normal flags */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA TPP_UINT_LEAST8_C(0x01) /* Invert default config */
+#endif /* TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) */
 #if TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N
-#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M TPP_UINT_LEAST8_C(0x01) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
+#define _TPP_EMITTER_CLI_LOADER_FLAG_DUMP_M TPP_UINT_LEAST8_C(0x02) /* Do `tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)` in `tpp_emitter_cli_loader_flush()` */
 #endif /* TPP_EMITTER_HAVE_CLI_DASH_DUMP_M || TPP_EMITTER_HAVE_CLI_DASH_DUMP_D || TPP_EMITTER_HAVE_CLI_DASH_DUMP_N */
 #endif /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 
@@ -52,11 +56,21 @@ typedef struct tpp_emitter_cli_loader {
 	unsigned int TPP_EMITTER_INTERNAL(temcl_state);   /* CLI loader state (meaning of value is internal, except for `TPP_EMITTER_CLI_LOADER_STATE_*` listed above) */
 #if TPP_EMITTER_HAVE_CLI_LOADER_FLAGS
 	_tpp_emitter_cli_loader_flags TPP_EMITTER_INTERNAL(temcl_flags);
+#define _TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self) , _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
 #define _tpp_emitter_cli_loader_init_flags(self) , (self)->TPP_EMITTER_INTERNAL(temcl_flags) = _TPP_EMITTER_CLI_LOADER_FLAG_NORMAL
 #else /* TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
+#define _TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self) /* nothing */
 #define _tpp_emitter_cli_loader_init_flags(self) /* nothing */
 #endif /* !TPP_EMITTER_HAVE_CLI_LOADER_FLAGS */
 } tpp_emitter_cli_loader;
+
+/* Static initializer */
+#define TPP_EMITTER_CLI_LOADER_INIT(self, emitter)                                       \
+	{                                                                                    \
+		/* .TPP_EMITTER_INTERNAL(temcl_emitter) = */ (emitter),                          \
+		/* .TPP_EMITTER_INTERNAL(temcl_state)   = */ TPP_EMITTER_CLI_LOADER_STATE_NORMAL \
+		_TPP_EMITTER_CLI_LOADER_INIT_FLAGS(self)                                         \
+	}
 
 /* Initialize a CLI loader for `emitter`
  *
@@ -87,6 +101,38 @@ typedef struct tpp_emitter_cli_loader {
  * expect any arguments, and hasn't encountered a "--" argument). */
 #define tpp_emitter_cli_loader_hasdefaultstate(self) \
 	((self)->TPP_EMITTER_INTERNAL(temcl_state) == TPP_EMITTER_CLI_LOADER_STATE_NORMAL)
+
+
+/* Configure how `tpp_emitter_cli_loader_flush()` should configure
+ * the associated emitter's `TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA`
+ *
+ * s.a.:
+ * - `tpp_emitter_get_reemit_unknown_pragma()`
+ * - `tpp_emitter_set_reemit_unknown_pragma()`
+ * - `tpp_emitter_enable_reemit_unknown_pragma()`
+ * - `tpp_emitter_disable_reemit_unknown_pragma()` */
+#if TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA) && TPP_CONF_DEFAULT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self)  (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) &= ~_TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) |= _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     (!((self)->TPP_EMITTER_INTERNAL(temcl_flags) & _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA))
+#define tpp_emitter_cli_loader_set_reemit_unknown_pragma(self, v)    \
+	((v) ? tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) \
+	     : tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self))
+#elif TPP_CONF_ISRT(TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self)  (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) |= _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)((self)->TPP_EMITTER_INTERNAL(temcl_flags) &= ~_TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     ((self)->TPP_EMITTER_INTERNAL(temcl_flags) & _TPP_EMITTER_CLI_LOADER_FLAG_INVREEMIT_UNKNOWN_PRAGMA)
+#define tpp_emitter_cli_loader_set_reemit_unknown_pragma(self, v)    \
+	((v) ? tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) \
+	     : tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self))
+#elif TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA
+#define tpp_emitter_cli_loader_enable_reemit_unknown_pragma(self) (void)0
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)    1
+#else /* TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+#define tpp_emitter_cli_loader_disable_reemit_unknown_pragma(self) (void)0
+#define tpp_emitter_cli_loader_get_reemit_unknown_pragma(self)     0
+#endif /* !TPP_EMITTER_HAVE_CLI_DASH_FREEMIT_UNKNOWN_PRAGMA */
+
 
 /* Feed an argument to the loader. How exactly the argument is parsed
  * depends on the loader's current state, but sufficed to say: in its
@@ -155,6 +201,11 @@ tpp_emitter_cli_loader_parseargv(tpp_emitter_cli_loader *tpp_restrict self,
  * Unlike the other CLI loader functions above, this one *MUST* be called
  * *AFTER* the lexer's initial input file has been initialized, as it may
  * need to push additional files onto the `#include`-stack.
+ *
+ * WARNING: If your compiler has a CLI switch that must be present for it
+ *          to actually emit preprocessor output (e.g. `gcc -E`), you should
+ *          *ONLY* call this function is that switch was present. Otherwise,
+ *          you should simply finalize the CLI loader and emitter.
  *
  * @return: TPP_EOK:       Success
  * @return: TPP_ENOMEM:    Out of memory

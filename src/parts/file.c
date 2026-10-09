@@ -1713,7 +1713,7 @@ tpp_file_pushdummy(tpp_file *tpp_restrict self, tpp_char const *pos) {
 	(void)0 _tpp_file_init_lcpos(dummy);
 	(void)0 _tpp_file_init_ifdef(dummy);
 	dummy->tf_kind = TPP_FILE_KIND_DUMMY;
-	(void)0 _tpp_file_init_enc(dummy);
+	(void)0 _tpp_file_init_enc_ex(dummy, TPP_FILE_ENCODING_UTF8);
 	(void)0 _tpp_file_init_flags(dummy, TPP_FILE_FLAGS_NORMAL);
 	dummy->tf_data.td_dummy.tfd_name = self->tf_data.td_io.tff_name;
 	lcinfo = tpp_file_getlcinfo(self, pos);

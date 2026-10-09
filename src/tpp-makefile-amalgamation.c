@@ -51,12 +51,12 @@
 #define tmkff_CLI_ENV           TPP_MAKEFILE_INTERNAL(tmkff_CLI_ENV)
 #define tmkf_lexer              TPP_MAKEFILE_INTERNAL(tmkf_lexer)
 #define tmkf_output             TPP_MAKEFILE_INTERNAL(tmkf_output)
-#define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
 #define tmkf_depc               TPP_MAKEFILE_INTERNAL(tmkf_depc)
 #define tmkf_depa               TPP_MAKEFILE_INTERNAL(tmkf_depa)
 #define tmkf_depv               TPP_MAKEFILE_INTERNAL(tmkf_depv)
 #define tmkf_curcol             TPP_MAKEFILE_INTERNAL(tmkf_curcol)
 #define tmkf_maxcol             TPP_MAKEFILE_INTERNAL(tmkf_maxcol)
+#define tmkf_output_file        TPP_MAKEFILE_INTERNAL(tmkf_output_file)
 
 #endif /* !TPP_MAKEFILE_BUILDING */
 
@@ -225,19 +225,8 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 /************************************************************************/
 
 #if TPP_MAKEFILE_HAVE_FEATURES
-TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default = {
-	/* .tmkf_flags = */ {
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES)
-		/* .tmkff_USER_DEPENDENCIES = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_USER_DEPENDENCIES) */
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY)
-		/* .tmkff_PHONY             = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_PHONY),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_PHONY) */
-#if TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV)
-		/* .tmkff_CLI_ENV           = */ TPP_CONF_DEFAULT(TPP_MAKEFILE_HAVE_CLI_ENV),
-#endif /* TPP_CONF_ISFEAT(TPP_MAKEFILE_HAVE_CLI_ENV) */
-	}
-};
+TPP_CONST_IMPL tpp_makefile_features const tpp_makefile_features_default =
+TPP_MAKEFILE_FEATURES_INIT(tpp_makefile_features_default);
 #endif /* TPP_MAKEFILE_HAVE_FEATURES */
 
 /************************************************************************/
