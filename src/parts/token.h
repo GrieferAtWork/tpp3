@@ -1672,6 +1672,7 @@ typedef struct tpp_token_range {
 #define tpp_token_range_getend(self)          ((tpp_char const *)(self)->TPP_INTERNAL(ttr_end))
 #define tpp_token_range_setstart(self, start) (void)((self)->TPP_INTERNAL(ttr_start) = (start))
 #define tpp_token_range_setend(self, end)     (void)((self)->TPP_INTERNAL(ttr_end) = (end))
+#define tpp_token_range_isempty(self)         ((self)->TPP_INTERNAL(ttr_start) >= (self)->TPP_INTERNAL(ttr_end))
 
 struct tpp_keyword;
 typedef struct tpp_token {
@@ -1709,6 +1710,7 @@ typedef struct tpp_token {
 #define tpp_token_getstart(self)   ((tpp_char const *)(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start))
 #define tpp_token_getend(self)     ((tpp_char const *)(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#define tpp_token_isempty(self)    (tpp_token_getstart(self) >= tpp_token_getend(self))
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdstr(self)  tpp_keyword_getstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdlen(self)  tpp_keyword_getlen(tpp_token_getkwd(self))

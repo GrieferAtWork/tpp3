@@ -307,6 +307,7 @@ typedef struct tpp_lexer {
 #define tpp_lexer_gettokenkwdcstr(self)           tpp_token_getkwdcstr(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenkwdstr(self)            tpp_token_getkwdstr(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenkwdlen(self)            tpp_token_getkwdlen(tpp_lexer_gettoken(self))
+#define tpp_lexer_gettokenrange(self)             tpp_token_getrange(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenstart(self)             tpp_token_getstart(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenend(self)               tpp_token_getend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokenlen(self)               tpp_token_getlen(tpp_lexer_gettoken(self))
@@ -2861,7 +2862,7 @@ typedef struct tpp_lexer_decodestring_config {
 	                                        *    -> `XCHAR[1]{ 0x00DF }`      (Use UCS2 encoding in output)
 	                                        *
 	                                        * This printer is *always* for the following 2 cases:
-	                                        * - Input: `"Stra�e"`    (when `tpp_file_isutf8()` and a non-ASCII sequence is encountered)
+	                                        * - Input: `"Straße"`    (when `tpp_file_isutf8()` and a non-ASCII sequence is encountered)
 	                                        * - Input: `"\u00DF"`    (here, `tldsc_utf8printer("\xC3\x9F")` is called with the utf-8 representation)
 	                                        *
 	                                        * The implementation is however also allowed to use this callback
@@ -3077,6 +3078,45 @@ tpp_lexer_parsecharacter_expr(tpp_lexer *tpp_restrict self,
                               /*out*/ tpp_expr_value *tpp_restrict result,
                               unsigned int flags);
 #endif /* TPP_HAVE_LEXER_PARSECHARACTER_EXPR */
+
+
+
+#if TPP_HAVE_LEXER_DECODECOMMENT
+/* Initialize `result` as the start/end sub-range of the actual comment text.
+ * That means that any leading (or in case of block-style comments: trailing)
+ * character-sequence used to start (or end) the comment token will *NOT* be
+ * included in the result.
+ *
+ * Additionally, any BSE sequences just after the leading (or just before the
+ * trailing) comment-character-sequence is *NOT* included in `*result`, meaning
+ * that (assuming the range is non-empty), `*tpp_token_range_getstart(result)`
+ * is the first character of the actual comment.
+ *
+ * Examples:
+ *
+ * | -------------- | ---------------- |
+ * | Line comment   | Block comment    |
+ * | -------------- | ---------------- |
+ * |      ↓start    |                  |
+ * | >> // foo      |  >> (* foo *)    |
+ * | >> <next line> |  start↑    ↑end  |
+ * |   ↑end         |                  |
+ *
+ * @return: TPP_LEXER_DECODECOMMENT_NONE:  `!TPP_TOK_ISCOMMENT(tpp_lexer_gettok(self))`
+ * @return: TPP_LEXER_DECODECOMMENT_LINE:  `TPP_TOK_ISCOMMENT_LINE(tpp_lexer_gettok(self))`
+ * @return: TPP_LEXER_DECODECOMMENT_BLOCK: `TPP_TOK_ISCOMMENT_NOLINE(tpp_lexer_gettok(self))` */
+#if TPP_HAVE_TOK_COMMENTLIKE
+TPP_DECL TPP_NONNULL((1, 2)) unsigned int TPPCALL
+tpp_lexer_decodecomment(tpp_lexer const *tpp_restrict self,
+                        tpp_token_range *tpp_restrict result);
+#else /* TPP_HAVE_TOK_COMMENTLIKE */
+#define tpp_lexer_decodecomment(self, result) \
+	(*(result) = *tpp_lexer_gettokenrange(self), TPP_LEXER_DECODECOMMENT_NONE)
+#endif /* !TPP_HAVE_TOK_COMMENTLIKE */
+#define TPP_LEXER_DECODECOMMENT_NONE  0 /* Not a comment-like token */
+#define TPP_LEXER_DECODECOMMENT_LINE  1 /* Line-style comment token */
+#define TPP_LEXER_DECODECOMMENT_BLOCK 2 /* Block-style comment token */
+#endif /* TPP_HAVE_LEXER_DECODECOMMENT */
 
 
 

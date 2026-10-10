@@ -35,6 +35,7 @@
     <ClCompile Include="..\src\parts\file.c" />
     <ClCompile Include="..\src\parts\hooks.c" />
     <ClCompile Include="..\src\parts\keyword.c" />
+    <ClCompile Include="..\src\parts\lexer-decodecomment.c" />
     <ClCompile Include="..\src\parts\lexer-decodeint.c" />
     <ClCompile Include="..\src\parts\lexer-decodestring.c" />
     <ClCompile Include="..\src\parts\lexer-dump.c" />

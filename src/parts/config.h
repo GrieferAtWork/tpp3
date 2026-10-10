@@ -7002,6 +7002,16 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_TOKEN_ENCODESTRING */
 
+/* Provide a function `tpp_lexer_decodecomment()` that can be used to
+ * get the start/end boundaries of the comment token's actual contents. */
+#ifndef TPP_HAVE_LEXER_DECODECOMMENT
+#if TPP_HAVE_PROFILE_ALL
+#define TPP_HAVE_LEXER_DECODECOMMENT 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODECOMMENT 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODECOMMENT */
+
 /* Provide a function `tpp_lexer_require_whitespace()` to check if 2 tokens,
  * when written directly adjacent to each other, *might* produce a different
  * (set of) token(s) when re-parsed.

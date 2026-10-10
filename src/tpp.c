@@ -95,6 +95,7 @@
 #include "parts/lexer-pp-define.c"
 #include "parts/lexer-pp-pragma.c"
 #include "parts/lexer-skipraw.c"
+#include "parts/lexer-decodecomment.c"
 #include "parts/lexer-decodeint.c"
 #include "parts/lexer-parseembed.c"
 #include "parts/lexer-yieldpp.c"

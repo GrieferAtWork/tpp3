@@ -1291,6 +1291,7 @@ rename("W_INVALID_INTEGER", "TPP_W_INVALID_INTEGER");
 #define tpp_token_getstart(self)    ((tpp_char const *)(self)->t_begin)
 #define tpp_token_getend(self)      ((tpp_char const *)(self)->t_end) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)      ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
+#define tpp_token_isempty(self)     (tpp_token_getstart(self) >= tpp_token_getend(self))
 #define tpp_token_getkwdcstr(self)  ((char const *)(self)->t_kwd->k_name)
 #define tpp_token_getkwdstr(self)   ((tpp_char const *)(self)->t_kwd->k_name)
 #define tpp_token_getkwdlen(self)   ((tpp_size)(self)->t_kwd->k_size)
