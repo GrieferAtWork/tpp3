@@ -75,7 +75,7 @@ TPP_IMPL struct tpp_string_empty_struct _tpp_string_empty = {
  *
  * @return: * : The string that was written to this builder
  * @return: NULL: Out-of-memory (only if `!TPP_HAVE_STATIC_EMPTY_STRING`) */
-TPP_IMPL TPP_RETNONNULL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) TPP_REF tpp_string *TPPCALL
 tpp_string_builder_pack(/*inherit(always)*/ tpp_string_builder *tpp_restrict self) {
 	TPP_REF tpp_string *result;
 
