@@ -1659,6 +1659,20 @@ TPP_DECL TPP_WUNUSED char const *TPPCALL tpp_reprtokenid(tpp_token_id id);
 #define tpp_reprtokenid(id) ((char const *)NULL)
 #endif /* !TPP_HAVE_REPRTOKENID */
 
+typedef struct tpp_token_range {
+	tpp_char const *TPP_INTERNAL(ttr_start); /* [1..1][>= :tt_chunk->ts_str && <= ttr_end] Token start pointer */
+	tpp_char const *TPP_INTERNAL(ttr_end);   /* [1..1][>= ttr_start && <= :tt_chunk->ts_str+:tt_chunk->ts_len] Token end pointer */
+} tpp_token_range;
+
+#define TPP_TOKEN_RANGE_INIT(self, start, end) { (start), (end) }
+#define tpp_token_range_init(self, start, end)        \
+	(void)((self)->TPP_INTERNAL(ttr_start) = (start), \
+	       (self)->TPP_INTERNAL(ttr_end)   = (end))
+#define tpp_token_range_getstart(self)        ((tpp_char const *)(self)->TPP_INTERNAL(ttr_start))
+#define tpp_token_range_getend(self)          ((tpp_char const *)(self)->TPP_INTERNAL(ttr_end))
+#define tpp_token_range_setstart(self, start) (void)((self)->TPP_INTERNAL(ttr_start) = (start))
+#define tpp_token_range_setend(self, end)     (void)((self)->TPP_INTERNAL(ttr_end) = (end))
+
 struct tpp_keyword;
 typedef struct tpp_token {
 	tpp_token_id              TPP_INTERNAL(tt_id);    /* Token ID (never set to one of `TPP_TOK_E*`; iow: always positive or `TPP_TOK_EOF`) */
@@ -1669,9 +1683,8 @@ typedef struct tpp_token {
 #else /* TPP_HAVE_TOKEN_NUMBER */
 #define _TPP_TOKEN_INIT_FORCORE_NUM(self) /* nothing */
 #endif /* !TPP_HAVE_TOKEN_NUMBER */
-	tpp_char const           *TPP_INTERNAL(tt_start); /* [1..1][>= tt_chunk->ts_str && <= tt_end] Token start pointer */
-	tpp_char const           *TPP_INTERNAL(tt_end);   /* [1..1][>= tt_start && <= tt_chunk->ts_str+tt_chunk->ts_len] Token end pointer */
-	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_start` and `tt_end` (or `NULL` if not needed) */
+	tpp_token_range           TPP_INTERNAL(tt_range); /* Token range */
+	TPP_REF tpp_string       *TPP_INTERNAL(tt_chunk); /* [0..1] Text chunk containing `tt_range` (or `NULL` if not needed) */
 } tpp_token;
 
 /* Public API */
@@ -1690,10 +1703,11 @@ typedef struct tpp_token {
 #else /* TPP_HAVE_USER_KEYWORDS */
 #define tpp_token_haskwd(self)     TPP_TOK_ISBUILTINKEYWORD(tpp_token_getid(self))
 #endif /* !TPP_HAVE_USER_KEYWORDS */
-#define tpp_token_getid(self)      ((self)->TPP_INTERNAL(tt_id))
-#define tpp_token_getkwd(self)     ((self)->TPP_INTERNAL(tt_kwd)) /* Only valid when `tpp_token_haskwd(self)` */
-#define tpp_token_getstart(self)   ((self)->TPP_INTERNAL(tt_start))
-#define tpp_token_getend(self)     ((self)->TPP_INTERNAL(tt_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
+#define tpp_token_getid(self)      ((tpp_token_id)(self)->TPP_INTERNAL(tt_id))
+#define tpp_token_getkwd(self)     ((struct tpp_keyword const *)(self)->TPP_INTERNAL(tt_kwd)) /* Only valid when `tpp_token_haskwd(self)` */
+#define tpp_token_getrange(self)   ((tpp_token_range const *)&(self)->TPP_INTERNAL(tt_range))
+#define tpp_token_getstart(self)   ((tpp_char const *)(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start))
+#define tpp_token_getend(self)     ((tpp_char const *)(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)) /* WARNING: Don't dereference -- pointed-to memory may not have been loaded! */
 #define tpp_token_getlen(self)     ((tpp_size)(tpp_token_getend(self) - tpp_token_getstart(self)))
 #define tpp_token_getkwdcstr(self) tpp_keyword_getcstr(tpp_token_getkwd(self))
 #define tpp_token_getkwdstr(self)  tpp_keyword_getstr(tpp_token_getkwd(self))
@@ -1701,7 +1715,7 @@ typedef struct tpp_token {
 
 /* Access to the token's *number* (incremented every time a new token is generated) */
 #if TPP_HAVE_TOKEN_NUMBER
-#define tpp_token_getnum(self)    ((self)->TPP_INTERNAL(tt_num))
+#define tpp_token_getnum(self)    ((tpp_token_num)(self)->TPP_INTERNAL(tt_num))
 #define tpp_token_setnum(self, v) (void)((self)->TPP_INTERNAL(tt_num) = (v))
 #define tpp_token_resetnum(self)  (void)((self)->TPP_INTERNAL(tt_num) = 0)
 #else /* TPP_HAVE_TOKEN_NUMBER */
@@ -1719,11 +1733,29 @@ typedef struct tpp_token {
  * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
  *          also specifies where the next call to tpp_lexer_yield() will
  *          start scanning for tokens! */
-#define tpp_token_setrange(self, start, end)         \
-	(void)((self)->TPP_INTERNAL(tt_start) = (start), \
-	       (self)->TPP_INTERNAL(tt_end)   = (end))
+#define tpp_token_pushrange(self) \
+	do {                          \
+		tpp_token_range const _ttpr_saved_range = (self)->TPP_INTERNAL(tt_range)
+#define tpp_token_setrange(self, start, end)                                     \
+		(void)((self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start) = (start), \
+		       (self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)   = (end))
+#define tpp_token_breakrange(self) \
+		(void)((self)->TPP_INTERNAL(tt_range) = _ttpr_saved_range)
+#define tpp_token_poprange(self)    \
+		tpp_token_breakrange(self); \
+	} while (0)
+
+#define tpp_token_pushend(self) \
+	do {                        \
+		tpp_char  const *const _ttpe_saved_end = (self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)
 #define tpp_token_setend(self, end) \
-	(void)((self)->TPP_INTERNAL(tt_end) = (end))
+		(void)((self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end) = (end))
+#define tpp_token_breakend(self) \
+		(void)((self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end) = _ttpe_saved_end)
+#define tpp_token_popend(self)    \
+		tpp_token_breakend(self); \
+	} while (0)
+
 
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)

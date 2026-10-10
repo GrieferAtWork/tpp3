@@ -55,11 +55,11 @@ tpp_lexer_istok(tpp_lexer *tpp_restrict self,
 		switch (tok) {
 		TPP_CASE_TPP_TOK_MC_STARTSWITH_LANGLE
 			/* Convert to "<" token */
-			tpp_assert(tpp_lexer_gettoken(self)->tt_start < (*p_pos));
-			tpp_assert(tpp_lexer_gettoken(self)->tt_start[0] == '<');
-			(*p_pos) = tpp_lexer_gettoken(self)->tt_start + 1;
+			tpp_assert(tpp_lexer_gettokenstart(self) < (*p_pos));
+			tpp_assert(tpp_lexer_gettokenstart(self)[0] == '<');
+			(*p_pos) = tpp_lexer_gettokenstart(self) + 1;
 			tok      = TPP_TOK_OFCHAR('<');
-			tpp_lexer_gettoken(self)->tt_id = tok;
+			tpp_lexer_settokenid(self, tok);
 			return true;
 		default: break;
 		}
@@ -109,10 +109,10 @@ again_yield_mainfile:
 	if (tpp_lexer_istok(self, tok, expected, &pos)) {
 		if (flags & TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV) {
 			/* Include previous token, too (HINT: tpp_lexer_seek_start()
-			 * saved that token's tart in "tt_end" for the sake of the
+			 * saved that token's tart in "ttr_end" for the sake of the
 			 * lexer's file not unloading that token's data) */
 			tpp_token *const token = tpp_lexer_gettoken(self);
-			token->tt_start = token->tt_end;
+			token->tt_range.ttr_start = token->tt_range.ttr_end;
 		}
 		tpp_lexer_seek_commit(self, pos);
 		return expected;
@@ -137,10 +137,10 @@ again_yield_nextfile:
 			if (tpp_lexer_istok(self, tok, expected, &pos)) {
 				if (flags & TPP_LEXER_TRYSKIP_RAW_FLAG_INCLPREV) {
 					/* Include previous token, too (HINT: tpp_lexer_seek_start()
-					 * saved that token's tart in "tt_end" for the sake of the
+					 * saved that token's tart in "ttr_end" for the sake of the
 					 * lexer's file not unloading that token's data) */
 					tpp_token *const token = tpp_lexer_gettoken(self);
-					token->tt_start = token->tt_end;
+					token->tt_range.ttr_start = token->tt_range.ttr_end;
 				}
 				tpp_lexer_seek_commit(self, pos);
 				tpp_lexer_manualpopfile_break_commit(self);
@@ -203,10 +203,10 @@ again_yield_mainfile:
 	if (!TPP_TOK_ISERR_OR_EOF(tok)) {
 		tpp_errno accept_error = TPP_EOK;
 		if (accept_cb != NULL) {
-			tpp_char const *const saved_end = tpp_lexer_gettokenend(self);
-			tpp_lexer_gettoken(self)->tt_end = pos;
+			tpp_lexer_pushtokenend(self);
+			tpp_lexer_settokenend(self, pos);
 			accept_error = (*accept_cb)(accept_arg, self);
-			tpp_lexer_gettoken(self)->tt_end = saved_end;
+			tpp_lexer_poptokenend(self);
 		}
 		if (accept_error != TPP_ENOENT) {
 			if (TPP_ISERR(accept_error)) {
@@ -214,8 +214,8 @@ again_yield_mainfile:
 			} else if (p_token != NULL) {
 				tpp_token_copy(p_token, tpp_lexer_gettoken(self));
 				if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
-					p_token->tt_start = tpp_lexer_gettokenend(self);
-				p_token->tt_end = pos;
+					p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
+				p_token->tt_range.ttr_end = pos;
 			}
 			tpp_lexer_seek_rollback(self, &backup);
 			goto done;
@@ -241,10 +241,10 @@ again_yield_nextfile:
 			if (!TPP_TOK_ISERR_OR_EOF(tok)) {
 				tpp_errno accept_error = TPP_EOK;
 				if (accept_cb != NULL) {
-					tpp_char const *const saved_end = tpp_lexer_gettokenend(self);
-					tpp_lexer_gettoken(self)->tt_end = pos;
+					tpp_lexer_pushtokenend(self);
+					tpp_lexer_settokenend(self, pos);
 					accept_error = (*accept_cb)(accept_arg, self);
-					tpp_lexer_gettoken(self)->tt_end = saved_end;
+					tpp_lexer_poptokenend(self);
 				}
 				if (accept_error != TPP_ENOENT) {
 					if (TPP_ISERR(accept_error)) {
@@ -252,8 +252,8 @@ again_yield_nextfile:
 					} else if (p_token != NULL) {
 						tpp_token_copy(p_token, tpp_lexer_gettoken(self));
 						if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
-							p_token->tt_start = tpp_lexer_gettokenend(self);
-						p_token->tt_end = pos;
+							p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
+						p_token->tt_range.ttr_end = pos;
 					}
 					tpp_lexer_seek_rollback(self, &backup);
 					tpp_lexer_manualpopfile_break_commit(self);
@@ -272,12 +272,12 @@ again_yield_nextfile:
 			if (p_token) {
 				tpp_file *const file = tpp_lexer_getfile(self);
 
-				p_token->tt_id    = TPP_TOK_EOF;
-/*				p_token->tt_kwd   = NULL; */
-				p_token->tt_start = tpp_file_getend(file);
-				p_token->tt_end   = tpp_file_getend(file);
+				p_token->tt_id              = TPP_TOK_EOF;
+/*				p_token->tt_kwd             = NULL; */
+				p_token->tt_range.ttr_start = tpp_file_getend(file);
+				p_token->tt_range.ttr_end   = tpp_file_getend(file);
 				if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
-					p_token->tt_start = tpp_lexer_gettokenend(self);
+					p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
 				p_token->tt_chunk = tpp_file_getchunk(file);
 				if (p_token->tt_chunk)
 					tpp_string_incref(p_token->tt_chunk);

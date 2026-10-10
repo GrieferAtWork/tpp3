@@ -1014,10 +1014,10 @@ tpp_lexer_yield_handle___TPP_IDENTIFIER(tpp_lexer *tpp_restrict self) {
 	if (!TPP_TOK_ISERR(tok)) {
 		tpp_assert(data.tlhtid_keyword);
 		/* Setup current token to refer to "data.tlhtid_keyword" */
-		token->tt_id    = tok = data.tlhtid_keyword->tk_id;
-		token->tt_kwd   = data.tlhtid_keyword;
-/*		token->tt_start = ...;  * Already correct (points at the '__TPP_IDENTIFIER'-keyword) */
-/*		token->tt_end   = ...;  * Already correct (points after the trailing ')'-token) */
+		tpp_token_setkwd(token, data.tlhtid_keyword);
+/*		token->tt_range.ttr_start = ...;  * Already correct (points at the '__TPP_IDENTIFIER'-keyword) */
+/*		token->tt_range.ttr_end   = ...;  * Already correct (points after the trailing ')'-token) */
+		tok = tpp_keyword_getid(data.tlhtid_keyword);
 	}
 	return tok;
 }

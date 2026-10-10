@@ -311,7 +311,7 @@ typedef struct tpp_file {
 	tpp_char const     *TPP_INTERNAL(tf_tpos);  /* [0..1] Start of last-loaded token
 	                                             * WARNING: This field is NOT maintained/updated by `tpp_file_*` APIs
 	                                             *          It is only here so it overlaps with the lexer's token's
-	                                             *          `tt_start` field, such that said field is saved when
+	                                             *          `ttr_start` field, such that said field is saved when
 	                                             *          a new file is pushed onto the `#include`-stack, and can
 	                                             *          then be used to calculate line/column information when
 	                                             *          lexer prints its `#include`-stack. */

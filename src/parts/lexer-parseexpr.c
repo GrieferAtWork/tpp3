@@ -113,8 +113,10 @@ handle_comment:
 	{
 		/* Handling for multi-char tokens:  --  ++  ~~  !! */
 		tpp_token *const token = tpp_lexer_gettoken(self);
-		token->tt_end = token->tt_start + 1;
-		token->tt_id = tok = TPP_TOK_OFCHAR(*token->tt_start);
+		tpp_char const *start = tpp_token_getstart(token);
+		tok = TPP_TOK_OFCHAR(*start);
+		tpp_token_setend(token, start + 1);
+		tpp_token_setid(token, tok);
 	}	TPP_FALLTHRU
 #endif /* ... */
 	case '!':
@@ -224,16 +226,18 @@ handle_comment:
 #if TPP_HAVE_BUILTIN_EXPR_STRINGS || TPP_HAVE_CPP_ASSERT
 #if TPP_HAVE_TOK_SHELL_COMMENT || TPP_HAVE_TOK_SOL_SHELL_COMMENT
 	TPP_CASE_TPP_TOK_SHELL_COMMENT {
+		tpp_char const *start;
 		tpp_token *const token = tpp_lexer_gettoken(self);
 		if (!tpp_lexer_has(self, CPP_ASSERT) &&
 		    !tpp_lexer_has(self, BUILTIN_EXPR_STRINGS))
 			goto handle_comment;
 		/* Convert to '#'-token */
-		token->tt_id = TPP_TOK_OFCHAR('#');
-		token->tt_end = token->tt_start + 1;
+		start = tpp_token_getstart(token);
+		tpp_token_setend(token, start + 1);
+		tpp_token_setid(token, TPP_TOK_OFCHAR('#'));
 #if TPP_HAVE_TRIGRAPHS
-		if (*token->tt_start == '?') {
-			token->tt_end += 2;
+		if (*start == '?') {
+			tpp_token_setend(token, start + 3);
 		} else
 #endif /* TPP_HAVE_TRIGRAPHS */
 		{

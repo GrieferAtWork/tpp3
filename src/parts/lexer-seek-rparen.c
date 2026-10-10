@@ -268,7 +268,7 @@ tpp_lexer_seekpp_rparen(tpp_lexer *tpp_restrict self,
 	 */
 
 	result = token->tt_id;
-	curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+	curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getend(token));
 	tpp_set_curarg_rel_rend(curarg_rel_start);
 	tpp_set_curarg_nonspace(0);
 again_yield_and_switch_tok:
@@ -306,7 +306,7 @@ again_switch_tok:
 			if (TPP_TOK_ISERR(result))
 				break;
 		} while (file->tf_prev != NULL);
-		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+		curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getstart(token));
 		tpp_set_curarg_rel_rend(curarg_rel_start);
 		tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
 	}
@@ -324,11 +324,11 @@ again_switch_tok:
 		if (tpp_string_builder_isempty(&state.tsrps_curarg_prefix) &&
 		    curarg_rel_start == curarg_rel_rend) {
 			/* Skip leading whitespace... */
-			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getend(token));
 			tpp_set_curarg_rel_rend(curarg_rel_start);
 			goto again_yield_and_switch_tok;
 		}
-		if (curarg_rel_end != tpp_file_keep_ptr2rel(file, token->tt_start)) {
+		if (curarg_rel_end != tpp_file_keep_ptr2rel(file, tpp_token_getstart(token))) {
 			tpp_assert(curarg_rel_end >= curarg_rel_rend);
 			if (curarg_rel_end > curarg_rel_start) {
 				tpp_size num_bytes = (tpp_size)(curarg_rel_end - curarg_rel_start);
@@ -375,9 +375,9 @@ again_switch_tok:
 				if (curarg_rel_rend > curarg_rel_start)
 					curarg_nonspace += (curarg_rel_rend - curarg_rel_start);
 			}
-			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getstart(token));
 		}
-		curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_end);
+		curarg_rel_end = tpp_file_keep_ptr2rel(file, tpp_token_getend(token));
 		goto again_yield_and_switch_tok;
 #endif /* TPP_CONF_MAYBE_0(TPP_HAVE_MACRO_ARGUMENT_WHITESPACE) */
 	}	break;
@@ -402,7 +402,7 @@ again_switch_tok:
 				}
 			}
 
-			curarg_rel_end = tpp_file_keep_ptr2rel(file, token->tt_start);
+			curarg_rel_end = tpp_file_keep_ptr2rel(file, tpp_token_getstart(token));
 #if TPP_HAVE_MACRO_ARGUMENT_WHITESPACE
 			if (tpp_lexer_seekpp_rparen_keepspace())
 				curarg_rel_rend = curarg_rel_end;
@@ -433,7 +433,7 @@ again_switch_tok:
 			}
 			tpp_seek_rparen_state_save_curfile(&state, self);
 			result = tpp_lexer_yieldpp_blocking(self);
-			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getstart(token));
 			tpp_set_curarg_rel_rend(curarg_rel_start);
 #if TPP_HAVE_MAGIC_WHITESPACE
 			if (!TPP_TOK_ISERR(result) &&
@@ -520,11 +520,11 @@ again_switch_tok:
 #if TPP_HAVE_TOK_MC_STARTSWITH_LANGLE
 	TPP_CASE_TPP_TOK_MC_STARTSWITH_LANGLE /* Could in theory exclude "TPP_TOK_LANGLE_RANGLE" here... */
 		/* Convert to "<" token */
-		tpp_assert(token->tt_start < token->tt_end);
-		tpp_assert(token->tt_start[0] == '<');
-		token->tt_end = token->tt_start + 1;
-/*		result = TPP_TOK_OFCHAR('<');  * Not necessary */
-/*		token->tt_id = result;         * Not necessary */
+		tpp_assert(tpp_token_getstart(token) < tpp_token_getend(token));
+		tpp_assert(tpp_token_getstart(token)[0] == '<');
+		tpp_token_setend(token, tpp_token_getstart(token) + 1);
+/*		result = TPP_TOK_OFCHAR('<');   * Not necessary */
+/*		tpp_token_setid(token, result); * Not necessary */
 		goto handle_langle;
 #define WANT_handle_langle
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_LANGLE */
@@ -534,11 +534,11 @@ again_switch_tok:
 #if TPP_HAVE_TOK_MC_STARTSWITH_RANGLE
 	TPP_CASE_TPP_TOK_MC_STARTSWITH_RANGLE
 		/* Convert to ">" token */
-		tpp_assert(token->tt_start < token->tt_end);
-		tpp_assert(token->tt_start[0] == '>');
-		token->tt_end = token->tt_start + 1;
+		tpp_assert(tpp_token_getstart(token) < tpp_token_getend(token));
+		tpp_assert(tpp_token_getstart(token)[0] == '>');
+		tpp_token_setend(token, tpp_token_getstart(token) + 1);
 		result = TPP_TOK_OFCHAR('>');
-		token->tt_id = result;
+		tpp_token_setid(token, result);
 		goto handle_rangle;
 #define WANT_handle_rangle
 #endif /* TPP_HAVE_TOK_MC_STARTSWITH_RANGLE */
@@ -583,10 +583,10 @@ for (local tok: splitTokens) {
 	print("#endif /" "* TPP_HAVE_TOK_", tokenName(tok), " *" "/");
 }
 print("		/" "* Convert to 1-char token *" "/");
-print("		tpp_assert(token->tt_start < token->tt_end);");
-print("		token->tt_end = token->tt_start + 1;");
-print("/" "*		result = TPP_TOK_OFCHAR(token->tt_start[0]); * Not necessary *" "/");
-print("/" "*		token->tt_id = result;                       * Not necessary *" "/");
+print("		tpp_assert(tpp_token_getstart(token) < tpp_token_getend(token));");
+print("		tpp_token_setend(token, tpp_token_getstart(token) + 1);");
+print("/" "*		result = TPP_TOK_OFCHAR(tpp_token_getstart(token)[0]); * Not necessary *" "/");
+print("/" "*		tpp_token_setid(token, result);                        * Not necessary *" "/");
 print("		break;");
 print("#endif /" "* ", cond, " *" "/");
 ]]]*/
@@ -634,10 +634,10 @@ print("#endif /" "* ", cond, " *" "/");
 	case TPP_TOK_EQUAL_RANGLE_RANGLE_RANGLE: /* "=>>>" */
 #endif /* TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 		/* Convert to 1-char token */
-		tpp_assert(token->tt_start < token->tt_end);
-		token->tt_end = token->tt_start + 1;
-/*		result = TPP_TOK_OFCHAR(token->tt_start[0]); * Not necessary */
-/*		token->tt_id = result;                       * Not necessary */
+		tpp_assert(tpp_token_getstart(token) < tpp_token_getend(token));
+		tpp_token_setend(token, tpp_token_getstart(token) + 1);
+/*		result = TPP_TOK_OFCHAR(tpp_token_getstart(token)[0]); * Not necessary */
+/*		tpp_token_setid(token, result);                        * Not necessary */
 		break;
 #endif /* TPP_HAVE_TOK_STAR_LANGLE_MINUS || TPP_HAVE_TOK_MINUS_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_STAR || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE || TPP_HAVE_TOK_MINUS_RANGLE_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_LANGLE_LANGLE_LANGLE || TPP_HAVE_TOK_EQUAL_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE || TPP_HAVE_TOK_EQUAL_RANGLE_RANGLE_RANGLE */
 /*[[[end]]]*/
@@ -728,7 +728,7 @@ handle_rangle:
 				arg->tlai_start = (tpp_char const *)curarg_rel_start;
 				arg->tlai_end   = (tpp_char const *)tpp_get_curarg_rel_rend();
 			}
-			curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_end);
+			curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getend(token));
 			tpp_set_curarg_rel_rend(curarg_rel_start);
 			++argc;
 			goto again_yield_and_switch_tok;
@@ -741,7 +741,7 @@ handle_rangle:
 			goto err_result;
 		break;
 	}
-	if (curarg_rel_end != tpp_file_keep_ptr2rel(file, token->tt_start)) {
+	if (curarg_rel_end != tpp_file_keep_ptr2rel(file, tpp_token_getstart(token))) {
 		tpp_assert(curarg_rel_end >= curarg_rel_start);
 		if (curarg_rel_end > curarg_rel_start) {
 			tpp_size num_bytes = (tpp_size)(curarg_rel_end - curarg_rel_start);
@@ -750,9 +750,9 @@ handle_rangle:
 				goto err_nomem;
 			tpp_set_curarg_nonspace(tpp_string_builder_getlen(&state.tsrps_curarg_prefix));
 		}
-		curarg_rel_start = tpp_file_keep_ptr2rel(file, token->tt_start);
+		curarg_rel_start = tpp_file_keep_ptr2rel(file, tpp_token_getstart(token));
 	}
-	tpp_set_curarg_rel_rend(tpp_file_keep_ptr2rel(file, token->tt_end));
+	tpp_set_curarg_rel_rend(tpp_file_keep_ptr2rel(file, tpp_token_getend(token)));
 	goto again_yield_and_switch_tok;
 
 

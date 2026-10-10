@@ -35,8 +35,10 @@
 #if TPP_HAVE_TOKEN_NUMBER
 			/* .TPP_INTERNAL(tt_num)   = */ 0,
 #endif /* TPP_HAVE_TOKEN_NUMBER */
-			/* .TPP_INTERNAL(tt_start) = */ NULL,
-			/* .TPP_INTERNAL(tt_end)   = */ NULL,
+			/* .TPP_INTERNAL(tt_range) = */ {
+				/* .TPP_INTERNAL(ttr_start) = */ NULL,
+				/* .TPP_INTERNAL(ttr_end)   = */ NULL
+			},
 			/* .TPP_INTERNAL(tt_chunk) = */ NULL
 		}
 	},

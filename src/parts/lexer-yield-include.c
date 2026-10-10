@@ -101,10 +101,10 @@ warn_linefeed:
 			}
 		}
 		/* Success -> setup token to describe the #include-string */
-		token->tt_id    = TPP_TOK_OFCHAR(start_ch);
-		token->tt_start = tpp_file_rel2ptr(file, rel_start);
-//		token->tt_end   = pos; /* Must be done by caller if that's what they want ... */
-		*p_pos = pos;          /* ... or done by this, in case "p_pos == &token->tt_end" */
+		token->tt_id              = TPP_TOK_OFCHAR(start_ch);
+		token->tt_range.ttr_start = tpp_file_rel2ptr(file, rel_start);
+//		token->tt_range.ttr_end   = pos; /* Must be done by caller if that's what they want ... */
+		*p_pos = pos;          /* ... or done by this, in case "p_pos == &token->tt_range.ttr_end" */
 		return TPP_TOK_OFCHAR(start_ch);
 	}
 
@@ -209,10 +209,9 @@ again:
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_ssize TPPCALL
 tpp_lexer_decode_include_string(tpp_lexer const *tpp_restrict self,
                                 tpp_formatprinter printer, void *arg) {
-	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_token_id const mode = token->tt_id;
-	tpp_char const *start = token->tt_start;
-	tpp_char const *end = token->tt_end;
+	tpp_token_id const mode = tpp_lexer_gettok(self);
+	tpp_char const *start = tpp_lexer_gettokenstart(self);
+	tpp_char const *end = tpp_lexer_gettokenend(self);
 	tpp_char const end_ch = mode == '<' ? '>' : (tpp_char)mode;
 	tpp_assert(mode == '"' || mode == '<');
 	if (start < end && start[0] == (tpp_char)mode)

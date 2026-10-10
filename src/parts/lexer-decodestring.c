@@ -70,8 +70,7 @@ tpp_token_decodestring_formatexpr(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const saved_token_id        = token->tt_id;
 //	tpp_keyword const *const saved_token_kwd = token->tt_kwd; /* Not necessary -- `saved_token_id` is a string literal token */
-	tpp_char const *const saved_token_start  = token->tt_start;
-	tpp_char const *const saved_token_end    = token->tt_end;
+	tpp_token_range const saved_token_range  = token->tt_range;
 	tpp_file *const file = tpp_lexer_getfile(self);
 	tpp_ssize result;
 	tpp_char const *expr_start = *p_iter;
@@ -95,8 +94,7 @@ tpp_token_decodestring_formatexpr(tpp_lexer *tpp_restrict self,
 			/* Warning: format expression terminated by end-of-string */
 #if TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF
 			tpp_errno error;
-			token->tt_start = expr_start;
-			token->tt_end   = end;
+			tpp_token_setrange(token, expr_start, end);
 			error  = tpp_lexer_warnf(self, TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF);
 			result = TPP_SSIZE_OFERR_OR_EOK(error);
 #endif /* TPP_HAVE_TPP_W_FORMAT_STRING_ESCAPE_TERMINATED_BY_EOF */
@@ -116,7 +114,7 @@ tpp_token_decodestring_formatexpr(tpp_lexer *tpp_restrict self,
 	/* Setup file to (re-)parse the expression itself. */
 	tpp_file_subtext_setchunk_fromsubstring(file, expr_start, expr_end);
 	token->tt_id = TPP_TOK_SPACE;
-	token->tt_start = expr_start;
+	token->tt_range.ttr_start = expr_start;
 
 	/* Invoke format expression handler. */
 	if (config->tldsc_formatexpr) {
@@ -128,7 +126,7 @@ check_eof_after_expression:;
 
 		/* Emit warning if there is more (unused) text after the expression. */
 #if TPP_HAVE_TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE
-		if (result >= 0 && token->tt_start < expr_end) {
+		if (result >= 0 && tpp_token_getstart(token) < expr_end) {
 			tpp_token_id tok = tpp_lexer_gettok(self);
 			while (TPP_TOK_ISSPACE_OR_LF_OR_COMMENT(tok))
 				tok = tpp_lexer_yieldraw(self);
@@ -136,7 +134,7 @@ check_eof_after_expression:;
 				result = TPP_SSIZE_OFERR(TPP_TOK_ASERR(tok));
 			} else if (tok != TPP_TOK_EOF) {
 				tpp_errno error;
-				token->tt_end = expr_end;
+				tpp_token_setend(token, expr_end);
 				error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_TEXT_AFTER_FORMAT_STRING_ESCAPE);
 				if (TPP_ISERR(error))
 					result = TPP_SSIZE_OFERR(error);
@@ -164,8 +162,7 @@ check_eof_after_expression:;
 	{
 #if TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE
 		tpp_errno error;
-		token->tt_start = expr_start;
-		token->tt_end   = expr_end;
+		tpp_token_setrange(token, expr_start, expr_end);
 		error  = tpp_lexer_warnf(self, TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE);
 		result = TPP_SSIZE_OFERR_OR_EOK(error);
 #else /* TPP_HAVE_TPP_W_UNSUPPORTED_FORMAT_STRING_ESCAPE */
@@ -177,8 +174,7 @@ done:
 	tpp_file_subtext_pop(file);
 	token->tt_id    = saved_token_id;
 //	token->tt_kwd   = saved_token_kwd; /* Not necessary -- `saved_token_id` is a string literal token */
-	token->tt_start = saved_token_start;
-	token->tt_end   = saved_token_end;
+	token->tt_range = saved_token_range;
 	*p_iter = after_expr;  /* Tell caller where the expression ends */
 	return result;
 }
@@ -225,13 +221,10 @@ tpp_token_decodestring_oct_sequence(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 	{
 		tpp_errno error;
-		tpp_char const *saved_start = token->tt_start;
-		tpp_char const *saved_end = token->tt_end;
-		token->tt_start = *p_iter;
-		token->tt_end   = iter;
+		tpp_token_pushrange(token);
+		tpp_token_setrange(token, *p_iter, iter);
 		error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
-		token->tt_start = saved_start;
-		token->tt_end   = saved_end;
+		tpp_token_poprange(token);
 		if (TPP_ISERR(error)) {
 			result = TPP_SSIZE_OFERR(error);
 			goto done;
@@ -240,13 +233,10 @@ tpp_token_decodestring_oct_sequence(tpp_lexer *tpp_restrict self,
 #endif /* TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE */
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
 	if (bigword > 0xff && config->tldsc_bigprinter) {
-		tpp_char const *saved_start = token->tt_start;
-		tpp_char const *saved_end = token->tt_end;
-		token->tt_start = *p_iter;
-		token->tt_end   = iter;
+		tpp_token_pushrange(token);
+		tpp_token_setrange(token, *p_iter, iter);
 		result = (*config->tldsc_bigprinter)(config->tldsc_arg, self, bigword);
-		token->tt_start = saved_start;
-		token->tt_end   = saved_end;
+		tpp_token_poprange(token);
 		goto done;
 	}
 #endif /* TPP_HAVE_STRING_ESCAPE_BIGCHAR */
@@ -356,13 +346,10 @@ tpp_token_decodestring_hex_sequence(tpp_lexer *tpp_restrict self,
 #endif /* !TPP_HAVE_STRING_ESCAPE_BIGCHAR */
 					{
 						tpp_errno error;
-						tpp_char const *saved_start = token->tt_start;
-						tpp_char const *saved_end = token->tt_end;
-						token->tt_start = *p_iter;
-						token->tt_end   = iter;
+						tpp_token_pushrange(token);
+						tpp_token_setrange(token, *p_iter, iter);
 						error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
-						token->tt_start = saved_start;
-						token->tt_end   = saved_end;
+						tpp_token_poprange(token);
 						if (TPP_ISERR(error)) {
 							*p_iter = iter;
 							return TPP_SSIZE_OFERR(error);
@@ -372,13 +359,10 @@ tpp_token_decodestring_hex_sequence(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_STRING_ESCAPE_BIGCHAR
 					if (bigword > 0xff && config->tldsc_bigprinter) {
 						tpp_ssize result;
-						tpp_char const *saved_start = token->tt_start;
-						tpp_char const *saved_end = token->tt_end;
-						token->tt_start = *p_iter;
-						token->tt_end   = iter;
+						tpp_token_pushrange(token);
+						tpp_token_setrange(token, *p_iter, iter);
 						result = (*config->tldsc_bigprinter)(config->tldsc_arg, self, bigword);
-						token->tt_start = saved_start;
-						token->tt_end   = saved_end;
+						tpp_token_poprange(token);
 						*p_iter = iter;
 						return result;
 					}
@@ -442,13 +426,10 @@ tpp_token_decodestring_uni_sequence(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TPP_W_CHARACTER_TOO_LARGE
 	if (has_overflow) {
 		tpp_errno error;
-		tpp_char const *saved_start = token->tt_start;
-		tpp_char const *saved_end = token->tt_end;
-		token->tt_start = *p_iter;
-		token->tt_end   = iter;
+		tpp_token_pushrange(token);
+		tpp_token_setrange(token, *p_iter, iter);
 		error = tpp_lexer_warnf(self, TPP_W_CHARACTER_TOO_LARGE);
-		token->tt_start = saved_start;
-		token->tt_end   = saved_end;
+		tpp_token_poprange(token);
 		if (TPP_ISERR(error)) {
 			*p_iter = iter;
 			return TPP_SSIZE_OFERR(error);
@@ -584,13 +565,10 @@ tpp_lexer_braceseq_find_rbrace_and_warn_bad_chars(tpp_char const **tpp_restrict 
 	{
 		tpp_errno error;
 		tpp_token *const token = tpp_lexer_gettoken(self);
-		tpp_char const *saved_start = token->tt_start;
-		tpp_char const *saved_end = token->tt_end;
-		token->tt_start = unmatched_start;
-		token->tt_end   = unmatched_end;
+		tpp_token_pushrange(token);
+		tpp_token_setrange(token, unmatched_start, unmatched_end);
 		error = tpp_lexer_warnf(self, TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE, "}");
-		token->tt_start = saved_start;
-		token->tt_end   = saved_end;
+		tpp_token_poprange(token);
 		return error;
 	}
 #else /* TPP_HAVE_TPP_W_UNEXPECTED_CHARACTER_IN_STRING_ESCAPE */
@@ -1302,13 +1280,10 @@ handle_unknown_escape_sequence:
 		{
 			tpp_errno error;
 			tpp_token *const token = tpp_lexer_gettoken(self);
-			tpp_char const *saved_start = token->tt_start;
-			tpp_char const *saved_end = token->tt_end;
-			token->tt_start = esc_start;
-			token->tt_end   = iter;
+			tpp_token_pushrange(token);
+			tpp_token_setrange(token, esc_start, iter);
 			error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_STRING_ESCAPE_SEQUENCE);
-			token->tt_start = saved_start;
-			token->tt_end   = saved_end;
+			tpp_token_poprange(token);
 			if (TPP_ISERR(error))
 				return TPP_SSIZE_OFERR(error);
 		}
@@ -1555,13 +1530,10 @@ not_trigraph:
 #if TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING
 			tpp_errno error;
 			tpp_token *const token = tpp_lexer_gettoken(self);
-			tpp_char const *const saved_start = token->tt_start;
-			tpp_char const *const saved_end = token->tt_end;
-			token->tt_start = esc_start;
-			token->tt_end   = iter;
+			tpp_token_pushrange(token);
+			tpp_token_setrange(token, esc_start, iter);
 			error = tpp_lexer_warnf(self, TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING);
-			token->tt_start = saved_start;
-			token->tt_end   = saved_end;
+			tpp_token_poprange(token);
 			temp = TPP_SSIZE_OFERR_OR_EOK(error);
 #endif /* TPP_HAVE_TPP_W_UNESCAPED_RBRACE_IN_PYTHON_FORMAT_STRING */
 		}
@@ -1997,10 +1969,10 @@ tpp_lexer_decodestring(tpp_lexer *tpp_restrict self,
                        tpp_lexer_decodestring_config const *tpp_restrict config) {
 #undef HAVE_do_decode_basic
 	tpp_token const *const token = tpp_lexer_gettoken(self);
-	tpp_char const *start = token->tt_start;
-	tpp_char const *end   = token->tt_end;
-	tpp_assert(TPP_TOK_ISSTRING(token->tt_id));
-	switch (token->tt_id) {
+	tpp_char const *start = tpp_token_getstart(token);
+	tpp_char const *end   = tpp_token_getend(token);
+	tpp_assert(tpp_token_isstring(token));
+	switch (tpp_token_getid(token)) {
 
 #if (TPP_HAVE_TOK_C_STRING ||                 \
      TPP_HAVE_TOK_CXX_WIDE_STRING_LITERAL ||  \
@@ -2484,10 +2456,10 @@ tpp_lexer_decodestring_is_single_chunk_at(tpp_lexer *tpp_restrict self,
                                           tpp_lexer_decodestring_single_chunk_flags__param) {
 	unsigned int result;
 	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_char const *saved_token_end = token->tt_end;
-	token->tt_end = token_end;
+	tpp_token_pushend(token);
+	tpp_token_setend(token, token_end);
 	result = tpp_lexer_decodestring_is_single_chunk(self tpp_lexer_decodestring_single_chunk_flags__arg);
-	token->tt_end = saved_token_end;
+	tpp_token_popend(token);
 	return result;
 }
 #endif /* TPP_HAVE_STRING_AUTO_CONCAT */
@@ -2782,7 +2754,7 @@ again_yield_after_eof_decoded:
 			tpp_token *const token = tpp_lexer_gettoken(self);
 			tpp_token_id final_tt_id               = token->tt_id;
 			struct tpp_keyword const *final_tt_kwd = token->tt_kwd;
-			tpp_char const *final_tt_start         = token->tt_start;
+			tpp_char const *final_tt_start         = tpp_token_getstart(token);
 
 			/* Restore the original token containing the single-chunk string */
 			tpp_lexer_seek_rollback(self, &backup);
@@ -2791,10 +2763,9 @@ again_yield_after_eof_decoded:
 			result = tpp_lexer_decodestring_as_single_chunk(self, cb, arg);
 			if (!TPP_ISERR(result)) {
 				/* Restore the context of the non-string token following the single-chunk'd string */
-				token->tt_id    = final_tt_id;
-				token->tt_kwd   = final_tt_kwd;
-				token->tt_start = final_tt_start;
-				token->tt_end   = pos;
+				token->tt_id  = final_tt_id;
+				token->tt_kwd = final_tt_kwd;
+				tpp_token_setrange(token, final_tt_start, pos);
 			}
 		}
 		return result;

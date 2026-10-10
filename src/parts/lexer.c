@@ -151,9 +151,9 @@ TPP_STATIC_ASSERT(TPP_TOK_OFCHAR('&') == TPP_TOK_AMP);
 
 /* Make sure that offsets within "tpp_lexer" are properly aligned such that
  * the tail end of "tpp_token" correctly overlaps with the start of "tpp_file" */
-TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_start) ==
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_range.ttr_start) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_tpos));
-TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_end) ==
+TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_range.ttr_end) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_pos));
 TPP_STATIC_ASSERT(tpp_offsetof(tpp_lexer, tl_core.tlc_tok.tt_chunk) ==
                   tpp_offsetof(tpp_lexer, tl_core.tlc_input.tli_file.tf_chunk));

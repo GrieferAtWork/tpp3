@@ -49,10 +49,10 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 	 * loaded token is a multi-char token that starts with
 	 * the same value. */
 	if ((TPP_TOK_ISCHAR(tok)) &&
-	    (token->tt_start < token->tt_end) &&
-	    (*token->tt_start == (tpp_char)(unsigned int)tok)) {
-		token->tt_end = token->tt_start + 1;
-		token->tt_id  = tok;
+	    (tpp_token_getstart(token) < tpp_token_getend(token)) &&
+	    (*tpp_token_getstart(token) == (tpp_char)(unsigned int)tok)) {
+		tpp_token_setend(token, tpp_token_getstart(token) + 1);
+		tpp_token_setid(token, tok);
 		return true;
 	}
 
@@ -297,10 +297,10 @@ tpp_lexer_token_matches(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		{
 			tpp_char const *iter;
 set_twochar:
-			iter = token->tt_start + 1;
-			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
-			token->tt_end = iter + 1;
-			token->tt_id  = tok;
+			iter = tpp_token_getstart(token) + 1;
+			iter = tpp_preparse_skipbse_fwd(self, iter, tpp_token_getend(token));
+			tpp_token_setend(token, iter + 1);
+			tpp_token_setid(token, tok);
 			return true;
 		}
 #endif /* WANT_set_twochar */
@@ -310,12 +310,12 @@ set_twochar:
 		{
 			tpp_char const *iter;
 set_threechar:
-			iter = token->tt_start + 1;
-			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
+			iter = tpp_token_getstart(token) + 1;
+			iter = tpp_preparse_skipbse_fwd(self, iter, tpp_token_getend(token));
 			iter = iter + 1;
-			iter = tpp_preparse_skipbse_fwd(self, iter, token->tt_end);
-			token->tt_end = iter + 1;
-			token->tt_id  = tok;
+			iter = tpp_preparse_skipbse_fwd(self, iter, tpp_token_getend(token));
+			tpp_token_setend(token, iter + 1);
+			tpp_token_setid(token, tok);
 			return true;
 		}
 #endif /* WANT_set_threechar */
@@ -394,8 +394,8 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		tpp_token *const token = tpp_lexer_gettoken(self);
 		tpp_lexer_arginfo argv[1];
 		tpp_size argc = 1;
-		token->tt_start = token->tt_end;
-		token->tt_end   = pos;
+		token->tt_range.ttr_start = token->tt_range.ttr_end;
+		token->tt_range.ttr_end   = pos;
 		tpp_lexer_manualpopfile_start(self);
 #if TPP_HAVE_LEXER_SEEKPP_RPAREN_EX
 		{
@@ -424,14 +424,14 @@ tpp_lexer_require(tpp_lexer *tpp_restrict self, tpp_token_id tok) {
 		if (result == tok) {
 			/* Found it! */
 			tpp_lexer_manualpopfile_break_commit(self);
-			token->tt_start = token->tt_end - 1;
+			token->tt_range.ttr_start = token->tt_range.ttr_end - 1;
 			return result;
 		}
 		tpp_lexer_getfile(self)->tf_pos = pos;
 		tpp_lexer_manualpopfile_end_rollback(self);
-		token->tt_end   = token->tt_start + backup.tlsb_len;
-		token->tt_id    = backup.tlsb_id;
-		token->tt_kwd   = backup.tlsb_kwd;
+		token->tt_range.ttr_end = token->tt_range.ttr_start + backup.tlsb_len;
+		token->tt_id            = backup.tlsb_id;
+		token->tt_kwd           = backup.tlsb_kwd;
 		if (!TPP_TOK_ISERR(result))
 			result = backup.tlsb_id;
 		return result;

@@ -286,7 +286,7 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 		if (newend < end) {
 			newend = tpp_preparse_skipbse_bck(self, start, newend);
 			if (newend > start)
-				tpp_lexer_gettoken(self)->tt_end = newend;
+				tpp_lexer_settokenend(self, newend);
 		}
 	}
 #if TPP_HAVE_TOK_C_INT

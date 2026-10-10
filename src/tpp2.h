@@ -5039,8 +5039,8 @@ TPPKeyword_GetFlags_(tpp_lexer *lexer,
 #undef t_file /* In TPP3, the lexer always re-uses the same file structure as the current file.
                * (when a new file is `#include`-ed, the old one is saved in the `#include`-stack)
                * To access the current file, use `tpp_lexer_getfile()` */
-#define t_begin TPP_INTERNAL(tt_start) /* Use `tpp_token_getstart()` + `tpp_token_setrange()` */
-#define t_end   TPP_INTERNAL(tt_end)   /* Use `tpp_token_getend()` + `tpp_token_setrange()` / `tpp_token_setend()` */
+#define t_begin TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start) /* Use `tpp_token_getstart()` + `tpp_token_setrange()` */
+#define t_end   TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)   /* Use `tpp_token_getend()` + `tpp_token_setrange()` / `tpp_token_setend()` */
 #define t_kwd   TPP_INTERNAL(tt_kwd)   /* Use `tpp_token_getkwd()` + `tpp_token_setkwd()` */
 /* }; */
 

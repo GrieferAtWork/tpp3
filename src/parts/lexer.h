@@ -63,7 +63,7 @@ union TPP_INTERNAL(tpp_lexer_core) {
 	tpp_token      TPP_INTERNAL(tlc_tok);  /* [valid_if(WAS_CALLED(tpp_lexer_yieldraw()))] Last-read token (never
 	                                        * set to one of `TPP_TOK_E*`; iow: always positive or TPP_TOK_EOF). */
 	struct {
-		char _tli_pad[tpp_offsetof(tpp_token, TPP_INTERNAL(tt_start))];
+		char _tli_pad[tpp_offsetof(tpp_token, TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start))];
 		tpp_file   TPP_INTERNAL(tli_file); /* [OVERRIDE(.tf_prev, [owned])]
 		                                    * The file that lies at the top of the lexer's #include/macro-stack.
 		                                    * this is also the file whose buffer currently contains `tl_tok` */
@@ -312,8 +312,14 @@ typedef struct tpp_lexer {
 #define tpp_lexer_gettokenlen(self)               tpp_token_getlen(tpp_lexer_gettoken(self))
 #define tpp_lexer_settokenid(self, id)            tpp_token_setid(tpp_lexer_gettoken(self), id)
 #define tpp_lexer_settokenkwd(self, kwd)          tpp_token_setkwd(tpp_lexer_gettoken(self), kwd)
+#define tpp_lexer_pushtokenrange(self)            tpp_token_pushrange(tpp_lexer_gettoken(self))
 #define tpp_lexer_settokenrange(self, start, end) tpp_token_setrange(tpp_lexer_gettoken(self), start, end)
+#define tpp_lexer_breaktokenrange(self)           tpp_token_breakrange(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokenrange(self)             tpp_token_poprange(tpp_lexer_gettoken(self))
+#define tpp_lexer_pushtokenend(self)              tpp_token_pushend(tpp_lexer_gettoken(self))
 #define tpp_lexer_settokenend(self, end)          tpp_token_setend(tpp_lexer_gettoken(self), end)
+#define tpp_lexer_breaktokenend(self)             tpp_token_breakend(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokenend(self)               tpp_token_popend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokennum(self)               tpp_token_getnum(tpp_lexer_gettoken(self))
 #define tpp_lexer_resettokennum(self)             tpp_token_resetnum(tpp_lexer_gettoken(self))
 #if TPP_HAVE_TOKEN_NUMBER
@@ -1975,7 +1981,7 @@ tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self);
  *    returned when no more data can be loaded.
  *
  * This is used to implement `tpp_lexer_yieldraw()`, which simply
- * passes `p_pos = &tpp_lexer_gettoken(self)->tt_end`
+ * passes `p_pos = &tpp_lexer_gettoken(self)->tt_range.ttr_end`
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
@@ -2020,19 +2026,19 @@ tpp_lexer_seek_start(tpp_lexer *tpp_restrict self,
 #define _tpp_lexer_seek_rollback_num(self, backup) /* nothing */
 #endif /* !TPP_HAVE_TOKEN_NUMBER */
 	backup->TPP_INTERNAL(tlsb_len) = tpp_token_getlen(token);
-	result                         = tpp_token_getend(token);
-	token->TPP_INTERNAL(tt_end)    = tpp_token_getstart(token);
+	result = tpp_token_getend(token);
+	token->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end) = tpp_token_getstart(token);
 	return result;
 }
 #define tpp_lexer_seek_commit(self, pos) \
-	(void)(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end) = (pos))
+	(void)(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end) = (pos))
 
 /* @return: * : The restored `tpp_token_id` */
-#define tpp_lexer_seek_rollback(self, backup)                                                                             \
-	(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_kwd) = (backup)->TPP_INTERNAL(tlsb_kwd)                                    \
-	 _tpp_lexer_seek_rollback_num(self, backup),                                                                          \
-	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_start) = tpp_lexer_gettokenend(self),                                      \
-	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end)   = tpp_lexer_gettokenstart(self) + (backup)->TPP_INTERNAL(tlsb_len), \
+#define tpp_lexer_seek_rollback(self, backup)                                                                                                     \
+	(tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_kwd) = (backup)->TPP_INTERNAL(tlsb_kwd)                                                            \
+	 _tpp_lexer_seek_rollback_num(self, backup),                                                                                                  \
+	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_start) = tpp_lexer_gettokenend(self),                                      \
+	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)   = tpp_lexer_gettokenstart(self) + (backup)->TPP_INTERNAL(tlsb_len), \
 	 tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_id)    = (backup)->TPP_INTERNAL(tlsb_id))
 
 
@@ -2192,7 +2198,7 @@ tpp_lexer_yieldpp_blocking(tpp_lexer *tpp_restrict self);
 /* Same as `tpp_lexer_yieldraw()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
 #define tpp_lexer_yieldraw_blocking(self) \
-	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
+	tpp_lexer_yieldraw_at_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end))
 
 /* Same as `tpp_lexer_yieldraw_at()`, but handle `TPP_TOK_EWOULDBLOCK` by temporarily
  * clearing the `TPP_FILE_FLAGS_NONBLOCK` flag, and re-attempting the yield. */
@@ -2308,9 +2314,9 @@ tpp_lexer_yield_include_string_blocking(tpp_lexer *tpp_restrict self);
 #define tpp_lexer_yield_include_string_blocking(self)              tpp_lexer_yield_include_string(self)
 #endif /* !TPP_HAVE_FILE_NONBLOCK */
 #define tpp_lexer_yieldraw_include_string_blocking(self, p_pos) \
-	tpp_lexer_yieldraw_at_include_string_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
+	tpp_lexer_yieldraw_at_include_string_blocking(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end))
 #define tpp_lexer_yieldraw_include_string(self) \
-	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_end))
+	tpp_lexer_yieldraw_at_include_string(self, &tpp_lexer_gettoken(self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end))
 #endif /* TPP_HAVE_LEXER_YIELD_INCLUDE_STRING */
 
 

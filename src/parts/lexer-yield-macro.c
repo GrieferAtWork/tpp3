@@ -177,15 +177,15 @@ next_tok:
 		self->tmei_expand_size = (tpp_size)(expected_simple_tok_start - arginfo->tlai_start);
 		goto done;
 	}
-	if (token->tt_start == expected_simple_tok_start) {
+	if (tpp_token_getstart(token) == expected_simple_tok_start) {
 		/* Yup: just a simple continuation */
-		expected_simple_tok_start = token->tt_end;
+		expected_simple_tok_start = tpp_token_getend(token);
 		tpp_assert(expected_simple_tok_start <= arginfo->tlai_end &&
 		           "Token spans beyond (expected) EOF?");
 		tpp_assert(tpp_lexer_getfile(lexer)->tf_prev == NULL &&
 		           "Nothing should have pushed a new file (because "
 		           "that wouldn't be 'simple', meaning that the "
-		           "'token->tt_start == expected_simple_tok_start'"
+		           "'tpp_token_getstart(token) == expected_simple_tok_start'"
 		           "check should have failed at some point)");
 		goto next_tok;
 	}
@@ -245,9 +245,7 @@ again_print_token:
 		prev_tok = tok;
 	}
 #endif /* TPP_HAVE_MAGIC_WHITESPACE */
-	if (!tpp_string_buffer_append(&buffer, token->tt_start,
-	                              (tpp_size)(token->tt_end -
-	                                         token->tt_start)))
+	if (!tpp_string_buffer_append(&buffer, tpp_token_getstart(token), tpp_token_getlen(token)))
 		goto err_builder_nomem;
 	tok = tpp_lexer_yield(lexer); /* Caller has pre-loaded, so no need for `tpp_lexer_yield_blocking()` */
 	if (TPP_TOK_ISERR(tok))
@@ -821,10 +819,9 @@ done_rollback:
 	 *       intentional, we can only get here when "-fmacro-recursion"
 	 *       is enabled, which is a TPP-specific extension, so this does
 	 *       not violate any standard. */
-	token->tt_end = token->tt_start + macro_keyword_len;
-	token->tt_kwd = macro_keyword;
-	token->tt_id  = macro_keyword->tk_id;
-	return macro_keyword->tk_id;
+	tpp_token_setend(token, tpp_token_getstart(token) + macro_keyword_len);
+	tpp_token_setkwd(token, macro_keyword);
+	return tpp_keyword_getid(macro_keyword);
 #endif /* TPP_HAVE_MACRO_RECURSION */
 
 err_nomem_macro_argbuf_rollback_arginfo_expinfo:
@@ -854,7 +851,7 @@ err_tok_macro:
 	tpp_macro_decref(macro);
 err_tok:
 	/* Reset token so another attempt to yield will get us here again */
-	token->tt_end = token->tt_start;
+	tpp_token_setend(token, tpp_token_getstart(token));
 	return tok;
 }
 

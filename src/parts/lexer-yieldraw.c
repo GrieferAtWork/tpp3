@@ -218,13 +218,10 @@ handle_ilseq:
 		{
 			tpp_errno error;
 			tpp_token *const token = tpp_lexer_gettoken(self);
-			tpp_char const *const saved_start = token->tt_start;
-			tpp_char const *const saved_end = token->tt_end;
-			token->tt_start = (*p_pos);
-			token->tt_end   = (*p_pos) + (len ? len : 1);
+			tpp_token_pushrange(token);
+			tpp_token_setrange(token, (*p_pos), (*p_pos) + (len ? len : 1));
 			error = tpp_lexer_warnf(self, TPP_W_ILLEGAL_UTF8_SEQUENCE);
-			token->tt_start = saved_start;
-			token->tt_end   = saved_end;
+			tpp_token_poprange(token);
 			return error;
 		}
 #else /* TPP_HAVE_TPP_W_ILLEGAL_UTF8_SEQUENCE */
@@ -1171,8 +1168,7 @@ tpp_lexer_seek_end_of_format_expr(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const saved_token_id        = token->tt_id;
 	tpp_keyword const *const saved_token_kwd = token->tt_kwd;
-	tpp_char const *const saved_token_start  = token->tt_start;
-	tpp_char const *const saved_token_end    = token->tt_end;
+	tpp_token_pushrange(token);
 
 	/* Seek the end of the expression */
 	tpp_lexer_autopopfile_pushoff(self); /* Stay within the current file */
@@ -1205,10 +1201,9 @@ tpp_lexer_seek_end_of_format_expr(tpp_lexer *tpp_restrict self,
 	 * so we don't even have to do anything extra here! */
 
 	/* Restore token config */
+	tpp_token_poprange(token);
 	token->tt_id    = saved_token_id;
 	token->tt_kwd   = saved_token_kwd;
-	token->tt_start = saved_token_start;
-	token->tt_end   = saved_token_end;
 	return result;
 }
 #endif /* TPP_HAVE_STRING_FORMAT */
@@ -1915,13 +1910,10 @@ tpp_lexer_warn_unknown_named_escape_sequence(tpp_lexer *tpp_restrict self,
                                              tpp_char const *end) {
 	tpp_errno error;
 	tpp_token *const token = tpp_lexer_gettoken(self);
-	tpp_char const *const saved_start = token->tt_start;
-	tpp_char const *const saved_end = token->tt_end;
-	token->tt_start = start;
-	token->tt_end   = end;
+	tpp_token_pushrange(token);
+	tpp_token_setrange(token, start, end);
 	error = tpp_lexer_warnf(self, TPP_W_UNKNOWN_NAMED_ESCAPE_SEQUENCE);
-	token->tt_start = saved_start;
-	token->tt_end   = saved_end;
+	tpp_token_poprange(token);
 	return error;
 }
 #endif /* ... */
@@ -2382,7 +2374,7 @@ again:
  * @return: TPP_TOK_EUSER(*):    User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1)) tpp_token_id TPPCALL
 tpp_lexer_yieldraw(tpp_lexer *tpp_restrict self) {
-	return tpp_lexer_yieldraw_at(self, &tpp_lexer_gettoken(self)->tt_end);
+	return tpp_lexer_yieldraw_at(self, &tpp_lexer_gettoken(self)->tt_range.ttr_end);
 }
 
 
@@ -2719,7 +2711,7 @@ return_error:
  *    returned when no more data can be loaded.
  *
  * This is used to implement `tpp_lexer_yieldraw()`, which simply
- * passes `p_pos = &tpp_lexer_gettoken(self)->tt_end`
+ * passes `p_pos = &tpp_lexer_gettoken(self)->tt_range.ttr_end`
  *
  * @return: * : See `tpp_lexer_yieldraw()` */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_token_id TPPCALL
@@ -2771,8 +2763,8 @@ tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos) {
 	 * disallows aliasing between different types. */
 	tpp_assume(p_pos != &file->tf_tpos);
 	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_tpos);
-	tpp_assume(p_pos != &token->tt_start);
-	tpp_assume(p_pos != &tpp_lexer_gettoken(self)->tt_start);
+	tpp_assume(p_pos != &token->tt_range.ttr_start);
+	tpp_assume(p_pos != &tpp_lexer_gettoken(self)->tt_range.ttr_start);
 	tpp_assume(p_pos != &file->tf_end);
 	tpp_assume(p_pos != &tpp_lexer_getfile(self)->tf_end);
 #if TPP_HAVE_FILE_LC_CACHE
@@ -2793,7 +2785,7 @@ again:
 		goto eof;
 	rel_start = tpp_file_ptr2rel(file, pos);
 again_read_from_pos:
-	token->tt_start = pos;
+	token->tt_range.ttr_start = pos;
 	ch = *pos++;
 
 	/* Primary CHARACTER -> TOKEN conversion switch */
@@ -5952,9 +5944,9 @@ set_result:
 #if TPP_HAVE_TOKEN_NUMBER
 	++token->tt_num;
 #endif /* TPP_HAVE_TOKEN_NUMBER */
-	token->tt_id    = result;
-	token->tt_start = tpp_file_rel2ptr(file, rel_start);
-	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_end") */
+	tpp_token_setid(token, result);
+	token->tt_range.ttr_start = tpp_file_rel2ptr(file, rel_start);
+	*p_pos = pos; /* This also updates "file->tf_pos" (if "p_pos == &token->tt_range.ttr_end") */
 	return result;
 	{
 #if TPP_HAVE_TPP_W_FILE_HAS_NO_TRAILING_LINEFEED && !TPP_HAVE_TOK_COMMENTLIKE_SOL_LINE
@@ -6042,8 +6034,8 @@ eof:
 
 	/* EOF reached */
 	tpp_assert(pos == end);
-	token->tt_id    = TPP_TOK_EOF;
-	token->tt_start = pos;
+	tpp_token_setid(token, TPP_TOK_EOF);
+	token->tt_range.ttr_start = pos;
 	*p_pos = pos;
 	return TPP_TOK_EOF;
 
