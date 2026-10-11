@@ -501,10 +501,14 @@ typedef struct tpp_file {
 	  tpp_lcinfo_isvalid(tpp_lcstate_getlc(&(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_text).TPP_INTERNAL(tft_start_lc)))))
 
 
+/* Access I/O handle */
+#define tpp_file_isio(self)        (tpp_file_getkind(self) == TPP_FILE_KIND_IO)
+#define tpp_file_getiohandle(self) ((tpp_io_handle)(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_file))
+
 /* Access macro information */
 #if TPP_HAVE_CPP_MACROS
 #define tpp_file_ismacro(self)  (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
-#define tpp_file_getmacro(self) ((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro))
+#define tpp_file_getmacro(self) ((struct tpp_macro *)(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_macro).TPP_INTERNAL(tfm_macro))
 #else /* TPP_HAVE_CPP_MACROS */
 #define tpp_file_ismacro(self) 0
 #endif /* !TPP_HAVE_CPP_MACROS */

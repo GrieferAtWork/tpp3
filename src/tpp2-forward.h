@@ -1326,6 +1326,8 @@ rename("W_INVALID_INTEGER", "TPP_W_INVALID_INTEGER");
 /* "parts/file.h"                                                    */
 /************************************************************************/
 
+#define tpp_io_handle TPP_FORWARD_COMPAT(stream_t)
+
 #define tpp_file struct TPPFile
 
 #define TPP_FILE_FLAGS_NOGUARD TPP_TEXTFILE_FLAG_NOGUARD
@@ -1334,21 +1336,23 @@ rename("W_INVALID_INTEGER", "TPP_W_INVALID_INTEGER");
 #define TPP_FILE_FLAGS_NONBLOCK TPP_TEXTFILE_FLAG_NONBLOCK
 #endif /* TPP_CONFIG_NONBLOCKING_IO */
 
-#define tpp_file_isutf8(self)   1
-#define tpp_file_isascii(self)  0
+#define tpp_file_isutf8(self)  1 /* Debatable... */
+#define tpp_file_isascii(self) 0
 
 #define TPP_FILE_KIND_IO    TPPFILE_KIND_TEXT
 #define TPP_FILE_KIND_TEXT  TPPFILE_KIND_EXPLICIT
 #define TPP_FILE_KIND_MACRO TPPFILE_KIND_MACRO
 
-#define tpp_file_getkind(self)   ((self)->f_kind)
-#define tpp_file_getpos(self)    ((tpp_char const *)(self)->f_pos)
-#define tpp_file_getend(self)    ((tpp_char const *)(self)->f_end)
-#define tpp_file_getchunk(self)  ((self)->f_text)
-#define tpp_file_haschunk(self)  1 /* ((self)->f_text != NULL) */
-#define tpp_file_haslcinfo(self) ((self)->f_kind != TPPFILE_KIND_EXPLICIT)
-#define tpp_file_ismacro(self)   (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
-#define tpp_file_getflags(self) ((self)->f_textfile.f_flags)
+#define tpp_file_getkind(self)     ((self)->f_kind)
+#define tpp_file_getpos(self)      ((tpp_char const *)(self)->f_pos)
+#define tpp_file_getend(self)      ((tpp_char const *)(self)->f_end)
+#define tpp_file_getchunk(self)    ((self)->f_text)
+#define tpp_file_haschunk(self)    1 /* ((self)->f_text != NULL) */
+#define tpp_file_haslcinfo(self)   ((self)->f_kind != TPPFILE_KIND_EXPLICIT)
+#define tpp_file_isio(self)        (tpp_file_getkind(self) == TPP_FILE_KIND_IO)
+#define tpp_file_getiohandle(self) ((self)->f_textfile.f_stream)
+#define tpp_file_ismacro(self)     (tpp_file_getkind(self) == TPP_FILE_KIND_MACRO)
+#define tpp_file_getflags(self)    ((self)->f_textfile.f_flags)
 
 #ifdef TPP_CONFIG_NONBLOCKING_IO
 #define tpp_file_getnonblock(self) (tpp_file_getflags(self) & TPP_FILE_FLAGS_NONBLOCK)
