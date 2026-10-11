@@ -12336,6 +12336,20 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_FILE_GETFULLHASH */
 
+/* Provide an API `tpp_file_getiooffset()` to determine the offset (in actual in-file-bytes)
+ * from a given pointer to the end of the currently-loaded chunk (including any trailing
+ * multi-byte-char bytes that may not have been parsed yet). Assuming the associated file
+ * stream's position hasn't been modified by outside forces, you can subtract this "io offset"
+ * from the streams current position to determine the effect in-file position of a given
+ * pointer into the file's buffer. For more details, see the API function. */
+#ifndef TPP_HAVE_FILE_GETIOOFFSET
+#if (TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_FILE_GETIOOFFSET 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETIOOFFSET 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETIOOFFSET */
+
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
  * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
@@ -23753,6 +23767,32 @@ tpp_file_gethash(tpp_file const *tpp_restrict self, tpp_char const *pos);
 TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_hash TPPCALL
 tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos);
 #endif /* TPP_HAVE_FILE_GETFULLHASH */
+
+
+#if TPP_HAVE_FILE_GETIOOFFSET
+/* Return the offset between `pos` and the end of the currently loaded file buffer,
+ * including any trailing multi-byte-char bytes that may not have been parsed yet.
+ *
+ * When combined with the equivalent of `ftell()` for the `tpp_io_handle` returned
+ * by `tpp_file_getiohandle()`, you can subtract the return value of this function
+ * to determine the actual in-file position corresponding to the character pointed
+ * to by `pos`.
+ *
+ * WARNING: If `pos` points into the middle of a utf-8 character sequence, and the
+ *          underlying file is encoded using something other than utf-8, the value
+ *          returned by this function is WEAK UNDEFINED.
+ *
+ * NOTES:
+ * - When `self` isn't an I/O file, simply return offset to end of chunk
+ * - When no chunk has been loaded, always return `0`
+ *
+ * @return: * : Offset from `pos` to end of currently loaded chunk.
+ *              Subtract this value from `ftell_equivalent(tpp_file_getiohandle(self))`
+ *              to determine the effective in-file byte offset of `pos` */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+tpp_file_getiooffset(tpp_file const *tpp_restrict self, tpp_char const *pos);
+#endif /* TPP_HAVE_FILE_GETIOOFFSET */
+
 
 typedef struct tpp_lcinfo_ex {
 	tpp_lcinfo      tlcix_info;     /* Line/column information, or `TPP_LCINFO_INVALID` if unknown */

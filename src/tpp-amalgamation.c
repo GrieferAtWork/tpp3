@@ -26677,6 +26677,129 @@ tpp_file_getfullhash(tpp_file const *tpp_restrict self, tpp_char const *pos) {
 
 
 
+#if TPP_HAVE_FILE_GETIOOFFSET
+/* Return the offset between `pos` and the end of the currently loaded file buffer,
+ * including any trailing multi-byte-char bytes that may not have been parsed yet.
+ *
+ * When combined with the equivalent of `ftell()` for the `tpp_io_handle` returned
+ * by `tpp_file_getiohandle()`, you can subtract the return value of this function
+ * to determine the actual in-file position corresponding to the character pointed
+ * to by `pos`.
+ *
+ * WARNING: If `pos` points into the middle of a utf-8 character sequence, and the
+ *          underlying file is encoded using something other than utf-8, the value
+ *          returned by this function is WEAK UNDEFINED.
+ *
+ * NOTES:
+ * - When `self` isn't an I/O file, simply return offset to end of chunk
+ * - When no chunk has been loaded, always return `0`
+ *
+ * @return: * : Offset from `pos` to end of currently loaded chunk.
+ *              Subtract this value from `ftell_equivalent(tpp_file_getiohandle(self))`
+ *              to determine the effective in-file byte offset of `pos` */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_size TPPCALL
+tpp_file_getiooffset(tpp_file const *tpp_restrict self, tpp_char const *pos) {
+	tpp_char const *chunk_end;
+	/* Check for special case: no chunk loaded --> return `0` */
+	if (self->tf_chunk == NULL)
+		return 0;
+
+	/* Check for special case: not an I/O file --> return offset to buffer end. */
+	chunk_end = tpp_string_end(self->tf_chunk);
+	if (self->tf_kind != TPP_FILE_KIND_IO)
+		return (tpp_size)(chunk_end - pos);
+
+	/* Clamp bounds of `pos` to always return sane values */
+	if (pos > chunk_end)
+		pos = chunk_end;
+	if (pos < tpp_string_str(self->tf_chunk))
+		pos = tpp_string_str(self->tf_chunk);
+
+	/* Reverse engineer position based on file encoding. */
+#if TPP_HAVE_UNICODE
+	switch (self->tf_enc) {
+
+	case TPP_FILE_ENCODING_UTF8:
+	case TPP_FILE_ENCODING_ASCII:
+	case TPP_FILE_ENCODING_FORCE_UTF8:
+	default:
+		/* Simple case: no conversion happened (except maybe a skipped BOM at the start,
+		 * but because we're only calculating an offset to the end, anything that was
+		 * skipped at the start doesn't need to matter to us). */
+		return (tpp_size)(chunk_end - pos);
+
+	case TPP_FILE_ENCODING_UTF16_LE:
+	case TPP_FILE_ENCODING_UTF16_BE:
+	case TPP_FILE_ENCODING_UTF32_LE:
+	case TPP_FILE_ENCODING_UTF32_BE: {
+		/* Multi-byte encoding:
+		 * - Need to count the # of utf-8 **characters** (not bytes) until `chunk_end`
+		 *   - Every character counts for 2/4 bytes depending on encoding
+		 *   - In the case of utf-16, characters that need surrogate-pairs must count 2x
+		 * - Add `self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc` to the sum
+		 *   to account for already-read-but-not-yet-processed file bytes. */
+		bool is_utf16 = (self->tf_enc == TPP_FILE_ENCODING_UTF16_LE ||
+		                 self->tf_enc == TPP_FILE_ENCODING_UTF16_BE);
+		tpp_size char_size = is_utf16 ? 2 : 4;
+		tpp_size result = 0;
+		tpp_char const *iter = pos;
+		while (iter < chunk_end) {
+			tpp_unichar uc = tpp_unicode_readutf8(&iter, chunk_end);
+			result += char_size;
+			if (is_utf16 && !(uc <= 0xffff && (uc < 0xd800 || uc > 0xdfff))) {
+				/* This one must have been decoded from a surrogate pair,
+				 * so the underlying file should have actually had **2**
+				 * words here (rather than only 1) */
+				result += char_size;
+			}
+		}
+
+		/* Account for tail bytes. */
+		result += self->tf_data.td_io.tff_encdat.tffed_unicode.tffu_tailc;
+		return result;
+	}	break;
+
+#if TPP_HAVE_FILE_ENCODING_EMBED
+	case TPP_FILE_ENCODING_EMBED: {
+		/* In this case, the given `pos` can point anywhere in a stream like this:
+		 * >> 100,10,1
+		 *    [-][-][]
+		 *    1  2  3
+		 *
+		 * The indicated ranges specify which sections are considered part of which
+		 * source file byte. Essentially, all bytes (except for the first) include
+		 * their respective leading `,` character (a pointer **to** the `,` means
+		 * that the associated file position describes whatever comes after the `,`)
+		 */
+		tpp_size result = 0;
+		tpp_char const *iter = pos;
+		if (iter < chunk_end && *iter == ',')
+			++iter; /* `,` belongs to following number, so skip is here. */
+		if (iter < chunk_end)
+			++result;
+
+		/* At this point, simply count the # of `,` characters, and add the count
+		 * to `result`, which will produce the correct result as per the requirements
+		 * defined above. */
+		for (; iter < chunk_end; ++iter) {
+			if (*iter == ',')
+				++result;
+		}
+		return result;
+	}	break;
+#endif /* TPP_HAVE_FILE_ENCODING_EMBED */
+
+	}
+	tpp_unreachable();
+#else /* TPP_HAVE_UNICODE */
+	/* Without unicode, it's always a 1-on-1 translation */
+	return (tpp_size)(chunk_end - pos);
+#endif /* !TPP_HAVE_UNICODE */
+}
+#endif /* TPP_HAVE_FILE_GETIOOFFSET */
+
+
+
 #if TPP_HAVE_FILE_GETREALFILENAMEKWD
 /* Returns the filename *keyword* (which may not always be available,
  * even when `tpp_file_getrealfilename()` returns non-NULL) */

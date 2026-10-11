@@ -57,6 +57,7 @@
 #define TPP_HAVE_KEYWORD_ASSTRING       0
 #define TPP_HAVE_CLI_INITINPUT          0
 #define TPP_HAVE_CLI_PUSHINPUT          0
+#define TPP_HAVE_FILE_GETIOOFFSET       0
 
 #if 1 /* Since we're building everything statically, we don't need hook cookies,
        * but can instead instruct TPP to determine emitter/makefile via offsets

@@ -6567,6 +6567,20 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_FILE_GETFULLHASH */
 
+/* Provide an API `tpp_file_getiooffset()` to determine the offset (in actual in-file-bytes)
+ * from a given pointer to the end of the currently-loaded chunk (including any trailing
+ * multi-byte-char bytes that may not have been parsed yet). Assuming the associated file
+ * stream's position hasn't been modified by outside forces, you can subtract this "io offset"
+ * from the streams current position to determine the effect in-file position of a given
+ * pointer into the file's buffer. For more details, see the API function. */
+#ifndef TPP_HAVE_FILE_GETIOOFFSET
+#if (TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_FILE_GETIOOFFSET 1
+#else /* ... */
+#define TPP_HAVE_FILE_GETIOOFFSET 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FILE_GETIOOFFSET */
+
 /* Provide a secondary set of keyword APIs that include support for `\`-escape sequences.
  * Needed to implement `TPP_HAVE_BSE`, `TPP_HAVE_IDENTIFIER_ESCAPE_UNI` and `TPP_HAVE_IDENTIFIER_ESCAPE_NAMED` */
 #ifndef TPP_HAVE_ESCAPED_KEYWORDS
