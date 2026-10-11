@@ -1016,6 +1016,115 @@ tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
 	va_end(args);
 	return result;
 }
+
+#if TPP_HAVE_LEXER_ERRF
+static TPP_NOINLINE TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_verrf_impl(tpp_lexer *tpp_restrict self,
+                     tpp_lexer_printf_info *tpp_restrict info,
+                     tpp_warning_id id, va_list args) {
+	tpp_errno result;
+	tpp_warning_invokeinfo invokeinfo;
+
+	/* Ask warning configuration how we should have this one */
+	result = tpp_lexer_invokewarning(self, id, &invokeinfo);
+#if TPP_HAVE_WARNINGS_INVOKE_MAYFAIL
+	if (TPP_ISERR(result))
+		return result;
+#endif /* TPP_HAVE_WARNINGS_INVOKE_MAYFAIL */
+
+	/* Force fatal. It doesn't matter what `tpp_lexer_invokewarning()`
+	 * returned. The only reason we're still calling it because of
+	 * side-effects such as suppression counters and-the-like. */
+	invokeinfo.twii_state = TPP_WSTATE_FATAL;
+
+	/* Invoke warning handler */
+	result = tpp_lexer_callhook_warnhandler(self, info, &invokeinfo, id, args);
+	if (TPP_ISERR(result))
+		return result;
+
+	/* Force fatal, even if WARNHANDLER returned `TPP_EOK` */
+	if (result == TPP_EOK)
+		result = TPP_ELEXERROR;
+
+	/* Raise lexer error */
+#if TPP_HAVE_RAISE_LEXERROR_HOOK
+	if (result == TPP_ELEXERROR) {
+		/* Allow users to define a hook to do additional
+		 * processing when a lexer error should be raised */
+		result = tpp_lexer_callhook_raise_lexerror(self);
+		if (result == TPP_EOK)
+			result = TPP_ELEXERROR;
+	}
+#endif /* TPP_HAVE_RAISE_LEXERROR_HOOK */
+	return result;
+}
+
+/* Emits the specified lexer warning at the start of the current token.
+ *
+ * These functions behave the same as the `tpp_lexer_warnf()` counterparts
+ * above, except that rather than returning `TPP_EOK`, they will call
+ * `tpp_lexer_callhook_raise_lexerror()` if no other **HARD_ERROR** was
+ * already returned. As such, these functions never return `TPP_EOK`,
+ * instead **always** returning some **HARD_ERROR**.
+ *
+ * @return: TPP_ELEXERROR: Warning was emitted
+ * @return: TPP_EUSER(*):  Error while printing warning */
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args) {
+	tpp_file *const file = tpp_lexer_getfile(self);
+	tpp_lexer_printf_info info;
+	tpp_lexer_printf_info_init_at(&info, file, tpp_file_getlastpos(file));
+	return tpp_lexer_verrf_impl(self, &info, id, args);
+}
+
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...) {
+	tpp_errno result;
+	va_list args;
+	va_start(args, id);
+	result = tpp_lexer_verrf(self, id, args);
+	va_end(args);
+	return result;
+}
+
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                   tpp_char const *pos, tpp_warning_id id, va_list args) {
+	tpp_lexer_printf_info info;
+	tpp_lexer_printf_info_init_at(&info, file, pos);
+	return tpp_lexer_verrf_impl(self, &info, id, args);
+}
+
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                  tpp_char const *pos, tpp_warning_id id, ...) {
+	tpp_errno result;
+	va_list args;
+	va_start(args, id);
+	result = tpp_lexer_verrf_at(self, file, pos, id, args);
+	va_end(args);
+	return result;
+}
+
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                   tpp_lcinfo lc, tpp_warning_id id, va_list args) {
+	tpp_lexer_printf_info info;
+	tpp_lexer_printf_info_init_lc(&info, filename, lc);
+	return tpp_lexer_verrf_impl(self, &info, id, args);
+}
+
+TPP_IMPL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                  tpp_lcinfo lc, tpp_warning_id id, ...) {
+	tpp_errno result;
+	va_list args;
+	va_start(args, id);
+	result = tpp_lexer_verrf_lc(self, filename, lc, id, args);
+	va_end(args);
+	return result;
+}
+#endif /* TPP_HAVE_LEXER_ERRF */
 #endif /* TPP_HAVE_WARNINGS */
 
 

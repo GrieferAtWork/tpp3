@@ -8053,6 +8053,14 @@ print("#endif /" "* !... *" "/");
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
+/* Provide a complementary set of `tpp_lexer_errf()`-style functions that behave
+ * identical to their respective `tpp_lexer_warnf()`, but will follow up the warning
+ * emission with `tpp_lexer_callhook_raise_lexerror()` if the act of emitting the
+ * warning didn't result in `TPP_ELEXERROR` or some other **HARD_ERROR** */
+#ifndef TPP_HAVE_LEXER_ERRF
+#define TPP_HAVE_LEXER_ERRF (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_LEXER_ERRF */
+
 /* `tpp_string_newempty()` is implemented in terms of a single, global "empty" string object.
  *
  * You might say that there's no point in disabling this, especially since the alternative

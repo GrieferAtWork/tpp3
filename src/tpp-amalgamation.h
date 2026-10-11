@@ -13822,6 +13822,14 @@ TPP_DECL_END
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_CLI_ASSERT */
 
+/* Provide a complementary set of `tpp_lexer_errf()`-style functions that behave
+ * identical to their respective `tpp_lexer_warnf()`, but will follow up the warning
+ * emission with `tpp_lexer_callhook_raise_lexerror()` if the act of emitting the
+ * warning didn't result in `TPP_ELEXERROR` or some other **HARD_ERROR** */
+#ifndef TPP_HAVE_LEXER_ERRF
+#define TPP_HAVE_LEXER_ERRF (TPP_HAVE_WARNINGS && TPP_HAVE_PROFILE_NOT_MINIMAL)
+#endif /* !TPP_HAVE_LEXER_ERRF */
+
 /* `tpp_string_newempty()` is implemented in terms of a single, global "empty" string object.
  *
  * You might say that there's no point in disabling this, especially since the alternative
@@ -31806,6 +31814,35 @@ tpp_lexer_vwarnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
 TPP_DECL TPP_COLDCALL TPP_WUNUSED TPP_NONNULL((1)) tpp_errno TPPVCALL
 tpp_lexer_warnf_lc(tpp_lexer *tpp_restrict self, char const *filename,
                    tpp_lcinfo lc, tpp_warning_id id, ...);
+
+#if TPP_HAVE_LEXER_ERRF
+/* Emits the specified lexer warning at the start of the current token.
+ *
+ * These functions behave the same as the `tpp_lexer_warnf()`
+ * counterparts above, except that:
+ * - They ignore `tpp_lexer_nowarnings_pushon()`
+ * - They ignore `tpp_file_getsystemheader()`
+ * - All warnings are treated as `TPP_WSTATE_FATAL`
+ *
+ * @return: TPP_ELEXERROR: Warning was emitted
+ * @return: TPP_EUSER(*):  Error while printing warning */
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf(tpp_lexer *tpp_restrict self, tpp_warning_id id, va_list args);
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf(tpp_lexer *tpp_restrict self, tpp_warning_id id, ...);
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                   tpp_char const *pos, tpp_warning_id id, va_list args);
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf_at(tpp_lexer *tpp_restrict self, tpp_file *file,
+                  tpp_char const *pos, tpp_warning_id id, ...);
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPCALL
+tpp_lexer_verrf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                   tpp_lcinfo lc, tpp_warning_id id, va_list args);
+TPP_DECL TPP_COLDCALL TPP_NONNULL((1)) tpp_errno TPPVCALL
+tpp_lexer_errf_lc(tpp_lexer *tpp_restrict self, char const *filename,
+                  tpp_lcinfo lc, tpp_warning_id id, ...);
+#endif /* TPP_HAVE_LEXER_ERRF */
 #else /* TPP_HAVE_WARNINGS */
 #define tpp_lexer_vwarnf(self, id, args)                  TPP_EOK
 #define tpp_lexer_vwarnf_at(self, file, pos, id, args)    TPP_EOK
