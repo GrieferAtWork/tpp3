@@ -709,14 +709,11 @@ _tpp_lexer_builtin_warnhandler(
 	tpp_formatprinter const printer = tpp_lexer_gethook_warnprinter(self);
 	void *const printer_arg = tpp_lexer_gethookcookie_warnprinter(self);
 
+	/* Substitute missing printf-info. */
+	(void)tpp_lexer_printf_info_getfilename(info);
+	(void)tpp_lexer_printf_info_getlc(info);
+
 	/* Print file-and-line prefix */
-	if (!tpp_lcinfo_isvalid(info->tlpfi_lc) &&
-	    (info->tlpfi_file && info->tlpfi_pos)) {
-		info->tlpfi_lc = tpp_file_getlcinfo(info->tlpfi_file,
-		                                    info->tlpfi_pos);
-	}
-	if (info->tlpfi_filename == NULL && info->tlpfi_file != NULL)
-		info->tlpfi_filename = tpp_file_getfilename(info->tlpfi_file);
 	if (info->tlpfi_filename || tpp_lcinfo_isvalid(info->tlpfi_lc)) {
 		print_status = tpp_lexer_printf_warning(self, info, printer, printer_arg,
 		                                        tpp_lexer_getfileandlineformat(self));

@@ -853,7 +853,7 @@ TPP_EMITTER_HAVE_CLI && TPP_EMITTER_HAVE_NOLINE
 `-dM`, `--dump=M`:
 Dump builtin/predefined macros to the emitters output during the
 CLI flush phase (i.e.: when [`tpp_emitter_cli_loader_flush()`](../src/tpp-emitter-amalgamation.h#L2073) is called):
-[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L31848)
+[`tpp_lexer_dump_definitions(TPP_LEXER_DUMP_DEFINITIONS_BUILTIN_MACROS)`](../src/tpp-amalgamation.h#L31872)
 
 Also turns on [`TPP_EMITTER_HAVE_REEMIT_MACRO_DEFINITIONS`](#tpp_emitter_have_reemit_macro_definitions), and sets the emitter's
 mode of operations to `TPP_EMITTER_MODE_DISPOSE` (see [`TPP_EMITTER_HAVE_MODE_DISPOSE`](#tpp_emitter_have_mode_dispose)).

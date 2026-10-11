@@ -1692,7 +1692,7 @@ TPP_PROFILE == TPP_PROFILE_ALL
 
 ## TPP_HAVE_LEXER_REPRTOKENID
 
-Provide a function [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L31837) to
+Provide a function [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L31861) to
 return the string-representation of a given token ID
 
 <details><summary>Details</summary>
@@ -1707,7 +1707,7 @@ TPP_HAVE_LEXER_SKIP
 ## TPP_HAVE_REPRTOKENID
 
 Provide a function [`tpp_reprtokenid()`](../src/tpp-amalgamation.h#L18032) that does the
-same as [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L31837) (and is also used to
+same as [`tpp_lexer_reprtokenid()`](../src/tpp-amalgamation.h#L31861) (and is also used to
 implement that function), but fails for user-defined
 keyword token IDs
 
@@ -1922,7 +1922,7 @@ TPP_HAVE_EXPR_VALUE_PRINTREPR || TPP_HAVE_EXPR_VALUE_PRINTSTR
 
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS
 
-Provide a function [`tpp_lexer_dump_definitions()`](../src/tpp-amalgamation.h#L31848) that can be
+Provide a function [`tpp_lexer_dump_definitions()`](../src/tpp-amalgamation.h#L31872) that can be
 used to re-print all user-defined macro definitions and asserts.
 
 This can be used to implement GCC's CPP's `-dM` CLI flag.
@@ -1939,7 +1939,7 @@ TPP_PROFILE == TPP_PROFILE_ALL
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS_SORTED
 
 Extension to [`TPP_HAVE_LEXER_DUMP_DEFINITIONS`](#tpp_have_lexer_dump_definitions): provide an
-additional flag [`TPP_LEXER_DUMP_DEFINITIONS_SORTED`](../src/tpp-amalgamation.h#L31889) that causes
+additional flag [`TPP_LEXER_DUMP_DEFINITIONS_SORTED`](../src/tpp-amalgamation.h#L31913) that causes
 macro ([`TPP_HAVE_CPP_MACROS`](config-conf.md#tpp_have_cpp_macros)) / assert ([`TPP_HAVE_CPP_ASSERT`](config-conf.md#tpp_have_cpp_assert))
 definition to be sorted based on the ID of the associated keyword
 (which corresponds with the first time the associated keyword was
@@ -1958,7 +1958,7 @@ TPP_HAVE_LEXER_DUMP_DEFINITIONS
 ## TPP_HAVE_LEXER_DUMP_DEFINITIONS_EXTRAINFO
 
 Extension to [`TPP_HAVE_LEXER_DUMP_DEFINITIONS`](#tpp_have_lexer_dump_definitions): provide an
-additional flag [`TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO`](../src/tpp-amalgamation.h#L31894) that causes every
+additional flag [`TPP_LEXER_DUMP_DEFINITIONS_EXTRAINFO`](../src/tpp-amalgamation.h#L31918) that causes every
 dumped macro definition to be preceded by a comment containing (among
 other things) the file/line/column where that definition comes from.
 

@@ -3138,6 +3138,30 @@ typedef struct tpp_lexer_printf_info {
 	       (self)->TPP_INTERNAL(tlpfi_filename) = (filename), \
 	       (self)->TPP_INTERNAL(tlpfi_lc)       = (lc))
 
+/* Query "raw" printf-info parameters ("raw" means that there is no caching or-the-like happening) */
+#define tpp_lexer_printf_info_hasrawfile(self)     ((self)->TPP_INTERNAL(tlpfi_file) != NULL)
+#define tpp_lexer_printf_info_getrawfile(self)     ((tpp_file *)(self)->TPP_INTERNAL(tlpfi_file))
+#define tpp_lexer_printf_info_hasrawpos(self)      ((self)->TPP_INTERNAL(tlpfi_file) != NULL && (self)->TPP_INTERNAL(tlpfi_pos) != NULL)
+#define tpp_lexer_printf_info_getrawpos(self)      ((tpp_char const *)(self)->TPP_INTERNAL(tlpfi_pos))
+#define tpp_lexer_printf_info_hasrawfilename(self) ((self)->TPP_INTERNAL(tlpfi_filename) != NULL)
+#define tpp_lexer_printf_info_getrawfilename(self) ((char const *)(self)->TPP_INTERNAL(tlpfi_filename))
+#define tpp_lexer_printf_info_hasrawlc(self)       tpp_lcinfo_isvalid((self)->TPP_INTERNAL(tlpfi_lc))
+#define tpp_lexer_printf_info_getrawlc(self)       ((self)->TPP_INTERNAL(tlpfi_lc))
+
+/* Get filename */
+#define tpp_lexer_printf_info_getfilename(self)                                                              \
+	((!tpp_lexer_printf_info_hasrawfilename(self) && tpp_lexer_printf_info_hasrawfile(self))                 \
+	 ? ((self)->TPP_INTERNAL(tlpfi_filename) = tpp_file_getfilename(tpp_lexer_printf_info_getrawfile(self))) \
+	 : tpp_lexer_printf_info_getrawfilename(self))
+
+/* Get line/column information */
+#define tpp_lexer_printf_info_getlc(self)                                                           \
+	((!tpp_lexer_printf_info_hasrawlc(self) && tpp_lexer_printf_info_hasrawpos(self))               \
+	 ? ((self)->TPP_INTERNAL(tlpfi_lc) = tpp_file_getlcinfo(tpp_lexer_printf_info_getrawfile(self), \
+	                                                        tpp_lexer_printf_info_getrawpos(self))) \
+	 : tpp_lexer_printf_info_getrawlc(self))
+
+
 /* Interpret + print a warning-message `format` string.
  * The following %-encoded escape sequences are recognized:
  * - `%[`    Start quoting text

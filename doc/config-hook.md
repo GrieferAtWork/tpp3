@@ -76,7 +76,7 @@ The following hooks exist and can each be overwritten individually:
 TPP_FORMATPRINTER_DEFINE(TPP_HOOK_WARNPRINTER, arg, text, num_bytes);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31790) to print warning messages.
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31814) to print warning messages.
 Potentially unused if [`TPP_HAVE_WARNHANDLER_HOOK`](#tpp_have_warnhandler_hook) is also overwritten
 
 <details><summary>Details</summary>
@@ -111,7 +111,7 @@ TPP_FORMATPRINTER_DEFINE(_tpp_lexer_builtin_warn_or_mesg_printer, arg, text, num
 tpp_errno TPP_HOOK_WARNHANDLER(COOKIE cookie, tpp_lexer_printf_info *tpp_restrict info, tpp_warning_invokeinfo const *tpp_restrict invokeinfo, tpp_warning_id id, va_list args);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31790) to handle warning notifications. Can be
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31814) to handle warning notifications. Can be
 overwritten to implement custom behavior in regards to handling of warnings.
 
 <details><summary>Details</summary>
@@ -605,7 +605,7 @@ tpp_ssize _tpp_disabled_hook_unknown_string_escape(COOKIE cookie, tpp_char const
 tpp_errno TPP_HOOK_RAISE_LEXERROR(COOKIE cookie);
 ```
 
-Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31790) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L14004)
+Called by [`tpp_lexer_warnf()`](../src/tpp-amalgamation.h#L31814) just before it's about to return [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L14004)
 This hook can be used to do additional state changes that may be necessary by the
 hosting application in order to handle the resulting [`TPP_ELEXERROR`](../src/tpp-amalgamation.h#L14004)
 

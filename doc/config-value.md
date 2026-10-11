@@ -189,7 +189,7 @@ Default:
 
 ## TPP_CONFIG_CLI_DEFAULT_SYSROOT
 
-The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L31911)
+The default value for `-isysroot path` (see [`TPP_HAVE_CLI_DASH_ISYSROOT`](config-cli.md#tpp_have_cli_dash_isysroot)) in [`tpp_cli_loader`](../src/tpp-amalgamation.h#L31935)
 
 <details><summary>Details</summary>
 

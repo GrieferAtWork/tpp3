@@ -5,7 +5,7 @@ In order to help you more easily create CLI frontends for TPP, there also exists
 <!--BEGIN:cli-->
 ## TPP_HAVE_CLI
 
-Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L31911), which can be used to configure a lexer
+Provide an API surrounding [`tpp_cli_loader`](../src/tpp-amalgamation.h#L31935), which can be used to configure a lexer
 using GCC-style commandline arguments like `-Dfoo=bar`, `-I/usr/include`, etc.
 
 This API is entirely optional: there's nothing it can do that can't already
@@ -630,7 +630,7 @@ TPP_HAVE_CLI && TPP_HAVE_WARNINGS
 
 ## TPP_HAVE_CLI_PARSEARGV
 
-Provide a convenience function [`tpp_cli_loader_parseargv()`](../src/tpp-amalgamation.h#L32098) to directly parse argc/argv
+Provide a convenience function [`tpp_cli_loader_parseargv()`](../src/tpp-amalgamation.h#L32122) to directly parse argc/argv
 
 <details><summary>Details</summary>
 
@@ -643,7 +643,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_INITINPUT
 
-Provide a function [`tpp_cli_loader_initinput()`](../src/tpp-amalgamation.h#L32113) that can be used to
+Provide a function [`tpp_cli_loader_initinput()`](../src/tpp-amalgamation.h#L32137) that can be used to
 initialize the associated lexer's file-stack (~ala `tpp_lexer_initfile_*`).
 Similar functionality is also available via [`TPP_HAVE_CLI_SETINPUTS`](#tpp_have_cli_setinputs)
 
@@ -658,7 +658,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_PUSHINPUT
 
-Provide a function [`tpp_cli_loader_pushinput()`](../src/tpp-amalgamation.h#L32127) that can be used to push an
+Provide a function [`tpp_cli_loader_pushinput()`](../src/tpp-amalgamation.h#L32151) that can be used to push an
 additional file onto the associated lexer's file-stack (~ala `tpp_lexer_pushfile_*`).
 Similar functionality is also available via [`TPP_HAVE_CLI_SETINPUTS`](#tpp_have_cli_setinputs)
 
@@ -673,7 +673,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_SETINPUTS
 
-Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32156), which can be used
+Enable support for [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32180), which can be used
 to easily implement a high-level wrapper around the different APIs
 that exist to load files into the lexer:
 
@@ -697,7 +697,7 @@ TPP_HAVE_CLI && (TPP_PROFILE == TPP_PROFILE_ALL)
 
 ## TPP_HAVE_CLI_SETINPUTS_DASH
 
-[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32156) supports a special case when the given
+[`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32180) supports a special case when the given
 filename is `"-"`. When that is the case, *STDIN* is used as input
 instead, with [`TPP_HAVE_CLI_SETINPUTS_STDIN_FILENAME`](#tpp_have_cli_setinputs_stdin_filename) becoming the
 filename.
@@ -728,7 +728,7 @@ Default:
 ## TPP_HAVE_CLI_DASH_FSEARCH_INCLUDE_PATH
 
 `-fsearch-include-path[=kind]` (where `kind` is one of `(user|system)`, defaulting to `user`):
-When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32156) (as enabled by
+When specified, enable some extra behavior in [`tpp_cli_loader_setinputs()`](../src/tpp-amalgamation.h#L32180) (as enabled by
 [`TPP_HAVE_CLI_SETINPUTS`](#tpp_have_cli_setinputs)) when the specified file cannot be found (as a file realtive to the
 preprocessor's current working directory). If that happens, perform an additional search for
 the specified filename using `#include`-paths (s.a. [`TPP_HAVE_INCLUDE_PATH`](config-core.md#tpp_have_include_path)):
