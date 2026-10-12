@@ -641,8 +641,11 @@ typedef struct tpp_file {
 #if TPP_HAVE_CPP_DIRECTIVES
 #define tpp_file_getallowdirectives(self) \
 	(!((self)->TPP_INTERNAL(tf_flags) & TPP_FILE_FLAGS_NODIRECTIVES))
+#define tpp_file_allowdirectives(self)    (void)((self)->TPP_INTERNAL(tf_flags) &= ~TPP_FILE_FLAGS_NODIRECTIVES)
+#define tpp_file_disallowdirectives(self) (void)((self)->TPP_INTERNAL(tf_flags) |= TPP_FILE_FLAGS_NODIRECTIVES)
 #else /* TPP_HAVE_CPP_DIRECTIVES */
 #define tpp_file_getallowdirectives(self) 0
+#define tpp_file_disallowdirectives(self) (void)0
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 
 
