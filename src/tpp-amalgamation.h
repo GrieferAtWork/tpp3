@@ -8817,7 +8817,7 @@ TPP_DECL_END
  * r"bar"
  * ```
  *
- * @detect: #if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9 */
+ * @detect: #if __TPP_COUNT_TOKENS('r"foo"') == 1 */
 #ifndef TPP_HAVE_TOK_RAW_STRING_LITERAL
 #define TPP_HAVE_TOK_RAW_STRING_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-string-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_STRING_LITERAL */
@@ -8827,7 +8827,7 @@ TPP_DECL_END
  * r'bar'
  * ```
  *
- * @detect: #if __TPP_COUNT_TOKENS("R'foo'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9 */
+ * @detect: #if __TPP_COUNT_TOKENS("r'foo'") == 1 */
 #ifndef TPP_HAVE_TOK_RAW_CHAR_LITERAL
 #define TPP_HAVE_TOK_RAW_CHAR_LITERAL (TPP_HAVE_PROFILE_ALL ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-raw-char-literal" */
 #endif /* !TPP_HAVE_TOK_RAW_CHAR_LITERAL */

@@ -4188,7 +4188,7 @@ Extension name:
 Detect:
 
 ```c
-#if __TPP_COUNT_TOKENS('R"foo"') == 1 && __TPP_STR_SIZE(R"AB(foo)AB") == 9
+#if __TPP_COUNT_TOKENS('r"foo"') == 1
 ...
 #endif
 ```
@@ -4219,7 +4219,7 @@ Extension name:
 Detect:
 
 ```c
-#if __TPP_COUNT_TOKENS("R'foo'") == 1 && __TPP_STR_SIZE(R'AB(foo)AB') == 9
+#if __TPP_COUNT_TOKENS("r'foo'") == 1
 ...
 #endif
 ```
