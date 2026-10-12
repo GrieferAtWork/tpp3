@@ -655,7 +655,7 @@
  * necessary because TPP is a text-based preprocessor. Trying to get
  * L/C information on the associated `TPP_TOK_SPACE` will fail.
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION* 
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  *
  * @detect: #define FOO()         foo
  *          #define BAR           bar
@@ -7107,12 +7107,30 @@ print("#endif /" "* !... *" "/");
 
 /* Provide a function `tpp_lexer_decodefloat()` to parse a float */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
-#if (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
+#if (TPP_HAVE_LEXER_DECODEFLOAT_EXPR || TPP_HAVE_PROFILE_ALL)
 #define TPP_HAVE_LEXER_DECODEFLOAT 1
 #else /* ... */
 #define TPP_HAVE_LEXER_DECODEFLOAT 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOATVALUE
+#if (TPP_HAVE_LEXER_DECODEFLOAT || TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_LEXER_DECODEFLOATVALUE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEFLOATVALUE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOATVALUE */
+
+/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
+#ifndef TPP_HAVE_FLOATVALUE_PACK
+#if (TPP_HAVE_LEXER_DECODEFLOAT || TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_FLOATVALUE_PACK 1
+#else /* ... */
+#define TPP_HAVE_FLOATVALUE_PACK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FLOATVALUE_PACK */
 
 /* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL

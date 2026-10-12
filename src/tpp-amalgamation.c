@@ -49054,35 +49054,303 @@ tpp_lexer_decodeint_ex(tpp_lexer *tpp_restrict self,
 
 
 
-#if TPP_HAVE_LEXER_DECODEFLOAT
+#if TPP_HAVE_FLOATVALUE_PACK
+
+static TPP_CONSTCALL TPP_WUNUSED tpp_float TPPCALL
+tpp_floatvalue_pack_generic(tpp_intmax whole_intval,
+                            tpp_intmax scale,
+                            unsigned int radix) {
+	tpp_float radix_fltval = (tpp_float)radix;
+	tpp_float whole_fltval = (tpp_float)whole_intval;
+	for (; scale > 0; --scale)
+		whole_fltval *= radix_fltval;
+	for (; scale < 0; ++scale)
+		whole_fltval /= radix_fltval;
+	return whole_fltval;
+}
+
+/* Package `self` into an actual, native floating-point value.
+ *
+ * @param: result: Store the floating-point value here
+ * @param: lexer:  Used for warnings when on overflow
+ * @return: TPP_EOK:       Success (`*result` was initialized)
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
+TPP_IMPL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_floatvalue_pack(tpp_floatvalue const *tpp_restrict self,
+                    tpp_float *tpp_restrict result,
+                    tpp_lexer *tpp_restrict lexer) {
+	tpp_float fresult;
+	tpp_errno error;
+	tpp_intmax whole_intval;
+	error = tpp_intvalue_asintmax(&self->tfv_value, &whole_intval);
+	if (error == TPP_ENOENT) {
+#if TPP_HAVE_TPP_W_INTEGER_OVERFLOW
+		error = tpp_lexer_warnf(lexer, TPP_W_INTEGER_OVERFLOW, "<float>", "", "");
+#else /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+		error = TPP_EOK;
+#endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+		whole_intval = 0;
+	}
+	if (TPP_ISERR(error))
+		return error;
+
+	switch (self->tfv_radix) {
+
+#if 0
+	case 10:
+		/* TODO: https://research.swtch.com/fp */
+		break;
+#endif
+
+	default:
+		/* Generic fallback that works for any radix, but is extremely slow & lossy */
+		fresult = tpp_floatvalue_pack_generic(whole_intval,
+		                                      self->tfv_scale,
+		                                      self->tfv_radix);
+		break;
+	}
+	*result = fresult;
+	return TPP_EOK;
+}
+#endif /* TPP_HAVE_FLOATVALUE_PACK */
+
+
+
+#if TPP_HAVE_LEXER_DECODEFLOATVALUE
 #if TPP_HAVE_TOK_C_FLOAT
 static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
-                         tpp_float *tpp_restrict result,
+                         /*out*/ tpp_floatvalue *tpp_restrict result,
                          tpp_char const **p_suffix_start) {
-	/* TODO: Decode string-to-float */
-	*result = 0.0;
-	if (p_suffix_start)
-		*p_suffix_start = tpp_lexer_gettokenend(self);
-/*handle_invalid:*/
+	/*
+	 * Expected/supported format:
+	 *
+	 *         Whole  Fraction    Exponent
+	 * >>      [0-9]*(\.[0-9]*)?([eE][+-]?[0-9]+)?.*
+	 * >> 0[xX][0-9]*(\.[0-9]*)?([pP][+-]?[0-9]+)?.*
+	 *
+	 * The following examples need not necessarily be
+	 * parseable (even though they match the above regex):
+	 * - ``     (yes: entirely empty doesn't need to be parseable here)
+	 * - `.`
+	 * - `.E1`
+	 * - `E1`
+	 *
+	 * iow: At least 1 of "Whole" or "Fraction" should always be
+	 *      present (but don't rely on it; this function is simply
+	 *      allowed to emit a warning if neither is present).
+	 *      It is up to `tpp_lexer_yieldraw()` to only match
+	 *      `TPP_TOK_C_FLOAT` on character-sequences where at
+	 *      least one of the 2 is actually present.
+	 *
+	 * ref: https://en.cppreference.com/cpp/language/floating_literal
+	 */
+	tpp_errno error;
+	tpp_intvalue_builder builder;
+	unsigned int num_digits_after_dot = 0;
+	tpp_char const *start = tpp_lexer_gettokenstart(self);
+	tpp_char const *end = tpp_lexer_gettokenend(self);
+	unsigned int radix = 10;
+
+	/* Decode string-to-float */
+	if (start < end && *start == '0') {
+		/* Check for hex-prefix (other this is just a leading `0` that
+		 * doesn't affect the final value and can just be ignored) */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start < end && (*start == 'x' || *start == 'X')) {
+			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+			radix = 16;
+		}
+	}
+
+	error = tpp_intvalue_builder_init(&builder, radix);
+	if (TPP_ISERR(error))
+		goto err;
+
+	while (start < end) {
+		unsigned int digit;
+		tpp_char ch = *start;
+		if (tpp_ascii_isdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_asdigit(ch);
+		} else if (tpp_ascii_islwrxdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_aslwrxdigit(ch);
+		} else if (tpp_ascii_isuprxdigit(ch)) {
+			digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
+		} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+		if (ch == '_') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+		if (ch == '\'') {
+			goto continue_with_ch;
+#define WANT_continue_with_ch
+		} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
+		{
+			break;
+		}
+		if (digit >= radix)
+			break;
+		error = tpp_intvalue_builder_adddigit(&builder, digit);
+		if (TPP_ISERR(error)) {
+			if (error == TPP_ENOENT)
+				goto handle_invalid_builder;
+			goto err_builder;
+		}
+#ifdef WANT_continue_with_ch
+#undef WANT_continue_with_ch
+continue_with_ch:
+#endif /* WANT_continue_with_ch */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+	}
+
+	/* Check for the portion after the `.` */
+	if (start < end && *start == '.') {
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		while (start < end) {
+			unsigned int digit;
+			tpp_char ch = *start;
+			if (tpp_ascii_isdigit(ch)) {
+				digit = (unsigned int)tpp_ascii_asdigit(ch);
+			} else if (tpp_ascii_islwrxdigit(ch)) {
+				digit = (unsigned int)tpp_ascii_aslwrxdigit(ch);
+			} else if (tpp_ascii_isuprxdigit(ch)) {
+				digit = (unsigned int)tpp_ascii_asuprxdigit(ch);
+			} else
+#if TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE
+			if (ch == '_') {
+				goto continue_with_ch_after_dot;
+#define WANT_continue_with_ch_after_dot
+			} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_UNDERSCORE */
+#if TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK
+			if (ch == '\'') {
+				goto continue_with_ch_after_dot;
+#define WANT_continue_with_ch_after_dot
+			} else
+#endif /* TPP_HAVE_THOUSANDS_SEPARATOR_SINGLETICK */
+			{
+				break;
+			}
+			if (digit >= radix)
+				break;
+			++num_digits_after_dot;
+			error = tpp_intvalue_builder_adddigit(&builder, digit);
+			if (TPP_ISERR(error)) {
+				if (error == TPP_ENOENT)
+					goto handle_invalid_builder;
+				goto err_builder;
+			}
+#ifdef WANT_continue_with_ch_after_dot
+#undef WANT_continue_with_ch_after_dot
+continue_with_ch_after_dot:
+#endif /* WANT_continue_with_ch_after_dot */
+			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		}
+	}
+
+	result->tfv_scale = -(tpp_intmax)num_digits_after_dot;
+	result->tfv_radix = radix;
+	if (radix == 16) {
+		/* Actually use binary as scale for hex numbers */
+		result->tfv_scale *= (16 / 2);
+		result->tfv_radix = 2;
+	}
+
+	/* Check for exponent suffix. */
+	if (start < end && (radix < 0xe ? (*start == 'e' || *start == 'E')
+	                                : (*start == 'p' || *start == 'P'))) {
+		tpp_intmax final_scale, exponent;
+		bool exponent_is_negative = false;
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start < end && (*start == '+' || *start == '-')) {
+			exponent_is_negative = *start == '-';
+			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		}
+		if (start >= end || !tpp_ascii_isdigit(*start)) {
+			/* The number-sequence after the exponent is MANDATORY.
+			 * As such, if it is missing, we *MUST* emit a warning. */
 #if TPP_HAVE_TPP_W_INVALID_FLOAT
-	return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+			error = tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+			if (TPP_ISERR(error))
+				goto err_builder;
+#endif /* TPP_HAVE_TPP_W_INVALID_FLOAT */
+		}
+
+		/* Parse exponent */
+		exponent = 0;
+		while (start < end) {
+			unsigned int digit;
+			tpp_char ch = *start;
+			if (!tpp_ascii_isdigit(ch))
+				break;
+			digit = tpp_ascii_asdigit(ch);
+#if TPP_HAVE_TPP_W_INVALID_FLOAT
+			if ((exponent + digit) < exponent) {
+				error = tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+				if (TPP_ISERR(error))
+					goto err_builder;
+			}
+#endif /* TPP_HAVE_TPP_W_INVALID_FLOAT */
+			exponent += digit;
+			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		}
+
+		/* Add exponent to scale of number. */
+		final_scale = exponent_is_negative
+		              ? (result->tfv_scale - exponent)
+		              : (result->tfv_scale + exponent);
+#if TPP_HAVE_TPP_W_INVALID_FLOAT
+		if (exponent_is_negative ? (final_scale > result->tfv_scale)
+		                         : (final_scale < result->tfv_scale)) {
+			/* Warn on overflow */
+			error = tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
+			if (TPP_ISERR(error))
+				goto err_builder;
+		}
+#endif /* TPP_HAVE_TPP_W_INVALID_FLOAT */
+		result->tfv_scale = final_scale;
+	}
+
+	/* Package up the "whole" part of the number */
+	error = tpp_intvalue_builder_pack(&builder, &result->tfv_value);
+	if (p_suffix_start)
+		*p_suffix_start = start;
+	return error;
+handle_invalid_builder:
+#if TPP_HAVE_TPP_W_INVALID_FLOAT
+	error = tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
 #else /* TPP_HAVE_TPP_W_INVALID_FLOAT */
-	return TPP_EOK;
+	error = TPP_EOK;
 #endif /* !TPP_HAVE_TPP_W_INVALID_FLOAT */
+err_builder:
+	tpp_intvalue_builder_fini(&builder);
+err:
+	return error;
 }
 #endif /* TPP_HAVE_TOK_C_FLOAT */
 
 /* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
  * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
- * first, and that integer will be converted into the equivalent `tpp_float`.
- * @return: TPP_EOK:       Success
+ * first and returned with `tfv_scale = 0` + `tfv_radix = <WEAK_UNDEFINED>`.
+ *
+ * This is the low-level float parser function. If this is too complicated
+ * for you, you may take a look at `tpp_lexer_decodefloat_ex()`, which does
+ * the final packing-into-a-float for you (though that one *can* have some
+ * loss in precision, whereas this function only loses precision when the
+ * limits of `tpp_intvalue` are exceeded)
+ *
+ * @return: TPP_EOK:       Success (`*result` was initialized)
  * @return: TPP_ELEXERROR: Lexer error happened
  * @return: TPP_EUSER(*):  User-defined error from hook */
 TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
-tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
-                         tpp_float *tpp_restrict result,
-                         tpp_char const **p_suffix_start) {
+tpp_lexer_decodefloatvalue_ex(tpp_lexer *tpp_restrict self,
+                              /*out*/ tpp_floatvalue *tpp_restrict result,
+                              tpp_char const **p_suffix_start) {
 	tpp_token_id tok = tpp_lexer_gettok(self);
 	tpp_assert(TPP_TOK_ISNUMBER(tok));
 	switch (tok) {
@@ -49095,31 +49363,19 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_TOK_INT
 	TPP_CASE_TPP_TOK_INT {
 #if TPP_HAVE_LEXER_DECODEINT
-		tpp_intvalue expr_intvalue;
-		tpp_errno error = tpp_lexer_decodeint_ex(self, &expr_intvalue, p_suffix_start);
-		if (!TPP_ISERR(error)) {
-			tpp_intmax intvalue;
-			error = tpp_intvalue_asintmax(&expr_intvalue, &intvalue);
-			if (TPP_ISERR(error)) {
-#if TPP_INTVALUE_ASINTMAX_CANOVERFLOW
-				if (error == TPP_ENOENT) {
-#if TPP_HAVE_TPP_W_INVALID_INTEGER
-					error = tpp_lexer_warnf(self, TPP_W_INVALID_INTEGER);
-#else  /* TPP_HAVE_TPP_W_INVALID_INTEGER */
-					error = TPP_EOK;
-#endif /* !TPP_HAVE_TPP_W_INVALID_INTEGER */
-				}
-#endif /* TPP_INTVALUE_ASINTMAX_CANOVERFLOW */
-				intvalue = 0;
-			}
-			tpp_intvalue_fini(&expr_intvalue);
-			*result = (tpp_float)intvalue;
-		}
-		return error;
+		result->tfv_scale = 0;
+		result->tfv_radix = 10; /* Doesn't matter */
+		return tpp_lexer_decodeint_ex(self, &result->tfv_value, p_suffix_start);
 #else /* TPP_HAVE_LEXER_DECODEINT */
-		*result = 0.0;
+		tpp_errno error;
+		result->tfv_scale = 0;
+		result->tfv_radix = 10; /* Doesn't matter */
+		error = tpp_intvalue_init_zero(&result->tfv_value);
+		if (TPP_ISERR(error))
+			return error;
 		if (p_suffix_start)
 			*p_suffix_start = tpp_lexer_gettokenend(self);
+/*handle_invalid:*/
 #if TPP_HAVE_TPP_W_INVALID_FLOAT
 		return tpp_lexer_warnf(self, TPP_W_INVALID_FLOAT);
 #else /* TPP_HAVE_TPP_W_INVALID_FLOAT */
@@ -49132,6 +49388,32 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 	default: tpp_unreachable();
 	}
 	tpp_unreachable();
+}
+#endif /* TPP_HAVE_LEXER_DECODEFLOATVALUE */
+
+#if TPP_HAVE_LEXER_DECODEFLOAT
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
+ * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
+ * first, and that integer will be converted into the equivalent `tpp_float`.
+ * @return: TPP_EOK:       Success
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
+TPP_IMPL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
+                         tpp_float *tpp_restrict result,
+                         tpp_char const **p_suffix_start) {
+	tpp_errno error;
+	tpp_floatvalue fvalue;
+
+	/* Parse float... */
+	error = tpp_lexer_decodefloatvalue_ex(self, &fvalue, p_suffix_start);
+	if (TPP_ISERR(error))
+		return error;
+
+	/* Pack into native float... */
+	error = tpp_floatvalue_pack(&fvalue, result, self);
+	tpp_floatvalue_fini(&fvalue);
+	return error;
 }
 #endif /* TPP_HAVE_LEXER_DECODEFLOAT */
 

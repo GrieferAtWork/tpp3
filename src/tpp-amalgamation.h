@@ -7082,7 +7082,7 @@ TPP_DECL_END
  * necessary because TPP is a text-based preprocessor. Trying to get
  * L/C information on the associated `TPP_TOK_SPACE` will fail.
  *
- * NOTE: affects behavior of macros at the *TIME OF DEFINITION* 
+ * NOTE: affects behavior of macros at the *TIME OF DEFINITION*
  *
  * @detect: #define FOO()         foo
  *          #define BAR           bar
@@ -12876,12 +12876,30 @@ TPP_DECL_END
 
 /* Provide a function `tpp_lexer_decodefloat()` to parse a float */
 #ifndef TPP_HAVE_LEXER_DECODEFLOAT
-#if (TPP_HAVE_LEXER_DECODEFLOAT_EXPR)
+#if (TPP_HAVE_LEXER_DECODEFLOAT_EXPR || TPP_HAVE_PROFILE_ALL)
 #define TPP_HAVE_LEXER_DECODEFLOAT 1
 #else /* ... */
 #define TPP_HAVE_LEXER_DECODEFLOAT 0
 #endif /* !... */
 #endif /* !TPP_HAVE_LEXER_DECODEFLOAT */
+
+/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
+#ifndef TPP_HAVE_LEXER_DECODEFLOATVALUE
+#if (TPP_HAVE_LEXER_DECODEFLOAT || TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_LEXER_DECODEFLOATVALUE 1
+#else /* ... */
+#define TPP_HAVE_LEXER_DECODEFLOATVALUE 0
+#endif /* !... */
+#endif /* !TPP_HAVE_LEXER_DECODEFLOATVALUE */
+
+/* Provide a function `tpp_lexer_decodefloat()` to parse a float */
+#ifndef TPP_HAVE_FLOATVALUE_PACK
+#if (TPP_HAVE_LEXER_DECODEFLOAT || TPP_HAVE_PROFILE_ALL)
+#define TPP_HAVE_FLOATVALUE_PACK 1
+#else /* ... */
+#define TPP_HAVE_FLOATVALUE_PACK 0
+#endif /* !... */
+#endif /* !TPP_HAVE_FLOATVALUE_PACK */
 
 /* Provide a function `tpp_lexer_parsecharacter_literal()` to parse character literals */
 #ifndef TPP_HAVE_LEXER_PARSECHARACTER_LITERAL
@@ -31391,6 +31409,82 @@ TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_decodeint_expr(tpp_lexer *tpp_restrict self,
                          tpp_expr_value *tpp_restrict result);
 #endif /* TPP_HAVE_LEXER_DECODEINT_EXPR */
+
+
+typedef struct tpp_floatvalue {
+	/* Abstract/arbitrary-precision floating point number representation
+	 * The actual value of the float being described is calculated as:
+	 * >> f = {tfv_value} * ({tfv_radix} POWER {tfv_scale})
+	 *
+	 * If that seems weird, here's a more detailed explanation:
+	 * - `tfv_radix` is just the radix that was used to write the
+	 *   number. That'll usually be `10` for decimals, but may also
+	 *   be `2` if hex-floats are enabled (yes: hex-floats denote
+	 *   their exponent in bits).
+	 * - `tfv_value` is the integer representation of the float's
+	 *   whole part, combined with its exponent. e.g. if you're
+	 *   parsing `1.23`, this'll be `123`
+	 * - `tfv_scale` is the exponent that needs to be applied to
+	 *   `tfv_value` in order to form the actual float value.
+	 *   Usually, this will be a negative value, in which case
+	 *   you can also think of it as the # of `tfv_radix`-digits
+	 *   that `tfv_value` needs to be shifted left by, in order
+	 *   to form the actual float.
+	 *
+	 * Examples:
+	 * - "1.0"      {tfv_scale:-1,  tfv_value:10,  tfv_radix:10}
+	 * - "123"      {tfv_scale:0,   tfv_value:123, tfv_radix:10}
+	 * - "1.23"     {tfv_scale:-2,  tfv_value:123, tfv_radix:10}
+	 * - "1E23"     {tfv_scale:23,  tfv_value:1,   tfv_radix:10}
+	 * - "1E-23"    {tfv_scale:-23, tfv_value:1,   tfv_radix:10}
+	 * - "1.2E-23"  {tfv_scale:-24, tfv_value:12,  tfv_radix:10}
+	 * - ".2E-23"   {tfv_scale:-24, tfv_value:2,   tfv_radix:10}
+	 * - "0x1P-3"   {tfv_scale:-3,  tfv_value:1,   tfv_radix:2}
+	 */
+	tpp_intmax   tfv_scale;
+	tpp_intvalue tfv_value;
+	unsigned int tfv_radix;
+} tpp_floatvalue;
+
+#define tpp_floatvalue_fini(self) tpp_intvalue_fini(&(self)->tfv_value)
+
+#if TPP_HAVE_FLOATVALUE_PACK
+/* Package `self` into an actual, native floating-point value.
+ *
+ * @param: result: Store the floating-point value here
+ * @param: lexer:  Used for warnings when on overflow
+ * @return: TPP_EOK:       Success (`*result` was initialized)
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
+TPP_DECL TPP_PURECALL TPP_WUNUSED TPP_NONNULL((1, 2, 3)) tpp_errno TPPCALL
+tpp_floatvalue_pack(tpp_floatvalue const *tpp_restrict self,
+                    tpp_float *tpp_restrict result,
+                    tpp_lexer *tpp_restrict lexer);
+#endif /* TPP_HAVE_FLOATVALUE_PACK */
+
+
+
+#if TPP_HAVE_LEXER_DECODEFLOATVALUE
+/* Decode the current token (which should be `TPP_TOK_ISNUMBER`) into a float.
+ * When the current token is `TPP_TOK_ISINT`, it will be parsed as integer
+ * first and returned with `tfv_scale = 0` + `tfv_radix = <WEAK_UNDEFINED>`.
+ *
+ * This is the low-level float parser function. If this is too complicated
+ * for you, you may take a look at `tpp_lexer_decodefloat_ex()`, which does
+ * the final packing-into-a-float for you (though that one *can* have some
+ * loss in precision, whereas this function only loses precision when the
+ * limits of `tpp_intvalue` are exceeded)
+ *
+ * @return: TPP_EOK:       Success (`*result` was initialized)
+ * @return: TPP_ELEXERROR: Lexer error happened
+ * @return: TPP_EUSER(*):  User-defined error from hook */
+TPP_DECL TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
+tpp_lexer_decodefloatvalue_ex(tpp_lexer *tpp_restrict self,
+                              /*out*/ tpp_floatvalue *tpp_restrict result,
+                              tpp_char const **p_suffix_start);
+#define tpp_lexer_decodefloatvalue(self, result) \
+	tpp_lexer_decodefloatvalue_ex(self, result, NULL)
+#endif /* TPP_HAVE_LEXER_DECODEFLOATVALUE */
 
 
 #if TPP_HAVE_LEXER_DECODEFLOAT
