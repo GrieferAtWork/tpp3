@@ -323,21 +323,15 @@ typedef struct tpp_lexer {
 #define tpp_lexer_poptokenend(self)               tpp_token_popend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokennum(self)               tpp_token_getnum(tpp_lexer_gettoken(self))
 #define tpp_lexer_resettokennum(self)             tpp_token_resetnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_pushtokenstate(self)            tpp_token_pushstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_breaktokenstate(self)           tpp_token_breakstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokenstate(self)             tpp_token_popstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_pushtokennum(self)              tpp_token_pushnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_breaktokennum(self)             tpp_token_breaknum(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokennum(self)               tpp_token_popnum(tpp_lexer_gettoken(self))
 #if TPP_HAVE_TOKEN_NUMBER
 #define tpp_lexer_settokennum(self, v)            tpp_token_setnum(tpp_lexer_gettoken(self), v)
-#define tpp_lexer_pushtokennum(self) \
-	do {                             \
-		tpp_token_num const _tlptn_saved_num = tpp_lexer_gettokennum(self)
-#define tpp_lexer_breaktokennum(self) \
-		tpp_lexer_settokennum(self, _tlptn_saved_num)
-#define tpp_lexer_poptokennum(self)    \
-		tpp_lexer_breaktokennum(self); \
-	} while (0)
-#else /* TPP_HAVE_TOKEN_NUMBER */
-#define tpp_lexer_pushtokennum(self)  do {
-#define tpp_lexer_breaktokennum(self) (void)0
-#define tpp_lexer_poptokennum(self)   (void)0; } while (0)
-#endif /* !TPP_HAVE_TOKEN_NUMBER */
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 
 
 /* Current file */

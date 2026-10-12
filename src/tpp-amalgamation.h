@@ -18103,10 +18103,22 @@ typedef struct tpp_token {
 #define tpp_token_getnum(self)    ((tpp_token_num)(self)->TPP_INTERNAL(tt_num))
 #define tpp_token_setnum(self, v) (void)((self)->TPP_INTERNAL(tt_num) = (v))
 #define tpp_token_resetnum(self)  (void)((self)->TPP_INTERNAL(tt_num) = 0)
+#define _tpp_token_pushnum(self)  tpp_token_num const _ttpn_oldnum = (self)->TPP_INTERNAL(tt_num)
+#define _tpp_token_breaknum(self) (self)->TPP_INTERNAL(tt_num) = _ttpn_oldnum
 #else /* TPP_HAVE_TOKEN_NUMBER */
 #define tpp_token_getnum(self)    ((tpp_token_num)0)
 #define tpp_token_resetnum(self)  (void)0
+#define _tpp_token_pushnum(self)  (void)0
+#define _tpp_token_breaknum(self) 0
 #endif /* !TPP_HAVE_TOKEN_NUMBER */
+#define tpp_token_pushnum(self) \
+	do {                        \
+		_tpp_token_pushnum(self)
+#define tpp_token_breaknum(self) \
+		(void)(_tpp_token_breaknum(self))
+#define tpp_token_popnum(self)    \
+		tpp_token_breaknum(self); \
+	} while (0)
 
 /* Helpers to set the data-fields of `self` */
 #define tpp_token_setid(self, id) \
@@ -18141,6 +18153,19 @@ typedef struct tpp_token {
 		tpp_token_breakend(self); \
 	} while (0)
 
+/* Save/restore the "state" (id/keyword/number) of a token */
+#define tpp_token_pushstate(self)                                                     \
+	do {                                                                              \
+		tpp_token_id const _ttps_old_id               = (self)->TPP_INTERNAL(tt_id);  \
+		struct tpp_keyword const *const _ttps_old_kwd = (self)->TPP_INTERNAL(tt_kwd); \
+		_tpp_token_pushnum(self);
+#define tpp_token_breakstate(self)                       \
+	(void)((self)->TPP_INTERNAL(tt_id)  = _ttps_old_id,  \
+	       (self)->TPP_INTERNAL(tt_kwd) = _ttps_old_kwd, \
+	       _tpp_token_breaknum(self))
+#define tpp_token_popstate(self)    \
+		tpp_token_breakstate(self); \
+	} while (0)
 
 /* Convenience aliases */
 #define tpp_token_iseof(self)                    (tpp_token_getid(self) == TPP_TOK_EOF)
@@ -28966,21 +28991,15 @@ typedef struct tpp_lexer {
 #define tpp_lexer_poptokenend(self)               tpp_token_popend(tpp_lexer_gettoken(self))
 #define tpp_lexer_gettokennum(self)               tpp_token_getnum(tpp_lexer_gettoken(self))
 #define tpp_lexer_resettokennum(self)             tpp_token_resetnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_pushtokenstate(self)            tpp_token_pushstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_breaktokenstate(self)           tpp_token_breakstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokenstate(self)             tpp_token_popstate(tpp_lexer_gettoken(self))
+#define tpp_lexer_pushtokennum(self)              tpp_token_pushnum(tpp_lexer_gettoken(self))
+#define tpp_lexer_breaktokennum(self)             tpp_token_breaknum(tpp_lexer_gettoken(self))
+#define tpp_lexer_poptokennum(self)               tpp_token_popnum(tpp_lexer_gettoken(self))
 #if TPP_HAVE_TOKEN_NUMBER
 #define tpp_lexer_settokennum(self, v)            tpp_token_setnum(tpp_lexer_gettoken(self), v)
-#define tpp_lexer_pushtokennum(self) \
-	do {                             \
-		tpp_token_num const _tlptn_saved_num = tpp_lexer_gettokennum(self)
-#define tpp_lexer_breaktokennum(self) \
-		tpp_lexer_settokennum(self, _tlptn_saved_num)
-#define tpp_lexer_poptokennum(self)    \
-		tpp_lexer_breaktokennum(self); \
-	} while (0)
-#else /* TPP_HAVE_TOKEN_NUMBER */
-#define tpp_lexer_pushtokennum(self)  do {
-#define tpp_lexer_breaktokennum(self) (void)0
-#define tpp_lexer_poptokennum(self)   (void)0; } while (0)
-#endif /* !TPP_HAVE_TOKEN_NUMBER */
+#endif /* TPP_HAVE_TOKEN_NUMBER */
 
 
 /* Current file */

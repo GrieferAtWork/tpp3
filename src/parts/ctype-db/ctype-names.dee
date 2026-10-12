@@ -229,14 +229,14 @@ function getUnicodeNames(warnConflicts: bool = true): {string: {int...}} {
 	 *   stuff like `ASTERISK` gets inserted as `002A FE0F`, but the unicode
 	 *   core data `UnicodeData.txt` comes along and says `002A` on its own
 	 *   should be called `ASTERISK` (we obviously respect unicode here since
-	 *   it was who added that trailing `FE0F` because `002A` appears was given
-	 *   a name by CLDR data and a suffix by `emoji-variation-sequences.txt`)
+	 *   it was who added that trailing `FE0F` because `002A` was given a name
+	 *   by CLDR data and a suffix by `emoji-variation-sequences.txt`)
 	 *
 	 * - A little more annoying are some conflicts where it isn't a missing
 	 *   FE0F (VS16) suffix, like in in the following conflicts:
 	 *   - "DAGGER"    emoji:[U+1F5E1, U+FE0F] 🗡️  UnicodeData:[U+2020]  †
 	 *   - "HOUSE"     emoji:[U+1F3E0]         🏠  UnicodeData:[U+2302]  ⌂
-	 *   - "BULLSEYE": emoji:[U+1F3AF]         🎯  UnicodeData:[U+25CE]  ◎
+	 *   - "BULLSEYE"  emoji:[U+1F3AF]         🎯  UnicodeData:[U+25CE]  ◎
 	 *   Again: we always pick what "UnicodeData.txt" says over emoji names,
 	 *          but these conflicts are pretty annoying if you ask me...
 	 */
