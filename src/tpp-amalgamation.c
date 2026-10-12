@@ -24891,6 +24891,7 @@ got_lhs_info:
 }
 #endif /* !tpp_io_compare_mtime */
 #endif /* TPP_HAVE_IO_COMPARE_MTIME */
+#endif /* tpp_io_handle_IS_BUILTIN */
 
 
 #if TPP_HAVE_IO_NORMALIZE_FILENAME
@@ -24949,7 +24950,6 @@ tpp_io_normalize_filename(char *filename, char *after_last_sep,
 }
 #endif /* !tpp_io_normalize_filename */
 #endif /* TPP_HAVE_IO_NORMALIZE_FILENAME */
-#endif /* tpp_io_handle_IS_BUILTIN */
 
 
 #if TPP_HAVE_IO_SKIP_BLOCKING
