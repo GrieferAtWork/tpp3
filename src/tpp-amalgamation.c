@@ -48528,18 +48528,18 @@ again_yield_mainfile:
 			accept_error = (*accept_cb)(accept_arg, self);
 			tpp_lexer_poptokenend(self);
 		}
-		if (accept_error != TPP_ENOENT) {
-			if (TPP_ISERR(accept_error)) {
-				tok = TPP_TOK_OFERR(accept_error);
-			} else if (p_token != NULL) {
-				tpp_token_copy(p_token, tpp_lexer_gettoken(self));
-				if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
-					p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
-				p_token->tt_range.ttr_end = pos;
-			}
-			tpp_lexer_seek_rollback(self, &backup);
-			goto done;
+		if (accept_error == TPP_ENOENT)
+			goto again_yield_mainfile;
+		if (TPP_ISERR(accept_error)) {
+			tok = TPP_TOK_OFERR(accept_error);
+		} else if (p_token != NULL) {
+			tpp_token_copy(p_token, tpp_lexer_gettoken(self));
+			if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
+				p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
+			p_token->tt_range.ttr_end = pos;
 		}
+		tpp_lexer_seek_rollback(self, &backup);
+		goto done;
 	}
 	tpp_lexer_seek_rollback(self, &backup);
 	if (tok == TPP_TOK_EOF) {
@@ -48566,19 +48566,19 @@ again_yield_nextfile:
 					accept_error = (*accept_cb)(accept_arg, self);
 					tpp_lexer_poptokenend(self);
 				}
-				if (accept_error != TPP_ENOENT) {
-					if (TPP_ISERR(accept_error)) {
-						tok = TPP_TOK_OFERR(accept_error);
-					} else if (p_token != NULL) {
-						tpp_token_copy(p_token, tpp_lexer_gettoken(self));
-						if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
-							p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
-						p_token->tt_range.ttr_end = pos;
-					}
-					tpp_lexer_seek_rollback(self, &backup);
-					tpp_lexer_manualpopfile_break_commit(self);
-					goto done;
+				if (accept_error == TPP_ENOENT)
+					goto again_yield_nextfile;
+				if (TPP_ISERR(accept_error)) {
+					tok = TPP_TOK_OFERR(accept_error);
+				} else if (p_token != NULL) {
+					tpp_token_copy(p_token, tpp_lexer_gettoken(self));
+					if (flags & TPP_LEXER_PEEK_RAW_FLAG_INCLPREV)
+						p_token->tt_range.ttr_start = tpp_lexer_gettokenend(self);
+					p_token->tt_range.ttr_end = pos;
 				}
+				tpp_lexer_seek_rollback(self, &backup);
+				tpp_lexer_manualpopfile_break_commit(self);
+				goto done;
 			}
 			tpp_lexer_seek_rollback(self, &backup);
 			if (tok != TPP_TOK_EOF)
