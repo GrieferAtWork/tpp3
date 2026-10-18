@@ -985,6 +985,7 @@ handle_unknown_uni_brace_sequence:
 			break;
 		}
 #if TPP_HAVE_STRING_ESCAPE_UNI
+		ch = 'u';
 		goto handle_escape_uni;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 	}	break;
@@ -1106,7 +1107,6 @@ handle_escape_uni:
 				nibble = (tpp_char)tpp_ascii_asdigit(ch);
 			} else if (tpp_ascii_islwrxdigit(ch)) {
 				nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
-				++iter;
 			} else if (tpp_ascii_isuprxdigit(ch)) {
 				nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
 			} else {

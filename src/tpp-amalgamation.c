@@ -49158,6 +49158,7 @@ tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
 		/* Check for hex-prefix (other this is just a leading `0` that
 		 * doesn't affect the final value and can just be ignored) */
 		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		/* TODO: Feature-flag for hex-floats (as well as `__cpp_hex_float`) */
 		if (start < end && (*start == 'x' || *start == 'X')) {
 			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
 			radix = 16;
@@ -58801,6 +58802,7 @@ handle_unknown_uni_brace_sequence:
 			break;
 		}
 #if TPP_HAVE_STRING_ESCAPE_UNI
+		ch = 'u';
 		goto handle_escape_uni;
 #endif /* TPP_HAVE_STRING_ESCAPE_UNI */
 	}	break;
@@ -58922,7 +58924,6 @@ handle_escape_uni:
 				nibble = (tpp_char)tpp_ascii_asdigit(ch);
 			} else if (tpp_ascii_islwrxdigit(ch)) {
 				nibble = (tpp_char)tpp_ascii_aslwrxdigit(ch);
-				++iter;
 			} else if (tpp_ascii_isuprxdigit(ch)) {
 				nibble = (tpp_char)tpp_ascii_asuprxdigit(ch);
 			} else {

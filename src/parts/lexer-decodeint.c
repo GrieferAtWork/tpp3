@@ -419,6 +419,7 @@ tpp_lexer_decode_c_float(tpp_lexer *tpp_restrict self,
 		/* Check for hex-prefix (other this is just a leading `0` that
 		 * doesn't affect the final value and can just be ignored) */
 		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		/* TODO: Feature-flag for hex-floats (as well as `__cpp_hex_float`) */
 		if (start < end && (*start == 'x' || *start == 'X')) {
 			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
 			radix = 16;
