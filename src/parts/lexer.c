@@ -302,29 +302,31 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 		goto err;
 #endif /* TPP_HAVE_LEXER_TIME */
 #if TPP_HAVE_WARNINGS
-	tpp_warnings_init(&self->tl_warn);
+	error = tpp_warnings_copy(&self->tl_warn, &from->tl_warn);
+	if (TPP_ISERR(error))
+		goto err_time;
 #endif /* TPP_HAVE_WARNINGS */
 #if TPP_HAVE_INCLUDE_PATH
 	error = tpp_include_paths_copy(&self->tl_include_paths,
 	                               &from->tl_include_paths);
 	if (TPP_ISERR(error))
-		goto err_warn;
+		goto err_time_warn;
 #endif /* TPP_HAVE_INCLUDE_PATH */
 #if TPP_HAVE_INCLUDE_PATH_ENVIRON
 	error = tpp_envinclude_paths_copy(&self->tl_envinclude_paths,
 	                                  &from->tl_envinclude_paths);
 	if (TPP_ISERR(error))
-		goto err_warn_incl;
+		goto err_time_warn_incl;
 #endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
 #if TPP_HAVE_EXTENSIONS
 	error = tpp_extensions_copy(&self->tl_exts, &from->tl_exts);
 	if (TPP_ISERR(error))
-		goto err_warn_incl_einc;
+		goto err_time_warn_incl_einc;
 #endif /* TPP_HAVE_EXTENSIONS */
 #if TPP_HAVE_USER_KEYWORDS
 	error = tpp_keywords_copy(&self->tl_kwds, &from->tl_kwds);
 	if (TPP_ISERR(error))
-		goto err_warn_incl_einc_exts;
+		goto err_time_warn_incl_einc_exts;
 #endif /* TPP_HAVE_USER_KEYWORDS */
 
 	/* Copy stuff that can't cause errors... */
@@ -379,32 +381,36 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 
 	return TPP_EOK;
 #if TPP_HAVE_USER_KEYWORDS
-err_warn_incl_einc_exts:
+err_time_warn_incl_einc_exts:
 #endif /* TPP_HAVE_USER_KEYWORDS */
 #if TPP_HAVE_EXTENSIONS
 #if TPP_HAVE_USER_KEYWORDS
 	tpp_extensions_fini(&self->tl_exts);
 #endif /* TPP_HAVE_USER_KEYWORDS */
-err_warn_incl_einc:
+err_time_warn_incl_einc:
 #endif /* TPP_HAVE_EXTENSIONS */
 #if TPP_HAVE_INCLUDE_PATH_ENVIRON
 #if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS
 	tpp_envinclude_paths_fini(&self->tl_envinclude_paths);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS */
-err_warn_incl:
+err_time_warn_incl:
 #endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
 #if TPP_HAVE_INCLUDE_PATH
 #if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON
 	tpp_include_paths_fini(&self->tl_include_paths);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS */
-err_warn:
+err_time_warn:
 #endif /* TPP_HAVE_INCLUDE_PATH */
 #if TPP_HAVE_WARNINGS
 #if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH
 	tpp_warnings_fini(&self->tl_warn);
 #endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH */
+err_time:
 #endif /* TPP_HAVE_WARNINGS */
 #if TPP_HAVE_LEXER_TIME
+#if TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH || TPP_HAVE_WARNINGS
+	tpp_time_fini(&self->tl_time);
+#endif /* TPP_HAVE_USER_KEYWORDS || TPP_HAVE_EXTENSIONS || TPP_HAVE_INCLUDE_PATH_ENVIRON || TPP_HAVE_INCLUDE_PATH || TPP_HAVE_WARNINGS */
 err:
 #endif /* TPP_HAVE_LEXER_TIME */
 	return error;
