@@ -519,13 +519,15 @@ tpp_lexer_foreach_include_path(tpp_lexer *tpp_restrict self, tpp_token_id mode,
 		/* Search `$CPATH` */
 		char const *envpath;
 		error = tpp_lexer_getenvincludepaths(self, &envpath);
-		if (TPP_ISERR(error))
-			return error;
-		while (*envpath) {
-			error = (*cb)(arg, envpath tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
-			if (error != TPP_ENOENT)
+		if (error != TPP_ENOENT) {
+			if (TPP_ISERR(error))
 				return error;
-			envpath += tpp_strlen(envpath) + 1;
+			while (*envpath) {
+				error = (*cb)(arg, envpath tpp_lexer_foreach_include_path_flags__ARG(TPP_FILE_FLAGS_NORMAL));
+				if (error != TPP_ENOENT)
+					return error;
+				envpath += tpp_strlen(envpath) + 1;
+			}
 		}
 	}
 #endif /* TPP_HAVE_INCLUDE_PATH_ENVIRON */
