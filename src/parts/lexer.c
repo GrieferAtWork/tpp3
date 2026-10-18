@@ -345,7 +345,7 @@ tpp_lexer_copy(tpp_lexer *tpp_restrict self,
 #if TPP_HAVE_WARNING_ERROR
 	self->tl_error_count = from->tl_error_count;
 #if TPP_ERROR_LIMIT < 0
-	self->tl_error_count = from->tl_error_limit;
+	self->tl_error_limit = from->tl_error_limit;
 #endif /* TPP_ERROR_LIMIT < 0 */
 #endif /* TPP_HAVE_WARNING_ERROR */
 
