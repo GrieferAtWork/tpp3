@@ -23389,6 +23389,8 @@ typedef struct tpp_file {
  * Return value is undefined if `tpp_file_getkind(self) != TPP_FILE_KIND_IO` */
 #define tpp_file_getkeep(self) \
 	(self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep)
+#define tpp_file_haskeep(self) \
+	((self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(ttf_keep) != NULL)
 
 /* Push the current keep-pointer for `self` and setup a new pointer `ptr`
  * This macro has no effect if `tpp_file_getkind(self) != TPP_FILE_KIND_IO` */
@@ -23414,6 +23416,7 @@ typedef struct tpp_file {
 	} while (0)
 #else /* TPP_HAVE_FILE_KEEPPOS */
 #define tpp_file_getkeep(self) tpp_file_getpos(self)
+#define tpp_file_haskeep(self) false
 #endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 
@@ -23618,6 +23621,36 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
 #define _tpp_file_init_macro_flags(self) _tpp_file_init_flags(self, TPP_FILE_FLAGS_NORMAL)
 #endif /* !TPP_HAVE_CPP_DIRECTIVES */
 #endif /* TPP_HAVE_CPP_MACROS */
+
+
+/* Dispose an I/O file's chunk-buffer (such that the next time a token is yielded,
+ * fresh data is read from the associated file). The given `reset_lc` is the L/C
+ * state that should be assigned, and should describe the state at the position
+ * that the file's system pointer is currently set at.
+ *
+ * Use this after doing custom `fseek()`-style operations on `tpp_file_getiohandle()`,
+ * in order to clear the `tpp_file`s buffer, as well as update the description of the
+ * file's current position.
+ *
+ * WARNING: This function cannot be used if `tpp_file_haskeep()`.
+ * WARNING: This is NOT a buffer reload function! Calling this function will dispose
+ *          any data that has already been read into the file's buffer, but has not
+ *          been processed yet! */
+#define tpp_file_resetio(self, reset_lc)                         \
+	(_tpp_file_assert_nokeep_(self)                              \
+	 tpp_assert(tpp_file_isio(self)),                            \
+	 (self)->TPP_INTERNAL(tf_pos) = NULL,                        \
+	 (self)->TPP_INTERNAL(tf_end) = NULL,                        \
+	 (self)->TPP_INTERNAL(tf_chunk)                              \
+	 ? (void)(tpp_string_decref((self)->TPP_INTERNAL(tf_chunk)), \
+	          (self)->TPP_INTERNAL(tf_chunk) = NULL)             \
+	 : (void)0,                                                  \
+	 (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(tlcs_info) = (reset_lc))
+#ifdef TPP_HAVE_FILE_KEEPPOS
+#define _tpp_file_assert_nokeep_(self) tpp_assert(!tpp_file_haskeep(self)),
+#else /* TPP_HAVE_FILE_KEEPPOS */
+#define _tpp_file_assert_nokeep_(self) /* nothing */
+#endif /* !TPP_HAVE_FILE_KEEPPOS */
 
 
 
