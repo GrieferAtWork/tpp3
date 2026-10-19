@@ -25,5 +25,6 @@ The final amalgamation files only include the contents of `/*[[[tpp-begin]]]*/ .
 | `tpp-amalgamation.h` | Amalgamation header file |
 | `tpp-amalgamation.c` | Amalgamation source file |
 | `tpp2.h` | Compatibility header for TPP2 (for use with `tpp-amalgamation.h` and `tpp-amalgamation.c`) |
+| `tpp-lexer-init.h` | Static initialization for `tpp_lexer`, equivalent to `tpp_lexer_init()` |
 | `makecache.py` | A script to generate a cache file that can be used to skip some startup initialization steps that TPP otherwise needs to do to build builtin keyword/extension/warning tables. See use in [`/samples/simple-with-cache/Makefile`](../samples/simple-with-cache/Makefile) |
 
