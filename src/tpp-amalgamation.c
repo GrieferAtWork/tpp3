@@ -38674,6 +38674,9 @@ tpp_lexer_seek_end_of_string(tpp_lexer *tpp_restrict self,
                              tpp_char const **tpp_restrict p_pos,
                              tpp_char quote_char) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+	bool string_continued_warned = false;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -38755,10 +38758,13 @@ handle_linefeed:
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
-				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
-				if (TPP_ISERR(error))
-					return error;
+				if (!string_continued_warned) {
+					string_continued_warned = true;
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+					                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+					if (TPP_ISERR(error))
+						return error;
+				}
 #endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 			}
 		} else
@@ -38798,6 +38804,9 @@ tpp_lexer_seek_end_of_format_string(tpp_lexer *tpp_restrict self,
                                     tpp_char const **tpp_restrict p_pos,
                                     tpp_char quote_char) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+	bool string_continued_warned = false;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -38894,10 +38903,13 @@ handle_linefeed:
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
-				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
-				if (TPP_ISERR(error))
-					return error;
+				if (!string_continued_warned) {
+					string_continued_warned = true;
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+					                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+					if (TPP_ISERR(error))
+						return error;
+				}
 #endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 			}
 		} else
@@ -38936,6 +38948,9 @@ static TPP_WUNUSED TPP_NONNULL((1, 2)) tpp_errno TPPCALL
 tpp_lexer_seek_end_of_backtick_string(tpp_lexer *tpp_restrict self,
                                       tpp_char const **tpp_restrict p_pos) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+	bool string_continued_warned = false;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -39030,10 +39045,13 @@ handle_linefeed:
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
-				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
-				if (TPP_ISERR(error))
-					return error;
+				if (!string_continued_warned) {
+					string_continued_warned = true;
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+					                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+					if (TPP_ISERR(error))
+						return error;
+				}
 #endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 			}
 		} else
@@ -39291,6 +39309,9 @@ tpp_lexer_seek_end_of_raw_string(tpp_lexer *tpp_restrict self,
                                  tpp_char const **tpp_restrict p_pos,
                                  tpp_char quote_char) {
 	tpp_file *const file = tpp_lexer_getfile(self);
+#if TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
+	bool string_continued_warned = false;
+#endif /* TPP_CONF_MAYBE_0(TPP_HAVE_STRING_ALLOW_MULTILINE) && TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 #if TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED
 	tpp_size rel_start = tpp_file_ptr2rel(file, *p_pos);
 #endif /* TPP_HAVE_TPP_W_STRING_TERMINATED_BY_EOF || TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
@@ -39323,10 +39344,13 @@ handle_linefeed:
 #endif /* !TPP_HAVE_TPP_W_STRING_TERMINATED_BY_LINEFEED */
 			} else {
 #if TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED
-				error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
-				                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
-				if (TPP_ISERR(error))
-					return error;
+				if (!string_continued_warned) {
+					string_continued_warned = true;
+					error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, old_pos),
+					                           TPP_W_STRING_CONTINUED_AFTER_LINEFEED);
+					if (TPP_ISERR(error))
+						return error;
+				}
 #endif /* TPP_HAVE_TPP_W_STRING_CONTINUED_AFTER_LINEFEED */
 			}
 		} else
