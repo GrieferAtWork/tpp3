@@ -172,10 +172,10 @@ tpp_macro_equals(tpp_macro const *lhs, tpp_macro const *rhs) {
 	if (lhs->tm_flags != rhs->tm_flags)
 		goto nope;
 #endif /* TPP_HAVE_MACRO_FLAGS */
-#if TPP_HAVE_UNICODE
-	if (lhs->tm_body_enc != rhs->tm_body_enc)
-		goto nope;
-#endif /* TPP_HAVE_UNICODE */
+	/* NOTE: Don't compare `tm_body_enc` here -- the underlying file will have
+	 *       already converted everything to utf-8, and the macro being defined
+	 *       by 2 files using different encoding shouldn't matter in regards to
+	 *       the actual definitions differing from each other! */
 
 	/* Compare bodies */
 	{
