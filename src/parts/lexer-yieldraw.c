@@ -1168,7 +1168,7 @@ tpp_lexer_seek_end_of_format_expr(tpp_lexer *tpp_restrict self,
 	tpp_token *const token = tpp_lexer_gettoken(self);
 	tpp_token_id const saved_token_id        = token->tt_id;
 	tpp_keyword const *const saved_token_kwd = token->tt_kwd;
-	tpp_token_pushrange(token);
+	tpp_size const saved_token_len = tpp_token_getlen(token);
 
 	/* Seek the end of the expression */
 	tpp_lexer_autopopfile_pushoff(self); /* Stay within the current file */
@@ -1201,9 +1201,10 @@ tpp_lexer_seek_end_of_format_expr(tpp_lexer *tpp_restrict self,
 	 * so we don't even have to do anything extra here! */
 
 	/* Restore token config */
-	tpp_token_poprange(token);
-	token->tt_id    = saved_token_id;
-	token->tt_kwd   = saved_token_kwd;
+	token->tt_range.ttr_start = token->tt_range.ttr_end - saved_token_len;
+	/* Don't have to restore "ttr_end": `tpp_lexer_yieldraw_at()` doesn't clobber that one! */
+	token->tt_id  = saved_token_id;
+	token->tt_kwd = saved_token_kwd;
 	return result;
 }
 #endif /* TPP_HAVE_STRING_FORMAT */

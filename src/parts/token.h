@@ -1744,9 +1744,8 @@ typedef struct tpp_token {
 	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
 
 /* Set the text-range of the token.
- * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
- *          also specifies where the next call to tpp_lexer_yield() will
- *          start scanning for tokens! */
+ * WARNING: Don't use these macros around code that might potentially make
+ *          calls to `tpp_file_expandchunk()` (or `tpp_lexer_yield*()`) */
 #define tpp_token_pushrange(self) \
 	do {                          \
 		tpp_token_range const _ttpr_saved_range = (self)->TPP_INTERNAL(tt_range)
@@ -1759,6 +1758,10 @@ typedef struct tpp_token {
 		tpp_token_breakrange(self); \
 	} while (0)
 
+/* Set the end-pointer of the token.
+ * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
+ *          also specifies where the next call to tpp_lexer_yield() will
+ *          start scanning for tokens! */
 #define tpp_token_pushend(self) \
 	do {                        \
 		tpp_char  const *const _ttpe_saved_end = (self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)

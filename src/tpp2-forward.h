@@ -20,7 +20,7 @@
 #ifndef GUARD_TPP2_FORWARD_H
 #define GUARD_TPP2_FORWARD_H 1
 
-/* Forward-compatibility header **FOR** TPP2 that adds TPP3-style APIs implement on-top of TPP2's API
+/* Forward-compatibility header **FOR** TPP2 that adds TPP3-style APIs implemented on-top of TPP2's API
  *
  * Same as `tpp2.h`, this header is meant to make it easier to transition from TPP2 to TPP3 */
 
@@ -64,6 +64,13 @@ TPP_DECL_BEGIN
 #else /* TPP */
 #define TPP_FORWARD_COMPAT(x) TPP_##x
 #endif /* !TPP */
+
+#ifndef TPP_IMPL
+#define TPP_IMPL /* nothing */
+#endif /* !TPP_IMPL */
+#ifndef TPP_DECL
+#define TPP_DECL TPPFUN
+#endif /* !TPP_DECL */
 
 #ifndef tpp_restrict
 #define tpp_restrict __restrict

@@ -23061,10 +23061,10 @@ typedef struct tpp_file {
 #endif /* !TPP_HAVE_UNICODE */
 
 /* Public API for accessing components of `tpp_file` */
-#define tpp_file_getkind(self)  ((self)->TPP_INTERNAL(tf_kind))
-#define tpp_file_getpos(self)   ((self)->TPP_INTERNAL(tf_pos))
-#define tpp_file_getend(self)   ((self)->TPP_INTERNAL(tf_end))
-#define tpp_file_getchunk(self) ((self)->TPP_INTERNAL(tf_chunk)) /* XXX: This should not be exposed like that -- instead, there should be a function like `struct { tpp_char const *start, *end; TPP_REF tpp_string *str; } tpp_file_getchunkof(tpp_file *self, tpp_char const *start, tpp_char const *end);` that returns the chunk-ref+start+end for a given sub-range (in case the way file chunks work ever changes) */
+#define tpp_file_getkind(self)  ((tpp_file_kind)(self)->TPP_INTERNAL(tf_kind))   /* Kind of file (s.a. `tpp_file_kind`) */
+#define tpp_file_getpos(self)   ((tpp_char const *)(self)->TPP_INTERNAL(tf_pos)) /* Pointer to end-of-current-token / start-of-next-token */
+#define tpp_file_getend(self)   ((tpp_char const *)(self)->TPP_INTERNAL(tf_end)) /* End of currently loaded chunk (when `tpp_file_getpos() >= tpp_file_getend()`, call `tpp_file_expandchunk()` to load more data) */
+#define tpp_file_getchunk(self) ((tpp_string *)(self)->TPP_INTERNAL(tf_chunk))   /* XXX: This should not be exposed like that -- instead, there should be a function like `struct { tpp_char const *start, *end; TPP_REF tpp_string *str; } tpp_file_getchunkof(tpp_file *self, tpp_char const *start, tpp_char const *end);` that returns the chunk-ref+start+end for a given sub-range (in case the way file chunks work ever changes) */
 #define tpp_file_haschunk(self) ((self)->TPP_INTERNAL(tf_chunk) != NULL)
 #if TPP_HAVE_IFDEF_STACK
 #define tpp_file_getifdef(self) (&(self)->TPP_INTERNAL(tf_ifdef)) /* XXX: This should not be exposed */
@@ -23630,22 +23630,22 @@ _tpp_file_io_notify_initialized(tpp_file *tpp_restrict self);
  *
  * Use this after doing custom `fseek()`-style operations on `tpp_file_getiohandle()`,
  * in order to clear the `tpp_file`s buffer, as well as update the description of the
- * file's current position.
+ * file's (then-)current line/column position.
  *
  * WARNING: This function cannot be used if `tpp_file_haskeep()`.
  * WARNING: This is NOT a buffer reload function! Calling this function will dispose
  *          any data that has already been read into the file's buffer, but has not
- *          been processed yet! */
-#define tpp_file_resetio(self, reset_lc)                         \
-	(_tpp_file_assert_nokeep_(self)                              \
-	 tpp_assert(tpp_file_isio(self)),                            \
-	 (self)->TPP_INTERNAL(tf_pos) = NULL,                        \
-	 (self)->TPP_INTERNAL(tf_end) = NULL,                        \
-	 (self)->TPP_INTERNAL(tf_chunk)                              \
-	 ? (void)(tpp_string_decref((self)->TPP_INTERNAL(tf_chunk)), \
-	          (self)->TPP_INTERNAL(tf_chunk) = NULL)             \
-	 : (void)0,                                                  \
-	 (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(tlcs_info) = (reset_lc))
+ *          been processed yet (i.e.: `[tpp_file_getpos(),tpp_file_getend())`)! */
+#define tpp_file_resetio(self, reset_lc)                               \
+	(void)(_tpp_file_assert_nokeep_(self)                              \
+	       tpp_assert(tpp_file_isio(self)),                            \
+	       (self)->TPP_INTERNAL(tf_pos) = NULL,                        \
+	       (self)->TPP_INTERNAL(tf_end) = NULL,                        \
+	       (self)->TPP_INTERNAL(tf_chunk)                              \
+	       ? (void)(tpp_string_decref((self)->TPP_INTERNAL(tf_chunk)), \
+	                (self)->TPP_INTERNAL(tf_chunk) = NULL)             \
+	       : (void)0,                                                  \
+	       (self)->TPP_INTERNAL(tf_data).TPP_INTERNAL(td_io).TPP_INTERNAL(tff_start_lc).TPP_INTERNAL(tlcs_info) = (reset_lc))
 #ifdef TPP_HAVE_FILE_KEEPPOS
 #define _tpp_file_assert_nokeep_(self) tpp_assert(!tpp_file_haskeep(self)),
 #else /* TPP_HAVE_FILE_KEEPPOS */
