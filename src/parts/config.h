@@ -2123,18 +2123,28 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
- * TODO: This type of comment should be nestable, but currently isn't in TPP
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
 #ifndef TPP_HAVE_TOK_PASCAL_COMMENT
 #define TPP_HAVE_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
 #endif /* !TPP_HAVE_TOK_PASCAL_COMMENT */
 
+/* Extension to `TPP_HAVE_TOK_PASCAL_COMMENT`: enable nesting support: `(* outer1 (*inner*) outer2 *)`
+ * @detect: #if __TPP_COUNT_TOKENS("(* a (* b *) c *)") <= 1 */
+#ifndef TPP_HAVE_TOK_PASCAL_COMMENT_NESTING
+#define TPP_HAVE_TOK_PASCAL_COMMENT_NESTING ((TPP_COMMON_HAVE_TPP_TOK_COMMENT && TPP_HAVE_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-pascal-comment-nesting" */
+#endif /* !TPP_HAVE_TOK_PASCAL_COMMENT_NESTING */
+
 /* Enable support for recognizing pascal brace-like comments: `{ like this one! }`
- * TODO: This type of comment should be nestable, but currently isn't in TPP
  * @detect: #if __TPP_COUNT_TOKENS("{ a b c }") <= 1 */
 #ifndef TPP_HAVE_TOK_PASCAL_BRACE_COMMENT
 #define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-brace-comment" */
 #endif /* !TPP_HAVE_TOK_PASCAL_BRACE_COMMENT */
+
+/* Extension to `TPP_HAVE_TOK_PASCAL_BRACE_COMMENT`: enable nesting support: `{ outer1 {inner} outer2 }`
+ * @detect: #if __TPP_COUNT_TOKENS("{ a { b } c }") <= 1 */
+#ifndef TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING
+#define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING ((TPP_HAVE_TOK_PASCAL_BRACE_COMMENT && TPP_HAVE_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-pascal-brace-comment-nesting" */
+#endif /* !TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING */
 
 /* Enable support for lua-style block-comments: `--[[ like this one! ]]`
  * Between the `[[` (and `]]`) can also be any number of (matching) `=`

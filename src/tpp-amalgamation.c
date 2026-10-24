@@ -187,7 +187,9 @@
 #define tef_TPP_EXT_TOK_CXX_COMMENT                        TPP_INTERNAL(tef_TPP_EXT_TOK_CXX_COMMENT)
 #define tef_TPP_EXT_TOK_C_COMMENT                          TPP_INTERNAL(tef_TPP_EXT_TOK_C_COMMENT)
 #define tef_TPP_EXT_TOK_PASCAL_COMMENT                     TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_COMMENT)
+#define tef_TPP_EXT_TOK_PASCAL_COMMENT_NESTING             TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_COMMENT_NESTING)
 #define tef_TPP_EXT_TOK_PASCAL_BRACE_COMMENT               TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_BRACE_COMMENT)
+#define tef_TPP_EXT_TOK_PASCAL_BRACE_COMMENT_NESTING       TPP_INTERNAL(tef_TPP_EXT_TOK_PASCAL_BRACE_COMMENT_NESTING)
 #define tef_TPP_EXT_TOK_HTML_COMMENT                       TPP_INTERNAL(tef_TPP_EXT_TOK_HTML_COMMENT)
 #define tef_TPP_EXT_TOK_SQL_COMMENT                        TPP_INTERNAL(tef_TPP_EXT_TOK_SQL_COMMENT)
 #define tef_TPP_EXT_TOK_AT_AT_COMMENT                      TPP_INTERNAL(tef_TPP_EXT_TOK_AT_AT_COMMENT)
@@ -491,7 +493,9 @@
 #define tff_TOK_CXX_COMMENT                                TPP_INTERNAL(tff_TOK_CXX_COMMENT)
 #define tff_TOK_C_COMMENT                                  TPP_INTERNAL(tff_TOK_C_COMMENT)
 #define tff_TOK_PASCAL_COMMENT                             TPP_INTERNAL(tff_TOK_PASCAL_COMMENT)
+#define tff_TOK_PASCAL_COMMENT_NESTING                     TPP_INTERNAL(tff_TOK_PASCAL_COMMENT_NESTING)
 #define tff_TOK_PASCAL_BRACE_COMMENT                       TPP_INTERNAL(tff_TOK_PASCAL_BRACE_COMMENT)
+#define tff_TOK_PASCAL_BRACE_COMMENT_NESTING               TPP_INTERNAL(tff_TOK_PASCAL_BRACE_COMMENT_NESTING)
 #define tff_TOK_HTML_COMMENT                               TPP_INTERNAL(tff_TOK_HTML_COMMENT)
 #define tff_TOK_SQL_COMMENT                                TPP_INTERNAL(tff_TOK_SQL_COMMENT)
 #define tff_TOK_AT_AT_COMMENT                              TPP_INTERNAL(tff_TOK_AT_AT_COMMENT)
@@ -42122,6 +42126,9 @@ not_a_trigraph:;
 /************************************************************************/
 	case '(': {
 #if TPP_HAVE_TOK_PASCAL_COMMENT
+#if TPP_HAVE_TOK_PASCAL_COMMENT_NESTING
+		unsigned int nesting = 1;
+#endif /* TPP_HAVE_TOK_PASCAL_COMMENT_NESTING */
 		if (!tpp_lexer_has(self, TOK_PASCAL_COMMENT))
 			break;
 		read_ch2(); // "(*like this one!*)"
@@ -42139,12 +42146,28 @@ continue_pascal_comment_with_ch2:
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 				break;
 			}
-			if (ch2 != '*')
+			if (ch2 != '*') {
+#if TPP_HAVE_TOK_PASCAL_COMMENT_NESTING
+				if (ch2 == '(' && tpp_lexer_has(self, TOK_PASCAL_COMMENT_NESTING)) {
+					read_ch2();
+					if (ch2 != '*')
+						goto continue_pascal_comment_with_ch2;
+					++nesting;
+				}
+#endif /* TPP_HAVE_TOK_PASCAL_COMMENT_NESTING */
 				continue;
+			}
 			read_ch2();
-			if (ch2 == ')')
+			if (ch2 != ')')
+				goto continue_pascal_comment_with_ch2;
+#if TPP_HAVE_TOK_PASCAL_COMMENT_NESTING
+			if (nesting > 1) {
+				--nesting;
+			} else
+#endif /* TPP_HAVE_TOK_PASCAL_COMMENT_NESTING */
+			{
 				break;
-			goto continue_pascal_comment_with_ch2;
+			}
 		}
 		result = TPP_TOK_PASCAL_COMMENT;
 		goto set_result;
@@ -42158,6 +42181,9 @@ continue_pascal_comment_with_ch2:
 	case '{': {
 #if TPP_HAVE_TOK_PASCAL_BRACE_COMMENT
 		if (tpp_lexer_has(self, TOK_PASCAL_BRACE_COMMENT)) {
+#if TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING
+			unsigned int nesting = 1;
+#endif /* TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING */
 			for (;;) {
 				read_ch2();
 				if (ch2 == 0 && pos >= file->tf_end) {
@@ -42169,8 +42195,20 @@ continue_pascal_comment_with_ch2:
 #endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
 					break;
 				}
-				if (ch2 == '}')
-					break;
+				if (ch2 != '}') {
+#if TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING
+					if (ch2 == '{' && tpp_lexer_has(self, TOK_PASCAL_BRACE_COMMENT_NESTING))
+						++nesting;
+#endif /* TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING */
+					continue;
+				}
+#if TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING
+				if (nesting > 1) {
+					--nesting;
+					continue;
+				}
+#endif /* TPP_HAVE_TOK_PASCAL_BRACE_COMMENT_NESTING */
+				break;
 			}
 			result = TPP_TOK_PASCAL_BRACE_COMMENT; /* "{like this one!}" */
 			goto set_result;

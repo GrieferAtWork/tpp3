@@ -53,10 +53,10 @@ headers
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6876), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6875), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6880): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6879): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6892), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6891), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6896): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6895): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -115,10 +115,10 @@ Used to implement the `-MP` CLI switch
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6876), `0`: Disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6875), `1`: Enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6880): Available (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6879): Available (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6892), `0`: Disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6891), `1`: Enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6896): Available (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6895): Available (enabled by default)
 
 <details><summary>Details</summary>
 
@@ -507,10 +507,10 @@ checks are controlled by:
 
 Configure as one of:
 
-- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6876), `0`: Always disabled
-- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6875), `1`: Always enabled
-- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6880):  Runtime-configurable (disabled by default)
-- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6879):  Runtime-configurable (enabled by default)
+- [`TPP_CONF_0`](../src/tpp-amalgamation.h#L6892), `0`: Always disabled
+- [`TPP_CONF_1`](../src/tpp-amalgamation.h#L6891), `1`: Always enabled
+- [`TPP_CONF_FEAT0`](../src/tpp-amalgamation.h#L6896):  Runtime-configurable (disabled by default)
+- [`TPP_CONF_FEAT1`](../src/tpp-amalgamation.h#L6895):  Runtime-configurable (enabled by default)
 
 When runtime configurable, the following function can be used:
 
