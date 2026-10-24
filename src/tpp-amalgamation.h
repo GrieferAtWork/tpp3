@@ -5123,6 +5123,12 @@ TPP_WARNING(TPP_W_INTEGER_OVERFLOW, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
             "integer overflow/underflow in %[%s%s%s%]")
 #endif /* TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
 
+#if TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+#define TPP_W_NEGATIVE_SHIFT TPP_W_NEGATIVE_SHIFT
+TPP_WARNING(TPP_W_NEGATIVE_SHIFT, 0(), 0(), TPP_WSTATE_ERROR_OR_FATAL,
+            "negative %[%s%]-shift")
+#endif /* TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
+
 #if TPP_HAVE_TPP_W_CANNOT_POP_INCLUDE_PATHS
 #define TPP_W_CANNOT_POP_INCLUDE_PATHS TPP_W_CANNOT_POP_INCLUDE_PATHS
 TPP_WARNING(TPP_W_CANNOT_POP_INCLUDE_PATHS, 0(), 0(), ~,
@@ -11797,6 +11803,10 @@ TPP_DECL_END
 #define TPP_HAVE_TPP_W_INTEGER_OVERFLOW \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK && (TPP_INTVALUE_MATH_CANOVERFLOW || TPP_INTVALUE_ASINTMAX_CANOVERFLOW))
 #endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
+#ifndef TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+#define TPP_HAVE_TPP_W_NEGATIVE_SHIFT \
+	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_PARSEEXPR_HOOK)
+#endif /* !TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
 #ifndef TPP_HAVE_TPP_W_DIVIDE_BY_ZERO
 #define TPP_HAVE_TPP_W_DIVIDE_BY_ZERO \
 	(TPP_HAVE_WARNINGS && TPP_HAVE_BUILTIN_EXPR_VALUE)
@@ -18145,9 +18155,8 @@ typedef struct tpp_token {
 	(void)((self)->TPP_INTERNAL(tt_id) = ((self)->TPP_INTERNAL(tt_kwd) = (kwd))->TPP_INTERNAL(tk_id))
 
 /* Set the text-range of the token.
- * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
- *          also specifies where the next call to tpp_lexer_yield() will
- *          start scanning for tokens! */
+ * WARNING: Don't use these macros around code that might potentially make
+ *          calls to `tpp_file_expandchunk()` (or `tpp_lexer_yield*()`) */
 #define tpp_token_pushrange(self) \
 	do {                          \
 		tpp_token_range const _ttpr_saved_range = (self)->TPP_INTERNAL(tt_range)
@@ -18160,6 +18169,10 @@ typedef struct tpp_token {
 		tpp_token_breakrange(self); \
 	} while (0)
 
+/* Set the end-pointer of the token.
+ * WARNING: When used on tpp_lexer_gettoken(), the given `end` pointer
+ *          also specifies where the next call to tpp_lexer_yield() will
+ *          start scanning for tokens! */
 #define tpp_token_pushend(self) \
 	do {                        \
 		tpp_char  const *const _ttpe_saved_end = (self)->TPP_INTERNAL(tt_range).TPP_INTERNAL(ttr_end)
@@ -24477,7 +24490,7 @@ typedef struct TPP_INTERNAL(tpp_keyword_features) {
 	, _tpp_keyword_features_with_has_declspec_attribute(self, cb) \
 	, _tpp_keyword_features_with_has_extension(self, cb)          \
 	, _tpp_keyword_features_with_has_feature(self, cb)            \
-	, _tpp_keyword_features_with_has_c_attribute(self, cb)
+	, _tpp_keyword_features_with_has_c_attribute(self, cb)       
 
 #define _tpp_keyword_features_init(self) \
 	((void)0 _tpp_keyword_features_witheach(self, _tpp_keyword_feature_init))

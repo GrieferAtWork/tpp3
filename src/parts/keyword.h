@@ -209,7 +209,7 @@ print("#define _tpp_keyword_features_witheach(self, cb) ", " " * (maxLen - 5), "
 	, _tpp_keyword_features_with_has_declspec_attribute(self, cb) \
 	, _tpp_keyword_features_with_has_extension(self, cb)          \
 	, _tpp_keyword_features_with_has_feature(self, cb)            \
-	, _tpp_keyword_features_with_has_c_attribute(self, cb)
+	, _tpp_keyword_features_with_has_c_attribute(self, cb)       
 /*[[[end]]]*/
 
 #define _tpp_keyword_features_init(self) \

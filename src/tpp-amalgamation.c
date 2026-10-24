@@ -36648,17 +36648,30 @@ tpp_expr_value_shl(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_INT: {
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT:
-			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
-			error = tpp_intvalue_shl(_tpp_expr_value_getint(lhs),
-			                         _tpp_expr_value_getint(rhs),
-			                         _tpp_expr_value_getint(result));
-#if TPP_INTVALUE_MATH_CANOVERFLOW
-			if (error == TPP_ENOENT) {
-				error = tpp_warn_integer_overflow_binary(lexer, lhs, " << ", rhs);
+			error = tpp_intvalue_isneg(_tpp_expr_value_getint(rhs));
+			if (!TPP_ISERR(error)) {
+#if TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+				error = tpp_lexer_warnf(lexer, TPP_W_NEGATIVE_SHIFT, "<<");
 				if (!TPP_ISERR(error))
+#endif /* TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
+				{
 					error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
-			}
+				}
+			} else {
+				if (error != TPP_ENOENT)
+					return error;
+				_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+				error = tpp_intvalue_shl(_tpp_expr_value_getint(lhs),
+				                         _tpp_expr_value_getint(rhs),
+				                         _tpp_expr_value_getint(result));
+#if TPP_INTVALUE_MATH_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					error = tpp_warn_integer_overflow_binary(lexer, lhs, " << ", rhs);
+					if (!TPP_ISERR(error))
+						error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+				}
 #endif /* TPP_INTVALUE_MATH_CANOVERFLOW */
+			}
 			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
@@ -36711,17 +36724,30 @@ tpp_expr_value_shr(struct tpp_lexer *tpp_restrict lexer,
 	case _TPP_EXPR_VALUE_KIND_INT: {
 		switch (_tpp_expr_value_getkind(rhs)) {
 		case _TPP_EXPR_VALUE_KIND_INT:
-			_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
-			error = tpp_intvalue_shr(_tpp_expr_value_getint(lhs),
-			                         _tpp_expr_value_getint(rhs),
-			                         _tpp_expr_value_getint(result));
-#if TPP_INTVALUE_MATH_CANOVERFLOW
-			if (error == TPP_ENOENT) {
-				error = tpp_warn_integer_overflow_binary(lexer, lhs, " >> ", rhs);
+			error = tpp_intvalue_isneg(_tpp_expr_value_getint(rhs));
+			if (!TPP_ISERR(error)) {
+#if TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+				error = tpp_lexer_warnf(lexer, TPP_W_NEGATIVE_SHIFT, ">>");
 				if (!TPP_ISERR(error))
+#endif /* TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
+				{
 					error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
-			}
+				}
+			} else {
+				if (error != TPP_ENOENT)
+					return error;
+				_tpp_expr_value_setkind_(result, _TPP_EXPR_VALUE_KIND_INT)
+				error = tpp_intvalue_shr(_tpp_expr_value_getint(lhs),
+				                         _tpp_expr_value_getint(rhs),
+				                         _tpp_expr_value_getint(result));
+#if TPP_INTVALUE_MATH_CANOVERFLOW
+				if (error == TPP_ENOENT) {
+					error = tpp_warn_integer_overflow_binary(lexer, lhs, " >> ", rhs);
+					if (!TPP_ISERR(error))
+						error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+				}
 #endif /* TPP_INTVALUE_MATH_CANOVERFLOW */
+			}
 			break;
 #if TPP_HAVE_BUILTIN_EXPR_FLOATS
 		case _TPP_EXPR_VALUE_KIND_FLOAT:
@@ -37337,13 +37363,26 @@ tpp_expr_value_shl(struct tpp_lexer *tpp_restrict lexer,
                    /*in*/ tpp_expr_value *tpp_restrict lhs,
                    /*in*/ tpp_expr_value *tpp_restrict rhs,
                    /*out*/ tpp_expr_value *tpp_restrict result) {
-	tpp_errno error = tpp_intvalue_shl(_tpp_expr_value_getint(lhs),
-	                                   _tpp_expr_value_getint(rhs),
-	                                   _tpp_expr_value_getint(result));
-	if (error == TPP_ENOENT) {
-		error = tpp_warn_integer_overflow_binary(lexer, lhs, " << ", rhs);
+	tpp_errno error = tpp_intvalue_isneg(_tpp_expr_value_getint(rhs));
+	if (!TPP_ISERR(error)) {
+#if TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+		error = tpp_lexer_warnf(lexer, TPP_W_NEGATIVE_SHIFT, "<<");
 		if (!TPP_ISERR(error))
+#endif /* TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
+		{
 			error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+		}
+	} else {
+		if (error != TPP_ENOENT)
+			return error;
+		error = tpp_intvalue_shl(_tpp_expr_value_getint(lhs),
+		                         _tpp_expr_value_getint(rhs),
+		                         _tpp_expr_value_getint(result));
+		if (error == TPP_ENOENT) {
+			error = tpp_warn_integer_overflow_binary(lexer, lhs, " << ", rhs);
+			if (!TPP_ISERR(error))
+				error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+		}
 	}
 	return error;
 }
@@ -37353,13 +37392,26 @@ tpp_expr_value_shr(struct tpp_lexer *tpp_restrict lexer,
                    /*in*/ tpp_expr_value *tpp_restrict lhs,
                    /*in*/ tpp_expr_value *tpp_restrict rhs,
                    /*out*/ tpp_expr_value *tpp_restrict result) {
-	tpp_errno error = tpp_intvalue_shr(_tpp_expr_value_getint(lhs),
-	                                   _tpp_expr_value_getint(rhs),
-	                                   _tpp_expr_value_getint(result));
-	if (error == TPP_ENOENT) {
-		error = tpp_warn_integer_overflow_binary(lexer, lhs, " >> ", rhs);
+	tpp_errno error = tpp_intvalue_isneg(_tpp_expr_value_getint(rhs));
+	if (!TPP_ISERR(error)) {
+#if TPP_HAVE_TPP_W_NEGATIVE_SHIFT
+		error = tpp_lexer_warnf(lexer, TPP_W_NEGATIVE_SHIFT, ">>");
 		if (!TPP_ISERR(error))
+#endif /* TPP_HAVE_TPP_W_NEGATIVE_SHIFT */
+		{
 			error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+		}
+	} else {
+		if (error != TPP_ENOENT)
+			return error;
+		error = tpp_intvalue_shr(_tpp_expr_value_getint(lhs),
+		                         _tpp_expr_value_getint(rhs),
+		                         _tpp_expr_value_getint(result));
+		if (error == TPP_ENOENT) {
+			error = tpp_warn_integer_overflow_binary(lexer, lhs, " >> ", rhs);
+			if (!TPP_ISERR(error))
+				error = tpp_intvalue_init_zero(_tpp_expr_value_getint(result));
+		}
 	}
 	return error;
 }
