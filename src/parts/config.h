@@ -2123,16 +2123,38 @@ print("#endif /" "* !... *" "/");
 #endif /* !TPP_HAVE_TOK_C_COMMENT */
 
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
+ * TODO: This type of comment should be nestable, but currently isn't in TPP
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
 #ifndef TPP_HAVE_TOK_PASCAL_COMMENT
 #define TPP_HAVE_TOK_PASCAL_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-comment" */
 #endif /* !TPP_HAVE_TOK_PASCAL_COMMENT */
 
 /* Enable support for recognizing pascal brace-like comments: `{ like this one! }`
+ * TODO: This type of comment should be nestable, but currently isn't in TPP
  * @detect: #if __TPP_COUNT_TOKENS("{ a b c }") <= 1 */
 #ifndef TPP_HAVE_TOK_PASCAL_BRACE_COMMENT
 #define TPP_HAVE_TOK_PASCAL_BRACE_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-pascal-brace-comment" */
 #endif /* !TPP_HAVE_TOK_PASCAL_BRACE_COMMENT */
+
+/* Enable support for lua-style block-comments: `--[[ like this one! ]]`
+ * Between the `[[` (and `]]`) can also be any number of (matching) `=`
+ * characters.
+ * @detect: #if __TPP_COUNT_TOKENS("--[[\na b c]]]") <= 1 */
+//XXX: #ifndef TPP_HAVE_TOK_LUA_BRACKET_COMMENT
+//XXX: #define TPP_HAVE_TOK_LUA_BRACKET_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lua-bracket-comment" */
+//XXX: #endif /* !TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
+
+/* XXX: Raku block comments: `#`(<[{ line this one! }]>)` (syntax: '#`'
+ * is followed by any number of `([{<`, and the comments ends after the
+ * mirror of that sequence of brackets) */
+/* XXX: PowerShell block comments: `<# line this one! #>` */
+/* XXX: Haskal block comments: `{- line this one! -}` */
+/* XXX: MATLAB block comments: `%{ line this one! %}`  (block comments can be nested here!) */
+/* XXX: Nim block comments: `#[ line this one! ]#`  (block comments can be nested here!) */
+/* XXX: BASIC line comments: `REM line this one!` */
+/* XXX: ;-style assembly line-comments: `; this is a comment` */
+
+/* XXX: Way more comments types are listed here: https://en.wikipedia.org/wiki/Comparison_of_programming_languages_(syntax)#Comments */
 
 /* Enable support for recognizing html-like comments: `<!-- like this one -->`
  * @detect: #if __TPP_COUNT_TOKENS("<!-- a b c -->") <= 1 */
