@@ -2122,6 +2122,12 @@ print("#endif /" "* !... *" "/");
 #define TPP_HAVE_TOK_C_COMMENT ((TPP_PROFILE == TPP_PROFILE_DEFAULT || TPP_HAVE_PROFILE_C_LIKE) ? 1 : (TPP_HAVE_PROFILE_ALL ? TPP_CONF_ENABLE(TPP_COMMON_HAVE_TPP_TOK_COMMENT) : TPP_COMMON_HAVE_TPP_TOK_COMMENT)) /* "-ftok-c-comment" */
 #endif /* !TPP_HAVE_TOK_C_COMMENT */
 
+// Extension to `TPP_HAVE_TOK_C_COMMENT`: enable nesting support: `/* outer1 /*inner*/ outer2 */`
+// @detect: #if __TPP_COUNT_TOKENS("/* a /* b */ c */") <= 1
+#ifndef TPP_HAVE_TOK_C_COMMENT_NESTING
+#define TPP_HAVE_TOK_C_COMMENT_NESTING ((TPP_HAVE_TOK_C_COMMENT && TPP_HAVE_PROFILE_ALL) ? TPP_COMMON_CONF_FEAT0 : 0) /* "-ftok-c-comment-nesting" */
+#endif /* !TPP_HAVE_TOK_C_COMMENT_NESTING */
+
 /* Enable support for recognizing pascal-like comments: `(* like this one! *)`
  * @detect: #if __TPP_COUNT_TOKENS("(* a b c *)") <= 1 */
 #ifndef TPP_HAVE_TOK_PASCAL_COMMENT
@@ -5740,7 +5746,7 @@ print("#endif /" "* !... *" "/");
 
 /* Configurations for individual warnings */
 #ifndef TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
-#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT TPP_HAVE_WARNINGS
+#define TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT (TPP_HAVE_WARNINGS && TPP_HAVE_TOK_C_COMMENT && TPP_CONF_MAYBE_0(TPP_HAVE_TOK_C_COMMENT_NESTING))
 #endif /* !TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
 #ifndef TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED
 #define TPP_HAVE_TPP_W_LINE_COMMENT_CONTINUED (TPP_HAVE_WARNINGS && TPP_HAVE_BSE)

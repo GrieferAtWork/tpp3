@@ -3450,6 +3450,9 @@ return_TPP_TOK_SOL_AT_COMMENT:
 #if TPP_HAVE_TOK_C_COMMENT
 		if (ch2 == '*') {
 			if (tpp_lexer_has(self, TOK_C_COMMENT)) {
+#if TPP_HAVE_TOK_C_COMMENT_NESTING
+				unsigned int nesting = 1;
+#endif /* TPP_HAVE_TOK_C_COMMENT_NESTING */
 				for (;;) {
 					read_ch2();
 continue_c_comment_with_ch2:
@@ -3463,26 +3466,42 @@ continue_c_comment_with_ch2:
 						break;
 					}
 					if (ch2 != '*') {
-#if TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
+#if TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT || TPP_HAVE_TOK_C_COMMENT_NESTING
 						if (ch2 == '/') {
 							tpp_size slash_pos = tpp_file_ptr2rel(file, pos);
 							read_ch2();
 							if (ch2 != '*')
 								continue;
-							error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, slash_pos),
-							                           TPP_W_SLASHSTAR_INSIDE_OF_COMMENT);
-							if (TPP_ISERR(error))
-								goto return_error;
-						} else
+#if TPP_HAVE_TOK_C_COMMENT_NESTING
+							if (tpp_lexer_has(self, TOK_C_COMMENT_NESTING)) {
+								++nesting;
+							} else
+#endif /* TPP_HAVE_TOK_C_COMMENT_NESTING */
+							{
+#if TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT
+								error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, slash_pos),
+								                           TPP_W_SLASHSTAR_INSIDE_OF_COMMENT);
+								if (TPP_ISERR(error))
+									goto return_error;
 #endif /* TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT */
+							}
+						} else
+#endif /* TPP_HAVE_TPP_W_SLASHSTAR_INSIDE_OF_COMMENT || TPP_HAVE_TOK_C_COMMENT_NESTING */
 						{
 							continue;
 						}
 					}
 					read_ch2();
-					if (ch2 == '/')
+					if (ch2 != '/')
+						goto continue_c_comment_with_ch2;
+#if TPP_HAVE_TOK_C_COMMENT_NESTING
+					if (nesting > 1) {
+						--nesting;
+					} else
+#endif /* TPP_HAVE_TOK_C_COMMENT_NESTING */
+					{
 						break;
-					goto continue_c_comment_with_ch2;
+					}
 				}
 				result = TPP_TOK_C_COMMENT; /* like this one! */
 				goto set_result;
