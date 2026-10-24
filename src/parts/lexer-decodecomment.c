@@ -129,14 +129,63 @@ tpp_lexer_decodecomment(tpp_lexer const *tpp_restrict self,
 			tpp_char const *new_end = end - 1;
 			new_end = tpp_preparse_skipbse_bck(self, start, new_end);
 			if ((new_end - 2) > start && new_end[-1] == '-') {
-				--new_end;
-				new_end = tpp_preparse_skipbse_bck(self, start, new_end);
+				new_end = tpp_preparse_skipbse_bck(self, start, new_end - 1);
 				if ((new_end - 1) > start && new_end[-1] == '-')
 					end = tpp_preparse_skipbse_bck(self, start, new_end - 1);
 			}
 		}
 		break;
 #endif /* TPP_HAVE_TOK_HTML_COMMENT */
+
+
+#if TPP_HAVE_TOK_LUA_BRACKET_COMMENT
+	case TPP_TOK_LUA_BRACKET_COMMENT: {
+		tpp_size eq_count;
+		kind = TPP_LEXER_DECODECOMMENT_BLOCK;
+		if (start >= end)
+			break;
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start >= end)
+			break;
+		/* *start == '-' */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start >= end)
+			break;
+		/* *start == '-' */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start >= end)
+			break;
+		/* *start == '[' */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start >= end)
+			break;
+		eq_count = 0;
+		while (*start == '=') {
+			++eq_count;
+			start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+			if (start >= end)
+				break;
+		}
+		/* *start == '[' */
+		start = tpp_preparse_skipbse_fwd(self, start + 1, end);
+		if (start >= end)
+			break;
+
+		if (end[-1] == ']') {
+			tpp_char const *new_end = end - 1;
+			new_end = tpp_preparse_skipbse_bck(self, start, new_end);
+			for (; eq_count; --eq_count) {
+				if ((new_end - 2) > start && new_end[-1] == '=') {
+					new_end = tpp_preparse_skipbse_bck(self, start, new_end - 1);
+				} else {
+					break;
+				}
+			}
+			if ((new_end - 1) > start && new_end[-1] == ']')
+				end = tpp_preparse_skipbse_bck(self, start, new_end - 1);
+		}
+	}	break;
+#endif /* TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
 
 
 #define TPP_HAVE_TOK_LINE_COMMENT_2CHAR                      \

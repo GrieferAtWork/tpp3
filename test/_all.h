@@ -39,6 +39,7 @@ for (local e: fs.dir(".").sorted()) {
 #include "has-include.h"
 #include "has-keyword-feature.h"
 #include "include-path.h"
+#include "lua-comments.h"
 #include "macro-argument-whitespace.h"
 #include "macro-call-conv.h"
 #include "macro-escape-lf.h"

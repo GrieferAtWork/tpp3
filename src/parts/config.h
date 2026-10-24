@@ -2156,9 +2156,9 @@ print("#endif /" "* !... *" "/");
  * Between the `[[` (and `]]`) can also be any number of (matching) `=`
  * characters.
  * @detect: #if __TPP_COUNT_TOKENS("--[[\na b c]]]") <= 1 */
-//XXX: #ifndef TPP_HAVE_TOK_LUA_BRACKET_COMMENT
-//XXX: #define TPP_HAVE_TOK_LUA_BRACKET_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lua-bracket-comment" */
-//XXX: #endif /* !TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
+#ifndef TPP_HAVE_TOK_LUA_BRACKET_COMMENT
+#define TPP_HAVE_TOK_LUA_BRACKET_COMMENT TPP_COMMON_HAVE_TPP_TOK_COMMENT /* "-ftok-lua-bracket-comment" */
+#endif /* !TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
 
 /* XXX: Raku block comments: `#`(<[{ line this one! }]>)` (syntax: '#`'
  * is followed by any number of `([{<`, and the comments ends after the
@@ -2550,7 +2550,8 @@ print("#endif /" "* !... *" "/");
 #undef TPP_HAVE_TOK_COMMENTLIKE_NOLINE
 #if (TPP_HAVE_TOK_C_COMMENT ||      \
      TPP_HAVE_TOK_PASCAL_COMMENT || \
-     TPP_HAVE_TOK_HTML_COMMENT)
+     TPP_HAVE_TOK_HTML_COMMENT ||   \
+     TPP_HAVE_TOK_LUA_BRACKET_COMMENT)
 #define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 1
 #else /* ... */
 #define TPP_HAVE_TOK_COMMENTLIKE_NOLINE 0

@@ -3102,8 +3102,9 @@ continue_html_comment_with_ch2:
 
 /************************************************************************/
 	case '-': {
-#if (TPP_HAVE_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TOK_SQL_COMMENT)
+#if (TPP_HAVE_TOK_MC_STARTSWITH_MINUS || TPP_HAVE_TOK_SQL_COMMENT || TPP_HAVE_TOK_LUA_BRACKET_COMMENT)
 		if (!tpp_lexer_has(self, TOK_SQL_COMMENT) &&
+		    !tpp_lexer_has(self, TOK_LUA_BRACKET_COMMENT) &&
 /*[[[deemon (printHasNone from ".config")("-");]]]*/
 		    !tpp_lexer_has(self, TOK_MINUS_MINUS) &&
 		    !tpp_lexer_has(self, TOK_MINUS_LANGLE) &&
@@ -3119,8 +3120,59 @@ continue_html_comment_with_ch2:
 			break;
 		read_ch2();
 		switch (ch2) {
-#if TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT
+#if TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT || TPP_HAVE_TOK_LUA_BRACKET_COMMENT
 		case '-': {
+#if TPP_HAVE_TOK_LUA_BRACKET_COMMENT
+			if (tpp_lexer_has(self, TOK_LUA_BRACKET_COMMENT)) {
+				tpp_size rel_end_of_2char = tpp_file_ptr2rel(file, pos);
+				read_ch2();
+				if (ch2 == '[') {
+					tpp_size eq_count = 0;
+					for (;;) {
+						read_ch2();
+						if (ch2 != '=')
+							break;
+						++eq_count;
+					}
+					if (ch2 == '[') {
+						/* Lua block-comment */
+						for (;;) {
+							tpp_size end_eq_count;
+continue_lua_comment:
+							read_ch2();
+							if (ch2 == 0 && pos >= file->tf_end) {
+handle_eof_in_lua_comment:
+#if TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF
+								error = tpp_lexer_warnf_at(self, file, tpp_file_rel2ptr(file, rel_start),
+								                           TPP_W_COMMENT_TERMINATED_BY_EOF);
+								if (TPP_ISERR(error))
+									goto return_error;
+#endif /* TPP_HAVE_TPP_W_COMMENT_TERMINATED_BY_EOF */
+								break;
+							}
+							if (ch2 != ']')
+								continue;
+							end_eq_count = 0;
+							for (;;) {
+								read_ch2();
+								if (ch2 == 0 && pos >= file->tf_end)
+									goto handle_eof_in_lua_comment;
+								if (end_eq_count >= eq_count)
+									break; /* All `=`-chars matched */
+								if (ch2 != '=')
+									goto continue_lua_comment;
+								++end_eq_count;
+							}
+							if (ch2 == ']')
+								break;
+						}
+						result = TPP_TOK_LUA_BRACKET_COMMENT;
+						goto set_result;
+					}
+				}
+				pos = tpp_file_rel2ptr(file, rel_end_of_2char);
+			}
+#endif /* TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
 #if TPP_HAVE_TOK_SQL_COMMENT
 			if (tpp_lexer_has(self, TOK_SQL_COMMENT)) {
 				error = tpp_lexer_seek_eol(self, &pos tpp_lexer_seek_eol__STYLE_ARG(TPP_TOK_SQL_COMMENT));
@@ -3139,7 +3191,7 @@ continue_html_comment_with_ch2:
 #endif /* TPP_HAVE_TOK_MINUS_MINUS */
 /*[[[end]]]*/
 		}	break;
-#endif /* TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT */
+#endif /* TPP_HAVE_TOK_MINUS_MINUS || TPP_HAVE_TOK_SQL_COMMENT || TPP_HAVE_TOK_LUA_BRACKET_COMMENT */
 /*[[[deemon (printDecoderAfterReadCh2Each from ".config")("-", "-", useSwitch: true);]]]*/
 #if TPP_HAVE_TOK_MINUS_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE || TPP_HAVE_TOK_MINUS_LANGLE_LANGLE_LANGLE
 		case '<': {
