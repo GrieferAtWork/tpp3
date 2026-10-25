@@ -2748,7 +2748,9 @@ tpp_lexer_yieldraw_at(tpp_lexer *self, tpp_char const **p_pos) {
      NEED_tpp_lexer_seek_end_of_cxx_raw_string || \
      NEED_tpp_lexer_seek_end_of_raw_string ||     \
      NEED_tpp_lexer_seek_end_of_format_string ||  \
-     TPP_HAVE_TOK_MC || TPP_HAVE_TOK_PASCAL_HEX)
+     TPP_HAVE_TOK_MC ||                           \
+     TPP_HAVE_TOK_PASCAL_HEX ||                   \
+     TPP_HAVE_TOK_COMMENTLIKE_NOLINE)
 #define NEED_read_ch2 1
 #else /* ... */
 #define NEED_read_ch2 0
