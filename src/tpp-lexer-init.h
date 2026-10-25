@@ -109,6 +109,9 @@
 #endif /* TPP_HAVE_WARNINGS */
 #if TPP_HAVE_WARNING_ERROR
 	/* .TPP_INTERNAL(tl_error_count) = */ 0,
+#if TPP_ERROR_LIMIT < 0
+	/* .TPP_INTERNAL(tl_error_limit) = */ -TPP_ERROR_LIMIT,
+#endif /* TPP_ERROR_LIMIT < 0 */
 #endif /* TPP_HAVE_WARNING_ERROR */
 #if TPP_HAVE_LEXER_WARNING_COUNT
 	/* .TPP_INTERNAL(tl_warning_count) = */ 0,

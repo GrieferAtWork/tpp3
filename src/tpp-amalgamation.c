@@ -49349,8 +49349,10 @@ tpp_floatvalue_pack(tpp_floatvalue const *tpp_restrict self,
 #endif /* !TPP_HAVE_TPP_W_INTEGER_OVERFLOW */
 		whole_intval = 0;
 	}
-	if (TPP_ISERR(error))
+	if (TPP_ISERR(error)) {
+		*result = 0.0; /* To prevent "-Wmaybe-uninitialized" warnings */
 		return error;
+	}
 
 	switch (self->tfv_radix) {
 
@@ -49665,8 +49667,10 @@ tpp_lexer_decodefloat_ex(tpp_lexer *tpp_restrict self,
 
 	/* Parse float... */
 	error = tpp_lexer_decodefloatvalue_ex(self, &fvalue, p_suffix_start);
-	if (TPP_ISERR(error))
+	if (TPP_ISERR(error)) {
+		*result = 0.0; /* To prevent "-Wmaybe-uninitialized" warnings */
 		return error;
+	}
 
 	/* Pack into native float... */
 	error = tpp_floatvalue_pack(&fvalue, result, self);

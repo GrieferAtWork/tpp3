@@ -538,10 +538,10 @@ Can be configured in one of 3 ways:
 
 When *Available*, can be configured at runtime using:
 
-- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1617)
+- [`tpp_emitter_get_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1615)
 - [`tpp_emitter_set_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1634)
-- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1615)
-- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1616)
+- [`tpp_emitter_enable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1616)
+- [`tpp_emitter_disable_reemit_unknown_pragma()`](../src/tpp-emitter-amalgamation.h#L1617)
 
 <details><summary>Details</summary>
 
@@ -670,10 +670,10 @@ Can be configured in one of 3 ways:
 
 When *Available*, can be turned on/off using:
 
-- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1714)
+- [`tpp_emitter_get_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1712)
 - [`tpp_emitter_set_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1731)
-- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1712)
-- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1713)
+- [`tpp_emitter_enable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1713)
+- [`tpp_emitter_disable_reemit_include_directives()`](../src/tpp-emitter-amalgamation.h#L1714)
 
 <details><summary>Details</summary>
 

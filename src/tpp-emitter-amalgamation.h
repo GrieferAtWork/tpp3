@@ -1612,15 +1612,15 @@ tpp_emitter_emitcurrent(tpp_emitter *tpp_restrict self);
 /* API support for (re-)emission of unknown `#pragma` directives */
 #if TPP_EMITTER_HAVE_REEMIT_UNKNOWN_PRAGMA
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK)
+#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
 #define tpp_emitter_enable_reemit_unknown_pragma(self)  tpp_lexer_addhook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
 #define tpp_emitter_disable_reemit_unknown_pragma(self) (void)tpp_lexer_delhook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
-#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma, self)
 #define _tpp_emitter_hook_unknown_pragma_cookie         void *
 #define _tpp_emitter_hook_unknown_pragma_ofcookie(x)    ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_UNKNOWN_PRAGMA_HOOK) */
+#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
 #define tpp_emitter_enable_reemit_unknown_pragma(self)  tpp_lexer_addhook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
 #define tpp_emitter_disable_reemit_unknown_pragma(self) (void)tpp_lexer_delhook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
-#define tpp_emitter_get_reemit_unknown_pragma(self)     tpp_lexer_hashook_unknown_pragma(tpp_emitter_getlexer(self), &_tpp_emitter_hook_unknown_pragma)
 #define _tpp_emitter_hook_unknown_pragma_cookie         tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_unknown_pragma_ofcookie(x) _tpp_emitter_oflexer(x)
@@ -1648,13 +1648,13 @@ _tpp_emitter_hook_unknown_pragma(_tpp_emitter_hook_unknown_pragma_cookie cookie)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK)
 #define tpp_emitter_get_reemit_macro_definitions(self) tpp_lexer_hashook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self)
 #define _tpp_emitter_enable_macro_defined_hook(self)   tpp_lexer_addhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self)
-#define _tpp_emitter_disable_macro_defined_hook(self)  tpp_lexer_delhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self)
+#define _tpp_emitter_disable_macro_defined_hook(self)  (void)tpp_lexer_delhook_macro_defined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined, self)
 #define _tpp_emitter_hook_macro_defined_cookie         void *
 #define _tpp_emitter_hook_macro_defined_ofcookie(x)    ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_DEFINED_HOOK) */
 #define tpp_emitter_get_reemit_macro_definitions(self) tpp_lexer_hashook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined)
 #define _tpp_emitter_enable_macro_defined_hook(self)   tpp_lexer_addhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined)
-#define _tpp_emitter_disable_macro_defined_hook(self)  tpp_lexer_delhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined)
+#define _tpp_emitter_disable_macro_defined_hook(self)  (void)tpp_lexer_delhook_macro_defined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_defined)
 #define _tpp_emitter_hook_macro_defined_cookie         tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_macro_defined_ofcookie(x) _tpp_emitter_oflexer(x)
@@ -1672,12 +1672,12 @@ _tpp_emitter_hook_macro_defined(_tpp_emitter_hook_macro_defined_cookie cookie,
 
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK)
 #define _tpp_emitter_enable_macro_undefined_hook(self)  tpp_lexer_addhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self)
-#define _tpp_emitter_disable_macro_undefined_hook(self) tpp_lexer_delhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self)
+#define _tpp_emitter_disable_macro_undefined_hook(self) (void)tpp_lexer_delhook_macro_undefined_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined, self)
 #define _tpp_emitter_hook_macro_undefined_cookie        void *
 #define _tpp_emitter_hook_macro_undefined_ofcookie(x)   ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_MACRO_UNDEFINED_HOOK) */
 #define _tpp_emitter_enable_macro_undefined_hook(self)  tpp_lexer_addhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined)
-#define _tpp_emitter_disable_macro_undefined_hook(self) tpp_lexer_delhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined)
+#define _tpp_emitter_disable_macro_undefined_hook(self) (void)tpp_lexer_delhook_macro_undefined(tpp_emitter_getlexer(self), &_tpp_emitter_hook_macro_undefined)
 #define _tpp_emitter_hook_macro_undefined_cookie        tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_macro_undefined_ofcookie(x) _tpp_emitter_oflexer(x)
@@ -1709,15 +1709,15 @@ tpp_emitter_enable_reemit_macro_definitions(tpp_emitter *tpp_restrict self);
 /* API support for (re-)emission of `#include` (and friends) directives */
 #if TPP_EMITTER_HAVE_REEMIT_INCLUDE_DIRECTIVES
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK)
+#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
 #define tpp_emitter_enable_reemit_include_directives(self)  tpp_lexer_addhook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
 #define tpp_emitter_disable_reemit_include_directives(self) (void)tpp_lexer_delhook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
-#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered, self)
 #define _tpp_emitter_hook_include_encountered_cookie        void *
 #define _tpp_emitter_hook_include_encountered_ofcookie(x)   ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_ENCOUNTERED_HOOK) */
+#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
 #define tpp_emitter_enable_reemit_include_directives(self)  tpp_lexer_addhook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
 #define tpp_emitter_disable_reemit_include_directives(self) (void)tpp_lexer_delhook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
-#define tpp_emitter_get_reemit_include_directives(self)     tpp_lexer_hashook_include_encountered(tpp_emitter_getlexer(self), &_tpp_emitter_hook_include_encountered)
 #define _tpp_emitter_hook_include_encountered_cookie        tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_include_encountered_ofcookie(x) _tpp_emitter_oflexer(x)
@@ -1753,12 +1753,12 @@ _tpp_emitter_hook_include_encountered(_tpp_emitter_hook_include_encountered_cook
 
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK)
 #define _tpp_emitter_enable_file_pushed_hook(self)  tpp_lexer_addhook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
-#define _tpp_emitter_disable_file_pushed_hook(self) tpp_lexer_delhook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
+#define _tpp_emitter_disable_file_pushed_hook(self) (void)tpp_lexer_delhook_file_pushed_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed, self)
 #define _tpp_emitter_hook_file_pushed_cookie        void *
 #define _tpp_emitter_hook_file_pushed_ofcookie(x)   ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_PUSHED_HOOK) */
 #define _tpp_emitter_enable_file_pushed_hook(self)  tpp_lexer_addhook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
-#define _tpp_emitter_disable_file_pushed_hook(self) tpp_lexer_delhook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
+#define _tpp_emitter_disable_file_pushed_hook(self) (void)tpp_lexer_delhook_file_pushed(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_pushed)
 #define _tpp_emitter_hook_file_pushed_cookie        tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_file_pushed_ofcookie(x) _tpp_emitter_oflexer(x)
@@ -1814,12 +1814,12 @@ _tpp_emitter_hook_file_pushed(_tpp_emitter_hook_file_pushed_cookie cookie);
 #if TPP_EMITTER_HAVE_USE_CPP_DIGIT_FLAGS
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK)
 #define _tpp_emitter_enable_file_popped_hook(self)  tpp_lexer_addhook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
-#define _tpp_emitter_disable_file_popped_hook(self) tpp_lexer_delhook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
+#define _tpp_emitter_disable_file_popped_hook(self) (void)tpp_lexer_delhook_file_popped_ex(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped, self)
 #define _tpp_emitter_hook_file_popped_cookie        void *
 #define _tpp_emitter_hook_file_popped_ofcookie(x)   ((tpp_emitter *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_FILE_POPPED_HOOK) */
 #define _tpp_emitter_enable_file_popped_hook(self)  tpp_lexer_addhook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
-#define _tpp_emitter_disable_file_popped_hook(self) tpp_lexer_delhook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
+#define _tpp_emitter_disable_file_popped_hook(self) (void)tpp_lexer_delhook_file_popped(tpp_emitter_getlexer(self), &_tpp_emitter_hook_file_popped)
 #define _tpp_emitter_hook_file_popped_cookie        tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_EMITTER_FROM_LEXER
 #define _tpp_emitter_hook_file_popped_ofcookie(x) _tpp_emitter_oflexer(x)

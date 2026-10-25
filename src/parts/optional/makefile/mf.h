@@ -311,15 +311,15 @@ tpp_makefile_flush(tpp_makefile *tpp_restrict self);
  * get notified whenever the lexer encounters a new dependency */
 #if TPP_HOOK_ISRT(TPP_HAVE_NEW_DEPENDENCY_HOOK)
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK)
-#define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
 #define tpp_makefile_getenabled(self) tpp_lexer_hashook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
-#define tpp_makefile_disable(self)    tpp_lexer_delhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
+#define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
+#define tpp_makefile_disable(self)    (void)tpp_lexer_delhook_new_dependency_ex(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook, self)
 #define _tpp_makefile_new_dependency_hook_cookie      void *
 #define _tpp_makefile_new_dependency_hook_ofcookie(x) ((tpp_makefile *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_NEW_DEPENDENCY_HOOK) */
-#define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
 #define tpp_makefile_getenabled(self) tpp_lexer_hashook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
-#define tpp_makefile_disable(self)    tpp_lexer_delhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
+#define tpp_makefile_enable(self)     tpp_lexer_addhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
+#define tpp_makefile_disable(self)    (void)tpp_lexer_delhook_new_dependency(tpp_makefile_getlexer(self), &_tpp_makefile_new_dependency_hook)
 #define _tpp_makefile_new_dependency_hook_cookie tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
 #define _tpp_makefile_new_dependency_hook_ofcookie(x) _tpp_makefile_oflexer(x)
@@ -348,13 +348,13 @@ _tpp_makefile_new_dependency_hook(_tpp_makefile_new_dependency_hook_cookie cooki
 #if TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK)
 #define tpp_makefile_enable_missing_file_dependencies(self)      tpp_lexer_addhook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
 #define tpp_makefile_get_missing_file_dependencies_enabled(self) tpp_lexer_hashook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
-#define tpp_makefile_disable_missing_file_dependencies(self)     tpp_lexer_delhook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
+#define tpp_makefile_disable_missing_file_dependencies(self)     (void)tpp_lexer_delhook_include_not_found_ex(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook, self)
 #define _tpp_makefile_include_not_found_hook_cookie      void *
 #define _tpp_makefile_include_not_found_hook_ofcookie(x) ((tpp_makefile *)(x))
 #else /* TPP_HOOK_HASCOOKIE(TPP_HAVE_INCLUDE_NOT_FOUND_HOOK) */
 #define tpp_makefile_enable_missing_file_dependencies(self)      tpp_lexer_addhook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
 #define tpp_makefile_get_missing_file_dependencies_enabled(self) tpp_lexer_hashook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
-#define tpp_makefile_disable_missing_file_dependencies(self)     tpp_lexer_delhook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
+#define tpp_makefile_disable_missing_file_dependencies(self)     (void)tpp_lexer_delhook_include_not_found(tpp_makefile_getlexer(self), &_tpp_makefile_include_not_found_hook)
 #define _tpp_makefile_include_not_found_hook_cookie tpp_lexer *
 #ifdef TPP_CONFIG_OFFSETOF_MAKEFILE_FROM_LEXER
 #define _tpp_makefile_include_not_found_hook_ofcookie(x) _tpp_makefile_oflexer(x)
