@@ -25365,7 +25365,11 @@ tpp_extension_nearest_ex(char const *tpp_restrict name, tpp_size name_maxlen);
 /************************************************************************/
 
 #if TPP_HAVE_WARNING_NUMBERS
+#ifdef UINT_MAX
 #define TPP_WARNING_NUMBER_INVALID UINT_MAX
+#else /* UINT_MAX */
+#define TPP_WARNING_NUMBER_INVALID ((unsigned int)-1)
+#endif /* !UINT_MAX */
 #endif /* TPP_HAVE_WARNING_NUMBERS */
 
 #if TPP_HAVE_WARNINGS
