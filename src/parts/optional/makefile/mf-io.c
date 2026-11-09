@@ -148,10 +148,15 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 	BOOL bWrite;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
-#if TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff)
-	if (bufsize > TPP_UINT_LEAST32_C(0xffffffff))
-		dwBufsize = TPP_UINT_LEAST32_C(0xffffffff);
-#endif /* TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff) */
+	/* - Prevent false positives in `TPP_SSIZE_ISERR()`
+	 * - Handle overflow in cast to `dwBufsize` */
+#define TPP_HANDLE_DW_BUFSIZE_MAX \
+	(TPP_SSIZE_MAX < TPP_UINT_LEAST32_C(0xffffffff) ? TPP_SSIZE_MAX : TPP_UINT_LEAST32_C(0xffffffff))
+#if TPP_SIZE_MAX > TPP_HANDLE_DW_BUFSIZE_MAX
+	if (bufsize > TPP_HANDLE_DW_BUFSIZE_MAX)
+		dwBufsize = TPP_HANDLE_DW_BUFSIZE_MAX;
+#endif /* TPP_SIZE_MAX > TPP_HANDLE_DW_BUFSIZE_MAX */
+#undef TPP_HANDLE_DW_BUFSIZE_MAX
 
 	TPP_SYSCALL({
 		bWrite = WriteFile(file, buf, dwBufsize, &dwResult, NULL);
@@ -163,6 +168,8 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 
 #ifdef tpp_makefile_io_handle_IS_int
 	tpp_ssize result;
+	if tpp_unlikely(bufsize > TPP_SSIZE_MAX)
+		bufsize = TPP_SSIZE_MAX; /* Prevent false positives in `TPP_SSIZE_ISERR()` */
 	TPP_SYSCALL({
 		result = (tpp_ssize)write(file, buf, bufsize);
 	}, return TPP_SSIZE_OFERR);
@@ -173,6 +180,8 @@ tpp_makefile_io_write(tpp_makefile_io_handle file, void const *buf, tpp_size buf
 
 #ifdef tpp_makefile_io_handle_IS_FILE
 	tpp_size result;
+	if tpp_unlikely(bufsize > TPP_SSIZE_MAX)
+		bufsize = TPP_SSIZE_MAX; /* Prevent false positives in `TPP_SSIZE_ISERR()` */
 	TPP_SYSCALL({
 		result = (tpp_size)fwrite(buf, 1, bufsize, file);
 	}, return TPP_SSIZE_OFERR);

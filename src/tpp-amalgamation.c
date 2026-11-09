@@ -24666,10 +24666,15 @@ tpp_io_read(tpp_io_handle file, void *buf,
 	BOOL bRead;
 	DWORD dwResult;
 	DWORD dwBufsize = (DWORD)bufsize;
-#if TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff)
-	if (bufsize > TPP_UINT_LEAST32_C(0xffffffff))
-		dwBufsize = TPP_UINT_LEAST32_C(0xffffffff);
-#endif /* TPP_SIZE_MAX > TPP_UINT_LEAST32_C(0xffffffff) */
+	/* - Prevent false positives in `TPP_SSIZE_ISERR()`
+	 * - Handle overflow in cast to `dwBufsize` */
+#define TPP_HANDLE_DW_BUFSIZE_MAX \
+	(TPP_SSIZE_MAX < TPP_UINT_LEAST32_C(0xffffffff) ? TPP_SSIZE_MAX : TPP_UINT_LEAST32_C(0xffffffff))
+#if TPP_SIZE_MAX > TPP_HANDLE_DW_BUFSIZE_MAX
+	if (bufsize > TPP_HANDLE_DW_BUFSIZE_MAX)
+		dwBufsize = TPP_HANDLE_DW_BUFSIZE_MAX;
+#endif /* TPP_SIZE_MAX > TPP_HANDLE_DW_BUFSIZE_MAX */
+#undef TPP_HANDLE_DW_BUFSIZE_MAX
 
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
@@ -24709,6 +24714,8 @@ tpp_io_read(tpp_io_handle file, void *buf,
 
 #ifdef tpp_io_handle_IS_int
 	tpp_ssize result;
+	if tpp_unlikely(bufsize > TPP_SSIZE_MAX)
+		bufsize = TPP_SSIZE_MAX; /* Prevent false positives in `TPP_SSIZE_ISERR()` */
 #if TPP_HAVE_FILE_NONBLOCK
 	if (nonblock) {
 		fd_set read_fds;
@@ -24735,6 +24742,8 @@ tpp_io_read(tpp_io_handle file, void *buf,
 
 #ifdef tpp_io_handle_IS_FILE
 	tpp_size result;
+	if tpp_unlikely(bufsize > TPP_SSIZE_MAX)
+		bufsize = TPP_SSIZE_MAX; /* Prevent false positives in `TPP_SSIZE_ISERR()` */
 	TPP_SYSCALL({
 		result = (tpp_size)fread(buf, 1, bufsize, file);
 	}, return TPP_SSIZE_OFERR);
