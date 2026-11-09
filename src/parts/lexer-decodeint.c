@@ -521,7 +521,7 @@ continue_with_ch_after_dot:
 	result->tfv_radix = radix;
 	if (radix == 16) {
 		/* Actually use binary as scale for hex numbers */
-		result->tfv_scale *= (16 / 2);
+		result->tfv_scale *= 4; /* 1 hex-nibble is equal to 4 bin-nibbles (0xf == 0b1111) */
 		result->tfv_radix = 2;
 	}
 
